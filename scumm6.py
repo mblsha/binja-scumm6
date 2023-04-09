@@ -86,7 +86,7 @@ class Scumm6(Architecture):
         # print(op, body, op.id)
         if body:
             if getattr(body, 'jump_offset', None) != None:
-                result.add_branch(BranchType.TrueBranch, addr+body.jump_offset)
+                result.add_branch(BranchType.TrueBranch, addr+result.length+body.jump_offset)
                 result.add_branch(BranchType.FalseBranch, addr+result.length)
                 # raise Exception('Unhandled jump_offset for op %s' % op.id)
 
@@ -188,10 +188,10 @@ class Scumm6(Architecture):
                 comp[op.id](4, il.pop(4), il.const(4, 0)),
                 t, f))
             il.mark_label(t)
-            il.append(il.jump(il.const(4, addr+body.jump_offset)))
+            il.append(il.jump(il.const(4, addr+dis[2]+body.jump_offset)))
             il.mark_label(f)
         elif op.id in [OpType.jump]:
-            il.append(il.jump(il.const(4, addr+body.jump_offset)))
+            il.append(il.jump(il.const(4, addr+dis[2]+body.jump_offset)))
         elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
             il.append(il.no_ret())
         elif not getattr(body, 'call_func', True):
@@ -218,6 +218,8 @@ class Scumm6(Architecture):
             il.append(il.goto(begin_label))
 
             il.mark_label(call_func_label)
+            il.append(il.intrinsic([], op.id.name, []))
+        elif op.id in [OpType.break_here]:
             il.append(il.intrinsic([], op.id.name, []))
         else:
             il.append(il.unimplemented())
