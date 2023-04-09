@@ -171,6 +171,12 @@ class Scumm6Opcodes(KaitaiStruct):
         set_box_set = 228
         get_actor_layer = 236
         get_object_new_dir = 237
+
+    class VarType(Enum):
+        normal = 0
+        local = 4
+        room = 8
+        globall = 15
     def __init__(self, _io, _parent=None, _root=None):
         self._io = _io
         self._parent = _parent
@@ -199,7 +205,7 @@ class Scumm6Opcodes(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.data = self._io.read_u2le()
+            self.data = self._io.read_s2le()
 
 
     class JumpData(KaitaiStruct):
@@ -211,6 +217,25 @@ class Scumm6Opcodes(KaitaiStruct):
 
         def _read(self):
             self.jump_offset = self._io.read_s2le()
+
+
+    class ByteVarData(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.data = self._io.read_u1()
+
+        @property
+        def type(self):
+            if hasattr(self, '_m_type'):
+                return self._m_type
+
+            self._m_type = Scumm6Opcodes.VarType.normal
+            return getattr(self, '_m_type', None)
 
 
     class NoData(KaitaiStruct):
@@ -232,7 +257,7 @@ class Scumm6Opcodes(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.data = self._io.read_u1()
+            self.data = self._io.read_s1()
 
 
     class CallFuncData(KaitaiStruct):
@@ -244,6 +269,18 @@ class Scumm6Opcodes(KaitaiStruct):
 
         def _read(self):
             self.call_func = self._io.read_bytes(0)
+
+
+    class WordVarData(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.data = self._io.read_bits_int_le(12)
+            self.type = KaitaiStream.resolve_enum(Scumm6Opcodes.VarType, self._io.read_bits_int_le(4))
 
 
     class Op(KaitaiStruct):
@@ -287,17 +324,17 @@ class Scumm6Opcodes(KaitaiStruct):
             elif _on == Scumm6Opcodes.OpType.le:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_word_var:
-                self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.WordVarData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.ge:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_object_code1:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.word_var_dec:
-                self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.WordVarData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.mul:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.write_word_var:
-                self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.WordVarData(self._io, self, self._root)
             else:
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 

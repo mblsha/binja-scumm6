@@ -172,6 +172,12 @@ enums:
     0xec: get_actor_layer
     0xed: get_object_new_dir
 
+  var_type:
+    0x0: normal
+    0x4: local
+    0x8: room
+    0xf: globall
+
 types:
   op:
     seq:
@@ -185,7 +191,7 @@ types:
             'op_type::push_byte': byte_data
             'op_type::push_word': word_data
             'op_type::push_byte_var': byte_data
-            'op_type::push_word_var': word_data
+            'op_type::push_word_var': word_var_data
             # 'op_type::byte_array_read': no_data
             # 'op_type::word_array_read': no_data
             # 'op_type::byte_array_indexed_read': no_data
@@ -206,7 +212,7 @@ types:
             # 'op_type::lor': no_data
             # 'op_type::pop1': no_data
             # 'op_type::write_byte_var': no_data
-            'op_type::write_word_var': word_data
+            'op_type::write_word_var': word_var_data
             # 'op_type::byte_array_write': no_data
             # 'op_type::word_array_write': no_data
             # 'op_type::byte_array_indexed_write': no_data
@@ -216,7 +222,7 @@ types:
             # 'op_type::byte_array_inc': no_data
             # 'op_type::word_array_inc': no_data
             # 'op_type::byte_var_dec': no_data
-            'op_type::word_var_dec': word_data
+            'op_type::word_var_dec': word_var_data
             # 'op_type::byte_array_dec': no_data
             # 'op_type::word_array_dec': no_data
             'op_type::iff': jump_data
@@ -343,7 +349,7 @@ types:
             # 'op_type::get_actor_layer': no_data
             # 'op_type::get_object_new_dir': no_data
             _: unknown_op
-    -webide-representation: '{id} {body}'
+    -webide-representation: '{id} {id:dec} {body}'
 
   no_data:
     seq:
@@ -360,14 +366,32 @@ types:
   byte_data:
     seq:
       - id: data
-        type: u1
+        type: s1
     -webide-representation: '{data}'
 
   word_data:
     seq:
       - id: data
-        type: u2
+        type: s2
     -webide-representation: '{data}'
+
+  byte_var_data:
+    seq:
+      - id: data
+        type: u1
+    instances:
+      type:
+        value: var_type::normal
+    -webide-representation: '(i:{data:dec} {type})'
+
+  word_var_data:
+    seq:
+      - id: data
+        type: b12
+      - id: type
+        type: b4
+        enum: var_type
+    -webide-representation: '(i:{data:dec} {type})'
 
   jump_data:
     seq:
