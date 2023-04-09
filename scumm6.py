@@ -152,18 +152,8 @@ class Scumm6(Architecture):
             }
             il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
             il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4))) # b
-            t = LowLevelILLabel()
-            f = LowLevelILLabel()
-            after = LowLevelILLabel()
-            il.append(il.if_expr(
-                comp[op.id](4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0))),
-                t, f))
-            il.mark_label(t)
-            il.append(il.push(4, il.const(4, 1)))
-            il.append(il.goto(after))
-            il.mark_label(f)
-            il.append(il.push(4, il.const(4, 0)))
-            il.mark_label(after)
+            comp_res = comp[op.id](4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))
+            il.append(il.push(4, comp_res))
         elif op.id in [OpType.add, OpType.sub, OpType.mul, OpType.div]:
             subopt = {
                 OpType.add: il.add,
