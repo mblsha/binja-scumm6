@@ -8,6 +8,8 @@ import os
 from enum import Enum
 import threading
 from functools import partial
+import bisect
+from collections import defaultdict
 
 from binaryninja.architecture import Architecture, IntrinsicIndex, IntrinsicName, IntrinsicType, IntrinsicInfo
 from binaryninja.lowlevelil import LowLevelILLabel, LLIL_TEMP, LowLevelILFunction, ExpressionIndex
@@ -25,6 +27,26 @@ from binaryninjaui import UIContext
 from .disasm import Scumm6Disasm
 from .scumm6_opcodes import Scumm6Opcodes
 OpType = Scumm6Opcodes.OpType
+
+class SortedList:
+    def __init__(self):
+        self._list = []
+
+    def insert_sorted(self, value):
+        if self.find_element(value):
+            return
+        bisect.insort(self._list, value)
+
+    def find_element(self, value):
+        pos = bisect.bisect_left(self._list, value)
+        return pos != len(self._list) and self._list[pos] == value
+
+    def closest_left_match(self, value):
+        pos = bisect.bisect_left(self._list, value)
+        if pos == 0:
+            return None
+        else:
+            return self._list[pos - 1]
 
 class Scumm6(Architecture):
     name = "SCUMM6"
@@ -65,9 +87,36 @@ class Scumm6(Architecture):
         op.name:IntrinsicInfo(inputs=[], outputs=[]) for op in OpType
     }
 
+    op_addrs = defaultdict(SortedList)
+
     def __init__(self):
         Architecture.__init__(self)
         self.disasm = Scumm6Disasm()
+
+    def get_view(self, data: bytes, addr: int):
+        ctx = UIContext.activeContext()
+        if not ctx:
+            return (None, None)
+        for view, filename in ctx.getAvailableBinaryViews():
+            if str(view.arch) != self.name:
+                continue
+            data2 = view.read(addr, len(data))
+            if data != data2:
+                continue
+            return (view, view.file.filename)
+        return (None, None)
+
+    def prev_instruction(self, data: bytes, addr: int):
+        view, filename = self.get_view(data, addr)
+        if not view:
+            raise Exception(f'prev_instruction: no view at {addr:x}')
+        prev_addr = self.op_addrs[filename].closest_left_match(addr)
+        print(f'prev_instruction: addr:{addr:x} -> prev:{prev_addr:x}')
+        data2 = view.read(prev_addr, 256)
+        dis = self.decode_instruction(data2, len(data2))
+        if not dis:
+            raise Exception(f'prev_instruction: no disasm at {prev_addr:x} len{len(data)}')
+        return dis
 
     def decode_instruction(self, data: bytes, addr: int):
         dis = self.disasm.decode_instruction(data, addr)
@@ -128,6 +177,7 @@ class Scumm6(Architecture):
             offs = il.mult(4, il.const(4, 4), il.const(4, var_index))
             return il.add(4, start, offs)
 
+        implemented = True
         op = dis[0]
         body = getattr(op, 'body', None)
         if op.id in [OpType.push_byte, OpType.push_word]:
@@ -185,33 +235,31 @@ class Scumm6(Architecture):
         elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
             il.append(il.no_ret())
         elif not getattr(body, 'call_func', True):
-            # 10 argumens should be enough for everyone
-            reg_num_args = LLIL_TEMP(10)
-            reg_i = LLIL_TEMP(11)
-            il.append(il.set_reg(4, reg_num_args, il.pop(4)))
-            il.append(il.set_reg(4, reg_i, il.const(4, 0)))
-            read_arg_label = LowLevelILLabel()
-            call_func_label = LowLevelILLabel()
-            begin_label = LowLevelILLabel()
+            # binja doesn't support popping dynamic num of args from stack,
+            # so try to figure out how many do we need to pop.
+            dis2 = self.prev_instruction(data, addr)
+            if not dis2:
+                raise Exception(f'no op_prev for {dis[1]} at {hex(addr)}')
+            op_prev = dis2[0]
+            if op_prev.id not in [OpType.push_byte, OpType.push_word]:
+                raise Exception(f'unsupported op_prev {dis2[1]} at {hex(addr)}')
 
-            il.mark_label(begin_label)
-            il.append(il.if_expr(
-                il.compare_equal(4, il.reg(4, reg_num_args), il.reg(4, reg_i)),
-                call_func_label, read_arg_label))
-
-            il.mark_label(read_arg_label)
-            il.append(il.pop(4))
-            il.append(il.set_reg(4, reg_i,
-                                 il.add(4,
-                                        il.reg(4, reg_i),
-                                        il.const(4, 1))))
-            il.append(il.goto(begin_label))
-
-            il.mark_label(call_func_label)
-            il.append(il.intrinsic([], op.id.name, []))
+            # num_regs
+            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
+            il.append(il.intrinsic([], op.id.name, [il.pop(4) for _ in
+                                                    range(op_prev.body.data)]))
         elif op.id in [OpType.break_here]:
             il.append(il.intrinsic([], op.id.name, []))
         else:
+            implemented = False
             il.append(il.unimplemented())
+
+        if implemented:
+            view, filename = self.get_view(data, addr)
+            if not view:
+                raise Exception("No view for data")
+            self.op_addrs[filename].insert_sorted(addr)
+            # print(self.op_addrs[filename]._list)
+
         return dis[2]
 
