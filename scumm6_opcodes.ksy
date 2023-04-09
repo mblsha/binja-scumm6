@@ -242,7 +242,7 @@ types:
             # 'op_type::set_state': no_data
             # 'op_type::set_owner': no_data
             # 'op_type::get_owner': no_data
-            'op_type::jump': word_data
+            'op_type::jump': jump_data
             # 'op_type::start_sound': no_data
             # 'op_type::stop_sound': no_data
             # 'op_type::start_music': no_data

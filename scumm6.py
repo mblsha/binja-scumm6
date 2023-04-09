@@ -50,6 +50,10 @@ class Scumm6(Architecture):
         'c': FlagRole.CarryFlagRole,
     }
 
+    intrinsics = {
+        op.name:IntrinsicInfo(inputs=[], outputs=[]) for op in OpType
+    }
+
     def __init__(self):
         Architecture.__init__(self)
         self.disasm = Scumm6Disasm()
@@ -106,6 +110,57 @@ class Scumm6(Architecture):
         if not dis:
             return None
 
-        il.append(il.unimplemented())
+        def var_addr(var_index):
+            start = il.const_pointer(4, 0x100000)
+            offs = il.mult(4, il.const(4, 4), il.const(4, var_index))
+            return il.add(4, start, offs)
+
+        op = dis[0]
+        body = getattr(op, 'body', None)
+        if op.id in [OpType.push_byte, OpType.push_word]:
+            il.append(il.push(4, il.const(4, body.data)))
+        elif op.id in [OpType.write_byte_var, OpType.write_word_var]:
+            il.append(il.store(4, var_addr(body.data), il.pop(4)))
+        elif op.id in [OpType.push_byte_var, OpType.push_word_var]:
+            il.append(il.push(4, il.load(4, var_addr(body.data))))
+        elif op.id in [OpType.gt, OpType.lt, OpType.le, OpType.ge]:
+            comp = {
+                OpType.gt: il.compare_signed_greater_than,
+                OpType.lt: il.compare_signed_less_than,
+                OpType.le: il.compare_signed_less_equal,
+                OpType.ge: il.compare_signed_greater_equal,
+            }
+            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
+            il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4))) # b
+            t = LowLevelILLabel()
+            f = LowLevelILLabel()
+            il.append(il.if_expr(
+                comp[op.id](4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0))),
+                t, f))
+            il.mark_label(t)
+            il.append(il.push(4, il.const(4, 1)))
+            il.mark_label(f)
+            il.append(il.push(4, il.const(4, 0)))
+        elif op.id in [OpType.iff, OpType.if_not]:
+            comp = {
+                OpType.iff: il.compare_not_equal,
+                OpType.if_not: il.compare_equal,
+            }
+            t = LowLevelILLabel()
+            f = LowLevelILLabel()
+            il.append(il.if_expr(
+                comp[op.id](4, il.pop(4), il.const(4, 0)),
+                t, f))
+            il.mark_label(t)
+            il.append(il.jump(il.const(4, addr+body.jump_offset)))
+            il.mark_label(f)
+        elif op.id in [OpType.jump]:
+            il.append(il.jump(il.const(4, addr+body.jump_offset)))
+        elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
+            il.append(il.no_ret())
+        elif op.id in [OpType.sound_kludge]:
+            il.append(il.intrinsic([], op.id.name, []))
+        else:
+            il.append(il.unimplemented())
         return dis[2]
 

@@ -260,7 +260,7 @@ class Scumm6Opcodes(KaitaiStruct):
             elif _on == Scumm6Opcodes.OpType.div:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.jump:
-                self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.JumpData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_byte:
                 self.body = Scumm6Opcodes.ByteData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.sound_kludge:
