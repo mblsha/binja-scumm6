@@ -5,9 +5,9 @@ meta:
   bit-endian: le # used for bit-fields
 
 seq:
-  - id: ops
+  - id: op
     type: op
-    repeat: eos
+    # repeat: eos
 
 enums:
   op_type:
@@ -20,7 +20,7 @@ enums:
     0x0a: byte_array_indexed_read
     0x0b: word_array_indexed_read
     0x0c: dup
-    0x0d: not
+    0x0d: nott
     0x0e: eq
     0x0f: neq
     0x10: gt
@@ -48,7 +48,7 @@ enums:
     0x57: word_var_dec
     0x5a: byte_array_dec
     0x5b: word_array_dec
-    0x5c: if
+    0x5c: iff
     0x5d: if_not
     0x5e: start_script
     0x5f: start_script_quick
@@ -175,12 +175,12 @@ enums:
 types:
   op:
     seq:
-      - id: op_type
+      - id: id
         type: u1
         enum: op_type
-      - id: op_data
+      - id: body
         type:
-          switch-on: op_type
+          switch-on: id
           cases:
             'op_type::push_byte': byte_data
             'op_type::push_word': word_data
@@ -191,7 +191,7 @@ types:
             # 'op_type::byte_array_indexed_read': no_data
             # 'op_type::word_array_indexed_read': no_data
             # 'op_type::dup': no_data
-            # 'op_type::not': no_data
+            # 'op_type::nott': no_data
             # 'op_type::eq': no_data
             # 'op_type::neq': no_data
             'op_type::gt': no_data
@@ -219,8 +219,8 @@ types:
             'op_type::word_var_dec': word_data
             # 'op_type::byte_array_dec': no_data
             # 'op_type::word_array_dec': no_data
-            'op_type::if': word_data
-            'op_type::if_not': word_data
+            'op_type::iff': jump_data
+            'op_type::if_not': jump_data
             # 'op_type::start_script': no_data
             # 'op_type::start_script_quick': no_data
             # 'op_type::start_object': no_data
@@ -343,7 +343,7 @@ types:
             # 'op_type::get_actor_layer': no_data
             # 'op_type::get_object_new_dir': no_data
             _: unknown_op
-    -webide-representation: '{op_type} {op_data}'
+    -webide-representation: '{id} {body}'
 
   no_data:
     seq:
@@ -361,6 +361,12 @@ types:
     seq:
       - id: data
         type: u2
+    -webide-representation: '{data}'
+
+  jump_data:
+    seq:
+      - id: jump_offset
+        type: s2
     -webide-representation: '{data}'
 
   unknown_op:

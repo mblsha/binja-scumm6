@@ -1,0 +1,27 @@
+{
+  "pluginmetadataversion": 2,
+  "name": "SCUMM6 Plugin",
+  "author": "Michael Pishchagin",
+  "type": [
+     "architecture"
+  ],
+  "api": [
+     "python3"
+  ],
+  "description": "SCUMM6 Script Decompiler",
+  "license": {
+     "name": "MIT"
+  },
+  "platforms": [
+     "Darwin",
+     "Windows",
+     "Linux"
+  ],
+  "installinstructions": {
+     "Darwin": "",
+     "Windows": "",
+     "Linux": ""
+  },
+  "version": "v1.0",
+  "minimumbinaryninjaversion": 3469
+}

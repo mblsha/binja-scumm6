@@ -20,7 +20,7 @@ class Scumm6Opcodes(KaitaiStruct):
         byte_array_indexed_read = 10
         word_array_indexed_read = 11
         dup = 12
-        not = 13
+        nott = 13
         eq = 14
         neq = 15
         gt = 16
@@ -48,7 +48,7 @@ class Scumm6Opcodes(KaitaiStruct):
         word_var_dec = 87
         byte_array_dec = 90
         word_array_dec = 91
-        if = 92
+        iff = 92
         if_not = 93
         start_script = 94
         start_script_quick = 95
@@ -178,12 +178,7 @@ class Scumm6Opcodes(KaitaiStruct):
         self._read()
 
     def _read(self):
-        self.ops = []
-        i = 0
-        while not self._io.is_eof():
-            self.ops.append(Scumm6Opcodes.Op(self._io, self, self._root))
-            i += 1
-
+        self.op = Scumm6Opcodes.Op(self._io, self, self._root)
 
     class UnknownOp(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
@@ -205,6 +200,17 @@ class Scumm6Opcodes(KaitaiStruct):
 
         def _read(self):
             self.data = self._io.read_u2le()
+
+
+    class JumpData(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.jump_offset = self._io.read_s2le()
 
 
     class NoData(KaitaiStruct):
@@ -237,52 +243,52 @@ class Scumm6Opcodes(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.op_type = KaitaiStream.resolve_enum(Scumm6Opcodes.OpType, self._io.read_u1())
-            _on = self.op_type
+            self.id = KaitaiStream.resolve_enum(Scumm6Opcodes.OpType, self._io.read_u1())
+            _on = self.id
             if _on == Scumm6Opcodes.OpType.push_word:
-                self.op_data = Scumm6Opcodes.WordData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_object_code2:
-                self.op_data = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.lt:
-                self.op_data = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.gt:
-                self.op_data = Scumm6Opcodes.NoData(self._io, self, self._root)
-            elif _on == Scumm6Opcodes.OpType.if:
-                self.op_data = Scumm6Opcodes.WordData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_byte_var:
-                self.op_data = Scumm6Opcodes.ByteData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.ByteData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.add:
-                self.op_data = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.div:
-                self.op_data = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.jump:
-                self.op_data = Scumm6Opcodes.WordData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_byte:
-                self.op_data = Scumm6Opcodes.ByteData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.ByteData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.sound_kludge:
-                self.op_data = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.break_here:
-                self.op_data = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.sub:
-                self.op_data = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.iff:
+                self.body = Scumm6Opcodes.JumpData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.if_not:
-                self.op_data = Scumm6Opcodes.WordData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.JumpData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.le:
-                self.op_data = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_word_var:
-                self.op_data = Scumm6Opcodes.WordData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.ge:
-                self.op_data = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_object_code1:
-                self.op_data = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.word_var_dec:
-                self.op_data = Scumm6Opcodes.WordData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.mul:
-                self.op_data = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.write_word_var:
-                self.op_data = Scumm6Opcodes.WordData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
             else:
-                self.op_data = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
+                self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
 
