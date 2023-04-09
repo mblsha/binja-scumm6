@@ -235,6 +235,17 @@ class Scumm6Opcodes(KaitaiStruct):
             self.data = self._io.read_u1()
 
 
+    class CallFuncData(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+
+
     class Op(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -264,7 +275,7 @@ class Scumm6Opcodes(KaitaiStruct):
             elif _on == Scumm6Opcodes.OpType.push_byte:
                 self.body = Scumm6Opcodes.ByteData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.sound_kludge:
-                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.CallFuncData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.break_here:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.sub:

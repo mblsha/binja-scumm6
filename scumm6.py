@@ -33,6 +33,17 @@ class Scumm6(Architecture):
     max_instr_length = 256
     endianness = Endianness.LittleEndian
     regs = {
+       'p0':  RegisterInfo('r', 4),
+       'p1':  RegisterInfo('r', 4),
+       'p2':  RegisterInfo('r', 4),
+       'p3':  RegisterInfo('r', 4),
+       'p4':  RegisterInfo('r', 4),
+       'p5':  RegisterInfo('r', 4),
+       'p6':  RegisterInfo('r', 4),
+       'p7':  RegisterInfo('r', 4),
+       'p8':  RegisterInfo('r', 4),
+       'p9':  RegisterInfo('r', 4),
+
        'r':  RegisterInfo('r', 4),
        'sp': RegisterInfo('sp', 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth),
     }
@@ -123,6 +134,13 @@ class Scumm6(Architecture):
             il.append(il.store(4, var_addr(body.data), il.pop(4)))
         elif op.id in [OpType.push_byte_var, OpType.push_word_var]:
             il.append(il.push(4, il.load(4, var_addr(body.data))))
+        elif op.id in [OpType.byte_var_dec, OpType.word_var_dec]:
+            il.append(il.set_reg(4, LLIL_TEMP(0), var_addr(il.pop(4))))
+            il.append(il.store(4, il.reg(4, LLIL_TEMP(0)),
+                                  il.sub(4,
+                                         il.load(4, il.reg(4, LLIL_TEMP(0))),
+                                         il.const(4, 1))))
+
         elif op.id in [OpType.gt, OpType.lt, OpType.le, OpType.ge]:
             comp = {
                 OpType.gt: il.compare_signed_greater_than,
@@ -141,6 +159,19 @@ class Scumm6(Architecture):
             il.append(il.push(4, il.const(4, 1)))
             il.mark_label(f)
             il.append(il.push(4, il.const(4, 0)))
+        elif op.id in [OpType.add, OpType.sub, OpType.mul, OpType.div]:
+            subopt = {
+                OpType.add: il.add,
+                OpType.sub: il.sub,
+                OpType.mul: il.mult,
+                OpType.div: il.div_signed,
+            }
+            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
+            il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4))) # b
+            il.append(il.push(4,
+                              subopt[op.id](4,
+                                            il.reg(4, LLIL_TEMP(1)),
+                                            il.reg(4, LLIL_TEMP(0)))))
         elif op.id in [OpType.iff, OpType.if_not]:
             comp = {
                 OpType.iff: il.compare_not_equal,
@@ -158,7 +189,30 @@ class Scumm6(Architecture):
             il.append(il.jump(il.const(4, addr+body.jump_offset)))
         elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
             il.append(il.no_ret())
-        elif op.id in [OpType.sound_kludge]:
+        elif not getattr(body, 'call_func', True):
+            # 10 argumens should be enough for everyone
+            reg_num_args = LLIL_TEMP(10)
+            reg_i = LLIL_TEMP(11)
+            il.append(il.set_reg(4, reg_num_args, il.pop(4)))
+            il.append(il.set_reg(4, reg_i, il.const(4, 0)))
+            read_arg_label = LowLevelILLabel()
+            call_func_label = LowLevelILLabel()
+            begin_label = LowLevelILLabel()
+
+            il.mark_label(begin_label)
+            il.append(il.if_expr(
+                il.compare_equal(4, il.reg(4, reg_num_args), il.reg(4, reg_i)),
+                call_func_label, read_arg_label))
+
+            il.mark_label(read_arg_label)
+            il.append(il.pop(4))
+            il.append(il.set_reg(4, reg_i,
+                                 il.add(4,
+                                        il.reg(4, reg_i),
+                                        il.const(4, 1))))
+            il.append(il.goto(begin_label))
+
+            il.mark_label(call_func_label)
             il.append(il.intrinsic([], op.id.name, []))
         else:
             il.append(il.unimplemented())

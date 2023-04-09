@@ -297,7 +297,7 @@ types:
             # 'op_type::wait': no_data
             # 'op_type::get_actor_scale_x': no_data
             # 'op_type::get_actor_anim_counter': no_data
-            'op_type::sound_kludge': no_data
+            'op_type::sound_kludge': call_func_data
             # 'op_type::is_any_of': no_data
             # 'op_type::system_ops': no_data
             # 'op_type::is_actor_in_box': no_data
@@ -351,6 +351,12 @@ types:
         size: 0
     -webide-representation: '{data}'
 
+  call_func_data:
+    seq:
+      - id: call_func
+        size: 0
+    -webide-representation: '{data}'
+
   byte_data:
     seq:
       - id: data
@@ -367,7 +373,7 @@ types:
     seq:
       - id: jump_offset
         type: s2
-    -webide-representation: '{data}'
+    -webide-representation: '{jump_offset}'
 
   unknown_op:
     seq:
