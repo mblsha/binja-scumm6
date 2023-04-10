@@ -224,8 +224,9 @@ class Scumm6(Architecture):
             }
             t = LowLevelILLabel()
             f = LowLevelILLabel()
+            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
             il.append(il.if_expr(
-                comp[op.id](4, il.pop(4), il.const(4, 0)),
+                comp[op.id](4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0)),
                 t, f))
             il.mark_label(t)
             il.append(il.jump(il.const(4, addr+dis[2]+body.jump_offset)))
@@ -244,10 +245,10 @@ class Scumm6(Architecture):
             if op_prev.id not in [OpType.push_byte, OpType.push_word]:
                 raise Exception(f'unsupported op_prev {dis2[1]} at {hex(addr)}')
 
-            # num_regs
-            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
+            # num_regs need to be popped separately
+            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
             il.append(il.intrinsic([], op.id.name, [il.pop(4) for _ in
-                                                    range(op_prev.body.data)]))
+                                                    range(op_prev.body.data + 0)]))
         elif op.id in [OpType.break_here]:
             il.append(il.intrinsic([], op.id.name, []))
         else:
