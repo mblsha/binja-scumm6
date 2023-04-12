@@ -28,6 +28,11 @@ from .disasm import Scumm6Disasm
 from .scumm6_opcodes import Scumm6Opcodes
 OpType = Scumm6Opcodes.OpType
 
+last_bv = None
+def set_last_bv(bv):
+    global last_bv
+    last_bv = bv
+
 class SortedList:
     def __init__(self):
         self._list = []
@@ -104,6 +109,12 @@ class Scumm6(Architecture):
             if data != data2:
                 continue
             return (view, view.file.filename)
+
+        global last_bv
+        if last_bv:
+            data2 = last_bv.read(addr, len(data))
+            if data == data2:
+                return (last_bv, last_bv.file.filename)
         return (None, None)
 
     def prev_instruction(self, data: bytes, addr: int):
