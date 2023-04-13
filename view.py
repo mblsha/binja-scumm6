@@ -1,8 +1,11 @@
+from pprint import pprint
+
 from binaryninja.binaryview import BinaryView;
 from binaryninja.architecture import Architecture
 from binaryninja.types import Symbol
 from binaryninja.enums import SegmentFlag, SymbolType, SectionSemantics, Endianness
 from .scumm6 import set_last_bv
+from .disasm import Scumm6Disasm
 
 class Scumm6View(BinaryView):
     name = 'SCUMM6 View'
@@ -15,14 +18,18 @@ class Scumm6View(BinaryView):
         print('is_valid_for_data', result, header[0:4])
         return result
 
-    def __init__(self, data):
+    def __init__(self, parent_view):
         arch = 'SCUMM6'
-        # data is a binaryninja.binaryview.BinaryView
-        BinaryView.__init__(self, parent_view = data, file_metadata = data.file)
+        # parent_view is a binaryninja.binaryview.BinaryView
+        BinaryView.__init__(self, parent_view = parent_view, file_metadata = parent_view.file)
         self.arch = Architecture[arch]
         self.platform = Architecture[arch].standalone_platform
-        self.data = data
-        set_last_bv(self)
+        set_last_bv(parent_view)
+
+        self.disasm = Scumm6Disasm()
+        data = parent_view.read(0, parent_view.end)
+        self.container = self.disasm.decode_container(data)
+        pprint(self.container)
 
     def init(self):
         start = 0
