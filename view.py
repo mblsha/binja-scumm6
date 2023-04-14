@@ -19,32 +19,31 @@ class Scumm6View(BinaryView):
         return result
 
     def __init__(self, parent_view):
-        arch = 'SCUMM6'
         # parent_view is a binaryninja.binaryview.BinaryView
         BinaryView.__init__(self, parent_view = parent_view, file_metadata = parent_view.file)
-        self.arch = Architecture[arch]
-        self.platform = Architecture[arch].standalone_platform
         set_last_bv(parent_view)
 
         self.disasm = Scumm6Disasm()
         data = parent_view.read(0, parent_view.end)
-        self.container = self.disasm.decode_container(data)
-        pprint(self.container)
+        self.scripts = self.disasm.decode_container(data)
 
     def init(self):
-        start = 0
-        size  = 0x100000
-        self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentReadable|SegmentFlag.SegmentExecutable)
-        start = size
-        size  = 0x200000
-        self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentReadable|SegmentFlag.SegmentWritable)
-        start = size
-        size  = 0x300000
-        self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentReadable|SegmentFlag.SegmentExecutable)
+        arch = 'SCUMM6'
+        self.arch = Architecture[arch]
+        self.platform = Architecture[arch].standalone_platform
+
+        for start, end in self.scripts:
+            print(start, end)
+            size = end - start
+            self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentReadable|SegmentFlag.SegmentExecutable)
+            self.add_entry_point(start)
+            break
+
+        # self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentReadable|SegmentFlag.SegmentWritable)
+        # self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentReadable|SegmentFlag.SegmentExecutable)
 
         # self.add_user_section("bank1", 0, 0x100000, SectionSemantics.ReadOnlyCodeSectionSemantics)
 
-        # self.add_entry_point(0xC00402)
         return True
 
     def perform_get_address_size(self) -> int:
