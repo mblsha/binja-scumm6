@@ -120,7 +120,7 @@ types:
             'block_type::excd': script
             'block_type::lscr': local_script
             'block_type::scrp': script
-            'block_type::verb': script
+            'block_type::verb': verb_script
 
             # 'block_type::soun': nested_blocks
             _: unknown_block
@@ -251,7 +251,7 @@ types:
       - id: actor_dir
         type: u1
 
-  verb:
+  verb_script:
     seq:
       - id: entry
         type: u1

@@ -18,18 +18,6 @@ from scumm6_container import *
 # if __name__ == '__main__':
 #     unittest.main()
 
-# def get_pos_recursive(block):
-#     if not getattr(block, 'pos', None):
-#         return 0
-#     return block.pos + get_pos_recursive(block._parent)
-#
-# original_block_constructor = Scumm6Container.Block.__init__
-# def block_constructor(self, _io, _parent, _root):
-#     # print('here', _io.pos())
-#     self.pos = _root._io.pos() # + get_pos_recursive(_parent)
-#     original_block_constructor(self, _io, _parent, _root)
-# Scumm6Container.Block.__init__ = block_constructor
-
 def pretty_scumm(block, pos, level):
     if not getattr(block.block_type, 'value', None):
         return block
@@ -44,14 +32,12 @@ def pretty_scumm(block, pos, level):
             pos += b.block_size
         r[type_str] = arr
     else:
-        r[type_str] = hex(pos)
+        r[type_str] = (hex(pos), block.block_data)
     return r
-
 
 filename = ''
 data = open(filename, 'rb').read()
 ks = KaitaiStream(BytesIO(data))
 r = Scumm6Container(ks)
-pprint(r)
-pprint(r.blocks)
+pprint(get_script_addrs(r.blocks[0], 0))
 pprint(pretty_scumm(r.blocks[0], 0, 0))

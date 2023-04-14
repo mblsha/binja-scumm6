@@ -33,16 +33,17 @@ class Scumm6View(BinaryView):
         self.platform = Architecture[arch].standalone_platform
 
         for start, end in self.scripts:
-            print(start, end)
+            print(hex(start), hex(end))
             size = end - start
-            self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentReadable|SegmentFlag.SegmentExecutable)
-            self.add_entry_point(start)
+            self.add_auto_segment(0, start, 0, start, SegmentFlag.SegmentDenyExecute)
+            self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentContainsCode)
+            self.add_user_section("func1", start, size, SectionSemantics.ReadOnlyCodeSectionSemantics)
+            self.add_auto_segment(end, self.parent_view.end - end, end, self.parent_view.end - end, SegmentFlag.SegmentDenyExecute)
             break
 
         # self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentReadable|SegmentFlag.SegmentWritable)
         # self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentReadable|SegmentFlag.SegmentExecutable)
 
-        # self.add_user_section("bank1", 0, 0x100000, SectionSemantics.ReadOnlyCodeSectionSemantics)
 
         return True
 

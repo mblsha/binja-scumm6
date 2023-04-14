@@ -359,7 +359,7 @@ class Scumm6Container(KaitaiStruct):
             elif _on == Scumm6Container.BlockType.verb:
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
-                self.block_data = Scumm6Container.Script(_io__raw_block_data, self, self._root)
+                self.block_data = Scumm6Container.VerbScript(_io__raw_block_data, self, self._root)
             elif _on == Scumm6Container.BlockType.imhd:
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
@@ -562,24 +562,6 @@ class Scumm6Container(KaitaiStruct):
             self.num_images = self._io.read_u2le()
 
 
-    class Verb(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.entry = []
-            i = 0
-            while True:
-                _ = self._io.read_u1()
-                self.entry.append(_)
-                if _ == 0:
-                    break
-                i += 1
-
-
     class Trns(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -616,6 +598,24 @@ class Scumm6Container(KaitaiStruct):
                 self.blocks.append(Scumm6Container.Block(self._io, self, self._root))
                 i += 1
 
+
+
+    class VerbScript(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.entry = []
+            i = 0
+            while True:
+                _ = self._io.read_u1()
+                self.entry.append(_)
+                if _ == 0:
+                    break
+                i += 1
 
 
     class Obna(KaitaiStruct):
