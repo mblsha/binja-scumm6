@@ -172,6 +172,141 @@ enums:
     0xec: get_actor_layer
     0xed: get_object_new_dir
 
+  subop_type:
+    65: at
+    66: color
+    67: clipped
+    69: center
+    71: left
+    72: overhead
+    74: mumble
+    75: textstring
+    76: set_costume
+    77: step_dist
+    78: sound
+    79: walk_animation
+    80: talk_animation
+    81: stand_animation
+    82: animation
+    83: init
+    84: elevation
+    85: animation_default
+    86: palette
+    87: talk_color
+    88: actor_name
+    89: init_animation
+    91: actor_width
+    92: scale
+    93: never_zclip
+    94: always_zclip
+    95: ignore_boxes
+    96: follow_boxes
+    97: animation_speed
+    98: shadow
+    99: text_offset
+    100: load_script
+    101: load_sound
+    102: load_costume
+    103: load_room
+    104: nuke_script
+    105: nuke_sound
+    106: nuke_costume
+    107: nuke_room
+    108: lock_script
+    109: lock_sound
+    110: lock_costume
+    111: lock_room
+    112: unlock_script
+    113: unlock_sound
+    114: unlock_costume
+    115: unlock_room
+    116: clear_heap
+    117: load_charset
+    118: nuke_charset
+    119: load_object
+    124: verb_image
+    125: verb_name
+    126: verb_color
+    127: verb_hicolor
+    128: verb_at
+    129: verb_on
+    130: verb_off
+    131: verb_delete
+    132: verb_new
+    133: verb_dimcolor
+    134: verb_dim
+    135: verb_key
+    136: verb_center
+    137: verb_name_str
+    139: verb_image_in_room
+    140: verb_bakcolor
+    141: save_verbs
+    142: restore_verbs
+    143: delete_verbs
+    144: cursor_on
+    145: cursor_off
+    146: userput_on
+    147: userput_off
+    148: cursor_soft_on
+    149: cursor_soft_off
+    150: userput_soft_on
+    151: userput_soft_off
+    153: cursor_image
+    154: cursor_hotspot
+    156: charset_set
+    157: charset_color
+    158: restart
+    159: pause
+    160: quit
+    168: wait_for_actor
+    169: wait_for_message
+    170: wait_for_camera
+    171: wait_for_sentence
+    172: room_scroll
+    174: room_screen
+    175: room_palette
+    176: room_shake_on
+    177: room_shake_off
+    179: room_intensity
+    180: room_savegame
+    181: room_fade
+    182: rgb_room_intensity
+    183: room_shadow
+    184: save_string
+    185: load_string
+    186: room_transform
+    187: cycle_speed
+    196: verb_init
+    197: set_current_actor
+    198: actor_variable
+    199: int_array
+    200: bit_array
+    201: nibble_array
+    202: byte_array
+    203: string_array
+    204: undim_array
+    205: assign_string
+    208: assign_int_list
+    212: assign_2dim_list
+    213: room_new_palette
+    214: cursor_transparent
+    215: actor_ignore_turns_on
+    216: actor_ignore_turns_off
+    217: neww
+    225: always_zclip_ft_demo
+    226: wait_for_animation
+    227: actor_depth
+    228: actor_walk_script
+    229: actor_stop
+    230: actor_face
+    231: actor_turn
+    232: wait_for_turn
+    233: actor_walk_pause
+    234: actor_walk_resume
+    235: actor_talk_script
+    254: baseop
+    255: endd
+
   var_type:
     0x0: normal
     0x4: local
@@ -193,13 +328,13 @@ types:
             'op_type::push_byte_var': byte_data
             'op_type::push_word_var': word_var_data
             # 'op_type::byte_array_read': no_data
-            # 'op_type::word_array_read': no_data
+            'op_type::word_array_read': word_data # FIXME
             # 'op_type::byte_array_indexed_read': no_data
             # 'op_type::word_array_indexed_read': no_data
             # 'op_type::dup': no_data
             # 'op_type::nott': no_data
-            # 'op_type::eq': no_data
-            # 'op_type::neq': no_data
+            'op_type::eq': no_data
+            'op_type::neq': no_data
             'op_type::gt': no_data
             'op_type::lt': no_data
             'op_type::le': no_data
@@ -227,7 +362,7 @@ types:
             # 'op_type::word_array_dec': no_data
             'op_type::iff': jump_data
             'op_type::if_not': jump_data
-            # 'op_type::start_script': no_data
+            'op_type::start_script': call_func_list_pop1
             # 'op_type::start_script_quick': no_data
             # 'op_type::start_object': no_data
             # 'op_type::draw_object': no_data
@@ -249,7 +384,7 @@ types:
             # 'op_type::set_owner': no_data
             # 'op_type::get_owner': no_data
             'op_type::jump': jump_data
-            # 'op_type::start_sound': no_data
+            'op_type::start_sound': call_func_pop1
             # 'op_type::stop_sound': no_data
             # 'op_type::start_music': no_data
             # 'op_type::stop_object_script': no_data
@@ -260,10 +395,10 @@ types:
             # 'op_type::stop_script': no_data
             # 'op_type::walk_actor_to_obj': no_data
             # 'op_type::walk_actor_to': no_data
-            # 'op_type::put_actor_at_xy': no_data
+            'op_type::put_actor_at_xy': call_func_pop4
             # 'op_type::put_actor_at_object': no_data
             # 'op_type::face_actor': no_data
-            # 'op_type::animate_actor': no_data
+            'op_type::animate_actor': call_func_pop2
             # 'op_type::do_sentence': no_data
             # 'op_type::pickup_object': no_data
             # 'op_type::load_room_with_ego': no_data
@@ -275,7 +410,7 @@ types:
             # 'op_type::get_object_x': no_data
             # 'op_type::get_object_y': no_data
             # 'op_type::get_object_old_dir': no_data
-            # 'op_type::get_actor_walk_box': no_data
+            # 'op_type::get_actor_walk_box': call_func_pop1_push
             # 'op_type::get_actor_costume': no_data
             # 'op_type::find_inventory': no_data
             # 'op_type::get_inventory_count': no_data
@@ -288,7 +423,7 @@ types:
             # 'op_type::create_box_matrix': no_data
             # 'op_type::resource_routines': no_data
             # 'op_type::room_ops': no_data
-            # 'op_type::actor_ops': no_data
+            'op_type::actor_ops': actor_ops
             # 'op_type::verb_ops': no_data
             # 'op_type::get_actor_from_xy': no_data
             # 'op_type::find_object': no_data
@@ -300,24 +435,28 @@ types:
             # 'op_type::draw_box': no_data
             # 'op_type::pop2': no_data
             # 'op_type::get_actor_width': no_data
-            # 'op_type::wait': no_data
+            'op_type::wait': wait
             # 'op_type::get_actor_scale_x': no_data
             # 'op_type::get_actor_anim_counter': no_data
-            'op_type::sound_kludge': call_func_data
+            'op_type::sound_kludge': call_func_list
             # 'op_type::is_any_of': no_data
             # 'op_type::system_ops': no_data
             # 'op_type::is_actor_in_box': no_data
-            # 'op_type::delay': no_data
+            'op_type::delay': call_func_pop1
             # 'op_type::delay_seconds': no_data
             # 'op_type::delay_minutes': no_data
             # 'op_type::stop_sentence': no_data
             # 'op_type::print_line': no_data
             # 'op_type::print_text': no_data
-            # 'op_type::print_debug': no_data
+            'op_type::print_debug': print
             # 'op_type::print_system': no_data
             # 'op_type::print_actor': no_data
             # 'op_type::print_ego': no_data
-            # 'op_type::talk_actor': no_data
+
+            # _actorToPrintStrFor = pop1()
+            # then interpreter?
+            'op_type::talk_actor': talk_actor
+
             # 'op_type::talk_ego': no_data
             # 'op_type::dim_array': no_data
             # 'op_type::dummy': no_data
@@ -330,7 +469,7 @@ types:
             # 'op_type::dist_pt_pt': no_data
             # 'op_type::kernel_get_functions': no_data
             # 'op_type::kernel_set_functions': no_data
-            # 'op_type::delay_frames': no_data
+            'op_type::delay_frames': call_func_pop1
             # 'op_type::pick_one_of': no_data
             # 'op_type::pick_one_of_default': no_data
             # 'op_type::stamp_object': no_data
@@ -351,16 +490,92 @@ types:
             _: unknown_op
     -webide-representation: '{id} {id:dec} {body}'
 
+  talk_actor:
+    enums:
+      talk_type:
+        1: newline
+        2: keep_text
+        3: wait
+        4: get_int
+        5: get_verb
+        6: get_name
+        7: get_string
+        9: start_anim
+        10: sound
+        12: set_color
+        13: unknown_13
+        14: set_font
+    types:
+      talk_cmd:
+        seq:
+          - id: magic
+            type: u1
+          - id: data
+            type: str
+            encoding: ASCII
+            terminator: 0
+            if: magic != 0xff
+          - id: cmd
+            type: u1
+            enum: talk_type
+            if: magic == 0xff
+          - id: body
+            if: magic == 0xff
+            type:
+              switch-on: cmd
+              cases:
+                'talk_type::sound': word7_data
+                _: unknown_op
+        -webide-representation: '{cmd}'
+    seq:
+      - id: cmds
+        type: talk_cmd
+        repeat: until
+        repeat-until: _.magic != 0xFF
+    -webide-representation: '{data}'
+
   no_data:
     seq:
       - id: data
         size: 0
     -webide-representation: '{data}'
 
-  call_func_data:
+  call_func_list:
     seq:
       - id: call_func
         size: 0
+    -webide-representation: '{data}'
+
+  call_func_list_pop1:
+    seq:
+      - id: call_func
+        size: 0
+    -webide-representation: '{data}'
+
+  call_func_pop1:
+    seq:
+      - id: call_func
+        size: 0
+    -webide-representation: '{data}'
+
+  call_func_pop2:
+    seq:
+      - id: call_func
+        size: 0
+    -webide-representation: '{data}'
+
+  call_func_pop4:
+    seq:
+      - id: call_func
+        size: 0
+    -webide-representation: '{data}'
+
+  call_func_string:
+    seq:
+      - id: data
+        type: str
+        encoding: ASCII
+        terminator: 0
     -webide-representation: '{data}'
 
   byte_data:
@@ -372,6 +587,24 @@ types:
   word_data:
     seq:
       - id: data
+        type: s2
+    -webide-representation: '{data}'
+
+  word7_data:
+    seq:
+      - id: data1
+        type: s2
+      - id: data2
+        type: s2
+      - id: data3
+        type: s2
+      - id: data4
+        type: s2
+      - id: data5
+        type: s2
+      - id: data6
+        type: s2
+      - id: data7
         type: s2
     -webide-representation: '{data}'
 
@@ -398,6 +631,187 @@ types:
       - id: jump_offset
         type: s2
     -webide-representation: '{jump_offset}'
+
+  actor_ops:
+    seq:
+      - id: subop
+        type: u1
+        enum: subop_type
+      - id: body
+        type:
+          switch-on: subop
+          cases:
+            # 'subop_type::at': no_data
+            # 'subop_type::color': no_data
+            # 'subop_type::clipped': no_data
+            # 'subop_type::center': no_data
+            # 'subop_type::left': no_data
+            # 'subop_type::overhead': no_data
+            # 'subop_type::mumble': no_data
+            # 'subop_type::textstring': no_data
+            'subop_type::set_costume': call_func_pop1
+            'subop_type::step_dist': call_func_pop2
+            # 'subop_type::sound': no_data
+            # 'subop_type::walk_animation': no_data
+            # 'subop_type::talk_animation': no_data
+            # 'subop_type::stand_animation': no_data
+            # 'subop_type::animation': no_data
+            'subop_type::init': no_data
+            # 'subop_type::elevation': no_data
+            # 'subop_type::animation_default': no_data
+            # 'subop_type::palette': no_data
+            'subop_type::talk_color': call_func_pop1
+            'subop_type::actor_name': call_func_string
+            # 'subop_type::init_animation': no_data
+            # 'subop_type::actor_width': no_data
+            # 'subop_type::scale': no_data
+            # 'subop_type::never_zclip': no_data
+            # 'subop_type::always_zclip': no_data
+            # 'subop_type::ignore_boxes': no_data
+            # 'subop_type::follow_boxes': no_data
+            # 'subop_type::animation_speed': no_data
+            # 'subop_type::shadow': no_data
+            # 'subop_type::text_offset': no_data
+            # 'subop_type::load_script': no_data
+            # 'subop_type::load_sound': no_data
+            # 'subop_type::load_costume': no_data
+            # 'subop_type::load_room': no_data
+            # 'subop_type::nuke_script': no_data
+            # 'subop_type::nuke_sound': no_data
+            # 'subop_type::nuke_costume': no_data
+            # 'subop_type::nuke_room': no_data
+            # 'subop_type::lock_script': no_data
+            # 'subop_type::lock_sound': no_data
+            # 'subop_type::lock_costume': no_data
+            # 'subop_type::lock_room': no_data
+            # 'subop_type::unlock_script': no_data
+            # 'subop_type::unlock_sound': no_data
+            # 'subop_type::unlock_costume': no_data
+            # 'subop_type::unlock_room': no_data
+            # 'subop_type::clear_heap': no_data
+            # 'subop_type::load_charset': no_data
+            # 'subop_type::nuke_charset': no_data
+            # 'subop_type::load_object': no_data
+            # 'subop_type::verb_image': no_data
+            # 'subop_type::verb_name': no_data
+            # 'subop_type::verb_color': no_data
+            # 'subop_type::verb_hicolor': no_data
+            # 'subop_type::verb_at': no_data
+            # 'subop_type::verb_on': no_data
+            # 'subop_type::verb_off': no_data
+            # 'subop_type::verb_delete': no_data
+            # 'subop_type::verb_new': no_data
+            # 'subop_type::verb_dimcolor': no_data
+            # 'subop_type::verb_dim': no_data
+            # 'subop_type::verb_key': no_data
+            # 'subop_type::verb_center': no_data
+            # 'subop_type::verb_name_str': no_data
+            # 'subop_type::verb_image_in_room': no_data
+            # 'subop_type::verb_bakcolor': no_data
+            # 'subop_type::save_verbs': no_data
+            # 'subop_type::restore_verbs': no_data
+            # 'subop_type::delete_verbs': no_data
+            # 'subop_type::cursor_on': no_data
+            # 'subop_type::cursor_off': no_data
+            # 'subop_type::userput_on': no_data
+            # 'subop_type::userput_off': no_data
+            # 'subop_type::cursor_soft_on': no_data
+            # 'subop_type::cursor_soft_off': no_data
+            # 'subop_type::userput_soft_on': no_data
+            # 'subop_type::userput_soft_off': no_data
+            # 'subop_type::cursor_image': no_data
+            # 'subop_type::cursor_hotspot': no_data
+            # 'subop_type::charset_set': no_data
+            # 'subop_type::charset_color': no_data
+            # 'subop_type::restart': no_data
+            # 'subop_type::pause': no_data
+            # 'subop_type::quit': no_data
+            # 'subop_type::wait_for_actor': no_data
+            # 'subop_type::wait_for_message': no_data
+            # 'subop_type::wait_for_camera': no_data
+            # 'subop_type::wait_for_sentence': no_data
+            # 'subop_type::room_scroll': no_data
+            # 'subop_type::room_screen': no_data
+            # 'subop_type::room_palette': no_data
+            # 'subop_type::room_shake_on': no_data
+            # 'subop_type::room_shake_off': no_data
+            # 'subop_type::room_intensity': no_data
+            # 'subop_type::room_savegame': no_data
+            # 'subop_type::room_fade': no_data
+            # 'subop_type::rgb_room_intensity': no_data
+            # 'subop_type::room_shadow': no_data
+            # 'subop_type::save_string': no_data
+            # 'subop_type::load_string': no_data
+            # 'subop_type::room_transform': no_data
+            # 'subop_type::cycle_speed': no_data
+            # 'subop_type::verb_init': no_data
+            'subop_type::set_current_actor': call_func_pop1 # SPECIAL CASE! Sets current actor!
+            # 'subop_type::actor_variable': no_data
+            # 'subop_type::int_array': no_data
+            # 'subop_type::bit_array': no_data
+            # 'subop_type::nibble_array': no_data
+            # 'subop_type::byte_array': no_data
+            # 'subop_type::string_array': no_data
+            # 'subop_type::undim_array': no_data
+            # 'subop_type::assign_string': no_data
+            # 'subop_type::assign_int_list': no_data
+            # 'subop_type::assign_2dim_list': no_data
+            # 'subop_type::room_new_palette': no_data
+            # 'subop_type::cursor_transparent': no_data
+            # 'subop_type::actor_ignore_turns_on': no_data
+            # 'subop_type::actor_ignore_turns_off': no_data
+            # 'subop_type::neww': no_data
+            # 'subop_type::always_zclip_ft_demo': no_data
+            # 'subop_type::wait_for_animation': no_data
+            # 'subop_type::actor_depth': no_data
+            # 'subop_type::actor_walk_script': no_data
+            # 'subop_type::actor_stop': no_data
+            # 'subop_type::actor_face': no_data
+            # 'subop_type::actor_turn': no_data
+            # 'subop_type::wait_for_turn': no_data
+            # 'subop_type::actor_walk_pause': no_data
+            # 'subop_type::actor_walk_resume': no_data
+            # 'subop_type::actor_talk_script': no_data
+            # 'subop_type::baseop': no_data
+            # 'subop_type::endd': no_data
+            _: unknown_op
+    -webide-representation: '{subop}'
+
+  wait:
+    seq:
+      - id: subop
+        type: u1
+        enum: subop_type
+      - id: body
+        type:
+          switch-on: subop
+          cases:
+            # 'subop_type::wait_for_actor': no_data
+            'subop_type::wait_for_message': no_data
+            # 'subop_type::wait_for_camera': no_data
+            # 'subop_type::wait_for_sentence': no_data
+            # 'subop_type::wait_for_animation': no_data
+            # 'subop_type::wait_for_turn': no_data
+            _: unknown_op
+    -webide-representation: '{subop}'
+
+  print:
+    seq:
+      - id: subop
+        type: u1
+        enum: subop_type
+      - id: body
+        type:
+          switch-on: subop
+          cases:
+            'subop_type::baseop': no_data
+            'subop_type::textstring': talk_actor
+            # 'subop_type::wait_for_camera': no_data
+            # 'subop_type::wait_for_sentence': no_data
+            # 'subop_type::wait_for_animation': no_data
+            # 'subop_type::wait_for_turn': no_data
+            _: unknown_op
+    -webide-representation: '{subop}'
 
   unknown_op:
     seq:
