@@ -32,6 +32,7 @@ last_bv = None
 def set_last_bv(bv):
     global last_bv
     last_bv = bv
+    print('set_last_bv', bv)
 
 class SortedList:
     def __init__(self):
@@ -115,6 +116,7 @@ class Scumm6(Architecture):
             data2 = last_bv.read(addr, len(data))
             if data == data2:
                 return (last_bv, last_bv.file.filename)
+        print('last_bv not set, view not initialized?')
         return (None, None)
 
     def prev_instruction(self, data: bytes, addr: int):
@@ -188,6 +190,29 @@ class Scumm6(Architecture):
             offs = il.mult(4, il.const(4, 4), il.const(4, var_index))
             return il.add(4, start, offs)
 
+        def add_intrinsic(block):
+            pop_count = getattr(block, 'pop_count', 0)
+            pop_list = getattr(block, 'pop_list', False)
+
+            args = []
+            args += [il.pop(4) for _ in range(pop_count)]
+            if pop_list:
+                # binja doesn't support popping dynamic num of args from stack,
+                # so try to figure out how many do we need to pop.
+                dis2 = self.prev_instruction(data, addr)
+                if not dis2:
+                    raise Exception(f'no op_prev for {dis[1]} at {hex(addr)}')
+                op_prev = dis2[0]
+                if op_prev.id not in [OpType.push_byte, OpType.push_word]:
+                    raise Exception(f'unsupported op_prev {dis2[1]} at {hex(addr)}')
+
+                # num_regs need to be popped separately
+                il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
+                args += [il.pop(4) for _ in range(op_prev.body.data + 0)]
+
+            il.append(il.intrinsic([], op.id.name, args))
+
+
         implemented = True
         op = dis[0]
         body = getattr(op, 'body', None)
@@ -247,19 +272,9 @@ class Scumm6(Architecture):
         elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
             il.append(il.no_ret())
         elif not getattr(body, 'call_func', True):
-            # binja doesn't support popping dynamic num of args from stack,
-            # so try to figure out how many do we need to pop.
-            dis2 = self.prev_instruction(data, addr)
-            if not dis2:
-                raise Exception(f'no op_prev for {dis[1]} at {hex(addr)}')
-            op_prev = dis2[0]
-            if op_prev.id not in [OpType.push_byte, OpType.push_word]:
-                raise Exception(f'unsupported op_prev {dis2[1]} at {hex(addr)}')
-
-            # num_regs need to be popped separately
-            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
-            il.append(il.intrinsic([], op.id.name, [il.pop(4) for _ in
-                                                    range(op_prev.body.data + 0)]))
+            add_intrinsic(body)
+        # elif not getattr(body, 'subop', True):
+        #     add_intrinsic(body.body)
         elif op.id in [OpType.break_here]:
             il.append(il.intrinsic([], op.id.name, []))
         else:
@@ -269,7 +284,7 @@ class Scumm6(Architecture):
         if implemented:
             view, filename = self.get_view(data, addr)
             if not view:
-                raise Exception("No view for data")
+                raise Exception(f"No view for data at {hex(addr)}")
             self.op_addrs[filename].insert_sorted(addr)
             # print(self.op_addrs[filename]._list)
 

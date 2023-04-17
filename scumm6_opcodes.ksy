@@ -544,30 +544,57 @@ types:
     seq:
       - id: call_func
         size: 0
+    instances:
+        pop_list:
+          value: true
     -webide-representation: '{data}'
 
   call_func_list_pop1:
     seq:
       - id: call_func
         size: 0
+    instances:
+        pop_count:
+          value: 1
+        pop_list:
+          value: true
+    -webide-representation: '{data}'
+
+  # for functions without params
+  call_func_pop0:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 0
     -webide-representation: '{data}'
 
   call_func_pop1:
     seq:
       - id: call_func
         size: 0
+    instances:
+        pop_count:
+          value: 1
     -webide-representation: '{data}'
 
   call_func_pop2:
     seq:
       - id: call_func
         size: 0
+    instances:
+        pop_count:
+          value: 2
     -webide-representation: '{data}'
 
   call_func_pop4:
     seq:
       - id: call_func
         size: 0
+    instances:
+        pop_count:
+          value: 4
     -webide-representation: '{data}'
 
   call_func_string:
@@ -656,7 +683,7 @@ types:
             # 'subop_type::talk_animation': no_data
             # 'subop_type::stand_animation': no_data
             # 'subop_type::animation': no_data
-            'subop_type::init': no_data
+            'subop_type::init': call_func_pop0
             # 'subop_type::elevation': no_data
             # 'subop_type::animation_default': no_data
             # 'subop_type::palette': no_data
@@ -787,7 +814,7 @@ types:
           switch-on: subop
           cases:
             # 'subop_type::wait_for_actor': no_data
-            'subop_type::wait_for_message': no_data
+            'subop_type::wait_for_message': call_func_pop0
             # 'subop_type::wait_for_camera': no_data
             # 'subop_type::wait_for_sentence': no_data
             # 'subop_type::wait_for_animation': no_data

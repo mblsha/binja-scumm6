@@ -331,6 +331,14 @@ class Scumm6Opcodes(KaitaiStruct):
         def _read(self):
             self.call_func = self._io.read_bytes(0)
 
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 2
+            return getattr(self, '_m_pop_count', None)
+
 
     class CallFuncListPop1(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
@@ -341,6 +349,22 @@ class Scumm6Opcodes(KaitaiStruct):
 
         def _read(self):
             self.call_func = self._io.read_bytes(0)
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 1
+            return getattr(self, '_m_pop_count', None)
+
+        @property
+        def pop_list(self):
+            if hasattr(self, '_m_pop_list'):
+                return self._m_pop_list
+
+            self._m_pop_list = True
+            return getattr(self, '_m_pop_list', None)
 
 
     class Wait(KaitaiStruct):
@@ -354,7 +378,7 @@ class Scumm6Opcodes(KaitaiStruct):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.wait_for_message:
-                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             else:
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
@@ -369,6 +393,14 @@ class Scumm6Opcodes(KaitaiStruct):
         def _read(self):
             self.call_func = self._io.read_bytes(0)
 
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 1
+            return getattr(self, '_m_pop_count', None)
+
 
     class CallFuncList(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
@@ -379,6 +411,14 @@ class Scumm6Opcodes(KaitaiStruct):
 
         def _read(self):
             self.call_func = self._io.read_bytes(0)
+
+        @property
+        def pop_list(self):
+            if hasattr(self, '_m_pop_list'):
+                return self._m_pop_list
+
+            self._m_pop_list = True
+            return getattr(self, '_m_pop_list', None)
 
 
     class Print(KaitaiStruct):
@@ -421,6 +461,25 @@ class Scumm6Opcodes(KaitaiStruct):
             self.data = self._io.read_s2le()
 
 
+    class CallFuncPop0(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 0
+            return getattr(self, '_m_pop_count', None)
+
+
     class JumpData(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -443,7 +502,7 @@ class Scumm6Opcodes(KaitaiStruct):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.init:
-                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.set_costume:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.set_current_actor:
@@ -581,6 +640,14 @@ class Scumm6Opcodes(KaitaiStruct):
 
         def _read(self):
             self.call_func = self._io.read_bytes(0)
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 4
+            return getattr(self, '_m_pop_count', None)
 
 
     class WordVarData(KaitaiStruct):
