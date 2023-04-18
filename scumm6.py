@@ -178,9 +178,12 @@ class Scumm6(Architecture):
             r += [InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, ")")]
             return r
 
-        tokens = [InstructionTextToken(InstructionTextTokenType.TextToken, dis[1])]
+        intrinsic_name = dis[1]
         op = dis[0]
         body = getattr(op, 'body', None)
+        if body and getattr(body, 'subop', None):
+            intrinsic_name += f'.{body.subop.name}'
+        tokens = [InstructionTextToken(InstructionTextTokenType.TextToken, intrinsic_name)]
         if body:
             tokens += tokenize_params(*[getattr(body, x) for x in dir(body) if isinstance(getattr(body, x), int)])
 
