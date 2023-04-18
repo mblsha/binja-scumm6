@@ -178,14 +178,19 @@ class Scumm6(Architecture):
             r += [InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, ")")]
             return r
 
-        intrinsic_name = dis[1]
         op = dis[0]
         body = getattr(op, 'body', None)
-        if body and getattr(body, 'subop', None):
+
+        intrinsic_name = dis[1]
+        subop = getattr(body, 'subop', None)
+        if body and subop:
             intrinsic_name += f'.{body.subop.name}'
         tokens = [InstructionTextToken(InstructionTextTokenType.TextToken, intrinsic_name)]
+
         if body:
-            tokens += tokenize_params(*[getattr(body, x) for x in dir(body) if isinstance(getattr(body, x), int)])
+            args  = [getattr(body, x)  for x in dir(body)  if isinstance(getattr(body, x), int)]
+            args += [getattr(subop, x) for x in dir(subop) if isinstance(getattr(subop, x), int)]
+            tokens += tokenize_params(*args)
 
         return tokens, dis[2]
 
@@ -281,6 +286,7 @@ class Scumm6(Architecture):
         elif op.id in [OpType.jump]:
             il.append(il.jump(il.const(4, addr+dis[2]+body.jump_offset)))
         elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
+            add_intrinsic(op.id.name, body)
             il.append(il.no_ret())
         elif not getattr(body, 'call_func', True):
             add_intrinsic(op.id.name, body)
