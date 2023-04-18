@@ -47,6 +47,9 @@ class Scumm6Disasm:
             return r.op, op_i, ks.pos()
         except EOFError:
             return None
+        except UnicodeDecodeError:
+            print("UnicodeDecodeError at", hex(addr))
+            raise
         except Exception as e:
             if "end of stream reached, but no terminator 0 found" in str(e):
                 return None

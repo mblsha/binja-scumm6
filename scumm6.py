@@ -27,6 +27,7 @@ from binaryninjaui import UIContext
 from .disasm import Scumm6Disasm
 from .scumm6_opcodes import Scumm6Opcodes
 OpType = Scumm6Opcodes.OpType
+SubopType = Scumm6Opcodes.SubopType
 
 last_bv = None
 def set_last_bv(bv):
@@ -91,7 +92,14 @@ class Scumm6(Architecture):
 
     intrinsics = {
         op.name:IntrinsicInfo(inputs=[], outputs=[]) for op in OpType
+    } | {
+        f'actor_ops.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
+    } | {
+        f'wait.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
+    } | {
+        f'print_debug.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
     }
+
 
     op_addrs = defaultdict(SortedList)
 
@@ -190,7 +198,7 @@ class Scumm6(Architecture):
             offs = il.mult(4, il.const(4, 4), il.const(4, var_index))
             return il.add(4, start, offs)
 
-        def add_intrinsic(block):
+        def add_intrinsic(name, block):
             pop_count = getattr(block, 'pop_count', 0)
             pop_list = getattr(block, 'pop_list', False)
 
@@ -210,7 +218,7 @@ class Scumm6(Architecture):
                 il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
                 args += [il.pop(4) for _ in range(op_prev.body.data + 0)]
 
-            il.append(il.intrinsic([], op.id.name, args))
+            il.append(il.intrinsic([], name, args))
 
 
         implemented = True
@@ -272,12 +280,13 @@ class Scumm6(Architecture):
         elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
             il.append(il.no_ret())
         elif not getattr(body, 'call_func', True):
-            add_intrinsic(body)
-        # elif not getattr(body, 'subop', True):
-        #     add_intrinsic(body.body)
+            add_intrinsic(op.id.name, body)
+        elif getattr(body, 'subop', None):
+            add_intrinsic(f'{op.id.name}.{body.subop.name}', body.body)
         elif op.id in [OpType.break_here]:
             il.append(il.intrinsic([], op.id.name, []))
         else:
+            print(f'not implemented {dis[1]} at {hex(addr)}: {getattr(body, "subop", None)}')
             implemented = False
             il.append(il.unimplemented())
 
