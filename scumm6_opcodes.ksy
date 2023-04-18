@@ -512,7 +512,7 @@ types:
             type: u1
           - id: data
             type: str
-            encoding: ASCII
+            encoding: ISO-8859-1
             terminator: 0
             if: magic != 0xff
           - id: cmd

@@ -577,7 +577,7 @@ class Scumm6Opcodes(KaitaiStruct):
             def _read(self):
                 self.magic = self._io.read_u1()
                 if self.magic != 255:
-                    self.data = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
+                    self.data = (self._io.read_bytes_term(0, False, True, True)).decode(u"ISO-8859-1")
 
                 if self.magic == 255:
                     self.cmd = KaitaiStream.resolve_enum(Scumm6Opcodes.TalkActor.TalkType, self._io.read_u1())
