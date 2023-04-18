@@ -293,6 +293,11 @@ class Scumm6(Architecture):
             implemented = False
             il.append(il.unimplemented())
 
+        if body and type(body) == Scumm6Opcodes.UnknownOp:
+            print(f'unknown_op {dis[1]} at {hex(addr)}: {getattr(body, "subop", None)}')
+            implemented = False
+            il.append(il.unimplemented())
+
         if implemented:
             view, filename = self.get_view(data, addr)
             if not view:
