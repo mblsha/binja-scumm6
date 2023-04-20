@@ -775,11 +775,15 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.Wait(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.gt:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.nott:
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.talk_actor:
                 self.body = Scumm6Opcodes.TalkActor(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_byte_var:
                 self.body = Scumm6Opcodes.ByteData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.add:
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.dup:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.start_script_quick:
                 self.body = Scumm6Opcodes.StartScriptQuick(self._io, self, self._root)

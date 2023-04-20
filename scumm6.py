@@ -294,6 +294,14 @@ class Scumm6(Architecture):
                               subopt[op.id](4,
                                             il.reg(4, LLIL_TEMP(1)),
                                             il.reg(4, LLIL_TEMP(0)))))
+        elif op.id in [OpType.dup]:
+            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
+            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        elif op.id in [OpType.nott]:
+            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
+            comp = il.compare_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0))
+            il.append(il.push(4, comp))
         elif op.id in [OpType.iff, OpType.if_not]:
             comp = {
                 OpType.iff: il.compare_not_equal,

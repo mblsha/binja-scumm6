@@ -331,8 +331,8 @@ types:
             'op_type::word_array_read': word_data
             # 'op_type::byte_array_indexed_read': no_data
             # 'op_type::word_array_indexed_read': no_data
-            # 'op_type::dup': no_data
-            # 'op_type::nott': no_data
+            'op_type::dup': no_data
+            'op_type::nott': no_data
             'op_type::eq': no_data
             'op_type::neq': no_data
             'op_type::gt': no_data
