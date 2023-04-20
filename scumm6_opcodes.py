@@ -854,6 +854,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_sentence:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.end_cutscene:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.draw_object:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.animate_actor:
@@ -886,6 +888,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.talk_actor:
                 self.body = Scumm6Opcodes.TalkActor(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.cutscene:
+                self.body = Scumm6Opcodes.CallFuncList(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_byte_var:
                 self.body = Scumm6Opcodes.ByteData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.add:

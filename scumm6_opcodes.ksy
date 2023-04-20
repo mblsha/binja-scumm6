@@ -371,8 +371,8 @@ types:
             # 'op_type::set_blast_object_window': no_data
             'op_type::stop_object_code1': no_data
             'op_type::stop_object_code2': no_data
-            # 'op_type::end_cutscene': no_data
-            # 'op_type::cutscene': no_data
+            'op_type::end_cutscene': call_func_pop0
+            'op_type::cutscene': call_func_list
             # 'op_type::stop_music': no_data
             # 'op_type::freeze_unfreeze': no_data
             'op_type::cursor_command': cursor_command
