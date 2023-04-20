@@ -319,7 +319,13 @@ class Scumm6(Architecture):
         elif not getattr(body, 'call_func', True):
             add_intrinsic(op.id.name, body)
         elif getattr(body, 'subop', None):
-            add_intrinsic(f'{op.id.name}.{body.subop.name}', body.body)
+            subop = body.subop
+            if type(subop) == Scumm6Opcodes.UnknownOp:
+                print(f'unknown_op {dis[1]} at {hex(addr)}: {getattr(body, "subop", None)}')
+                implemented = False
+                il.append(il.unimplemented())
+            else:
+                add_intrinsic(f'{op.id.name}.{body.subop.name}', body.body)
         elif op.id in [OpType.break_here]:
             il.append(il.intrinsic([], op.id.name, []))
         else:
