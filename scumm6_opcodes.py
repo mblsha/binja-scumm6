@@ -676,6 +676,22 @@ class Scumm6Opcodes(KaitaiStruct):
             self.type = KaitaiStream.resolve_enum(Scumm6Opcodes.VarType, self._io.read_bits_int_le(4))
 
 
+    class RoomOps(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
+            _on = self.subop
+            if _on == Scumm6Opcodes.SubopType.room_screen:
+                self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
+            else:
+                self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
+
+
     class StartScriptQuick(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -797,6 +813,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.ByteData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.delay:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.room_ops:
+                self.body = Scumm6Opcodes.RoomOps(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_byte:
                 self.body = Scumm6Opcodes.ByteData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.put_actor_at_xy:

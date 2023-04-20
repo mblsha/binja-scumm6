@@ -422,7 +422,7 @@ types:
             # 'op_type::set_box_flags': no_data
             # 'op_type::create_box_matrix': no_data
             # 'op_type::resource_routines': no_data
-            # 'op_type::room_ops': no_data
+            'op_type::room_ops': room_ops
             'op_type::actor_ops': actor_ops
             # 'op_type::verb_ops': no_data
             # 'op_type::get_actor_from_xy': no_data
@@ -685,6 +685,30 @@ types:
         type: s2
     -webide-representation: '{jump_offset}'
 
+  room_ops:
+    seq:
+      - id: subop
+        type: u1
+        enum: subop_type
+      - id: body
+        type:
+          switch-on: subop
+          cases:
+            # 'subop_type::room_scroll': no_data
+            'subop_type::room_screen': call_func_pop2
+            # 'subop_type::room_palette': no_data
+            # 'subop_type::room_shake_on': no_data
+            # 'subop_type::room_shake_off': no_data
+            # 'subop_type::room_intensity': no_data
+            # 'subop_type::room_savegame': no_data
+            # 'subop_type::room_fade': no_data
+            # 'subop_type::rgb_room_intensity': no_data
+            # 'subop_type::room_shadow': no_data
+            # 'subop_type::room_transform': no_data
+            # 'subop_type::room_new_palette': no_data
+            _: unknown_op
+    -webide-representation: '{subop}'
+
   actor_ops:
     seq:
       - id: subop
@@ -783,19 +807,8 @@ types:
             # 'subop_type::wait_for_message': no_data
             # 'subop_type::wait_for_camera': no_data
             # 'subop_type::wait_for_sentence': no_data
-            # 'subop_type::room_scroll': no_data
-            # 'subop_type::room_screen': no_data
-            # 'subop_type::room_palette': no_data
-            # 'subop_type::room_shake_on': no_data
-            # 'subop_type::room_shake_off': no_data
-            # 'subop_type::room_intensity': no_data
-            # 'subop_type::room_savegame': no_data
-            # 'subop_type::room_fade': no_data
-            # 'subop_type::rgb_room_intensity': no_data
-            # 'subop_type::room_shadow': no_data
             # 'subop_type::save_string': no_data
             # 'subop_type::load_string': no_data
-            # 'subop_type::room_transform': no_data
             # 'subop_type::cycle_speed': no_data
             # 'subop_type::verb_init': no_data
             'subop_type::set_current_actor': call_func_pop1 # SPECIAL CASE! Sets current actor!
@@ -809,7 +822,6 @@ types:
             # 'subop_type::assign_string': no_data
             # 'subop_type::assign_int_list': no_data
             # 'subop_type::assign_2dim_list': no_data
-            # 'subop_type::room_new_palette': no_data
             # 'subop_type::cursor_transparent': no_data
             # 'subop_type::actor_ignore_turns_on': no_data
             # 'subop_type::actor_ignore_turns_off': no_data
