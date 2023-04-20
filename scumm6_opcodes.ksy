@@ -365,7 +365,7 @@ types:
             'op_type::start_script': start_script
             'op_type::start_script_quick': start_script_quick
             # 'op_type::start_object': no_data
-            # 'op_type::draw_object': no_data
+            'op_type::draw_object': call_func_pop2
             # 'op_type::draw_object_at': no_data
             # 'op_type::draw_blast_object': no_data
             # 'op_type::set_blast_object_window': no_data
@@ -389,8 +389,8 @@ types:
             # 'op_type::start_music': no_data
             # 'op_type::stop_object_script': no_data
             # 'op_type::pan_camera_to': no_data
-            # 'op_type::actor_follow_camera': no_data
-            # 'op_type::set_camera_at': no_data
+            'op_type::actor_follow_camera': call_func_pop1
+            'op_type::set_camera_at': call_func_pop1
             # 'op_type::load_room': no_data
             'op_type::stop_script': call_func_pop1
             # 'op_type::walk_actor_to_obj': no_data
@@ -402,7 +402,7 @@ types:
             # 'op_type::do_sentence': no_data
             # 'op_type::pickup_object': no_data
             # 'op_type::load_room_with_ego': no_data
-            # 'op_type::get_random_number': no_data
+            'op_type::get_random_number': call_func_pop1_push
             # 'op_type::get_random_number_range': no_data
             # 'op_type::get_actor_moving': no_data
             'op_type::is_script_running': call_func_pop1_push
@@ -446,12 +446,12 @@ types:
             # 'op_type::delay_seconds': no_data
             # 'op_type::delay_minutes': no_data
             # 'op_type::stop_sentence': no_data
-            # 'op_type::print_line': no_data
-            # 'op_type::print_text': no_data
+            'op_type::print_line': print
+            'op_type::print_text': print
             'op_type::print_debug': print
-            # 'op_type::print_system': no_data
-            # 'op_type::print_actor': no_data
-            # 'op_type::print_ego': no_data
+            'op_type::print_system': print
+            'op_type::print_actor': print
+            'op_type::print_ego': print
 
             # _actorToPrintStrFor = pop1()
             # then interpreter?
@@ -708,7 +708,7 @@ types:
             # 'subop_type::load_charset': no_data
             # 'subop_type::nuke_charset': no_data
             'subop_type::charset_set': call_func_pop1
-            # 'subop_type::charset_color': no_data
+            'subop_type::charset_color': call_func_list
             # 'subop_type::cursor_on': no_data
             # 'subop_type::cursor_off': no_data
             # 'subop_type::cursor_soft_on': no_data
@@ -765,7 +765,7 @@ types:
             # 'subop_type::sound': no_data
             # 'subop_type::walk_animation': no_data
             'subop_type::talk_animation': call_func_pop2
-            # 'subop_type::stand_animation': no_data
+            'subop_type::stand_animation': call_func_pop1
             # 'subop_type::animation': no_data
             'subop_type::init': call_func_pop0
             'subop_type::elevation': call_func_pop1

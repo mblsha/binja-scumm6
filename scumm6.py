@@ -101,7 +101,17 @@ class Scumm6(Architecture):
     } | {
         f'wait.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
     } | {
+        f'print_line.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
+    } | {
+        f'print_text.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
+    } | {
         f'print_debug.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
+    } | {
+        f'print_system.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
+    } | {
+        f'print_actor.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
+    } | {
+        f'print_ego.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
     }
 
 
