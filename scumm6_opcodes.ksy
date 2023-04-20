@@ -405,7 +405,7 @@ types:
             # 'op_type::get_random_number': no_data
             # 'op_type::get_random_number_range': no_data
             # 'op_type::get_actor_moving': no_data
-            # 'op_type::is_script_running': no_data
+            'op_type::is_script_running': call_func_pop1_push
             # 'op_type::get_actor_room': no_data
             # 'op_type::get_object_x': no_data
             # 'op_type::get_object_y': no_data
@@ -583,6 +583,17 @@ types:
     instances:
         pop_count:
           value: 0
+    -webide-representation: '{data}'
+
+  call_func_pop1_push:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 1
+        push_count:
+          value: 1
     -webide-representation: '{data}'
 
   call_func_pop1:

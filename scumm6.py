@@ -217,6 +217,7 @@ class Scumm6(Architecture):
 
         def add_intrinsic(name, block):
             pop_count = getattr(block, 'pop_count', 0)
+            push_count = getattr(block, 'push_count', 0)
             pop_list = getattr(block, 'pop_list', False)
 
             args = []
@@ -235,7 +236,13 @@ class Scumm6(Architecture):
                 il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
                 args += [il.pop(4) for _ in range(op_prev.body.data + 0)]
 
-            il.append(il.intrinsic([], name, args))
+            results = []
+            if push_count:
+                assert(push_count == 1)
+                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], name, args))
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+            else:
+                il.append(il.intrinsic([], name, args))
 
 
         implemented = True
