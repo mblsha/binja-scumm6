@@ -375,7 +375,7 @@ types:
             # 'op_type::cutscene': no_data
             # 'op_type::stop_music': no_data
             # 'op_type::freeze_unfreeze': no_data
-            # 'op_type::cursor_command': no_data
+            'op_type::cursor_command': cursor_command
             'op_type::break_here': no_data
             # 'op_type::if_class_of_is': no_data
             # 'op_type::set_class': no_data
@@ -696,6 +696,29 @@ types:
         type: s2
     -webide-representation: '{jump_offset}'
 
+  cursor_command:
+    seq:
+      - id: subop
+        type: u1
+        enum: subop_type
+      - id: body
+        type:
+          switch-on: subop
+          cases:
+            # 'subop_type::load_charset': no_data
+            # 'subop_type::nuke_charset': no_data
+            'subop_type::charset_set': call_func_pop1
+            # 'subop_type::charset_color': no_data
+            # 'subop_type::cursor_on': no_data
+            # 'subop_type::cursor_off': no_data
+            # 'subop_type::cursor_soft_on': no_data
+            # 'subop_type::cursor_soft_off': no_data
+            # 'subop_type::cursor_image': no_data
+            # 'subop_type::cursor_hotspot': no_data
+            # 'subop_type::cursor_transparent': no_data
+            _: unknown_op
+    -webide-representation: '{subop}'
+
   room_ops:
     seq:
       - id: subop
@@ -741,7 +764,7 @@ types:
             'subop_type::step_dist': call_func_pop2
             # 'subop_type::sound': no_data
             # 'subop_type::walk_animation': no_data
-            # 'subop_type::talk_animation': no_data
+            'subop_type::talk_animation': call_func_pop2
             # 'subop_type::stand_animation': no_data
             # 'subop_type::animation': no_data
             'subop_type::init': call_func_pop0
@@ -777,8 +800,6 @@ types:
             # 'subop_type::unlock_costume': no_data
             # 'subop_type::unlock_room': no_data
             # 'subop_type::clear_heap': no_data
-            # 'subop_type::load_charset': no_data
-            # 'subop_type::nuke_charset': no_data
             # 'subop_type::load_object': no_data
             # 'subop_type::verb_image': no_data
             # 'subop_type::verb_name': no_data
@@ -799,18 +820,10 @@ types:
             # 'subop_type::save_verbs': no_data
             # 'subop_type::restore_verbs': no_data
             # 'subop_type::delete_verbs': no_data
-            # 'subop_type::cursor_on': no_data
-            # 'subop_type::cursor_off': no_data
             # 'subop_type::userput_on': no_data
             # 'subop_type::userput_off': no_data
-            # 'subop_type::cursor_soft_on': no_data
-            # 'subop_type::cursor_soft_off': no_data
             # 'subop_type::userput_soft_on': no_data
             # 'subop_type::userput_soft_off': no_data
-            # 'subop_type::cursor_image': no_data
-            # 'subop_type::cursor_hotspot': no_data
-            # 'subop_type::charset_set': no_data
-            # 'subop_type::charset_color': no_data
             # 'subop_type::restart': no_data
             # 'subop_type::pause': no_data
             # 'subop_type::quit': no_data
@@ -833,7 +846,6 @@ types:
             # 'subop_type::assign_string': no_data
             # 'subop_type::assign_int_list': no_data
             # 'subop_type::assign_2dim_list': no_data
-            # 'subop_type::cursor_transparent': no_data
             # 'subop_type::actor_ignore_turns_on': no_data
             # 'subop_type::actor_ignore_turns_off': no_data
             # 'subop_type::neww': no_data
