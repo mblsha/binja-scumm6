@@ -187,7 +187,16 @@ class Scumm6(Architecture):
             intrinsic_name += f'.{body.subop.name}'
         tokens = [InstructionTextToken(InstructionTextTokenType.TextToken, intrinsic_name)]
 
-        if body:
+        if op.id == OpType.talk_actor:
+            args = []
+            for tcmd in body.cmds:
+                if getattr(tcmd, 'data', None):
+                    args.append(chr(tcmd.magic) + tcmd.data)
+                else:
+                    args.append(tcmd.cmd.name)
+            tokens += tokenize_params(*args)
+
+        elif body:
             args  = [getattr(body, x)  for x in dir(body)  if isinstance(getattr(body, x), int)]
             args += [getattr(subop, x) for x in dir(subop) if isinstance(getattr(subop, x), int)]
             tokens += tokenize_params(*args)
