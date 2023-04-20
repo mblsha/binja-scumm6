@@ -345,7 +345,7 @@ types:
             'op_type::div': no_data
             # 'op_type::land': no_data
             # 'op_type::lor': no_data
-            # 'op_type::pop1': no_data
+            'op_type::pop1': call_func_pop1
             # 'op_type::write_byte_var': no_data
             'op_type::write_word_var': word_var_data
             # 'op_type::byte_array_write': no_data
@@ -424,7 +424,7 @@ types:
             # 'op_type::resource_routines': no_data
             'op_type::room_ops': room_ops
             'op_type::actor_ops': actor_ops
-            # 'op_type::verb_ops': no_data
+            'op_type::verb_ops': verb_ops
             # 'op_type::get_actor_from_xy': no_data
             # 'op_type::find_object': no_data
             # 'op_type::pseudo_room': no_data
@@ -433,7 +433,7 @@ types:
             # 'op_type::array_ops': no_data
             # 'op_type::save_restore_verbs': no_data
             # 'op_type::draw_box': no_data
-            # 'op_type::pop2': no_data
+            'op_type::pop2': call_func_pop1
             # 'op_type::get_actor_width': no_data
             'op_type::wait': wait
             # 'op_type::get_actor_scale_x': no_data
@@ -443,9 +443,9 @@ types:
             # 'op_type::system_ops': no_data
             'op_type::is_actor_in_box': call_func_pop2_push
             'op_type::delay': call_func_pop1
-            # 'op_type::delay_seconds': no_data
-            # 'op_type::delay_minutes': no_data
-            # 'op_type::stop_sentence': no_data
+            'op_type::delay_seconds': call_func_pop1
+            'op_type::delay_minutes': call_func_pop1
+            'op_type::stop_sentence': call_func_pop0
             'op_type::print_line': print
             'op_type::print_text': print
             'op_type::print_debug': print
@@ -696,6 +696,35 @@ types:
         type: s2
     -webide-representation: '{jump_offset}'
 
+  verb_ops:
+    seq:
+      - id: subop
+        type: u1
+        enum: subop_type
+      - id: body
+        type:
+          switch-on: subop
+          cases:
+            'subop_type::verb_init': call_func_pop1
+            # 'subop_type::verb_image': no_data
+            # 'subop_type::verb_name': no_data
+            # 'subop_type::verb_color': no_data
+            # 'subop_type::verb_hicolor': no_data
+            # 'subop_type::verb_at': no_data
+            # 'subop_type::verb_on': no_data
+            # 'subop_type::verb_off': no_data
+            # 'subop_type::verb_delete': no_data
+            # 'subop_type::verb_new': no_data
+            # 'subop_type::verb_dimcolor': no_data
+            # 'subop_type::verb_dim': no_data
+            # 'subop_type::verb_key': no_data
+            # 'subop_type::verb_center': no_data
+            # 'subop_type::verb_name_str': no_data
+            # 'subop_type::verb_image_in_room': no_data
+            # 'subop_type::verb_bakcolor': no_data
+            _: unknown_op
+    -webide-representation: '{subop}'
+
   cursor_command:
     seq:
       - id: subop
@@ -763,14 +792,14 @@ types:
             'subop_type::set_costume': call_func_pop1
             'subop_type::step_dist': call_func_pop2
             # 'subop_type::sound': no_data
-            # 'subop_type::walk_animation': no_data
+            'subop_type::walk_animation': call_func_pop1
             'subop_type::talk_animation': call_func_pop2
             'subop_type::stand_animation': call_func_pop1
             # 'subop_type::animation': no_data
             'subop_type::init': call_func_pop0
             'subop_type::elevation': call_func_pop1
             # 'subop_type::animation_default': no_data
-            # 'subop_type::palette': no_data
+            'subop_type::palette': call_func_pop2
             'subop_type::talk_color': call_func_pop1
             'subop_type::actor_name': call_func_string
             # 'subop_type::init_animation': no_data
@@ -801,22 +830,6 @@ types:
             # 'subop_type::unlock_room': no_data
             # 'subop_type::clear_heap': no_data
             # 'subop_type::load_object': no_data
-            # 'subop_type::verb_image': no_data
-            # 'subop_type::verb_name': no_data
-            # 'subop_type::verb_color': no_data
-            # 'subop_type::verb_hicolor': no_data
-            # 'subop_type::verb_at': no_data
-            # 'subop_type::verb_on': no_data
-            # 'subop_type::verb_off': no_data
-            # 'subop_type::verb_delete': no_data
-            # 'subop_type::verb_new': no_data
-            # 'subop_type::verb_dimcolor': no_data
-            # 'subop_type::verb_dim': no_data
-            # 'subop_type::verb_key': no_data
-            # 'subop_type::verb_center': no_data
-            # 'subop_type::verb_name_str': no_data
-            # 'subop_type::verb_image_in_room': no_data
-            # 'subop_type::verb_bakcolor': no_data
             # 'subop_type::save_verbs': no_data
             # 'subop_type::restore_verbs': no_data
             # 'subop_type::delete_verbs': no_data
@@ -834,7 +847,6 @@ types:
             # 'subop_type::save_string': no_data
             # 'subop_type::load_string': no_data
             # 'subop_type::cycle_speed': no_data
-            # 'subop_type::verb_init': no_data
             'subop_type::set_current_actor': call_func_pop1 # SPECIAL CASE! Sets current actor!
             # 'subop_type::actor_variable': no_data
             # 'subop_type::int_array': no_data

@@ -99,6 +99,8 @@ class Scumm6(Architecture):
     } | {
         f'actor_ops.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
     } | {
+        f'verb_ops.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
+    } | {
         f'wait.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
     } | {
         f'print_line.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
