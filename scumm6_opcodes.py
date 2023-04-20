@@ -726,7 +726,9 @@ class Scumm6Opcodes(KaitaiStruct):
         def _read(self):
             self.id = KaitaiStream.resolve_enum(Scumm6Opcodes.OpType, self._io.read_u1())
             _on = self.id
-            if _on == Scumm6Opcodes.OpType.animate_actor:
+            if _on == Scumm6Opcodes.OpType.stop_script:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.animate_actor:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_word:
                 self.body = Scumm6Opcodes.WordData(self._io, self, self._root)

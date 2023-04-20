@@ -392,7 +392,7 @@ types:
             # 'op_type::actor_follow_camera': no_data
             # 'op_type::set_camera_at': no_data
             # 'op_type::load_room': no_data
-            # 'op_type::stop_script': no_data
+            'op_type::stop_script': call_func_pop1
             # 'op_type::walk_actor_to_obj': no_data
             # 'op_type::walk_actor_to': no_data
             'op_type::put_actor_at_xy': call_func_pop4

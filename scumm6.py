@@ -306,6 +306,16 @@ class Scumm6(Architecture):
         elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
             add_intrinsic(op.id.name, body)
             il.append(il.no_ret())
+        elif op.id == OpType.stop_script:
+            add_intrinsic(op.id.name, body)
+            dis2 = self.prev_instruction(data, addr)
+            op_prev = dis2[0]
+            if op_prev.id not in [OpType.push_byte, OpType.push_word]:
+                raise Exception(f'unsupported op_prev {dis2[1]} at {hex(addr)}')
+                args += [il.pop(4) for _ in range(op_prev.body.data + 0)]
+            if op_prev.body.data == 0:
+                # stopObjectCode
+                il.append(il.no_ret())
         elif not getattr(body, 'call_func', True):
             add_intrinsic(op.id.name, body)
         elif getattr(body, 'subop', None):
