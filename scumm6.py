@@ -253,9 +253,11 @@ class Scumm6(Architecture):
                                   il.sub(4,
                                          il.load(4, il.reg(4, LLIL_TEMP(0))),
                                          il.const(4, 1))))
-
-        elif op.id in [OpType.gt, OpType.lt, OpType.le, OpType.ge]:
+        elif op.id in [OpType.eq, OpType.neq,
+                       OpType.gt, OpType.lt, OpType.le, OpType.ge]:
             comp = {
+                OpType.eq: il.compare_equal,
+                OpType.neq: il.compare_not_equal,
                 OpType.gt: il.compare_signed_greater_than,
                 OpType.lt: il.compare_signed_less_than,
                 OpType.le: il.compare_signed_less_equal,
