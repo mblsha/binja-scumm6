@@ -441,7 +441,7 @@ types:
             'op_type::sound_kludge': call_func_list
             # 'op_type::is_any_of': no_data
             # 'op_type::system_ops': no_data
-            # 'op_type::is_actor_in_box': no_data
+            'op_type::is_actor_in_box': call_func_pop2_push
             'op_type::delay': call_func_pop1
             # 'op_type::delay_seconds': no_data
             # 'op_type::delay_minutes': no_data
@@ -592,6 +592,17 @@ types:
     instances:
         pop_count:
           value: 1
+        push_count:
+          value: 1
+    -webide-representation: '{data}'
+
+  call_func_pop2_push:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 2
         push_count:
           value: 1
     -webide-representation: '{data}'
@@ -748,7 +759,7 @@ types:
             # 'subop_type::follow_boxes': no_data
             # 'subop_type::animation_speed': no_data
             # 'subop_type::shadow': no_data
-            # 'subop_type::text_offset': no_data
+            'subop_type::text_offset': call_func_pop2
             # 'subop_type::load_script': no_data
             # 'subop_type::load_sound': no_data
             # 'subop_type::load_costume': no_data

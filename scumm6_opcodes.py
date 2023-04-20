@@ -321,6 +321,33 @@ class Scumm6Opcodes(KaitaiStruct):
     def _read(self):
         self.op = Scumm6Opcodes.Op(self._io, self, self._root)
 
+    class CallFuncPop2Push(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 2
+            return getattr(self, '_m_pop_count', None)
+
+        @property
+        def push_count(self):
+            if hasattr(self, '_m_push_count'):
+                return self._m_push_count
+
+            self._m_push_count = 1
+            return getattr(self, '_m_push_count', None)
+
+
     class CallFuncPop2(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -522,6 +549,8 @@ class Scumm6Opcodes(KaitaiStruct):
             elif _on == Scumm6Opcodes.SubopType.elevation:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.step_dist:
+                self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.text_offset:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.talk_color:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
@@ -789,6 +818,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.print_debug:
                 self.body = Scumm6Opcodes.Print(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.is_actor_in_box:
+                self.body = Scumm6Opcodes.CallFuncPop2Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.lt:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.wait:
