@@ -525,6 +525,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.talk_color:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.scale:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.actor_name:
                 self.body = Scumm6Opcodes.CallFuncString(self._io, self, self._root)
             else:
@@ -688,6 +690,8 @@ class Scumm6Opcodes(KaitaiStruct):
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.room_screen:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.room_palette:
+                self.body = Scumm6Opcodes.CallFuncPop4(self._io, self, self._root)
             else:
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 

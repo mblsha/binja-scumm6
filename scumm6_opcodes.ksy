@@ -696,7 +696,7 @@ types:
           cases:
             # 'subop_type::room_scroll': no_data
             'subop_type::room_screen': call_func_pop2
-            # 'subop_type::room_palette': no_data
+            'subop_type::room_palette': call_func_pop4
             # 'subop_type::room_shake_on': no_data
             # 'subop_type::room_shake_off': no_data
             # 'subop_type::room_intensity': no_data
@@ -741,7 +741,7 @@ types:
             'subop_type::actor_name': call_func_string
             # 'subop_type::init_animation': no_data
             # 'subop_type::actor_width': no_data
-            # 'subop_type::scale': no_data
+            'subop_type::scale': call_func_pop1
             'subop_type::never_zclip': call_func_pop0
             # 'subop_type::always_zclip': no_data
             'subop_type::ignore_boxes': call_func_pop0
