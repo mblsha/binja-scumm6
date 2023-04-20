@@ -699,7 +699,7 @@ types:
             # 'subop_type::stand_animation': no_data
             # 'subop_type::animation': no_data
             'subop_type::init': call_func_pop0
-            # 'subop_type::elevation': no_data
+            'subop_type::elevation': call_func_pop1
             # 'subop_type::animation_default': no_data
             # 'subop_type::palette': no_data
             'subop_type::talk_color': call_func_pop1
@@ -707,9 +707,9 @@ types:
             # 'subop_type::init_animation': no_data
             # 'subop_type::actor_width': no_data
             # 'subop_type::scale': no_data
-            # 'subop_type::never_zclip': no_data
+            'subop_type::never_zclip': call_func_pop0
             # 'subop_type::always_zclip': no_data
-            # 'subop_type::ignore_boxes': no_data
+            'subop_type::ignore_boxes': call_func_pop0
             # 'subop_type::follow_boxes': no_data
             # 'subop_type::animation_speed': no_data
             # 'subop_type::shadow': no_data

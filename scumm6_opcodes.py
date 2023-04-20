@@ -511,9 +511,15 @@ class Scumm6Opcodes(KaitaiStruct):
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.init:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.never_zclip:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.set_costume:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.set_current_actor:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.ignore_boxes:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.elevation:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.step_dist:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
