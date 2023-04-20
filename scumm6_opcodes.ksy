@@ -327,8 +327,8 @@ types:
             'op_type::push_word': word_data
             'op_type::push_byte_var': byte_data
             'op_type::push_word_var': word_var_data
-            # 'op_type::byte_array_read': no_data
-            'op_type::word_array_read': word_data # FIXME
+            'op_type::byte_array_read': byte_data
+            'op_type::word_array_read': word_data
             # 'op_type::byte_array_indexed_read': no_data
             # 'op_type::word_array_indexed_read': no_data
             # 'op_type::dup': no_data
@@ -362,8 +362,8 @@ types:
             # 'op_type::word_array_dec': no_data
             'op_type::iff': jump_data
             'op_type::if_not': jump_data
-            'op_type::start_script': call_func_list_pop1
-            # 'op_type::start_script_quick': no_data
+            'op_type::start_script': start_script
+            'op_type::start_script_quick': start_script_quick
             # 'op_type::start_object': no_data
             # 'op_type::draw_object': no_data
             # 'op_type::draw_object_at': no_data
@@ -549,7 +549,20 @@ types:
           value: true
     -webide-representation: '{data}'
 
-  call_func_list_pop1:
+  start_script:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 2
+        pop_list:
+          value: true
+        pop_list_first:
+          value: true
+    -webide-representation: '{data}'
+
+  start_script_quick:
     seq:
       - id: call_func
         size: 0
@@ -557,6 +570,8 @@ types:
         pop_count:
           value: 1
         pop_list:
+          value: true
+        pop_list_first:
           value: true
     -webide-representation: '{data}'
 

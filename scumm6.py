@@ -253,6 +253,13 @@ class Scumm6(Architecture):
                                   il.sub(4,
                                          il.load(4, il.reg(4, LLIL_TEMP(0))),
                                          il.const(4, 1))))
+        # elif op.id in [OpType.byte_array_read, OpType.word_array_read]:
+        #     il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # base
+        #     il.append(il.set_reg(4, LLIL_TEMP(1), body.data)) # ?
+        #     int base = pop();
+        #     # int ScummEngine_v6::readArray(int array, int idx, int base)
+        #     push(readArray(fetchScriptByte(), 0, base));
+        #     pass
         elif op.id in [OpType.eq, OpType.neq,
                        OpType.gt, OpType.lt, OpType.le, OpType.ge]:
             comp = {
