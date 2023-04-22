@@ -422,7 +422,7 @@ types:
             # 'op_type::is_sound_running': no_data
             # 'op_type::set_box_flags': no_data
             # 'op_type::create_box_matrix': no_data
-            # 'op_type::resource_routines': no_data
+            'op_type::resource_routines': resource_routines
             'op_type::room_ops': room_ops
             'op_type::actor_ops': actor_ops
             'op_type::verb_ops': verb_ops
@@ -745,6 +745,38 @@ types:
             _: unknown_op
     -webide-representation: '{subop}'
 
+  resource_routines:
+    seq:
+      - id: subop
+        type: u1
+        enum: subop_type
+      - id: body
+        type:
+          switch-on: subop
+          cases:
+            'subop_type::load_charset': call_func_pop1
+            'subop_type::nuke_charset': call_func_pop1
+            'subop_type::load_script': call_func_pop1
+            'subop_type::load_sound': call_func_pop1
+            'subop_type::load_costume': call_func_pop1
+            'subop_type::load_room': call_func_pop1
+            # 'subop_type::load_object': no_data
+            # 'subop_type::load_string': no_data
+            'subop_type::nuke_script': call_func_pop1
+            'subop_type::nuke_sound': call_func_pop1
+            'subop_type::nuke_costume': call_func_pop1
+            'subop_type::nuke_room': call_func_pop1
+            'subop_type::lock_script': call_func_pop1
+            'subop_type::lock_sound': call_func_pop1
+            'subop_type::lock_costume': call_func_pop1
+            'subop_type::lock_room': call_func_pop1
+            'subop_type::unlock_script': call_func_pop1
+            'subop_type::unlock_sound': call_func_pop1
+            'subop_type::unlock_costume': call_func_pop1
+            'subop_type::unlock_room': call_func_pop1
+            _: unknown_op
+    -webide-representation: '{subop}'
+
   cursor_command:
     seq:
       - id: subop
@@ -754,8 +786,6 @@ types:
         type:
           switch-on: subop
           cases:
-            # 'subop_type::load_charset': no_data
-            # 'subop_type::nuke_charset': no_data
             'subop_type::charset_set': call_func_pop1
             'subop_type::charset_color': call_func_list
             'subop_type::cursor_on': call_func_pop0
@@ -834,24 +864,7 @@ types:
             # 'subop_type::animation_speed': no_data
             # 'subop_type::shadow': no_data
             'subop_type::text_offset': call_func_pop2
-            # 'subop_type::load_script': no_data
-            # 'subop_type::load_sound': no_data
-            # 'subop_type::load_costume': no_data
-            # 'subop_type::load_room': no_data
-            # 'subop_type::nuke_script': no_data
-            # 'subop_type::nuke_sound': no_data
-            # 'subop_type::nuke_costume': no_data
-            # 'subop_type::nuke_room': no_data
-            # 'subop_type::lock_script': no_data
-            # 'subop_type::lock_sound': no_data
-            # 'subop_type::lock_costume': no_data
-            # 'subop_type::lock_room': no_data
-            # 'subop_type::unlock_script': no_data
-            # 'subop_type::unlock_sound': no_data
-            # 'subop_type::unlock_costume': no_data
-            # 'subop_type::unlock_room': no_data
             # 'subop_type::clear_heap': no_data
-            # 'subop_type::load_object': no_data
             # 'subop_type::save_verbs': no_data
             # 'subop_type::restore_verbs': no_data
             # 'subop_type::delete_verbs': no_data
@@ -859,7 +872,6 @@ types:
             # 'subop_type::pause': no_data
             # 'subop_type::quit': no_data
             # 'subop_type::save_string': no_data
-            # 'subop_type::load_string': no_data
             # 'subop_type::cycle_speed': no_data
             'subop_type::set_current_actor': call_func_pop1 # SPECIAL CASE! Sets current actor!
             # 'subop_type::actor_variable': no_data
