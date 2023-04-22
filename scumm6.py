@@ -24,7 +24,7 @@ from binaryninja.enums import (Endianness, BranchType, InstructionTextTokenType,
 from binaryninja import BinaryViewType, lowlevelil
 from binaryninjaui import UIContext
 
-from .disasm import Scumm6Disasm
+from .disasm import Scumm6Disasm, Instruction
 from .scumm6_opcodes import Scumm6Opcodes
 OpType = Scumm6Opcodes.OpType
 SubopType = Scumm6Opcodes.SubopType
@@ -172,9 +172,9 @@ class Scumm6(Architecture):
             return None
 
         result = InstructionInfo()
-        result.length = dis[2]
+        result.length = dis.length
 
-        op = dis[0]
+        op = dis.op
         body = getattr(op, 'body', None)
         # print(op, body, op.id)
         if body:
@@ -201,10 +201,10 @@ class Scumm6(Architecture):
             r += [InstructionTextToken(InstructionTextTokenType.BeginMemoryOperandToken, ")")]
             return r
 
-        op = dis[0]
+        op = dis.op
         body = getattr(op, 'body', None)
 
-        intrinsic_name = dis[1]
+        intrinsic_name = dis.id
         subop = getattr(body, 'subop', None)
         if body and subop:
             intrinsic_name += f'.{body.subop.name}'
@@ -232,7 +232,7 @@ class Scumm6(Architecture):
                          can_tokenize(getattr(body.body, x))]
             tokens += tokenize_params(*args)
 
-        return tokens, dis[2]
+        return tokens, dis.length
 
     def get_instruction_low_level_il(self, data: bytes, addr: int, il: lowlevelil.LowLevelILFunction) -> Optional[int]:
         dis = self.decode_instruction(data, addr)
@@ -246,26 +246,33 @@ class Scumm6(Architecture):
             offs = il.mult(4, il.const(4, 4), il.const(4, var_index))
             return il.add(4, start, offs)
 
+        def do_pop_list(block):
+            args = []
+            # binja doesn't support popping dynamic num of args from stack,
+            # so try to figure out how many do we need to pop.
+            dis2 = self.prev_instruction(data, addr)
+            if not dis2:
+                raise Exception(f'no op_prev for {dis.id} at {hex(addr)}')
+            op_prev = dis2[0]
+            if op_prev.id not in [OpType.push_byte, OpType.push_word]:
+                raise Exception(f'unsupported op_prev {dis2[1]} at {hex(addr)}')
+
+            # num_regs need to be popped separately
+            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
+            args += [il.pop(4) for _ in range(op_prev.body.data + 0)]
+            return args
+
         def add_intrinsic(name, block):
             pop_count = getattr(block, 'pop_count', 0)
             push_count = getattr(block, 'push_count', 0)
             pop_list = getattr(block, 'pop_list', False)
 
             args = []
-            args += [il.pop(4) for _ in range(pop_count)]
             if pop_list:
-                # binja doesn't support popping dynamic num of args from stack,
-                # so try to figure out how many do we need to pop.
-                dis2 = self.prev_instruction(data, addr)
-                if not dis2:
-                    raise Exception(f'no op_prev for {dis[1]} at {hex(addr)}')
-                op_prev = dis2[0]
-                if op_prev.id not in [OpType.push_byte, OpType.push_word]:
-                    raise Exception(f'unsupported op_prev {dis2[1]} at {hex(addr)}')
+                assert(getattr(block, 'pop_list_first', False))
+                args += do_pop_list(block)
 
-                # num_regs need to be popped separately
-                il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
-                args += [il.pop(4) for _ in range(op_prev.body.data + 0)]
+            args += [il.pop(4) for _ in range(pop_count)]
 
             results = []
             if push_count:
@@ -277,7 +284,7 @@ class Scumm6(Architecture):
 
 
         implemented = True
-        op = dis[0]
+        op = dis.op
         body = getattr(op, 'body', None)
         if op.id in [OpType.push_byte, OpType.push_word]:
             il.append(il.push(4, il.const(4, body.data)))
@@ -352,10 +359,10 @@ class Scumm6(Architecture):
                 comp[op.id](4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0)),
                 t, f))
             il.mark_label(t)
-            il.append(il.jump(il.const(4, addr+dis[2]+body.jump_offset)))
+            il.append(il.jump(il.const(4, addr+dis.length+body.jump_offset)))
             il.mark_label(f)
         elif op.id in [OpType.jump]:
-            il.append(il.jump(il.const(4, addr+dis[2]+body.jump_offset)))
+            il.append(il.jump(il.const(4, addr+dis.length+body.jump_offset)))
         elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
             add_intrinsic(op.id.name, body)
             il.append(il.no_ret())
@@ -373,7 +380,7 @@ class Scumm6(Architecture):
             add_intrinsic(op.id.name, body)
         elif getattr(body, 'subop', None):
             if type(body.body) == Scumm6Opcodes.UnknownOp:
-                print(f'unknown_op {dis[1]} at {hex(addr)}: {getattr(body, "subop", None)}')
+                print(f'unknown_op {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}')
                 implemented = False
                 il.append(il.unimplemented())
             else:
@@ -381,12 +388,12 @@ class Scumm6(Architecture):
         elif op.id in [OpType.break_here]:
             il.append(il.intrinsic([], op.id.name, []))
         else:
-            print(f'not implemented {dis[1]} at {hex(addr)}: {getattr(body, "subop", None)}')
+            print(f'not implemented {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}')
             implemented = False
             il.append(il.unimplemented())
 
         if body and type(body) == Scumm6Opcodes.UnknownOp:
-            print(f'unknown_op {dis[1]} at {hex(addr)}: {getattr(body, "subop", None)}')
+            print(f'unknown_op {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}')
             implemented = False
             il.append(il.unimplemented())
 
@@ -397,5 +404,5 @@ class Scumm6(Architecture):
             self.op_addrs[filename].insert_sorted(addr)
             # print(self.op_addrs[filename]._list)
 
-        return dis[2]
+        return dis.length
 

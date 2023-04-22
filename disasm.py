@@ -51,6 +51,9 @@ def get_script_addrs(block, state, pos=0):
     # elif type(block.block_data) == Scumm6Container.VerbScript:
     return r
 
+from collections import namedtuple
+Instruction = namedtuple('Instruction', ['op', 'id', 'length', 'data', 'addr'])
+
 class Scumm6Disasm:
     def __init__(self):
         pass
@@ -62,7 +65,9 @@ class Scumm6Disasm:
             ks = KaitaiStream(BytesIO(data))
             r = Scumm6Opcodes(ks)
             op_i = str(r.op.id).replace('OpType.', '')
-            return r.op, op_i, ks.pos()
+            return Instruction(r.op, id=op_i, length=ks.pos(), data=data,
+                               addr=addr)
+            # return r.op, op_i, ks.pos()
         except EOFError:
             return None
         except UnicodeDecodeError:
