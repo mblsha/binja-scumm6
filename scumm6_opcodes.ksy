@@ -824,6 +824,14 @@ types:
         type: s2
     -webide-representation: '{data}'
 
+  string_data:
+    seq:
+      - id: data
+        type: str
+        encoding: ISO-8859-1
+        terminator: 0
+    -webide-representation: '{data}'
+
   word7_data:
     seq:
       - id: data1
@@ -877,7 +885,7 @@ types:
           cases:
             'subop_type::verb_init': call_func_pop1
             'subop_type::verb_image': call_func_pop1
-            # 'subop_type::verb_name': no_data
+            'subop_type::verb_name': string_data
             'subop_type::verb_color': call_func_pop1
             'subop_type::verb_hicolor': call_func_pop1
             'subop_type::verb_at': call_func_pop2
@@ -1107,7 +1115,7 @@ types:
         type:
           switch-on: subop
           cases:
-            # 'subop_type::assign_string': no_data
+            'subop_type::assign_string': string_data
             # 'subop_type::assign_int_list': no_data
             # 'subop_type::assign_2dim_list': no_data
             _: unknown_op

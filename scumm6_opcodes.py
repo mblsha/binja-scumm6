@@ -443,6 +443,17 @@ class Scumm6Opcodes(KaitaiStruct):
             return getattr(self, '_m_push_count', None)
 
 
+    class StringData(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.data = (self._io.read_bytes_term(0, False, True, True)).decode(u"ISO-8859-1")
+
+
     class ArrayOps(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -453,7 +464,11 @@ class Scumm6Opcodes(KaitaiStruct):
         def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             self.array = self._io.read_u2le()
-            self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
+            _on = self.subop
+            if _on == Scumm6Opcodes.SubopType.assign_string:
+                self.body = Scumm6Opcodes.StringData(self._io, self, self._root)
+            else:
+                self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
     class CallFuncPop1(KaitaiStruct):
@@ -896,6 +911,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.endd:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.verb_name:
+                self.body = Scumm6Opcodes.StringData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.verb_at:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.verb_hicolor:

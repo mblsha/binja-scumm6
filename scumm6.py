@@ -208,6 +208,13 @@ class Scumm6(Architecture):
             intrinsic_name += f'.{body.subop.name}'
         tokens = [InstructionTextToken(InstructionTextTokenType.TextToken, intrinsic_name)]
 
+        def can_tokenize(param):
+            if isinstance(param, int):
+                return True
+            if isinstance(param, str):
+                return not param.startswith('scumm6')
+            return False
+
         if op.id == OpType.talk_actor:
             args = []
             for tcmd in body.cmds:
@@ -216,10 +223,11 @@ class Scumm6(Architecture):
                 else:
                     args.append(tcmd.cmd.name)
             tokens += tokenize_params(*args)
-
         elif body:
-            args  = [getattr(body, x)  for x in dir(body)  if isinstance(getattr(body, x), int)]
-            args += [getattr(subop, x) for x in dir(subop) if isinstance(getattr(subop, x), int)]
+            args  = [getattr(body, x)  for x in dir(body) if can_tokenize(getattr(body, x))]
+            if getattr(body, 'body', None):
+                args += [getattr(body.body, x) for x in dir(body.body) if
+                         can_tokenize(getattr(body.body, x))]
             tokens += tokenize_params(*args)
 
         return tokens, dis[2]
