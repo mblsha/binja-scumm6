@@ -391,7 +391,7 @@ types:
             # 'op_type::pan_camera_to': no_data
             'op_type::actor_follow_camera': call_func_pop1
             'op_type::set_camera_at': call_func_pop1
-            # 'op_type::load_room': no_data
+            'op_type::load_room': call_func_pop1
             'op_type::stop_script': call_func_pop1
             'op_type::walk_actor_to_obj': call_func_pop3
             'op_type::walk_actor_to': call_func_pop3
@@ -404,9 +404,9 @@ types:
             # 'op_type::load_room_with_ego': no_data
             'op_type::get_random_number': call_func_pop1_push
             # 'op_type::get_random_number_range': no_data
-            # 'op_type::get_actor_moving': no_data
+            'op_type::get_actor_moving': call_func_pop1_push
             'op_type::is_script_running': call_func_pop1_push
-            # 'op_type::get_actor_room': no_data
+            'op_type::get_actor_room': call_func_pop1_push
             'op_type::get_object_x': call_func_pop1_push
             'op_type::get_object_y': call_func_pop1_push
             'op_type::get_object_old_dir': call_func_pop1_push
@@ -431,14 +431,14 @@ types:
             # 'op_type::pseudo_room': no_data
             # 'op_type::get_actor_elevation': no_data
             # 'op_type::get_verb_entrypoint': no_data
-            # 'op_type::array_ops': no_data
+            'op_type::array_ops': array_ops
             # 'op_type::save_restore_verbs': no_data
             # 'op_type::draw_box': no_data
             'op_type::pop2': call_func_pop1
             # 'op_type::get_actor_width': no_data
             'op_type::wait': wait
             'op_type::get_actor_scale_x': call_func_pop1_push
-            # 'op_type::get_actor_anim_counter': no_data
+            'op_type::get_actor_anim_counter': call_func_pop1_push
             'op_type::sound_kludge': call_func_list
             # 'op_type::is_any_of': no_data
             # 'op_type::system_ops': no_data
@@ -737,13 +737,13 @@ types:
             'subop_type::verb_init': call_func_pop1
             # 'subop_type::verb_image': no_data
             # 'subop_type::verb_name': no_data
-            # 'subop_type::verb_color': no_data
+            'subop_type::verb_color': call_func_pop1
             # 'subop_type::verb_hicolor': no_data
             # 'subop_type::verb_at': no_data
             # 'subop_type::verb_on': no_data
             # 'subop_type::verb_off': no_data
             # 'subop_type::verb_delete': no_data
-            # 'subop_type::verb_new': no_data
+            'subop_type::verb_new': call_func_pop0
             # 'subop_type::verb_dimcolor': no_data
             # 'subop_type::verb_dim': no_data
             # 'subop_type::verb_key': no_data
@@ -844,7 +844,6 @@ types:
         type:
           switch-on: subop
           cases:
-            # 'subop_type::at': no_data
             # 'subop_type::color': no_data
             # 'subop_type::clipped': no_data
             # 'subop_type::center': no_data
@@ -890,9 +889,6 @@ types:
             # 'subop_type::byte_array': no_data
             # 'subop_type::string_array': no_data
             # 'subop_type::undim_array': no_data
-            # 'subop_type::assign_string': no_data
-            # 'subop_type::assign_int_list': no_data
-            # 'subop_type::assign_2dim_list': no_data
             # 'subop_type::actor_ignore_turns_on': no_data
             # 'subop_type::actor_ignore_turns_off': no_data
             # 'subop_type::neww': no_data
@@ -943,6 +939,24 @@ types:
             'subop_type::textstring': talk_actor
             'subop_type::color': call_func_pop1
             'subop_type::mumble': call_func_pop0
+            'subop_type::at': call_func_pop2
+            _: unknown_op
+    -webide-representation: '{subop}'
+
+  array_ops:
+    seq:
+      - id: subop
+        type: u1
+        enum: subop_type
+      - id: array
+        type: u2
+      - id: body
+        type:
+          switch-on: subop
+          cases:
+            # 'subop_type::assign_string': no_data
+            # 'subop_type::assign_int_list': no_data
+            # 'subop_type::assign_2dim_list': no_data
             _: unknown_op
     -webide-representation: '{subop}'
 

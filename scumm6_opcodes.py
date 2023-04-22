@@ -387,6 +387,19 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
+    class ArrayOps(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
+            self.array = self._io.read_u2le()
+            self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
+
+
     class CallFuncPop1(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -474,6 +487,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.mumble:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.at:
+                self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.color:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.textstring:
@@ -650,6 +665,10 @@ class Scumm6Opcodes(KaitaiStruct):
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.verb_init:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.verb_color:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.verb_new:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             else:
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
@@ -1008,7 +1027,11 @@ class Scumm6Opcodes(KaitaiStruct):
         def _read(self):
             self.id = KaitaiStream.resolve_enum(Scumm6Opcodes.OpType, self._io.read_u1())
             _on = self.id
-            if _on == Scumm6Opcodes.OpType.stop_script:
+            if _on == Scumm6Opcodes.OpType.get_actor_anim_counter:
+                self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.stop_script:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.load_room:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_sentence:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
@@ -1054,6 +1077,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncList(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_byte_var:
                 self.body = Scumm6Opcodes.ByteData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.get_actor_room:
+                self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.add:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.verb_ops:
@@ -1120,6 +1145,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.StartScript(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.print_ego:
                 self.body = Scumm6Opcodes.Print(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.get_actor_moving:
+                self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.set_state:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.if_not:
@@ -1140,6 +1167,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.word_var_dec:
                 self.body = Scumm6Opcodes.WordVarData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.array_ops:
+                self.body = Scumm6Opcodes.ArrayOps(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.resource_routines:
                 self.body = Scumm6Opcodes.ResourceRoutines(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.pop1:

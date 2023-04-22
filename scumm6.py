@@ -93,6 +93,8 @@ class Scumm6(Architecture):
     intrinsics = {
         op.name:IntrinsicInfo(inputs=[], outputs=[]) for op in OpType
     } | {
+        f'array_ops.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
+    } | {
         f'resource_routines.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
     } | {
         f'cursor_command.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
