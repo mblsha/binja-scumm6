@@ -393,7 +393,7 @@ types:
             'op_type::set_camera_at': call_func_pop1
             # 'op_type::load_room': no_data
             'op_type::stop_script': call_func_pop1
-            # 'op_type::walk_actor_to_obj': no_data
+            'op_type::walk_actor_to_obj': call_func_pop3
             'op_type::walk_actor_to': call_func_pop3
             'op_type::put_actor_at_xy': call_func_pop4
             # 'op_type::put_actor_at_object': no_data
@@ -407,12 +407,13 @@ types:
             # 'op_type::get_actor_moving': no_data
             'op_type::is_script_running': call_func_pop1_push
             # 'op_type::get_actor_room': no_data
-            # 'op_type::get_object_x': no_data
-            # 'op_type::get_object_y': no_data
-            # 'op_type::get_object_old_dir': no_data
+            'op_type::get_object_x': call_func_pop1_push
+            'op_type::get_object_y': call_func_pop1_push
+            'op_type::get_object_old_dir': call_func_pop1_push
+            'op_type::get_object_new_dir': call_func_pop1_push
             # 'op_type::get_actor_walk_box': call_func_pop1_push
             # 'op_type::get_actor_costume': no_data
-            # 'op_type::find_inventory': no_data
+            'op_type::find_inventory': call_func_pop2_push
             # 'op_type::get_inventory_count': no_data
             # 'op_type::get_verb_from_xy': no_data
             # 'op_type::begin_override': no_data
@@ -486,7 +487,6 @@ types:
             # 'op_type::pick_var_random': no_data
             # 'op_type::set_box_set': no_data
             # 'op_type::get_actor_layer': no_data
-            # 'op_type::get_object_new_dir': no_data
             _: unknown_op
     -webide-representation: '{id} {id:dec} {body}'
 
@@ -758,13 +758,17 @@ types:
             # 'subop_type::nuke_charset': no_data
             'subop_type::charset_set': call_func_pop1
             'subop_type::charset_color': call_func_list
-            # 'subop_type::cursor_on': no_data
-            # 'subop_type::cursor_off': no_data
-            # 'subop_type::cursor_soft_on': no_data
-            # 'subop_type::cursor_soft_off': no_data
+            'subop_type::cursor_on': call_func_pop0
+            'subop_type::cursor_off': call_func_pop0
+            'subop_type::cursor_soft_on': call_func_pop0
+            'subop_type::cursor_soft_off': call_func_pop0
             # 'subop_type::cursor_image': no_data
-            # 'subop_type::cursor_hotspot': no_data
-            # 'subop_type::cursor_transparent': no_data
+            'subop_type::cursor_hotspot': call_func_pop2
+            'subop_type::cursor_transparent': call_func_pop1
+            'subop_type::userput_on': call_func_pop0
+            'subop_type::userput_off': call_func_pop0
+            'subop_type::userput_soft_on': call_func_pop0
+            'subop_type::userput_soft_off': call_func_pop0
             _: unknown_op
     -webide-representation: '{subop}'
 
@@ -782,13 +786,13 @@ types:
             'subop_type::room_palette': call_func_pop4
             # 'subop_type::room_shake_on': no_data
             # 'subop_type::room_shake_off': no_data
-            # 'subop_type::room_intensity': no_data
+            'subop_type::room_intensity': call_func_pop3
             # 'subop_type::room_savegame': no_data
             # 'subop_type::room_fade': no_data
             # 'subop_type::rgb_room_intensity': no_data
             # 'subop_type::room_shadow': no_data
             # 'subop_type::room_transform': no_data
-            # 'subop_type::room_new_palette': no_data
+            'subop_type::room_new_palette': call_func_pop1
             _: unknown_op
     -webide-representation: '{subop}'
 
@@ -851,10 +855,6 @@ types:
             # 'subop_type::save_verbs': no_data
             # 'subop_type::restore_verbs': no_data
             # 'subop_type::delete_verbs': no_data
-            # 'subop_type::userput_on': no_data
-            # 'subop_type::userput_off': no_data
-            # 'subop_type::userput_soft_on': no_data
-            # 'subop_type::userput_soft_off': no_data
             # 'subop_type::restart': no_data
             # 'subop_type::pause': no_data
             # 'subop_type::quit': no_data
