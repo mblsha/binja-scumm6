@@ -150,12 +150,12 @@ class Scumm6(Architecture):
         print('last_bv not set, view not initialized?')
         return (None, None)
 
-    def prev_instruction(self, data: bytes, addr: int):
-        view, filename = self.get_view(data, addr)
+    def prev_instruction(self, instr):
+        view, filename = self.get_view(instr.data, instr.addr)
         if not view:
-            raise Exception(f'prev_instruction: no view at {addr:x}')
-        prev_addr = self.op_addrs[filename].closest_left_match(addr)
-        # print(f'prev_instruction: addr:{addr:x} -> prev:{prev_addr:x}')
+            raise Exception(f'prev_instruction: no view at {hex(instr.addr)}')
+        prev_addr = self.op_addrs[filename].closest_left_match(instr.addr)
+        # print(f'prev_instruction: addr:{instr.addr:x} -> prev:{prev_addr:x}')
         data2 = view.read(prev_addr, 256)
         dis = self.decode_instruction(data2, prev_addr)
         if not dis:
@@ -247,7 +247,7 @@ class Scumm6(Architecture):
             return il.add(4, start, offs)
 
         def get_prev_dis(instr):
-            prev = self.prev_instruction(instr.data, instr.addr)
+            prev = self.prev_instruction(instr)
             if not prev:
                 raise Exception(f"get_prev_dis: no prev for '{instr.id}' at {hex(instr.addr)}")
             return prev
@@ -381,7 +381,7 @@ class Scumm6(Architecture):
             func_num = dis
             for _ in range(len(args) + 2):
                 print(f'  >>> prev {hex(func_num.addr)}')
-                func_num = self.prev_instruction(func_num.data, func_num.addr)
+                func_num = self.prev_instruction(func_num)
             print(f'>>> {hex(addr)} calling function #{get_dis_value(func_num)} with {len(args)} args')
 
             if op.id == OpType.start_script:
@@ -391,14 +391,13 @@ class Scumm6(Architecture):
             il.append(il.unimplemented())
         elif op.id == OpType.stop_script:
             add_intrinsic(op.id.name, body)
-            dis2 = self.prev_instruction(data, addr)
-            op_prev = dis2.op
-            if op_prev.id not in [OpType.push_byte, OpType.push_word]:
-                raise Exception(f'unsupported op_prev {dis2.id} at {hex(addr)}')
-                args += [il.pop(4) for _ in range(op_prev.body.data + 0)]
-            if op_prev.body.data == 0:
+            prev_value = self.get_prev_value(dis)
+            if prev_value == 0:
                 # stopObjectCode
+                il.append(il.pop(4))
                 il.append(il.no_ret())
+            else:
+                il.append(il.intrinsic([], op.id.name, [il.pop(4)]))
         elif not getattr(body, 'call_func', True):
             add_intrinsic(op.id.name, body)
         elif getattr(body, 'subop', None):
