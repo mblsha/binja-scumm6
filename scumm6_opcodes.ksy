@@ -380,7 +380,7 @@ types:
             # 'op_type::if_class_of_is': no_data
             # 'op_type::set_class': no_data
             # 'op_type::get_state': no_data
-            # 'op_type::set_state': no_data
+            'op_type::set_state': call_func_pop2
             # 'op_type::set_owner': no_data
             # 'op_type::get_owner': no_data
             'op_type::jump': jump_data
@@ -394,7 +394,7 @@ types:
             # 'op_type::load_room': no_data
             'op_type::stop_script': call_func_pop1
             # 'op_type::walk_actor_to_obj': no_data
-            # 'op_type::walk_actor_to': no_data
+            'op_type::walk_actor_to': call_func_pop3
             'op_type::put_actor_at_xy': call_func_pop4
             # 'op_type::put_actor_at_object': no_data
             # 'op_type::face_actor': no_data
@@ -585,6 +585,17 @@ types:
           value: 0
     -webide-representation: '{data}'
 
+  call_func_pop1_word:
+    seq:
+      - id: call_func
+        size: 0
+      - id: param
+        type: s2
+    instances:
+        pop_count:
+          value: 1
+    -webide-representation: '{data}'
+
   call_func_pop1_push:
     seq:
       - id: call_func
@@ -623,6 +634,15 @@ types:
     instances:
         pop_count:
           value: 2
+    -webide-representation: '{data}'
+
+  call_func_pop3:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 3
     -webide-representation: '{data}'
 
   call_func_pop4:
@@ -787,8 +807,6 @@ types:
             # 'subop_type::center': no_data
             # 'subop_type::left': no_data
             # 'subop_type::overhead': no_data
-            # 'subop_type::mumble': no_data
-            # 'subop_type::textstring': no_data
             'subop_type::set_costume': call_func_pop1
             'subop_type::step_dist': call_func_pop2
             # 'subop_type::sound': no_data
@@ -803,7 +821,7 @@ types:
             'subop_type::talk_color': call_func_pop1
             'subop_type::actor_name': call_func_string
             # 'subop_type::init_animation': no_data
-            # 'subop_type::actor_width': no_data
+            'subop_type::actor_width': call_func_pop1
             'subop_type::scale': call_func_pop1
             'subop_type::never_zclip': call_func_pop0
             # 'subop_type::always_zclip': no_data
@@ -840,10 +858,6 @@ types:
             # 'subop_type::restart': no_data
             # 'subop_type::pause': no_data
             # 'subop_type::quit': no_data
-            # 'subop_type::wait_for_actor': no_data
-            # 'subop_type::wait_for_message': no_data
-            # 'subop_type::wait_for_camera': no_data
-            # 'subop_type::wait_for_sentence': no_data
             # 'subop_type::save_string': no_data
             # 'subop_type::load_string': no_data
             # 'subop_type::cycle_speed': no_data
@@ -886,9 +900,9 @@ types:
         type:
           switch-on: subop
           cases:
-            # 'subop_type::wait_for_actor': no_data
+            'subop_type::wait_for_actor': call_func_pop1_word
             'subop_type::wait_for_message': call_func_pop0
-            # 'subop_type::wait_for_camera': no_data
+            'subop_type::wait_for_camera': call_func_pop0
             # 'subop_type::wait_for_sentence': no_data
             # 'subop_type::wait_for_animation': no_data
             # 'subop_type::wait_for_turn': no_data
@@ -906,10 +920,8 @@ types:
           cases:
             'subop_type::baseop': no_data
             'subop_type::textstring': talk_actor
-            # 'subop_type::wait_for_camera': no_data
-            # 'subop_type::wait_for_sentence': no_data
-            # 'subop_type::wait_for_animation': no_data
-            # 'subop_type::wait_for_turn': no_data
+            'subop_type::color': call_func_pop1
+            'subop_type::mumble': call_func_pop0
             _: unknown_op
     -webide-representation: '{subop}'
 

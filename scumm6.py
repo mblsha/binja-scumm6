@@ -116,7 +116,6 @@ class Scumm6(Architecture):
         f'print_ego.{subop.name}':IntrinsicInfo(inputs=[], outputs=[]) for subop in SubopType
     }
 
-
     op_addrs = defaultdict(SortedList)
 
     def __init__(self):
