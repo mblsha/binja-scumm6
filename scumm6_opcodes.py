@@ -438,6 +438,33 @@ class Scumm6Opcodes(KaitaiStruct):
             return getattr(self, '_m_pop_list', None)
 
 
+    class CallFuncPop3Push(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 3
+            return getattr(self, '_m_pop_count', None)
+
+        @property
+        def push_count(self):
+            if hasattr(self, '_m_push_count'):
+                return self._m_push_count
+
+            self._m_push_count = 1
+            return getattr(self, '_m_push_count', None)
+
+
     class StartScript(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -748,6 +775,33 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             else:
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
+
+
+    class CallFuncPop4Push(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 4
+            return getattr(self, '_m_pop_count', None)
+
+        @property
+        def push_count(self):
+            if hasattr(self, '_m_push_count'):
+                return self._m_push_count
+
+            self._m_push_count = 1
+            return getattr(self, '_m_push_count', None)
 
 
     class TalkActor(KaitaiStruct):
@@ -1173,6 +1227,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_object_code2:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.freeze_unfreeze:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.print_debug:
                 self.body = Scumm6Opcodes.Print(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.is_actor_in_box:
@@ -1233,6 +1289,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop4(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.print_line:
                 self.body = Scumm6Opcodes.Print(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.dist_pt_pt:
+                self.body = Scumm6Opcodes.CallFuncPop4Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.delay_frames:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.sound_kludge:
@@ -1289,12 +1347,16 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.word_var_dec:
                 self.body = Scumm6Opcodes.WordVarData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.dist_object_pt:
+                self.body = Scumm6Opcodes.CallFuncPop3Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.array_ops:
                 self.body = Scumm6Opcodes.ArrayOps(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.resource_routines:
                 self.body = Scumm6Opcodes.ResourceRoutines(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.pop1:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.dist_object_object:
+                self.body = Scumm6Opcodes.CallFuncPop2Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.mul:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.write_word_var:

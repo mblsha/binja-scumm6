@@ -374,7 +374,7 @@ types:
             'op_type::end_cutscene': call_func_pop0
             'op_type::cutscene': call_func_list
             # 'op_type::stop_music': no_data
-            # 'op_type::freeze_unfreeze': no_data
+            'op_type::freeze_unfreeze': call_func_pop1
             'op_type::cursor_command': cursor_command
             'op_type::break_here': no_data
             # 'op_type::if_class_of_is': no_data
@@ -465,9 +465,9 @@ types:
             # 'op_type::start_script_quick2': no_data
             # 'op_type::dim2dim_array': no_data
             # 'op_type::abs': no_data
-            # 'op_type::dist_object_object': no_data
-            # 'op_type::dist_object_pt': no_data
-            # 'op_type::dist_pt_pt': no_data
+            'op_type::dist_object_object': call_func_pop2_push
+            'op_type::dist_object_pt': call_func_pop3_push
+            'op_type::dist_pt_pt': call_func_pop4_push
             # 'op_type::kernel_get_functions': no_data
             # 'op_type::kernel_set_functions': no_data
             'op_type::delay_frames': call_func_pop1
@@ -640,6 +640,28 @@ types:
     instances:
         pop_count:
           value: 2
+        push_count:
+          value: 1
+    -webide-representation: '{data}'
+
+  call_func_pop3_push:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 3
+        push_count:
+          value: 1
+    -webide-representation: '{data}'
+
+  call_func_pop4_push:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 4
         push_count:
           value: 1
     -webide-representation: '{data}'
