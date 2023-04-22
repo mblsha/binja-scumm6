@@ -327,8 +327,8 @@ types:
             'op_type::push_word': word_data
             'op_type::push_byte_var': byte_data
             'op_type::push_word_var': word_var_data
-            'op_type::byte_array_read': byte_data
-            'op_type::word_array_read': word_data
+            'op_type::byte_array_read': byte_array_read
+            'op_type::word_array_read': word_array_read
             # 'op_type::byte_array_indexed_read': no_data
             # 'op_type::word_array_indexed_read': no_data
             'op_type::dup': no_data
@@ -348,8 +348,8 @@ types:
             'op_type::pop1': call_func_pop1
             # 'op_type::write_byte_var': no_data
             'op_type::write_word_var': word_var_data
-            # 'op_type::byte_array_write': no_data
-            # 'op_type::word_array_write': no_data
+            'op_type::byte_array_write': byte_array_write
+            'op_type::word_array_write': word_array_write
             # 'op_type::byte_array_indexed_write': no_data
             # 'op_type::word_array_indexed_write': no_data
             # 'op_type::byte_array_inc': no_data
@@ -385,7 +385,7 @@ types:
             # 'op_type::get_owner': no_data
             'op_type::jump': jump_data
             'op_type::start_sound': call_func_pop1
-            # 'op_type::stop_sound': no_data
+            'op_type::stop_sound': call_func_pop1
             # 'op_type::start_music': no_data
             # 'op_type::stop_object_script': no_data
             # 'op_type::pan_camera_to': no_data
@@ -464,7 +464,7 @@ types:
             # 'op_type::start_object_quick': no_data
             # 'op_type::start_script_quick2': no_data
             # 'op_type::dim2dim_array': no_data
-            # 'op_type::abs': no_data
+            'op_type::abs': call_func_pop1_push
             'op_type::dist_object_object': call_func_pop2_push
             'op_type::dist_object_pt': call_func_pop3_push
             'op_type::dist_pt_pt': call_func_pop4_push
@@ -560,6 +560,58 @@ types:
     instances:
         pop_count:
           value: 0
+    -webide-representation: '{data}'
+
+  byte_array_read:
+    seq:
+      - id: call_func
+        size: 0
+      - id: array
+        type: u1
+    instances:
+        pop_count:
+          value: 1
+        push_count:
+          value: 1
+    -webide-representation: '{data}'
+
+  byte_array_write:
+    seq:
+      - id: call_func
+        size: 0
+      - id: array
+        type: u1
+    instances:
+        pop_count:
+          value: 2
+        push_count:
+          value: 1
+    -webide-representation: '{data}'
+
+  word_array_read:
+    seq:
+      - id: call_func
+        size: 0
+      - id: array
+        type: u2
+    instances:
+        pop_count:
+          value: 1
+        push_count:
+          value: 1
+    -webide-representation: '{data}'
+
+  word_array_write:
+    seq:
+      - id: call_func
+        size: 0
+      - id: array
+        type: u2
+    instances:
+        pop_count:
+          value: 2
+        push_count:
+          value: 1
     -webide-representation: '{data}'
 
   is_any_of:

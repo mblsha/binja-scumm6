@@ -283,7 +283,6 @@ class Scumm6(Architecture):
                 OpType.byte_var_dec: il.sub,
                 OpType.word_var_dec: il.sub,
             }
-
             il.append(il.set_reg(4, LLIL_TEMP(0), var_addr(body.data)))
             il.append(il.store(4, il.reg(4, LLIL_TEMP(0)),
                                   inc[op.id](4,
