@@ -379,6 +379,7 @@ class Scumm6(Architecture):
             print(f'>> {op.id.name} at {hex(dis.addr)}')
             args = do_pop_list(dis)
             func_num = dis
+            args = [il.pop(4) for _ in args]
             for _ in range(len(args) + 2):
                 print(f'  >>> prev {hex(func_num.addr)}')
                 func_num = self.prev_instruction(func_num)
@@ -387,11 +388,12 @@ class Scumm6(Architecture):
             if op.id == OpType.start_script:
                 flags = get_prev_value(func_num)
                 print(f'>>> {hex(addr)} calling function #{get_dis_value(func_num)} with {len(args)} args and flags {flags}')
-
-            il.append(il.unimplemented())
+                il.append(il.intrinsic([], op.id.name, [il.pop(4), il.pop(4)] + args))
+            else:
+                il.append(il.intrinsic([], op.id.name, [il.pop(4)] + args))
         elif op.id == OpType.stop_script:
             add_intrinsic(op.id.name, body)
-            prev_value = self.get_prev_value(dis)
+            prev_value = get_prev_value(dis)
             if prev_value == 0:
                 # stopObjectCode
                 il.append(il.pop(4))
