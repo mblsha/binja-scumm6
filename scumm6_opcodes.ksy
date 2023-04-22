@@ -377,7 +377,7 @@ types:
             'op_type::freeze_unfreeze': call_func_pop1
             'op_type::cursor_command': cursor_command
             'op_type::break_here': no_data
-            # 'op_type::if_class_of_is': no_data
+            'op_type::if_class_of_is': if_class_of_is
             # 'op_type::set_class': no_data
             'op_type::get_state': call_func_pop1_push
             'op_type::set_state': call_func_pop2
@@ -440,8 +440,8 @@ types:
             'op_type::get_actor_scale_x': call_func_pop1_push
             'op_type::get_actor_anim_counter': call_func_pop1_push
             'op_type::sound_kludge': call_func_list
-            # 'op_type::is_any_of': no_data
-            # 'op_type::system_ops': no_data
+            'op_type::is_any_of': is_any_of
+            'op_type::system_ops': system_ops
             'op_type::is_actor_in_box': call_func_pop2_push
             'op_type::delay': call_func_pop1
             'op_type::delay_seconds': call_func_pop1
@@ -560,6 +560,36 @@ types:
     instances:
         pop_count:
           value: 0
+    -webide-representation: '{data}'
+
+  is_any_of:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 1
+        pop_list:
+          value: true
+        pop_list_first:
+          value: true
+        push_count:
+          value: 1
+    -webide-representation: '{data}'
+
+  if_class_of_is:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 1
+        pop_list:
+          value: true
+        pop_list_first:
+          value: true
+        push_count:
+          value: 1
     -webide-representation: '{data}'
 
   start_object:
@@ -931,9 +961,6 @@ types:
             # 'subop_type::save_verbs': no_data
             # 'subop_type::restore_verbs': no_data
             # 'subop_type::delete_verbs': no_data
-            # 'subop_type::restart': no_data
-            # 'subop_type::pause': no_data
-            # 'subop_type::quit': no_data
             # 'subop_type::save_string': no_data
             # 'subop_type::cycle_speed': no_data
             'subop_type::set_current_actor': call_func_pop1 # SPECIAL CASE! Sets current actor!
@@ -999,6 +1026,21 @@ types:
             'subop_type::mumble': call_func_pop0
             'subop_type::baseop': no_data
             'subop_type::endd': call_func_pop0
+            _: unknown_op
+    -webide-representation: '{subop}'
+
+  system_ops:
+    seq:
+      - id: subop
+        type: u1
+        enum: subop_type
+      - id: body
+        type:
+          switch-on: subop
+          cases:
+            'subop_type::restart': call_func_pop0
+            'subop_type::pause': call_func_pop0
+            'subop_type::quit': call_func_pop0
             _: unknown_op
     -webide-representation: '{subop}'
 
