@@ -378,7 +378,7 @@ types:
             'op_type::cursor_command': cursor_command
             'op_type::break_here': no_data
             'op_type::if_class_of_is': if_class_of_is
-            # 'op_type::set_class': no_data
+            'op_type::set_class': set_class
             'op_type::get_state': call_func_pop1_push
             'op_type::set_state': call_func_pop2
             # 'op_type::set_owner': no_data
@@ -459,7 +459,7 @@ types:
             'op_type::talk_actor': talk_actor
 
             # 'op_type::talk_ego': no_data
-            # 'op_type::dim_array': no_data
+            'op_type::dim_array': dim_array
             # 'op_type::dummy': no_data
             # 'op_type::start_object_quick': no_data
             # 'op_type::start_script_quick2': no_data
@@ -612,6 +612,19 @@ types:
           value: 2
         push_count:
           value: 1
+    -webide-representation: '{data}'
+
+  set_class:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 1
+        pop_list:
+          value: true
+        pop_list_first:
+          value: true
     -webide-representation: '{data}'
 
   is_any_of:
@@ -1025,12 +1038,6 @@ types:
             # 'subop_type::cycle_speed': no_data
             'subop_type::set_current_actor': call_func_pop1 # SPECIAL CASE! Sets current actor!
             # 'subop_type::actor_variable': no_data
-            # 'subop_type::int_array': no_data
-            # 'subop_type::bit_array': no_data
-            # 'subop_type::nibble_array': no_data
-            # 'subop_type::byte_array': no_data
-            # 'subop_type::string_array': no_data
-            # 'subop_type::undim_array': no_data
             # 'subop_type::actor_ignore_turns_on': no_data
             # 'subop_type::actor_ignore_turns_off': no_data
             # 'subop_type::neww': no_data
@@ -1118,6 +1125,26 @@ types:
             'subop_type::assign_string': string_data
             # 'subop_type::assign_int_list': no_data
             # 'subop_type::assign_2dim_list': no_data
+            _: unknown_op
+    -webide-representation: '{subop}'
+
+  dim_array:
+    seq:
+      - id: subop
+        type: u1
+        enum: subop_type
+      - id: array
+        type: u2
+      - id: body
+        type:
+          switch-on: subop
+          cases:
+            'subop_type::int_array': call_func_pop1
+            'subop_type::bit_array': call_func_pop1
+            'subop_type::nibble_array': call_func_pop1
+            'subop_type::byte_array': call_func_pop1
+            'subop_type::string_array': call_func_pop1
+            'subop_type::undim_array': call_func_pop1_word
             _: unknown_op
     -webide-representation: '{subop}'
 
