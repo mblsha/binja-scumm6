@@ -246,20 +246,29 @@ class Scumm6(Architecture):
             offs = il.mult(4, il.const(4, 4), il.const(4, var_index))
             return il.add(4, start, offs)
 
-        def do_pop_list(block):
-            args = []
+        def get_prev_dis(instr):
+            prev = self.prev_instruction(instr.data, instr.addr)
+            if not prev:
+                raise Exception(f"get_prev_dis: no prev for '{instr.id}' at {hex(instr.addr)}")
+            return prev
+
+        def get_dis_value(instr):
+            op = instr.op
+            if op.id not in [OpType.push_byte, OpType.push_word]:
+                raise Exception(f"get_dis_value: unsupported op '{instr.id}' at {hex(instr.addr)}")
+            return op.body.data
+
+        def get_prev_value(instr):
+            prev = get_prev_dis(instr)
+            return get_dis_value(prev)
+
+        def do_pop_list(instr):
             # binja doesn't support popping dynamic num of args from stack,
             # so try to figure out how many do we need to pop.
-            dis2 = self.prev_instruction(data, addr)
-            if not dis2:
-                raise Exception(f'no op_prev for {dis.id} at {hex(addr)}')
-            op_prev = dis2[0]
-            if op_prev.id not in [OpType.push_byte, OpType.push_word]:
-                raise Exception(f'unsupported op_prev {dis2[1]} at {hex(addr)}')
-
+            num_args = get_prev_value(instr)
             # num_regs need to be popped separately
             il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
-            args += [il.pop(4) for _ in range(op_prev.body.data + 0)]
+            args = [il.pop(4) for _ in range(num_args)]
             return args
 
         def add_intrinsic(name, block):
@@ -270,7 +279,7 @@ class Scumm6(Architecture):
             args = []
             if pop_list:
                 assert(getattr(block, 'pop_list_first', False))
-                args += do_pop_list(block)
+                args += do_pop_list(dis)
 
             args += [il.pop(4) for _ in range(pop_count)]
 
@@ -366,24 +375,26 @@ class Scumm6(Architecture):
         elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
             add_intrinsic(op.id.name, body)
             il.append(il.no_ret())
-        elif op.id == OpType.start_script_quick:
-            args = do_pop_list(body)
-            dis2 = dis
-            # need to skip the number of args, and get the function number
-            # print(f'>>> {hex(addr)} calling {len(args)} args')
+        elif op.id in [OpType.start_script, OpType.start_script_quick]:
+            print(f'>> {op.id.name} at {hex(dis.addr)}')
+            args = do_pop_list(dis)
+            func_num = dis
             for _ in range(len(args) + 2):
-                # print(f'   >> prev for {hex(dis2.addr)}')
-                dis2 = self.prev_instruction(dis2.data, dis2.addr)
-            op_prev = dis2[0]
-            if op_prev.id not in [OpType.push_byte, OpType.push_word]:
-                raise Exception(f'unsupported op_prev {dis2[1]} at {hex(addr)}')
-            print(f'>>> {hex(addr)} calling function #{op_prev.body.data} with {len(args)} args')
+                print(f'  >>> prev {hex(func_num.addr)}')
+                func_num = self.prev_instruction(func_num.data, func_num.addr)
+            print(f'>>> {hex(addr)} calling function #{get_dis_value(func_num)} with {len(args)} args')
+
+            if op.id == OpType.start_script:
+                flags = get_prev_value(func_num)
+                print(f'>>> {hex(addr)} calling function #{get_dis_value(func_num)} with {len(args)} args and flags {flags}')
+
+            il.append(il.unimplemented())
         elif op.id == OpType.stop_script:
             add_intrinsic(op.id.name, body)
             dis2 = self.prev_instruction(data, addr)
-            op_prev = dis2[0]
+            op_prev = dis2.op
             if op_prev.id not in [OpType.push_byte, OpType.push_word]:
-                raise Exception(f'unsupported op_prev {dis2[1]} at {hex(addr)}')
+                raise Exception(f'unsupported op_prev {dis2.id} at {hex(addr)}')
                 args += [il.pop(4) for _ in range(op_prev.body.data + 0)]
             if op_prev.body.data == 0:
                 # stopObjectCode
