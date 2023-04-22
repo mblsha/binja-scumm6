@@ -379,7 +379,7 @@ types:
             'op_type::break_here': no_data
             # 'op_type::if_class_of_is': no_data
             # 'op_type::set_class': no_data
-            # 'op_type::get_state': no_data
+            'op_type::get_state': call_func_pop1_push
             'op_type::set_state': call_func_pop2
             # 'op_type::set_owner': no_data
             # 'op_type::get_owner': no_data
@@ -437,7 +437,7 @@ types:
             'op_type::pop2': call_func_pop1
             # 'op_type::get_actor_width': no_data
             'op_type::wait': wait
-            # 'op_type::get_actor_scale_x': no_data
+            'op_type::get_actor_scale_x': call_func_pop1_push
             # 'op_type::get_actor_anim_counter': no_data
             'op_type::sound_kludge': call_func_list
             # 'op_type::is_any_of': no_data
@@ -654,6 +654,15 @@ types:
           value: 4
     -webide-representation: '{data}'
 
+  call_func_pop5:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 5
+    -webide-representation: '{data}'
+
   call_func_string:
     seq:
       - id: data
@@ -811,17 +820,17 @@ types:
         type:
           switch-on: subop
           cases:
-            # 'subop_type::room_scroll': no_data
+            'subop_type::room_scroll': call_func_pop2
             'subop_type::room_screen': call_func_pop2
             'subop_type::room_palette': call_func_pop4
-            # 'subop_type::room_shake_on': no_data
-            # 'subop_type::room_shake_off': no_data
+            'subop_type::room_shake_on': call_func_pop0
+            'subop_type::room_shake_off': call_func_pop0
             'subop_type::room_intensity': call_func_pop3
-            # 'subop_type::room_savegame': no_data
-            # 'subop_type::room_fade': no_data
-            # 'subop_type::rgb_room_intensity': no_data
-            # 'subop_type::room_shadow': no_data
-            # 'subop_type::room_transform': no_data
+            'subop_type::room_savegame': call_func_pop2
+            'subop_type::room_fade': call_func_pop1
+            'subop_type::rgb_room_intensity': call_func_pop5
+            'subop_type::room_shadow': call_func_pop5
+            'subop_type::room_transform': call_func_pop4
             'subop_type::room_new_palette': call_func_pop1
             _: unknown_op
     -webide-representation: '{subop}'

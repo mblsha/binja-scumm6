@@ -504,6 +504,25 @@ class Scumm6Opcodes(KaitaiStruct):
             self.data = self._io.read_s2le()
 
 
+    class CallFuncPop5(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 5
+            return getattr(self, '_m_pop_count', None)
+
+
     class CallFuncPop0(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -823,10 +842,26 @@ class Scumm6Opcodes(KaitaiStruct):
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.room_screen:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.room_shadow:
+                self.body = Scumm6Opcodes.CallFuncPop5(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.room_fade:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.rgb_room_intensity:
+                self.body = Scumm6Opcodes.CallFuncPop5(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.room_shake_on:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.room_palette:
                 self.body = Scumm6Opcodes.CallFuncPop4(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.room_shake_off:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.room_intensity:
                 self.body = Scumm6Opcodes.CallFuncPop3(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.room_savegame:
+                self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.room_transform:
+                self.body = Scumm6Opcodes.CallFuncPop4(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.room_scroll:
+                self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.room_new_palette:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             else:
@@ -1073,6 +1108,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_object_x:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.get_state:
+                self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.print_text:
                 self.body = Scumm6Opcodes.Print(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.walk_actor_to_obj:
@@ -1093,6 +1130,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_word_var:
                 self.body = Scumm6Opcodes.WordVarData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.get_actor_scale_x:
+                self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.ge:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.cursor_command:
