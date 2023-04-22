@@ -32,6 +32,8 @@ class Scumm6View(BinaryView):
         self.arch = Architecture[arch]
         self.platform = Architecture[arch].standalone_platform
 
+        # self.add_auto_segment(0x1000000, 0x1000, 0, 0, SegmentFlag.SegmentReadable)
+
         for start, end, name in self.scripts:
             print('adding segment:', hex(start), hex(end), name)
             size = end - start

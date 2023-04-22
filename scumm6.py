@@ -155,9 +155,9 @@ class Scumm6(Architecture):
         if not view:
             raise Exception(f'prev_instruction: no view at {addr:x}')
         prev_addr = self.op_addrs[filename].closest_left_match(addr)
-        print(f'prev_instruction: addr:{addr:x} -> prev:{prev_addr:x}')
+        # print(f'prev_instruction: addr:{addr:x} -> prev:{prev_addr:x}')
         data2 = view.read(prev_addr, 256)
-        dis = self.decode_instruction(data2, len(data2))
+        dis = self.decode_instruction(data2, prev_addr)
         if not dis:
             raise Exception(f'prev_instruction: no disasm at {prev_addr:x} len{len(data)}')
         return dis
@@ -366,6 +366,18 @@ class Scumm6(Architecture):
         elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
             add_intrinsic(op.id.name, body)
             il.append(il.no_ret())
+        elif op.id == OpType.start_script_quick:
+            args = do_pop_list(body)
+            dis2 = dis
+            # need to skip the number of args, and get the function number
+            # print(f'>>> {hex(addr)} calling {len(args)} args')
+            for _ in range(len(args) + 2):
+                # print(f'   >> prev for {hex(dis2.addr)}')
+                dis2 = self.prev_instruction(dis2.data, dis2.addr)
+            op_prev = dis2[0]
+            if op_prev.id not in [OpType.push_byte, OpType.push_word]:
+                raise Exception(f'unsupported op_prev {dis2[1]} at {hex(addr)}')
+            print(f'>>> {hex(addr)} calling function #{op_prev.body.data} with {len(args)} args')
         elif op.id == OpType.stop_script:
             add_intrinsic(op.id.name, body)
             dis2 = self.prev_instruction(data, addr)
@@ -400,7 +412,7 @@ class Scumm6(Architecture):
         if implemented:
             view, filename = self.get_view(data, addr)
             if not view:
-                raise Exception(f"No view for data at {hex(addr)}")
+                raise Exception(f"Can't save current addr: No view for data at {hex(addr)}")
             self.op_addrs[filename].insert_sorted(addr)
             # print(self.op_addrs[filename]._list)
 
