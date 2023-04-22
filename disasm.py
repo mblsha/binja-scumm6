@@ -2,6 +2,8 @@ from kaitaistruct import KaitaiStream, BytesIO
 from .scumm6_opcodes import Scumm6Opcodes
 from .scumm6_container import Scumm6Container
 
+BlockType = Scumm6Container.BlockType
+
 def pretty_scumm(block, pos=0, level=0):
     if not getattr(block.block_type, 'value', None):
         return block
@@ -18,17 +20,28 @@ def pretty_scumm(block, pos=0, level=0):
         r[type_str] = (hex(pos), block.block_data)
     return r
 
-def get_script_addrs(block, pos=0):
+def get_script_addrs(block, state, pos=0):
     r = []
+
+    if block.block_type == BlockType.room:
+        state['room'] += 1
+        state['scrp'] = 0
+
     if type(block.block_data) == Scumm6Container.NestedBlocks:
         pos += 8
         for b in block.block_data.blocks:
-            r.extend(get_script_addrs(b, pos))
+            r.extend(get_script_addrs(b, state, pos))
             pos += b.block_size
     elif type(block.block_data) == Scumm6Container.Script:
-        r.append(((pos + 8), (pos + block.block_size)))
+        name = block.block_type.name
+        if block.block_type == BlockType.scrp:
+            state['scrp'] += 1
+            name = f'scrp{state["scrp"]}'
+        r.append(((pos + 8), (pos + block.block_size),
+                  f'room{state["room"]}_{name}'))
     elif type(block.block_data) == Scumm6Container.LocalScript:
-        r.append(((pos + 8 + 1), (pos + block.block_size)))
+        r.append(((pos + 8 + 1), (pos + block.block_size),
+                  f'room{state["room"]}_local{block.block_data.index}'))
     # TODO: VerbScript
     # elif type(block.block_data) == Scumm6Container.VerbScript:
     return r
@@ -61,7 +74,10 @@ class Scumm6Disasm:
         try:
             ks = KaitaiStream(BytesIO(data))
             r = Scumm6Container(ks)
-            return get_script_addrs(r.blocks[0], 0)
+            state = {
+                'room': 0,
+            }
+            return get_script_addrs(r.blocks[0], state, 0)
         except EOFError:
             return None
         except Exception as e:

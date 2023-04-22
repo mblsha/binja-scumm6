@@ -118,8 +118,8 @@ types:
 
             'block_type::encd': script
             'block_type::excd': script
-            'block_type::lscr': local_script
             'block_type::scrp': script
+            'block_type::lscr': local_script
             'block_type::verb': verb_script
 
             # 'block_type::soun': nested_blocks
