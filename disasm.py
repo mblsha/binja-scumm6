@@ -37,6 +37,11 @@ def get_script_addrs(block, state, pos=0):
         if block.block_type == BlockType.scrp:
             state['scrp'] += 1
             name = f'scrp{state["scrp"]}'
+        elif block.block_type == BlockType.encd:
+            name = 'enter'
+        elif block.block_type == BlockType.excd:
+            name = 'exit'
+
         r.append(((pos + 8), (pos + block.block_size),
                   f'room{state["room"]}_{name}'))
     elif type(block.block_data) == Scumm6Container.LocalScript:

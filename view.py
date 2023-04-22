@@ -37,6 +37,9 @@ class Scumm6View(BinaryView):
             size = end - start
             # self.add_auto_segment(0, start, 0, start, SegmentFlag.SegmentDenyExecute)
             self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentContainsCode)
+            self.create_user_function(start)
+            f = self.get_function_at(start)
+            f.name = name
             # self.add_user_section("func1", start, size, SectionSemantics.ReadOnlyCodeSectionSemantics)
             # self.add_auto_segment(end, self.parent_view.end - end, end, self.parent_view.end - end, SegmentFlag.SegmentDenyExecute)
             # break
