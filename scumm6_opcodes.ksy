@@ -411,7 +411,7 @@ types:
             'op_type::get_object_y': call_func_pop1_push
             'op_type::get_object_old_dir': call_func_pop1_push
             'op_type::get_object_new_dir': call_func_pop1_push
-            # 'op_type::get_actor_walk_box': call_func_pop1_push
+            'op_type::get_actor_walk_box': call_func_pop1_push
             # 'op_type::get_actor_costume': no_data
             'op_type::find_inventory': call_func_pop2_push
             # 'op_type::get_inventory_count': no_data
@@ -432,7 +432,7 @@ types:
             # 'op_type::get_actor_elevation': no_data
             # 'op_type::get_verb_entrypoint': no_data
             'op_type::array_ops': array_ops
-            # 'op_type::save_restore_verbs': no_data
+            'op_type::save_restore_verbs': call_func_pop3_byte
             # 'op_type::draw_box': no_data
             'op_type::pop2': call_func_pop1
             # 'op_type::get_actor_width': no_data
@@ -645,6 +645,17 @@ types:
           value: 3
     -webide-representation: '{data}'
 
+  call_func_pop3_byte:
+    seq:
+      - id: call_func
+        size: 0
+      - id: param
+        type: s1
+    instances:
+        pop_count:
+          value: 1
+    -webide-representation: '{data}'
+
   call_func_pop4:
     seq:
       - id: call_func
@@ -735,22 +746,23 @@ types:
           switch-on: subop
           cases:
             'subop_type::verb_init': call_func_pop1
-            # 'subop_type::verb_image': no_data
+            'subop_type::verb_image': call_func_pop1
             # 'subop_type::verb_name': no_data
             'subop_type::verb_color': call_func_pop1
-            # 'subop_type::verb_hicolor': no_data
-            # 'subop_type::verb_at': no_data
-            # 'subop_type::verb_on': no_data
-            # 'subop_type::verb_off': no_data
-            # 'subop_type::verb_delete': no_data
+            'subop_type::verb_hicolor': call_func_pop1
+            'subop_type::verb_at': call_func_pop2
+            'subop_type::verb_on': call_func_pop0
+            'subop_type::verb_off': call_func_pop0
+            'subop_type::verb_delete': call_func_pop1
             'subop_type::verb_new': call_func_pop0
-            # 'subop_type::verb_dimcolor': no_data
-            # 'subop_type::verb_dim': no_data
-            # 'subop_type::verb_key': no_data
-            # 'subop_type::verb_center': no_data
+            'subop_type::verb_dimcolor': call_func_pop1
+            'subop_type::verb_dim': call_func_pop0
+            'subop_type::verb_key': call_func_pop1
+            'subop_type::verb_center': call_func_pop0
             # 'subop_type::verb_name_str': no_data
-            # 'subop_type::verb_image_in_room': no_data
-            # 'subop_type::verb_bakcolor': no_data
+            'subop_type::verb_image_in_room': call_func_pop2
+            'subop_type::verb_bakcolor': call_func_pop1
+            'subop_type::endd': call_func_pop0
             _: unknown_op
     -webide-representation: '{subop}'
 
@@ -904,7 +916,6 @@ types:
             # 'subop_type::actor_walk_resume': no_data
             # 'subop_type::actor_talk_script': no_data
             # 'subop_type::baseop': no_data
-            # 'subop_type::endd': no_data
             _: unknown_op
     -webide-representation: '{subop}'
 
@@ -940,6 +951,7 @@ types:
             'subop_type::color': call_func_pop1
             'subop_type::mumble': call_func_pop0
             'subop_type::at': call_func_pop2
+            'subop_type::endd': call_func_pop0
             _: unknown_op
     -webide-representation: '{subop}'
 
