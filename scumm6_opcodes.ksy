@@ -364,7 +364,7 @@ types:
             'op_type::if_not': jump_data
             'op_type::start_script': start_script
             'op_type::start_script_quick': start_script_quick
-            # 'op_type::start_object': no_data
+            'op_type::start_object': start_object
             'op_type::draw_object': call_func_pop2
             # 'op_type::draw_object_at': no_data
             # 'op_type::draw_blast_object': no_data
@@ -416,8 +416,8 @@ types:
             'op_type::find_inventory': call_func_pop2_push
             # 'op_type::get_inventory_count': no_data
             # 'op_type::get_verb_from_xy': no_data
-            # 'op_type::begin_override': no_data
-            # 'op_type::end_override': no_data
+            'op_type::begin_override': begin_override
+            'op_type::end_override': call_func_pop0
             # 'op_type::set_object_name': no_data
             # 'op_type::is_sound_running': no_data
             # 'op_type::set_box_flags': no_data
@@ -546,6 +546,32 @@ types:
         size: 0
     instances:
         pop_list:
+          value: true
+    -webide-representation: '{data}'
+
+  begin_override:
+    seq:
+      - id: call_func
+        size: 0
+      - id: arg1
+        type: s1
+      - id: arg2
+        type: s2
+    instances:
+        pop_count:
+          value: 0
+    -webide-representation: '{data}'
+
+  start_object:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 3
+        pop_list:
+          value: true
+        pop_list_first:
           value: true
     -webide-representation: '{data}'
 
@@ -856,11 +882,6 @@ types:
         type:
           switch-on: subop
           cases:
-            # 'subop_type::color': no_data
-            # 'subop_type::clipped': no_data
-            # 'subop_type::center': no_data
-            # 'subop_type::left': no_data
-            # 'subop_type::overhead': no_data
             'subop_type::set_costume': call_func_pop1
             'subop_type::step_dist': call_func_pop2
             # 'subop_type::sound': no_data
@@ -946,11 +967,15 @@ types:
         type:
           switch-on: subop
           cases:
-            'subop_type::baseop': no_data
-            'subop_type::textstring': talk_actor
-            'subop_type::color': call_func_pop1
-            'subop_type::mumble': call_func_pop0
             'subop_type::at': call_func_pop2
+            'subop_type::color': call_func_pop1
+            'subop_type::clipped': call_func_pop1
+            'subop_type::center': call_func_pop0
+            'subop_type::left': call_func_pop0
+            'subop_type::overhead': call_func_pop0
+            'subop_type::textstring': talk_actor # FIXME: rename to printString?
+            'subop_type::mumble': call_func_pop0
+            'subop_type::baseop': no_data
             'subop_type::endd': call_func_pop0
             _: unknown_op
     -webide-representation: '{subop}'

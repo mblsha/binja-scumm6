@@ -503,8 +503,12 @@ class Scumm6Opcodes(KaitaiStruct):
         def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
-            if _on == Scumm6Opcodes.SubopType.baseop:
+            if _on == Scumm6Opcodes.SubopType.overhead:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.baseop:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.clipped:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.mumble:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.at:
@@ -513,8 +517,12 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.color:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.left:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.textstring:
                 self.body = Scumm6Opcodes.TalkActor(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.center:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             else:
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
@@ -672,6 +680,27 @@ class Scumm6Opcodes(KaitaiStruct):
                 return self._m_pop_count
 
             self._m_pop_count = 1
+            return getattr(self, '_m_pop_count', None)
+
+
+    class BeginOverride(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+            self.arg1 = self._io.read_s1()
+            self.arg2 = self._io.read_s2le()
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 0
             return getattr(self, '_m_pop_count', None)
 
 
@@ -885,6 +914,41 @@ class Scumm6Opcodes(KaitaiStruct):
             return getattr(self, '_m_pop_count', None)
 
 
+    class StartObject(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 3
+            return getattr(self, '_m_pop_count', None)
+
+        @property
+        def pop_list(self):
+            if hasattr(self, '_m_pop_list'):
+                return self._m_pop_list
+
+            self._m_pop_list = True
+            return getattr(self, '_m_pop_list', None)
+
+        @property
+        def pop_list_first(self):
+            if hasattr(self, '_m_pop_list_first'):
+                return self._m_pop_list_first
+
+            self._m_pop_list_first = True
+            return getattr(self, '_m_pop_list_first', None)
+
+
     class WordVarData(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -1075,10 +1139,14 @@ class Scumm6Opcodes(KaitaiStruct):
         def _read(self):
             self.id = KaitaiStream.resolve_enum(Scumm6Opcodes.OpType, self._io.read_u1())
             _on = self.id
-            if _on == Scumm6Opcodes.OpType.get_actor_anim_counter:
+            if _on == Scumm6Opcodes.OpType.start_object:
+                self.body = Scumm6Opcodes.StartObject(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.get_actor_anim_counter:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_script:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.end_override:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.load_room:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_sentence:
@@ -1099,6 +1167,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_word:
                 self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.begin_override:
+                self.body = Scumm6Opcodes.BeginOverride(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_object_old_dir:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_object_code2:
