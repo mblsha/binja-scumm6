@@ -400,7 +400,7 @@ types:
             # 'op_type::face_actor': no_data
             'op_type::animate_actor': call_func_pop2
             # 'op_type::do_sentence': no_data
-            # 'op_type::pickup_object': no_data
+            'op_type::pickup_object': call_func_pop2
             # 'op_type::load_room_with_ego': no_data
             'op_type::get_random_number': call_func_pop1_push
             # 'op_type::get_random_number_range': no_data
