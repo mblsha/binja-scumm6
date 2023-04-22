@@ -352,11 +352,11 @@ types:
             # 'op_type::word_array_write': no_data
             # 'op_type::byte_array_indexed_write': no_data
             # 'op_type::word_array_indexed_write': no_data
-            # 'op_type::byte_var_inc': no_data
-            # 'op_type::word_var_inc': no_data
             # 'op_type::byte_array_inc': no_data
             # 'op_type::word_array_inc': no_data
-            # 'op_type::byte_var_dec': no_data
+            'op_type::byte_var_inc': byte_var_data
+            'op_type::word_var_inc': word_var_data
+            'op_type::byte_var_dec': byte_var_data
             'op_type::word_var_dec': word_var_data
             # 'op_type::byte_array_dec': no_data
             # 'op_type::word_array_dec': no_data

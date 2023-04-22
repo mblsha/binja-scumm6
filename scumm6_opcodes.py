@@ -1329,6 +1329,10 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.begin_override:
                 self.body = Scumm6Opcodes.BeginOverride(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.byte_var_dec:
+                self.body = Scumm6Opcodes.ByteVarData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.byte_var_inc:
+                self.body = Scumm6Opcodes.ByteVarData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_object_old_dir:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_object_code2:
@@ -1399,6 +1403,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.Print(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.dist_pt_pt:
                 self.body = Scumm6Opcodes.CallFuncPop4Push(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.word_var_inc:
+                self.body = Scumm6Opcodes.WordVarData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.delay_frames:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.sound_kludge:

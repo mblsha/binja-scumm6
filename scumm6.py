@@ -275,10 +275,18 @@ class Scumm6(Architecture):
             il.append(il.store(4, var_addr(body.data), il.pop(4)))
         elif op.id in [OpType.push_byte_var, OpType.push_word_var]:
             il.append(il.push(4, il.load(4, var_addr(body.data))))
-        elif op.id in [OpType.byte_var_dec, OpType.word_var_dec]:
+        elif op.id in [OpType.byte_var_inc, OpType.word_var_inc,
+                       OpType.byte_var_dec, OpType.word_var_dec]:
+            inc = {
+                OpType.byte_var_inc: il.add,
+                OpType.word_var_inc: il.add,
+                OpType.byte_var_dec: il.sub,
+                OpType.word_var_dec: il.sub,
+            }
+
             il.append(il.set_reg(4, LLIL_TEMP(0), var_addr(body.data)))
             il.append(il.store(4, il.reg(4, LLIL_TEMP(0)),
-                                  il.sub(4,
+                                  inc[op.id](4,
                                          il.load(4, il.reg(4, LLIL_TEMP(0))),
                                          il.const(4, 1))))
         # elif op.id in [OpType.byte_array_read, OpType.word_array_read]:
