@@ -547,6 +547,8 @@ types:
     instances:
         pop_list:
           value: true
+        pop_list_first:
+          value: true
     -webide-representation: '{data}'
 
   begin_override:

@@ -508,6 +508,14 @@ class Scumm6Opcodes(KaitaiStruct):
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
 
+        @property
+        def pop_list_first(self):
+            if hasattr(self, '_m_pop_list_first'):
+                return self._m_pop_list_first
+
+            self._m_pop_list_first = True
+            return getattr(self, '_m_pop_list_first', None)
+
 
     class SystemOps(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
