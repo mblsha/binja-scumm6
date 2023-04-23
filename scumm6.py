@@ -391,7 +391,6 @@ class Scumm6(Architecture):
                 print(f'>>> {hex(addr)} calling function #{get_dis_value(func_num)} with {len(args)} args')
                 il.append(il.intrinsic([], op.id.name, [il.pop(4)] + args))
         elif op.id == OpType.stop_script:
-            add_intrinsic(op.id.name, body)
             prev_value = get_prev_value(dis)
             il.append(il.intrinsic([], op.id.name, [il.pop(4)]))
             if prev_value == 0:
