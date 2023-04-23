@@ -27,6 +27,7 @@ from binaryninjaui import UIContext
 from .disasm import Scumm6Disasm, Instruction
 from .scumm6_opcodes import Scumm6Opcodes
 OpType = Scumm6Opcodes.OpType
+VarType = Scumm6Opcodes.VarType
 SubopType = Scumm6Opcodes.SubopType
 
 last_bv = None
@@ -62,19 +63,15 @@ class Scumm6(Architecture):
     max_instr_length = 256
     endianness = Endianness.LittleEndian
     regs = {
-       'p0':  RegisterInfo('r', 4),
-       'p1':  RegisterInfo('r', 4),
-       'p2':  RegisterInfo('r', 4),
-       'p3':  RegisterInfo('r', 4),
-       'p4':  RegisterInfo('r', 4),
-       'p5':  RegisterInfo('r', 4),
-       'p6':  RegisterInfo('r', 4),
-       'p7':  RegisterInfo('r', 4),
-       'p8':  RegisterInfo('r', 4),
-       'p9':  RegisterInfo('r', 4),
-
-       'r':  RegisterInfo('r', 4),
-       'sp': RegisterInfo('sp', 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth),
+        'sp': RegisterInfo('sp', 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth),
+    } | { # normal
+        f'N{i}': RegisterInfo(f'N{i}', 4) for i in range(1024)
+    } | { # local
+        f'L{i}': RegisterInfo(f'L{i}', 4) for i in range(1024)
+    } | { # room
+        f'R{i}': RegisterInfo(f'R{i}', 4) for i in range(1024)
+    } | { # global
+        f'G{i}': RegisterInfo(f'G{i}', 4) for i in range(1024)
     }
 
     stack_pointer = 'sp'
@@ -239,12 +236,23 @@ class Scumm6(Architecture):
         if not dis:
             return None
 
-        # FIXME: support switching based on var type
-        # use registers for local vars, and split to read/write funcs?
-        def var_addr(var_index):
-            start = il.const_pointer(4, 0x100000)
-            offs = il.mult(4, il.const(4, 4), il.const(4, var_index))
-            return il.add(4, start, offs)
+        # # FIXME: support switching based on var type
+        # # use registers for local vars, and split to read/write funcs?
+        # def var_addr(var_index):
+        #     start = il.const_pointer(4, 0x100000)
+        #     offs = il.mult(4, il.const(4, 4), il.const(4, var_index))
+        #     return il.add(4, start, offs)
+        def reg_name(block):
+            if block.type == VarType.normal:
+                return f'N{block.data}'
+            elif block.type == VarType.local:
+                return f'L{block.data}'
+            elif block.type == VarType.room:
+                return f'R{block.data}'
+            elif block.type == VarType.globall:
+                return f'G{block.data}'
+            else:
+                raise Exception(f"reg_name: unsupported var type '{block.type}'")
 
         def get_prev_dis(instr):
             prev = self.prev_instruction(instr)
@@ -298,9 +306,11 @@ class Scumm6(Architecture):
         if op.id in [OpType.push_byte, OpType.push_word]:
             il.append(il.push(4, il.const(4, body.data)))
         elif op.id in [OpType.write_byte_var, OpType.write_word_var]:
-            il.append(il.store(4, var_addr(body.data), il.pop(4)))
+            # il.append(il.store(4, var_addr(body.data), il.pop(4)))
+            il.append(il.set_reg(4, reg_name(body), il.pop(4)))
         elif op.id in [OpType.push_byte_var, OpType.push_word_var]:
-            il.append(il.push(4, il.load(4, var_addr(body.data))))
+            # il.append(il.push(4, il.load(4, var_addr(body.data))))
+            il.append(il.push(4, il.reg(4, reg_name(body))))
         elif op.id in [OpType.byte_var_inc, OpType.word_var_inc,
                        OpType.byte_var_dec, OpType.word_var_dec]:
             inc = {
@@ -309,10 +319,14 @@ class Scumm6(Architecture):
                 OpType.byte_var_dec: il.sub,
                 OpType.word_var_dec: il.sub,
             }
-            il.append(il.set_reg(4, LLIL_TEMP(0), var_addr(body.data)))
-            il.append(il.store(4, il.reg(4, LLIL_TEMP(0)),
+            # il.append(il.set_reg(4, LLIL_TEMP(0), var_addr(body.data)))
+            # il.append(il.store(4, il.reg(4, LLIL_TEMP(0)),
+            #                       inc[op.id](4,
+            #                              il.load(4, il.reg(4, LLIL_TEMP(0))),
+            #                              il.const(4, 1))))
+            il.append(il.set_reg(4, reg_name(body),
                                   inc[op.id](4,
-                                         il.load(4, il.reg(4, LLIL_TEMP(0))),
+                                         il.reg(4, reg_name(body)),
                                          il.const(4, 1))))
         # elif op.id in [OpType.byte_array_read, OpType.word_array_read]:
         #     il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # base
