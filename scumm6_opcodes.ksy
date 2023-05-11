@@ -343,8 +343,8 @@ types:
             'op_type::sub': no_data
             'op_type::mul': no_data
             'op_type::div': no_data
-            # 'op_type::land': no_data
-            # 'op_type::lor': no_data
+            'op_type::land': no_data
+            'op_type::lor': no_data
             'op_type::pop1': call_func_pop1
             # 'op_type::write_byte_var': no_data
             'op_type::write_word_var': word_var_data
@@ -381,14 +381,14 @@ types:
             'op_type::set_class': set_class
             'op_type::get_state': call_func_pop1_push
             'op_type::set_state': call_func_pop2
-            # 'op_type::set_owner': no_data
+            'op_type::set_owner': call_func_pop2
             # 'op_type::get_owner': no_data
             'op_type::jump': jump_data
             'op_type::start_sound': call_func_pop1
             'op_type::stop_sound': call_func_pop1
             # 'op_type::start_music': no_data
             # 'op_type::stop_object_script': no_data
-            # 'op_type::pan_camera_to': no_data
+            'op_type::pan_camera_to': call_func_pop1
             'op_type::actor_follow_camera': call_func_pop1
             'op_type::set_camera_at': call_func_pop1
             'op_type::load_room': call_func_pop1
@@ -420,14 +420,14 @@ types:
             'op_type::end_override': call_func_pop0
             # 'op_type::set_object_name': no_data
             # 'op_type::is_sound_running': no_data
-            # 'op_type::set_box_flags': no_data
+            'op_type::set_box_flags': set_box_flags
             # 'op_type::create_box_matrix': no_data
             'op_type::resource_routines': resource_routines
             'op_type::room_ops': room_ops
             'op_type::actor_ops': actor_ops
             'op_type::verb_ops': verb_ops
             # 'op_type::get_actor_from_xy': no_data
-            # 'op_type::find_object': no_data
+            'op_type::find_object': call_func_pop2_push
             # 'op_type::pseudo_room': no_data
             # 'op_type::get_actor_elevation': no_data
             # 'op_type::get_verb_entrypoint': no_data
@@ -614,6 +614,19 @@ types:
           value: 2
         push_count:
           value: 1
+    -webide-representation: '{data}'
+
+  set_box_flags:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 1
+        pop_list:
+          value: true
+        pop_list_first:
+          value: false
     -webide-representation: '{data}'
 
   set_class:
@@ -966,7 +979,7 @@ types:
             'subop_type::cursor_off': call_func_pop0
             'subop_type::cursor_soft_on': call_func_pop0
             'subop_type::cursor_soft_off': call_func_pop0
-            # 'subop_type::cursor_image': no_data
+            'subop_type::cursor_image': call_func_pop2
             'subop_type::cursor_hotspot': call_func_pop2
             'subop_type::cursor_transparent': call_func_pop1
             'subop_type::userput_on': call_func_pop0

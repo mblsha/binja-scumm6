@@ -349,12 +349,14 @@ class Scumm6(Architecture):
             il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4))) # b
             comp_res = comp[op.id](4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))
             il.append(il.push(4, comp_res))
-        elif op.id in [OpType.add, OpType.sub, OpType.mul, OpType.div]:
+        elif op.id in [OpType.add, OpType.sub, OpType.mul, OpType.div, OpType.land, OpType.lor]:
             subopt = {
                 OpType.add: il.add,
                 OpType.sub: il.sub,
                 OpType.mul: il.mult,
                 OpType.div: il.div_signed,
+                OpType.land: il.and_expr,
+                OpType.lor: il.or_expr,
             }
             il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # a
             il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4))) # b
@@ -422,7 +424,8 @@ class Scumm6(Architecture):
         elif op.id in [OpType.break_here]:
             il.append(il.intrinsic([], op.id.name, []))
         else:
-            print(f'not implemented {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}')
+            if op.id not in [OpType.talk_actor]:
+                print(f'not implemented {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}')
             implemented = False
             il.append(il.unimplemented())
 

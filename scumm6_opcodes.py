@@ -619,6 +619,41 @@ class Scumm6Opcodes(KaitaiStruct):
             return getattr(self, '_m_pop_count', None)
 
 
+    class SetBoxFlags(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 1
+            return getattr(self, '_m_pop_count', None)
+
+        @property
+        def pop_list(self):
+            if hasattr(self, '_m_pop_list'):
+                return self._m_pop_list
+
+            self._m_pop_list = True
+            return getattr(self, '_m_pop_list', None)
+
+        @property
+        def pop_list_first(self):
+            if hasattr(self, '_m_pop_list_first'):
+                return self._m_pop_list_first
+
+            self._m_pop_list_first = False
+            return getattr(self, '_m_pop_list_first', None)
+
+
     class Print(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -1410,6 +1445,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.userput_on:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.cursor_image:
+                self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.cursor_soft_on:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.cursor_off:
@@ -1518,6 +1555,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_random_number:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.land:
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.find_inventory:
                 self.body = Scumm6Opcodes.CallFuncPop2Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.delay_seconds:
@@ -1530,6 +1569,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.BeginOverride(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.byte_var_dec:
                 self.body = Scumm6Opcodes.ByteVarData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.find_object:
+                self.body = Scumm6Opcodes.CallFuncPop2Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.byte_var_inc:
                 self.body = Scumm6Opcodes.ByteVarData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_object_old_dir:
@@ -1630,6 +1671,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.eq:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.lor:
+                self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_object_x:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_state:
@@ -1638,6 +1681,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.Print(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.walk_actor_to_obj:
                 self.body = Scumm6Opcodes.CallFuncPop3(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.set_owner:
+                self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.iff:
                 self.body = Scumm6Opcodes.JumpData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.start_script:
@@ -1652,6 +1697,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.set_state:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.pan_camera_to:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.if_not:
                 self.body = Scumm6Opcodes.JumpData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.word_array_read:
@@ -1672,6 +1719,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CursorCommand(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_object_code1:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.set_box_flags:
+                self.body = Scumm6Opcodes.SetBoxFlags(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.if_class_of_is:
                 self.body = Scumm6Opcodes.IfClassOfIs(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.word_var_dec:
