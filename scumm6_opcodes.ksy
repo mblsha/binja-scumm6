@@ -419,7 +419,7 @@ types:
             'op_type::begin_override': begin_override
             'op_type::end_override': call_func_pop0
             # 'op_type::set_object_name': no_data
-            # 'op_type::is_sound_running': no_data
+            'op_type::is_sound_running': call_func_pop1_push
             'op_type::set_box_flags': set_box_flags
             # 'op_type::create_box_matrix': no_data
             'op_type::resource_routines': resource_routines
@@ -435,7 +435,7 @@ types:
             'op_type::save_restore_verbs': call_func_pop3_byte
             # 'op_type::draw_box': no_data
             'op_type::pop2': call_func_pop1
-            # 'op_type::get_actor_width': no_data
+            'op_type::get_actor_width': call_func_pop1_push
             'op_type::wait': wait
             'op_type::get_actor_scale_x': call_func_pop1_push
             'op_type::get_actor_anim_counter': call_func_pop1_push
@@ -1039,9 +1039,10 @@ types:
             'subop_type::actor_width': call_func_pop1
             'subop_type::scale': call_func_pop1
             'subop_type::never_zclip': call_func_pop0
-            # 'subop_type::always_zclip': no_data
+            'subop_type::always_zclip': call_func_pop1
+            'subop_type::always_zclip_ft_demo': call_func_pop1
             'subop_type::ignore_boxes': call_func_pop0
-            # 'subop_type::follow_boxes': no_data
+            'subop_type::follow_boxes': call_func_pop0
             # 'subop_type::animation_speed': no_data
             # 'subop_type::shadow': no_data
             'subop_type::text_offset': call_func_pop2
@@ -1056,7 +1057,6 @@ types:
             # 'subop_type::actor_ignore_turns_on': no_data
             # 'subop_type::actor_ignore_turns_off': no_data
             # 'subop_type::neww': no_data
-            # 'subop_type::always_zclip_ft_demo': no_data
             # 'subop_type::wait_for_animation': no_data
             # 'subop_type::actor_depth': no_data
             # 'subop_type::actor_walk_script': no_data

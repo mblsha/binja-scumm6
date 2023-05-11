@@ -867,7 +867,9 @@ class Scumm6Opcodes(KaitaiStruct):
         def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
-            if _on == Scumm6Opcodes.SubopType.palette:
+            if _on == Scumm6Opcodes.SubopType.follow_boxes:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.palette:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.init:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
@@ -880,6 +882,8 @@ class Scumm6Opcodes(KaitaiStruct):
             elif _on == Scumm6Opcodes.SubopType.walk_animation:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.stand_animation:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.always_zclip_ft_demo:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.ignore_boxes:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
@@ -896,6 +900,8 @@ class Scumm6Opcodes(KaitaiStruct):
             elif _on == Scumm6Opcodes.SubopType.talk_animation:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.scale:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.always_zclip:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.actor_name:
                 self.body = Scumm6Opcodes.CallFuncString(self._io, self, self._root)
@@ -1553,6 +1559,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.animate_actor:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.get_actor_width:
+                self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_random_number:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.land:
@@ -1645,6 +1653,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.ByteData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.put_actor_at_xy:
                 self.body = Scumm6Opcodes.CallFuncPop4(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.is_sound_running:
+                self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.print_line:
                 self.body = Scumm6Opcodes.Print(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.dist_pt_pt:
