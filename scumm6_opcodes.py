@@ -1675,6 +1675,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.break_here:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.get_random_number_range:
+                self.body = Scumm6Opcodes.CallFuncPop2Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.actor_follow_camera:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.sub:

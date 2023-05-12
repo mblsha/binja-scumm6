@@ -403,7 +403,7 @@ types:
             'op_type::pickup_object': call_func_pop2
             # 'op_type::load_room_with_ego': no_data
             'op_type::get_random_number': call_func_pop1_push
-            # 'op_type::get_random_number_range': no_data
+            'op_type::get_random_number_range': call_func_pop2_push
             'op_type::get_actor_moving': call_func_pop1_push
             'op_type::is_script_running': call_func_pop1_push
             'op_type::get_actor_room': call_func_pop1_push
@@ -913,6 +913,7 @@ types:
           cases:
             'subop_type::verb_init': call_func_pop1
             'subop_type::verb_image': call_func_pop1
+            # FIXME: probably wrong?
             'subop_type::verb_name': string_data
             'subop_type::verb_color': call_func_pop1
             'subop_type::verb_hicolor': call_func_pop1
