@@ -1684,6 +1684,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_sentence:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.set_object_name:
+                self.body = Scumm6Opcodes.TalkActor(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.end_cutscene:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.draw_object:
@@ -1888,6 +1890,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.SetBoxFlags(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.if_class_of_is:
                 self.body = Scumm6Opcodes.IfClassOfIs(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.do_sentence:
+                self.body = Scumm6Opcodes.CallFuncPop4(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.word_var_dec:
                 self.body = Scumm6Opcodes.WordVarData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.dist_object_pt:

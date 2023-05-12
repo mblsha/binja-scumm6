@@ -225,7 +225,7 @@ class Scumm6(Architecture):
                     args.append('UNKNOWN')
             tokens += tokenize_params(*args)
 
-        if op.id == OpType.talk_actor:
+        if op.id in [OpType.talk_actor, OpType.set_object_name]:
             args = []
             for tcmd in body.cmds:
                 if getattr(tcmd, 'data', None):

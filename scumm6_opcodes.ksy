@@ -400,7 +400,7 @@ types:
             'op_type::put_actor_at_object': call_func_pop3
             'op_type::face_actor': call_func_pop2
             'op_type::animate_actor': call_func_pop2
-            # 'op_type::do_sentence': no_data
+            'op_type::do_sentence': call_func_pop4
             'op_type::pickup_object': call_func_pop2
             'op_type::get_random_number': call_func_pop1_push
             'op_type::get_random_number_range': call_func_pop2_push
@@ -419,7 +419,7 @@ types:
             'op_type::get_verb_entrypoint': call_func_pop2_push
             'op_type::begin_override': begin_override
             'op_type::end_override': call_func_pop0
-            # 'op_type::set_object_name': no_data
+            'op_type::set_object_name': talk_actor
             'op_type::is_sound_running': call_func_pop1_push
             'op_type::set_box_flags': set_box_flags
             'op_type::create_box_matrix': call_func_pop0
