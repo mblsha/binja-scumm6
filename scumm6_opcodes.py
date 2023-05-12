@@ -471,6 +471,34 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
+    class ByteArrayIndexedRead(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+            self.array = self._io.read_u1()
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 2
+            return getattr(self, '_m_pop_count', None)
+
+        @property
+        def push_count(self):
+            if hasattr(self, '_m_push_count'):
+                return self._m_push_count
+
+            self._m_push_count = 1
+            return getattr(self, '_m_push_count', None)
+
+
     class CallFuncPop1(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -818,6 +846,34 @@ class Scumm6Opcodes(KaitaiStruct):
             return getattr(self, '_m_pop_count', None)
 
 
+    class WordArrayIndexedWrite(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+            self.array = self._io.read_u2le()
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 3
+            return getattr(self, '_m_pop_count', None)
+
+        @property
+        def push_count(self):
+            if hasattr(self, '_m_push_count'):
+                return self._m_push_count
+
+            self._m_push_count = 1
+            return getattr(self, '_m_push_count', None)
+
+
     class ByteArrayRead(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -857,6 +913,41 @@ class Scumm6Opcodes(KaitaiStruct):
             self.jump_offset = self._io.read_s2le()
 
 
+    class DrawBlastObject(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 5
+            return getattr(self, '_m_pop_count', None)
+
+        @property
+        def pop_list(self):
+            if hasattr(self, '_m_pop_list'):
+                return self._m_pop_list
+
+            self._m_pop_list = True
+            return getattr(self, '_m_pop_list', None)
+
+        @property
+        def pop_list_first(self):
+            if hasattr(self, '_m_pop_list_first'):
+                return self._m_pop_list_first
+
+            self._m_pop_list_first = True
+            return getattr(self, '_m_pop_list_first', None)
+
+
     class ActorOps(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -869,6 +960,8 @@ class Scumm6Opcodes(KaitaiStruct):
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.follow_boxes:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.init_animation:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.palette:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.init:
@@ -990,7 +1083,7 @@ class Scumm6Opcodes(KaitaiStruct):
             elif _on == Scumm6Opcodes.SubopType.endd:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.verb_name:
-                self.body = Scumm6Opcodes.StringData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.TalkActor(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.verb_at:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.verb_hicolor:
@@ -1035,6 +1128,34 @@ class Scumm6Opcodes(KaitaiStruct):
                 return self._m_pop_count
 
             self._m_pop_count = 4
+            return getattr(self, '_m_pop_count', None)
+
+        @property
+        def push_count(self):
+            if hasattr(self, '_m_push_count'):
+                return self._m_push_count
+
+            self._m_push_count = 1
+            return getattr(self, '_m_push_count', None)
+
+
+    class WordArrayIndexedRead(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+            self.array = self._io.read_u2le()
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
 
         @property
@@ -1555,6 +1676,10 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.end_override:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.word_array_indexed_write:
+                self.body = Scumm6Opcodes.WordArrayIndexedWrite(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.byte_array_indexed_write:
+                self.body = Scumm6Opcodes.ByteArrayIndexedWrite(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.load_room:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_sentence:
@@ -1565,6 +1690,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.animate_actor:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.word_array_indexed_read:
+                self.body = Scumm6Opcodes.WordArrayIndexedRead(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.create_box_matrix:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_actor_width:
@@ -1589,6 +1716,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop2Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.byte_var_inc:
                 self.body = Scumm6Opcodes.ByteVarData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.draw_blast_object:
+                self.body = Scumm6Opcodes.DrawBlastObject(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_object_old_dir:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_object_code2:
@@ -1621,6 +1750,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.TalkActor(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.cutscene:
                 self.body = Scumm6Opcodes.CallFuncList(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.set_blast_object_window:
+                self.body = Scumm6Opcodes.CallFuncPop4(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.push_byte_var:
                 self.body = Scumm6Opcodes.ByteData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_actor_room:
@@ -1657,6 +1788,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.ByteArrayRead(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_sound:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.draw_object_at:
+                self.body = Scumm6Opcodes.CallFuncPop3(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.delay:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.room_ops:
@@ -1693,6 +1826,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_random_number_range:
                 self.body = Scumm6Opcodes.CallFuncPop2Push(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.byte_array_indexed_read:
+                self.body = Scumm6Opcodes.ByteArrayIndexedRead(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.actor_follow_camera:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.sub:
@@ -1781,6 +1916,34 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             else:
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
+
+
+    class ByteArrayIndexedWrite(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.call_func = self._io.read_bytes(0)
+            self.array = self._io.read_u1()
+
+        @property
+        def pop_count(self):
+            if hasattr(self, '_m_pop_count'):
+                return self._m_pop_count
+
+            self._m_pop_count = 3
+            return getattr(self, '_m_pop_count', None)
+
+        @property
+        def push_count(self):
+            if hasattr(self, '_m_push_count'):
+                return self._m_push_count
+
+            self._m_push_count = 1
+            return getattr(self, '_m_push_count', None)
 
 
 

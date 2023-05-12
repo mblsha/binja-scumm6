@@ -329,8 +329,12 @@ types:
             'op_type::push_word_var': word_var_data
             'op_type::byte_array_read': byte_array_read
             'op_type::word_array_read': word_array_read
-            # 'op_type::byte_array_indexed_read': no_data
-            # 'op_type::word_array_indexed_read': no_data
+            'op_type::byte_array_write': byte_array_write
+            'op_type::word_array_write': word_array_write
+            'op_type::byte_array_indexed_read': byte_array_indexed_read
+            'op_type::byte_array_indexed_write': byte_array_indexed_write
+            'op_type::word_array_indexed_read': word_array_indexed_read
+            'op_type::word_array_indexed_write': word_array_indexed_write
             'op_type::dup': no_data
             'op_type::nott': no_data
             'op_type::eq': no_data
@@ -348,10 +352,6 @@ types:
             'op_type::pop1': call_func_pop1
             # 'op_type::write_byte_var': no_data
             'op_type::write_word_var': word_var_data
-            'op_type::byte_array_write': byte_array_write
-            'op_type::word_array_write': word_array_write
-            # 'op_type::byte_array_indexed_write': no_data
-            # 'op_type::word_array_indexed_write': no_data
             # 'op_type::byte_array_inc': no_data
             # 'op_type::word_array_inc': no_data
             'op_type::byte_var_inc': byte_var_data
@@ -366,9 +366,9 @@ types:
             'op_type::start_script_quick': start_script_quick
             'op_type::start_object': start_object
             'op_type::draw_object': call_func_pop2
-            # 'op_type::draw_object_at': no_data
-            # 'op_type::draw_blast_object': no_data
-            # 'op_type::set_blast_object_window': no_data
+            'op_type::draw_object_at': call_func_pop3
+            'op_type::draw_blast_object': draw_blast_object
+            'op_type::set_blast_object_window': call_func_pop4
             'op_type::stop_object_code1': no_data
             'op_type::stop_object_code2': no_data
             'op_type::stop_object_script': call_func_pop1
@@ -592,6 +592,32 @@ types:
           value: 1
     -webide-representation: '{data}'
 
+  byte_array_indexed_read:
+    seq:
+      - id: call_func
+        size: 0
+      - id: array
+        type: u1
+    instances:
+        pop_count:
+          value: 2
+        push_count:
+          value: 1
+    -webide-representation: '{data}'
+
+  byte_array_indexed_write:
+    seq:
+      - id: call_func
+        size: 0
+      - id: array
+        type: u1
+    instances:
+        pop_count:
+          value: 3
+        push_count:
+          value: 1
+    -webide-representation: '{data}'
+
   word_array_read:
     seq:
       - id: call_func
@@ -616,6 +642,45 @@ types:
           value: 2
         push_count:
           value: 1
+    -webide-representation: '{data}'
+
+  word_array_indexed_read:
+    seq:
+      - id: call_func
+        size: 0
+      - id: array
+        type: u2
+    instances:
+        pop_count:
+          value: 2
+        push_count:
+          value: 1
+    -webide-representation: '{data}'
+
+  word_array_indexed_write:
+    seq:
+      - id: call_func
+        size: 0
+      - id: array
+        type: u2
+    instances:
+        pop_count:
+          value: 3
+        push_count:
+          value: 1
+    -webide-representation: '{data}'
+
+  draw_blast_object:
+    seq:
+      - id: call_func
+        size: 0
+    instances:
+        pop_count:
+          value: 5
+        pop_list:
+          value: true
+        pop_list_first:
+          value: true
     -webide-representation: '{data}'
 
   set_box_flags:
@@ -916,7 +981,7 @@ types:
             'subop_type::verb_init': call_func_pop1
             'subop_type::verb_image': call_func_pop1
             # FIXME: probably wrong?
-            'subop_type::verb_name': string_data
+            'subop_type::verb_name': talk_actor
             'subop_type::verb_color': call_func_pop1
             'subop_type::verb_hicolor': call_func_pop1
             'subop_type::verb_at': call_func_pop2
@@ -1038,7 +1103,7 @@ types:
             'subop_type::palette': call_func_pop2
             'subop_type::talk_color': call_func_pop1
             'subop_type::actor_name': call_func_string
-            # 'subop_type::init_animation': no_data
+            'subop_type::init_animation': call_func_pop1
             'subop_type::actor_width': call_func_pop1
             'subop_type::scale': call_func_pop1
             'subop_type::never_zclip': call_func_pop0
