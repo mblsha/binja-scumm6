@@ -222,6 +222,16 @@ class Scumm6(Architecture):
                 else:
                     args.append(tcmd.cmd.name)
             tokens += tokenize_params(*args)
+        elif op.id in [OpType.print_line, OpType.print_text, OpType.print_debug, OpType.print_system, OpType.print_actor, OpType.print_ego] and body.subop == SubopType.textstring:
+            args = []
+            for tcmd in body.body.cmds:
+                if getattr(tcmd, 'data', None):
+                    args.append(chr(tcmd.magic) + tcmd.data)
+                elif getattr(tcmd, 'cmd', None):
+                    args.append(tcmd.cmd.name)
+                else:
+                    args.append('UNKNOWN')
+            tokens += tokenize_params(*args)
         elif body:
             args  = [getattr(body, x)  for x in dir(body) if can_tokenize(getattr(body, x))]
             if getattr(body, 'body', None):
@@ -285,11 +295,13 @@ class Scumm6(Architecture):
             pop_list = getattr(block, 'pop_list', False)
 
             args = []
-            if pop_list:
-                assert(getattr(block, 'pop_list_first', False))
+            if pop_list and block.pop_list_first:
                 args += do_pop_list(dis)
 
             args += [il.pop(4) for _ in range(pop_count)]
+
+            if pop_list and not block.pop_list_first:
+                args += do_pop_list(dis)
 
             results = []
             if push_count:
