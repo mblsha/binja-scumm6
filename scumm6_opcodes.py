@@ -1699,8 +1699,6 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.JumpData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.start_script:
                 self.body = Scumm6Opcodes.StartScript(self._io, self, self._root)
-            elif _on == Scumm6Opcodes.OpType.print_ego:
-                self.body = Scumm6Opcodes.Print(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.word_array_write:
                 self.body = Scumm6Opcodes.WordArrayWrite(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.dim_array:

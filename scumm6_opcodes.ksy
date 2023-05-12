@@ -452,13 +452,15 @@ types:
             'op_type::print_debug': print
             'op_type::print_system': print
             'op_type::print_actor': print
-            'op_type::print_ego': print
+            # FIXME: has push(VAR_EGO)
+            # 'op_type::print_ego': print
 
             # _actorToPrintStrFor = pop1()
             # then interpreter?
             'op_type::talk_actor': talk_actor
+            # need to push(VAR_EGO)
+            # 'op_type::talk_ego': talk_actor
 
-            # 'op_type::talk_ego': no_data
             'op_type::dim_array': dim_array
             # 'op_type::dummy': no_data
             # 'op_type::start_object_quick': no_data
