@@ -881,6 +881,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.walk_animation:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.animation_speed:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.stand_animation:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.always_zclip_ft_demo:
@@ -1244,6 +1246,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.nuke_charset:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.SubopType.load_object:
+                self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.load_sound:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.unlock_room:
@@ -1543,6 +1547,8 @@ class Scumm6Opcodes(KaitaiStruct):
             _on = self.id
             if _on == Scumm6Opcodes.OpType.start_object:
                 self.body = Scumm6Opcodes.StartObject(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.get_verb_from_xy:
+                self.body = Scumm6Opcodes.CallFuncPop2Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_actor_anim_counter:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.stop_script:
@@ -1559,6 +1565,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.animate_actor:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.create_box_matrix:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_actor_width:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_random_number:
@@ -1587,6 +1595,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.freeze_unfreeze:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.put_actor_at_object:
+                self.body = Scumm6Opcodes.CallFuncPop3(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.print_debug:
                 self.body = Scumm6Opcodes.Print(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.is_actor_in_box:
@@ -1619,12 +1629,16 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.verb_ops:
                 self.body = Scumm6Opcodes.VerbOps(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.get_owner:
+                self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.abs:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.dup:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.start_script_quick:
                 self.body = Scumm6Opcodes.StartScriptQuick(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.face_actor:
+                self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.print_system:
                 self.body = Scumm6Opcodes.Print(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.neq:
@@ -1667,6 +1681,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncList(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.start_sound:
                 self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.get_verb_entrypoint:
+                self.body = Scumm6Opcodes.CallFuncPop2Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_object_new_dir:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_actor_walk_box:
@@ -1687,6 +1703,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_object_x:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.stop_object_script:
+                self.body = Scumm6Opcodes.CallFuncPop1(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_state:
                 self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.print_text:
@@ -1701,6 +1719,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.StartScript(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.word_array_write:
                 self.body = Scumm6Opcodes.WordArrayWrite(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.get_actor_costume:
+                self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.dim_array:
                 self.body = Scumm6Opcodes.DimArray(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.get_actor_moving:
@@ -1749,10 +1769,16 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.write_word_var:
                 self.body = Scumm6Opcodes.WordVarData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.load_room_with_ego:
+                self.body = Scumm6Opcodes.CallFuncPop4(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.is_any_of:
                 self.body = Scumm6Opcodes.IsAnyOf(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.actor_ops:
                 self.body = Scumm6Opcodes.ActorOps(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.stop_music:
+                self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.get_inventory_count:
+                self.body = Scumm6Opcodes.CallFuncPop1Push(self._io, self, self._root)
             else:
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 

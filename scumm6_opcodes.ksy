@@ -371,9 +371,10 @@ types:
             # 'op_type::set_blast_object_window': no_data
             'op_type::stop_object_code1': no_data
             'op_type::stop_object_code2': no_data
+            'op_type::stop_object_script': call_func_pop1
             'op_type::end_cutscene': call_func_pop0
             'op_type::cutscene': call_func_list
-            # 'op_type::stop_music': no_data
+            'op_type::stop_music': call_func_pop0
             'op_type::freeze_unfreeze': call_func_pop1
             'op_type::cursor_command': cursor_command
             'op_type::break_here': no_data
@@ -382,26 +383,25 @@ types:
             'op_type::get_state': call_func_pop1_push
             'op_type::set_state': call_func_pop2
             'op_type::set_owner': call_func_pop2
-            # 'op_type::get_owner': no_data
+            'op_type::get_owner': call_func_pop1_push
             'op_type::jump': jump_data
             'op_type::start_sound': call_func_pop1
             'op_type::stop_sound': call_func_pop1
             # 'op_type::start_music': no_data
-            # 'op_type::stop_object_script': no_data
             'op_type::pan_camera_to': call_func_pop1
             'op_type::actor_follow_camera': call_func_pop1
             'op_type::set_camera_at': call_func_pop1
             'op_type::load_room': call_func_pop1
+            'op_type::load_room_with_ego': call_func_pop4
             'op_type::stop_script': call_func_pop1
             'op_type::walk_actor_to_obj': call_func_pop3
             'op_type::walk_actor_to': call_func_pop3
             'op_type::put_actor_at_xy': call_func_pop4
-            # 'op_type::put_actor_at_object': no_data
-            # 'op_type::face_actor': no_data
+            'op_type::put_actor_at_object': call_func_pop3
+            'op_type::face_actor': call_func_pop2
             'op_type::animate_actor': call_func_pop2
             # 'op_type::do_sentence': no_data
             'op_type::pickup_object': call_func_pop2
-            # 'op_type::load_room_with_ego': no_data
             'op_type::get_random_number': call_func_pop1_push
             'op_type::get_random_number_range': call_func_pop2_push
             'op_type::get_actor_moving': call_func_pop1_push
@@ -412,16 +412,17 @@ types:
             'op_type::get_object_old_dir': call_func_pop1_push
             'op_type::get_object_new_dir': call_func_pop1_push
             'op_type::get_actor_walk_box': call_func_pop1_push
-            # 'op_type::get_actor_costume': no_data
+            'op_type::get_actor_costume': call_func_pop1_push
             'op_type::find_inventory': call_func_pop2_push
-            # 'op_type::get_inventory_count': no_data
-            # 'op_type::get_verb_from_xy': no_data
+            'op_type::get_inventory_count': call_func_pop1_push
+            'op_type::get_verb_from_xy': call_func_pop2_push
+            'op_type::get_verb_entrypoint': call_func_pop2_push
             'op_type::begin_override': begin_override
             'op_type::end_override': call_func_pop0
             # 'op_type::set_object_name': no_data
             'op_type::is_sound_running': call_func_pop1_push
             'op_type::set_box_flags': set_box_flags
-            # 'op_type::create_box_matrix': no_data
+            'op_type::create_box_matrix': call_func_pop0
             'op_type::resource_routines': resource_routines
             'op_type::room_ops': room_ops
             'op_type::actor_ops': actor_ops
@@ -430,7 +431,6 @@ types:
             'op_type::find_object': call_func_pop2_push
             # 'op_type::pseudo_room': no_data
             # 'op_type::get_actor_elevation': no_data
-            # 'op_type::get_verb_entrypoint': no_data
             'op_type::array_ops': array_ops
             'op_type::save_restore_verbs': call_func_pop3_byte
             # 'op_type::draw_box': no_data
@@ -950,7 +950,7 @@ types:
             'subop_type::load_sound': call_func_pop1
             'subop_type::load_costume': call_func_pop1
             'subop_type::load_room': call_func_pop1
-            # 'subop_type::load_object': no_data
+            'subop_type::load_object': call_func_pop2
             # 'subop_type::load_string': no_data
             'subop_type::nuke_script': call_func_pop1
             'subop_type::nuke_sound': call_func_pop1
@@ -1046,7 +1046,7 @@ types:
             'subop_type::always_zclip_ft_demo': call_func_pop1
             'subop_type::ignore_boxes': call_func_pop0
             'subop_type::follow_boxes': call_func_pop0
-            # 'subop_type::animation_speed': no_data
+            'subop_type::animation_speed': call_func_pop1
             # 'subop_type::shadow': no_data
             'subop_type::text_offset': call_func_pop2
             # 'subop_type::clear_heap': no_data
