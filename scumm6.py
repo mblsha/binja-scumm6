@@ -214,29 +214,24 @@ class Scumm6(Architecture):
                 return not param.startswith('scumm6')
             return False
 
-        def tokenize_talk_actor(tokens):
+        def tokenize_talk_actor(body, tokens):
             args = []
-            for tcmd in body.body.cmds:
-                if getattr(tcmd, 'data', None):
-                    args.append(chr(tcmd.magic) + tcmd.data)
-                elif getattr(tcmd, 'cmd', None):
-                    args.append(tcmd.cmd.name)
+            for tcmd in body.cmds:
+                if tcmd.has_str:
+                    a = [chr(i) for i in tcmd.string_data]
+                    args.append(chr(tcmd.magic) + ''.join(a))
+                # elif getattr(tcmd, 'cmd', None):
+                #     args.append(tcmd.cmd.name)
                 else:
                     args.append('UNKNOWN')
             tokens += tokenize_params(*args)
 
         if op.id in [OpType.talk_actor, OpType.set_object_name]:
-            args = []
-            for tcmd in body.cmds:
-                if getattr(tcmd, 'data', None):
-                    args.append(chr(tcmd.magic) + tcmd.data)
-                else:
-                    args.append(tcmd.cmd.name)
-            tokens += tokenize_params(*args)
+            tokenize_talk_actor(body, tokens)
         elif op.id in [OpType.print_line, OpType.print_text, OpType.print_debug, OpType.print_system, OpType.print_actor, OpType.print_ego] and body.subop == SubopType.textstring:
-            tokenize_talk_actor(tokens)
+            tokenize_talk_actor(body.body, tokens)
         elif op.id in [OpType.verb_ops] and body.subop == SubopType.verb_name:
-            tokenize_talk_actor(tokens)
+            tokenize_talk_actor(body.body, tokens)
         elif body:
             args  = [getattr(body, x)  for x in dir(body) if can_tokenize(getattr(body, x))]
             if getattr(body, 'body', None):
@@ -441,6 +436,7 @@ class Scumm6(Architecture):
         elif op.id in [OpType.break_here]:
             il.append(il.intrinsic([], op.id.name, []))
         elif op.id in [OpType.talk_actor]:
+            # FIXME: need pop!
             # FIXME: want to print all the dialogue
             il.append(il.intrinsic([], op.id.name, []))
         else:

@@ -492,6 +492,7 @@ types:
             _: unknown_op
     -webide-representation: '{id} {id:dec} {body}'
 
+  # scumm/string.cpp: convertMessageToString()
   talk_actor:
     enums:
       talk_type:
@@ -509,31 +510,40 @@ types:
         14: set_font
     types:
       talk_cmd:
+        instances:
+          has_str:
+            value: magic >= 0x20 and magic != 0xFF
+          last_char:
+            value: 'has_str ? string_data.last : (magic == 0x00 ? 0x00 : 0xFF)'
+          switch_cmd:
+            value: 'magic == 0xFF ? cmd : magic'
         seq:
           - id: magic
             type: u1
-          - id: data
-            type: str
-            encoding: ISO-8859-1
-            terminator: 0
-            if: magic != 0xff
+          - id: string_data
+            type: u1
+            repeat: until
+            repeat-until: _ < 0x20 or _ == 0xFF
+            if: has_str
           - id: cmd
             type: u1
-            enum: talk_type
-            if: magic == 0xff
+            if: magic == 0xFF
           - id: body
-            if: magic == 0xff
+            if: not has_str and magic != 0x00
             type:
-              switch-on: cmd
+              switch-on: switch_cmd
               cases:
-                'talk_type::sound': word7_data
-                _: unknown_op
+                10: word7_data
+                4: word_data
+                3: no_data
+                2: no_data
+                # _: unknown_op
         -webide-representation: '{cmd}'
     seq:
       - id: cmds
         type: talk_cmd
         repeat: until
-        repeat-until: _.magic != 0xFF
+        repeat-until: _.last_char == 0x00
     -webide-representation: '{data}'
 
   no_data:

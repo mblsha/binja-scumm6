@@ -1194,7 +1194,7 @@ class Scumm6Opcodes(KaitaiStruct):
             while True:
                 _ = Scumm6Opcodes.TalkActor.TalkCmd(self._io, self, self._root)
                 self.cmds.append(_)
-                if _.magic != 255:
+                if _.last_char == 0:
                     break
                 i += 1
 
@@ -1207,19 +1207,54 @@ class Scumm6Opcodes(KaitaiStruct):
 
             def _read(self):
                 self.magic = self._io.read_u1()
-                if self.magic != 255:
-                    self.data = (self._io.read_bytes_term(0, False, True, True)).decode(u"ISO-8859-1")
+                if self.has_str:
+                    self.string_data = []
+                    i = 0
+                    while True:
+                        _ = self._io.read_u1()
+                        self.string_data.append(_)
+                        if  ((_ < 32) or (_ == 255)) :
+                            break
+                        i += 1
 
                 if self.magic == 255:
-                    self.cmd = KaitaiStream.resolve_enum(Scumm6Opcodes.TalkActor.TalkType, self._io.read_u1())
+                    self.cmd = self._io.read_u1()
 
-                if self.magic == 255:
-                    _on = self.cmd
-                    if _on == Scumm6Opcodes.TalkActor.TalkType.sound:
+                if  ((not (self.has_str)) and (self.magic != 0)) :
+                    _on = self.switch_cmd
+                    if _on == 10:
                         self.body = Scumm6Opcodes.Word7Data(self._io, self, self._root)
-                    else:
-                        self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
+                    elif _on == 4:
+                        self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
+                    elif _on == 3:
+                        self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
+                    elif _on == 2:
+                        self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
 
+
+            @property
+            def has_str(self):
+                if hasattr(self, '_m_has_str'):
+                    return self._m_has_str
+
+                self._m_has_str =  ((self.magic >= 32) and (self.magic != 255)) 
+                return getattr(self, '_m_has_str', None)
+
+            @property
+            def last_char(self):
+                if hasattr(self, '_m_last_char'):
+                    return self._m_last_char
+
+                self._m_last_char = (self.string_data[-1] if self.has_str else (0 if self.magic == 0 else 255))
+                return getattr(self, '_m_last_char', None)
+
+            @property
+            def switch_cmd(self):
+                if hasattr(self, '_m_switch_cmd'):
+                    return self._m_switch_cmd
+
+                self._m_switch_cmd = (self.cmd if self.magic == 255 else self.magic)
+                return getattr(self, '_m_switch_cmd', None)
 
 
 
