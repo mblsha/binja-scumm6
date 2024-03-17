@@ -3,7 +3,7 @@ import unittest
 from kaitaistruct import KaitaiStream, BytesIO
 
 test_cases = [
-    (b'', ''),
+    (b"", ""),
 ]
 
 from pprint import pprint
