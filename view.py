@@ -35,24 +35,25 @@ class Scumm6View(BinaryView):
         self.arch = Architecture[arch]
         self.platform = Architecture[arch].standalone_platform
 
-        # self.add_auto_segment(0x1000000, 0x1000, 0, 0, SegmentFlag.SegmentReadable)
-
         for start, end, name in self.scripts:
             print("adding segment:", hex(start), hex(end), name)
             size = end - start
-            # self.add_auto_segment(0, start, 0, start, SegmentFlag.SegmentDenyExecute)
+
             self.add_auto_segment(
                 start, size, start, size, SegmentFlag.SegmentContainsCode
             )
-            self.create_user_function(start)
-            f = self.get_function_at(start)
-            f.name = name
-            # self.add_user_section("func1", start, size, SectionSemantics.ReadOnlyCodeSectionSemantics)
-            # self.add_auto_segment(end, self.parent_view.end - end, end, self.parent_view.end - end, SegmentFlag.SegmentDenyExecute)
-            # break
 
-        # self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentReadable|SegmentFlag.SegmentWritable)
-        # self.add_auto_segment(start, size, start, size, SegmentFlag.SegmentReadable|SegmentFlag.SegmentExecutable)
+            self.add_user_section(
+                name,
+                start,
+                size,
+                SectionSemantics.ReadOnlyCodeSectionSemantics,
+            )
+
+            if not self.get_function_at(start):
+                self.create_user_function(start)
+                f = self.get_function_at(start)
+                f.name = name
 
         return True
 
