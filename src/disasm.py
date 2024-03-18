@@ -1,3 +1,4 @@
+import os
 from kaitaistruct import KaitaiStream, BytesIO
 from .scumm6_opcodes import Scumm6Opcodes
 from .scumm6_container import Scumm6Container
@@ -7,6 +8,55 @@ from dataclasses import dataclass, field
 from .sorted_list import SortedList
 
 BlockType = Scumm6Container.BlockType
+
+
+def is_valid_filename(filename: str) -> bool:
+    if filename.endswith(".001.lecf"):
+        return True
+    raise ValueError(f"Invalid filename: {filename} (Expected '.001.lecf' extension)")
+
+
+def get_rnam_filename(filename: str) -> str:
+    return filename.replace(".001.lecf", ".000.rnam")
+
+
+class Resource(NamedTuple):
+    room_no: int
+    room_offset: int
+
+
+def read_dscr(lecf_filename: str) -> List[Resource]:
+    rnam_filename = get_rnam_filename(lecf_filename)
+    if not os.path.exists(rnam_filename):
+        raise ValueError(f"File not found: {rnam_filename}")
+
+    with open(rnam_filename, "rb") as f:
+        data = f.read()
+    return decode_rnam_dscr(data)
+
+
+# https://github.com/scummvm/scummvm/blob/74b6c4d35aaeeb6892c358f0c3e41d8be98c79ea/engines/scumm/resource.cpp#L455
+# DSCR: readResTypeList(rtScript): room_no -> room_offset
+def decode_rnam_dscr(data: bytes) -> List[Resource]:
+    ks = KaitaiStream(BytesIO(data))
+    r = Scumm6Container(ks)
+
+    dscr = None
+    for b in r.blocks:
+        if b.block_type == BlockType.dscr:
+            dscr = b.block_data
+            break
+
+    if not dscr:
+        raise ValueError("No DSCR block found at top-level")
+
+    scripts: List[Resource] = []
+    for i in range(dscr.num_entries):
+        index = dscr.index_no[i]
+        room_offset = dscr.room_offset[i]
+        scripts.append(Resource(index, room_offset))
+
+    return scripts
 
 
 def pretty_scumm(block: Any, pos: int = 0, level: int = 0) -> Any:
@@ -53,6 +103,9 @@ class State:
     # block_addr -> script_addr
     # used for global script pointers
     block_to_script: Dict[int, int] = field(default_factory=dict)
+
+    # global script ids
+    dscr: List[Resource] = field(default_factory=list)
 
 
 class ScriptAddr(NamedTuple):
@@ -159,29 +212,13 @@ class Scumm6Disasm:
                 return None
             raise
 
-    # https://github.com/scummvm/scummvm/blob/74b6c4d35aaeeb6892c358f0c3e41d8be98c79ea/engines/scumm/resource.cpp#L455
-    # DRCC: readResTypeList(rtScript): room_no -> room_offset
+    def decode_container(
+        self, lecf_filename: str, data: bytes
+    ) -> Optional[Tuple[List[ScriptAddr], State]]:
+        dscr = read_dscr(lecf_filename)
 
-    # DROO: readResTypeList(rtRoom)
-    def decode_rnam(self, data: bytes) -> Any:
         ks = KaitaiStream(BytesIO(data))
         r = Scumm6Container(ks)
-        for b in r.blocks:
-            if b.block_type == BlockType.dscr:
-                return b.block_data
-        return None
-
-    def decode_container(self, data: bytes) -> Optional[Tuple[List[ScriptAddr], State]]:
-        if len(data) <= 0:
-            return None
-        try:
-            ks = KaitaiStream(BytesIO(data))
-            r = Scumm6Container(ks)
-            state = State()
-            return get_script_addrs(r.blocks[0], state, 0), state
-        except EOFError:
-            return None
-        except Exception as e:
-            if "end of stream reached, but no terminator 0 found" in str(e):
-                return None
-            raise
+        state = State()
+        state.dscr = dscr
+        return get_script_addrs(r.blocks[0], state, 0), state

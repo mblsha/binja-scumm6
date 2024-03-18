@@ -1,27 +1,26 @@
-from .disasm import Scumm6Disasm
+from .disasm import Scumm6Disasm, decode_rnam_dscr
 
 from .scumm6_opcodes import Scumm6Opcodes
 
 import os
 from pprint import pprint
 
-from typing import List, Tuple
 
 OpType = Scumm6Opcodes.OpType
 
 
 # NOTE: the .lecf is the un-xored file
-path = os.path.join(os.path.dirname(__file__), "..", "DOTTDEMO.001.lecf")
-with open(path, "rb") as f:
+lecf_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "DOTTDEMO.001.lecf")
+with open(lecf_path, "rb") as f:
     lecf = f.read()
-path = os.path.join(os.path.dirname(__file__), "..", "DOTTDEMO.000.rnam")
-with open(path, "rb") as f:
+rnam_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "DOTTDEMO.000.rnam")
+with open(rnam_path, "rb") as f:
     rnam = f.read()
 
 
 def test_decode_container() -> None:
     disasm = Scumm6Disasm()
-    r = disasm.decode_container(lecf)
+    r = disasm.decode_container(lecf_path, lecf)
     assert r is not None
     scripts, state = r
 
@@ -55,6 +54,8 @@ def test_decode_container() -> None:
     assert len(state.block_to_script) == 65
     assert state.block_to_script[0x851D6 + 0x7368] == 0x8C546
 
+    assert len(state.dscr) == 140
+
 
 def test_decode_instruction_none() -> None:
     disasm = Scumm6Disasm()
@@ -85,19 +86,5 @@ def test_decode_instruction() -> None:
 
 
 def test_decode_rnam() -> None:
-    disasm = Scumm6Disasm()
-    r = disasm.decode_rnam(rnam)
-    print(r)
-    print(r.num_entries)
-
-    # DSCR: room_no -> room_offset
-    # index: room_no, room_offset
-    scripts: List[Tuple[int, int]] = []
-    for i in range(r.num_entries):
-        index = r.index_no[i]
-        room_offset = r.room_offset[i]
-        scripts.append((index, room_offset))
-
-    assert scripts[1] == (61, 0x7368)
-    #     print(f"{i} {index} -> {hex(room_offset)}")
-    # assert r is None
+    r = decode_rnam_dscr(rnam)
+    assert r[1] == (61, 0x7368)

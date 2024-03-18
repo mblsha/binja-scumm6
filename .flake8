@@ -1,4 +1,4 @@
 [flake8]
-ignore = W391
+ignore = W391, W503
 max-line-length = 100
 exclude = .git,__pycache__,scumm6_container.py,scumm6_opcodes.py

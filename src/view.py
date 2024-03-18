@@ -2,7 +2,7 @@ from binaryninja.binaryview import BinaryView
 from binaryninja.architecture import Architecture
 from binaryninja.enums import SegmentFlag, SectionSemantics, Endianness
 from .scumm6 import LastBV
-from .disasm import Scumm6Disasm, ScriptAddr, State
+from .disasm import Scumm6Disasm, ScriptAddr, State, read_dscr
 
 from typing import List
 
@@ -15,7 +15,8 @@ class Scumm6View(BinaryView):  # type: ignore
     def is_valid_for_data(self, data: BinaryView) -> bool:
         header = data.read(0, 0x4)
         result = header[0:4] in [b"LECF"]
-        print("is_valid_for_data", result, header[0:4])
+        if result:
+            _ = read_dscr(data.file.filename)
         return result
 
     def __init__(self, parent_view: BinaryView) -> None:
@@ -27,7 +28,7 @@ class Scumm6View(BinaryView):  # type: ignore
 
         self.disasm = Scumm6Disasm()
         data = parent_view.read(0, parent_view.end)
-        container = self.disasm.decode_container(data)
+        container = self.disasm.decode_container(parent_view.file.filename, data)
         assert container
         self.scripts: List[ScriptAddr] = container[0]
         self.state: State = container[1]
