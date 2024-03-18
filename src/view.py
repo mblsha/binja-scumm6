@@ -36,7 +36,7 @@ class Scumm6View(BinaryView):  # type: ignore
         self.platform = Architecture[arch].standalone_platform
 
         assert self.scripts
-        for start, end, name in self.scripts:
+        for start, end, name, room in self.scripts:
             print("adding segment:", hex(start), hex(end), name)
             size = end - start
 

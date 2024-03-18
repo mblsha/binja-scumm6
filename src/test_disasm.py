@@ -18,16 +18,16 @@ def test_decode_container() -> None:
     assert scripts is not None
     pprint(scripts)
     assert len(scripts) == 65
-    assert scripts[0] == (1179, 1180, "room1_exit")
-    assert scripts[1] == (1188, 1189, "room1_enter")
-    assert scripts[2] == (33360, 33365, "room2_exit")
-    assert scripts[3] == (33373, 33391, "room2_enter")
+    assert scripts[0] == (1179, 1180, "room1_exit", 1)
+    assert scripts[1] == (1188, 1189, "room1_enter", 1)
+    assert scripts[2] == (33360, 33365, "room2_exit", 2)
+    assert scripts[3] == (33373, 33391, "room2_enter", 2)
 
     # LocalScripts
-    assert scripts[4] == (33410, 33435, "room2_local200")
-    assert scripts[5] == (33444, 33546, "room2_local201")
+    assert scripts[4] == (33410, 33435, "room2_local200", 2)
+    assert scripts[5] == (33444, 33546, "room2_local201", 2)
 
-    assert scripts[-1] == (962497, 962967, "room12_scrp1")
+    assert scripts[-1] == (962497, 962967, "room12_scrp1", 12)
 
 
 def test_decode_instruction_none() -> None:

@@ -6,6 +6,7 @@ BlockType = Scumm6Container.BlockType
 
 
 from typing import Any, Dict, List, Tuple, Optional, NamedTuple
+from dataclasses import dataclass, field
 
 
 def pretty_scumm(block: Scumm6Container.Block, pos: int = 0, level: int = 0) -> Any:
@@ -25,20 +26,27 @@ def pretty_scumm(block: Scumm6Container.Block, pos: int = 0, level: int = 0) -> 
     return r
 
 
+@dataclass
+class State:
+    room: int = 0
+    scrp: int = 0
+
+
 class ScriptAddr(NamedTuple):
     start: int
     end: int
     name: str
+    room: int
 
 
 def get_script_addrs(
-    block: Scumm6Container.Block, state: Dict[str, int], pos: int = 0
+    block: Scumm6Container.Block, state: State, pos: int = 0
 ) -> List[ScriptAddr]:
     r = []
 
     if block.block_type == BlockType.room:
-        state["room"] += 1
-        state["scrp"] = 0
+        state.room += 1
+        state.scrp = 0
 
     if type(block.block_data) == Scumm6Container.NestedBlocks:
         pos += 8
@@ -48,8 +56,8 @@ def get_script_addrs(
     elif type(block.block_data) == Scumm6Container.Script:
         name = block.block_type.name
         if block.block_type == BlockType.scrp:
-            state["scrp"] += 1
-            name = f'scrp{state["scrp"]}'
+            state.scrp += 1
+            name = f'scrp{state.scrp}'
         elif block.block_type == BlockType.encd:
             name = "enter"
         elif block.block_type == BlockType.excd:
@@ -57,15 +65,19 @@ def get_script_addrs(
 
         r.append(
             ScriptAddr(
-                (pos + 8), (pos + block.block_size), f'room{state["room"]}_{name}'
+                start=pos + 8,
+                end=pos + block.block_size,
+                name=f'room{state.room}_{name}',
+                room=state.room,
             )
         )
     elif type(block.block_data) == Scumm6Container.LocalScript:
         r.append(
             ScriptAddr(
-                (pos + 8 + 1),
-                (pos + block.block_size),
-                f'room{state["room"]}_local{block.block_data.index}',
+                start=pos + 8 + 1,
+                end=pos + block.block_size,
+                name=f'room{state.room}_local{block.block_data.index}',
+                room=state.room,
             )
         )
     # TODO: VerbScript
@@ -109,9 +121,7 @@ class Scumm6Disasm:
         try:
             ks = KaitaiStream(BytesIO(data))
             r = Scumm6Container(ks)
-            state = {
-                "room": 0,
-            }
+            state = State()
             return get_script_addrs(r.blocks[0], state, 0)
         except EOFError:
             return None

@@ -53,15 +53,17 @@ OpType = Scumm6Opcodes.OpType
 VarType = Scumm6Opcodes.VarType
 SubopType = Scumm6Opcodes.SubopType
 
-last_bv = None
+last_bv: Optional[BinaryView] = None
 
 
+# called by Scumm6View
 def set_last_bv(bv: BinaryView) -> None:
     global last_bv
     last_bv = bv
     print("set_last_bv", bv)
 
 
+# We use this to find the previous instruction.
 class SortedList:
     def __init__(self) -> None:
         self._list: List[int] = []
