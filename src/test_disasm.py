@@ -10,10 +10,14 @@ OpType = Scumm6Opcodes.OpType
 
 
 # NOTE: the .lecf is the un-xored file
-lecf_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "DOTTDEMO.001.lecf")
+lecf_path = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "DOTTDEMO.001.lecf"
+)
 with open(lecf_path, "rb") as f:
     lecf = f.read()
-rnam_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "DOTTDEMO.000.rnam")
+rnam_path = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "DOTTDEMO.000.rnam"
+)
 with open(rnam_path, "rb") as f:
     rnam = f.read()
 
@@ -88,3 +92,19 @@ def test_decode_instruction() -> None:
 def test_decode_rnam() -> None:
     r = decode_rnam_dscr(rnam)
     assert r[1] == (61, 0x7368)
+
+
+def test_get_script_ptr() -> None:
+    disasm = Scumm6Disasm()
+    r = disasm.decode_container(lecf_path, lecf)
+    assert r is not None
+    _, state = r
+
+    assert disasm.get_script_ptr(state, 1, -1) == 0x8C546
+    assert disasm.get_script_ptr(state, 200, 33360) == 33410
+    assert disasm.get_script_ptr(state, 201, 33360) == 33444
+
+    # FIXME: figure out how SCUMMVM handles this
+    assert not disasm.get_script_ptr(state, 85, 0x8D53B)
+    assert not disasm.get_script_ptr(state, 86, 0x8CCEA)
+

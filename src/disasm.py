@@ -191,10 +191,8 @@ class Instruction(NamedTuple):
 
 
 class Scumm6Disasm:
-    def __init__(self) -> None:
-        pass
-
-    def decode_instruction(self, data: bytes, addr: int) -> Optional[Instruction]:
+    @staticmethod
+    def decode_instruction(data: bytes, addr: int) -> Optional[Instruction]:
         if len(data) <= 0:
             return None
         try:
@@ -212,8 +210,9 @@ class Scumm6Disasm:
                 return None
             raise
 
+    @staticmethod
     def decode_container(
-        self, lecf_filename: str, data: bytes
+        lecf_filename: str, data: bytes
     ) -> Optional[Tuple[List[ScriptAddr], State]]:
         dscr = read_dscr(lecf_filename)
 
@@ -222,3 +221,23 @@ class Scumm6Disasm:
         state = State()
         state.dscr = dscr
         return get_script_addrs(r.blocks[0], state, 0), state
+
+    @staticmethod
+    def get_script_ptr(state: State, script_num: int, call_addr: int) -> Optional[int]:
+        if script_num >= len(state.dscr):
+            # local script
+            room_addr = state.rooms_addrs.closest_left_match(call_addr)
+            assert room_addr
+            room = state.rooms_dict[room_addr]
+
+            name = f"local{script_num}"
+            addr = room.funcs[name]
+            return addr
+
+        res = state.dscr[script_num]
+        if res.room_no not in state.room_ids:
+            return None
+
+        room_addr = state.room_ids[res.room_no]
+        block_addr = room_addr + res.room_offset
+        return state.block_to_script[block_addr]

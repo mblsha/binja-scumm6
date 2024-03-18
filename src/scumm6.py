@@ -537,17 +537,15 @@ class Scumm6(Architecture):  # type: ignore
             args = [il.pop(4) for _ in args]
             for _ in range(len(args) + 2):
                 func_num = self.prev_instruction(func_num)
-            func_num_value = get_dis_value(func_num)
 
-            # FIXME: extrat this to a function
-            # (addr, num) -> func_ptr
-            state = self.get_state(dis)
-            assert state
-            room_addr = state.rooms_addrs.closest_left_match(dis.addr)
-            assert room_addr
-            room = state.rooms_dict[room_addr]
-            assert room
-            # print(room)
+            func_num_value = get_dis_value(func_num)
+            try:
+                func_ptr = Scumm6Disasm.get_script_ptr(
+                    self.get_state(dis), func_num_value, dis.addr
+                )
+            except:  # noqa: E722
+                print(f"get_script_ptr failed: {func_num_value} at {hex(dis.addr)}")
+                raise
 
             if op.id == OpType.start_script:
                 flags = get_prev_value(func_num)
@@ -562,23 +560,17 @@ class Scumm6(Architecture):  # type: ignore
                         il.intrinsic([], "stop_script", [il.const(4, func_num_value)])
                     )
 
-                name = f"local{func_num_value}"
-                if name in room.funcs:
-                    addr = room.funcs[name]
-                    print(f"found {name} at {hex(addr)}")
-                    il.append(il.call(il.const_pointer(4, addr)))
+                if func_ptr:
+                    il.append(il.call(il.const_pointer(4, func_ptr)))
                 else:
-                    print(
-                        f">>> {hex(addr)} calling function #{func_num_value} with {len(args)} args and flags {flags}"
-                    )
                     il.append(
                         il.intrinsic([], op.id.name, [il.pop(4), il.pop(4)] + args)
                     )
             else:
-                print(
-                    f">>> {hex(addr)} calling function #{func_num_value} with {len(args)} args"
-                )
-                il.append(il.intrinsic([], op.id.name, [il.pop(4)] + args))
+                if func_ptr:
+                    il.append(il.call(il.const_pointer(4, func_ptr)))
+                else:
+                    il.append(il.intrinsic([], op.id.name, [il.pop(4)] + args))
         elif op.id == OpType.stop_script:
             prev_value = get_prev_value(dis)
             il.append(il.intrinsic([], op.id.name, [il.pop(4)]))
