@@ -59,13 +59,13 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
         verb = 1447383618
         wrap = 1465008464
         zpnn = 1515220590
-    def __init__(self, _io, _parent=None, _root=None):
+    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
         self._io = _io
         self._parent = _parent
         self._root = _root if _root else self
         self._read()
 
-    def _read(self):
+    def _read(self):  # type: ignore
         self.blocks = []
         i = 0
         while not self._io.is_eof():
@@ -74,24 +74,24 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
     class Boxm(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.v1 = self._io.read_u1()
 
 
     class Aary(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.elements = []
             i = 0
             while True:
@@ -102,13 +102,13 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
                 i += 1
 
         class Element(KaitaiStruct):  # type: ignore
-            def __init__(self, _io, _parent=None, _root=None):
+            def __init__(self, _io, _parent=None, _root=None):  # type: ignore
                 self._io = _io
                 self._parent = _parent
                 self._root = _root if _root else self
                 self._read()
 
-            def _read(self):
+            def _read(self):  # type: ignore
                 self.var_no = self._io.read_u2le()
                 if self.var_no != 0:
                     self.xsize = self._io.read_u2le()
@@ -123,24 +123,24 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
     class Rmih(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.num_z_buf = self._io.read_u2le()
 
 
     class Dobj(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.num_entries = self._io.read_u2le()
             self.owner_state = []
             for i in range(self.num_entries):
@@ -152,50 +152,50 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
         class OwnerState(KaitaiStruct):  # type: ignore
-            def __init__(self, _io, _parent=None, _root=None):
+            def __init__(self, _io, _parent=None, _root=None):  # type: ignore
                 self._io = _io
                 self._parent = _parent
                 self._root = _root if _root else self
                 self._read()
 
-            def _read(self):
+            def _read(self):  # type: ignore
                 self.owner = self._io.read_bits_int_le(4)
                 self.state = self._io.read_bits_int_le(4)
 
 
 
     class UnknownBlock(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.data = self._io.read_bytes_full()
 
 
     class Apal(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.pal = []
             for i in range(256):
                 self.pal.append(Scumm6Container.Apal.Pal(self._io, self, self._root))
 
 
         class Pal(KaitaiStruct):  # type: ignore
-            def __init__(self, _io, _parent=None, _root=None):
+            def __init__(self, _io, _parent=None, _root=None):  # type: ignore
                 self._io = _io
                 self._parent = _parent
                 self._root = _root if _root else self
                 self._read()
 
-            def _read(self):
+            def _read(self):  # type: ignore
                 self.r = self._io.read_u1()
                 self.g = self._io.read_u1()
                 self.b = self._io.read_u1()
@@ -203,25 +203,25 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
     class LocalScript(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.index = self._io.read_u1()
             self.data = self._io.read_bytes_full()
 
 
     class Cdhd(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.obj_id = self._io.read_u2le()
             self.x = self._io.read_u2le()
             self.y = self._io.read_u2le()
@@ -235,48 +235,48 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
     class Offs(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.offset = self._io.read_u4le()
 
 
     class Nlsc(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.number_local_scripts = self._io.read_u1()
 
 
     class Rmhd(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.width = self._io.read_u2le()
             self.height = self._io.read_u2le()
             self.num_objects = self._io.read_u2le()
 
 
     class Block(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.block_type = KaitaiStream.resolve_enum(Scumm6Container.BlockType, self._io.read_u4be())
             self.block_size = self._io.read_u4be()
             _on = self.block_type
@@ -427,13 +427,13 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
     class IndexNoOffset(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.num_entries = self._io.read_u2le()
             self.index_no = []
             for i in range(self.num_entries):
@@ -446,13 +446,13 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
     class Rnam(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.resource_names = []
             i = 0
             while True:
@@ -463,13 +463,13 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
                 i += 1
 
         class ResourceName(KaitaiStruct):  # type: ignore
-            def __init__(self, _io, _parent=None, _root=None):
+            def __init__(self, _io, _parent=None, _root=None):  # type: ignore
                 self._io = _io
                 self._parent = _parent
                 self._root = _root if _root else self
                 self._read()
 
-            def _read(self):
+            def _read(self):  # type: ignore
                 self.resource_id = self._io.read_u1()
                 if self.resource_id != 0:
                     self.name = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
@@ -478,13 +478,13 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
     class Imhd(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.obj_id = self._io.read_u2le()
             self.num_imnn = self._io.read_u2le()
             self.num_zpnn = self._io.read_u2le()
@@ -500,26 +500,26 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
         class Hotspot(KaitaiStruct):  # type: ignore
-            def __init__(self, _io, _parent=None, _root=None):
+            def __init__(self, _io, _parent=None, _root=None):  # type: ignore
                 self._io = _io
                 self._parent = _parent
                 self._root = _root if _root else self
                 self._read()
 
-            def _read(self):
+            def _read(self):  # type: ignore
                 self.x = self._io.read_s2le()
                 self.y = self._io.read_s2le()
 
 
 
     class Loff(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.num_rooms = self._io.read_u1()
             self.rooms = []
             for i in range(self.num_rooms):
@@ -527,26 +527,26 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
         class Room(KaitaiStruct):  # type: ignore
-            def __init__(self, _io, _parent=None, _root=None):
+            def __init__(self, _io, _parent=None, _root=None):  # type: ignore
                 self._io = _io
                 self._parent = _parent
                 self._root = _root if _root else self
                 self._read()
 
-            def _read(self):
+            def _read(self):  # type: ignore
                 self.room_id = self._io.read_u1()
                 self.room_offset = self._io.read_u4le()
 
 
 
     class Maxs(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.num_variables = self._io.read_u2le()
             self.num_bit_variables = self._io.read_u2le()
             self.num_local_objects = self._io.read_u2le()
@@ -563,35 +563,35 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
     class Trns(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.transparent_color = self._io.read_u1()
 
 
     class Script(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.data = self._io.read_bytes_full()
 
 
     class NestedBlocks(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.blocks = []
             i = 0
             while not self._io.is_eof():
@@ -601,13 +601,13 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
     class VerbScript(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.entry = []
             i = 0
             while True:
@@ -619,24 +619,24 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
     class Obna(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.name = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
 
 
     class Boxd(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):
+        def _read(self):  # type: ignore
             self.num_boxes = self._io.read_u2le()
             self.boxes = []
             for i in range(self.num_boxes):
@@ -644,13 +644,13 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
 
         class Box(KaitaiStruct):  # type: ignore
-            def __init__(self, _io, _parent=None, _root=None):
+            def __init__(self, _io, _parent=None, _root=None):  # type: ignore
                 self._io = _io
                 self._parent = _parent
                 self._root = _root if _root else self
                 self._read()
 
-            def _read(self):
+            def _read(self):  # type: ignore
                 self.ulx = self._io.read_s2le()
                 self.uly = self._io.read_s2le()
                 self.urx = self._io.read_s2le()

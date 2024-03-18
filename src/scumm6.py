@@ -1,6 +1,6 @@
 from . import binja_api
 
-from typing import List, Optional, Tuple, Dict
+from typing import Any, List, Optional, Tuple, Dict
 
 import struct
 import traceback
@@ -56,26 +56,26 @@ SubopType = Scumm6Opcodes.SubopType
 last_bv = None
 
 
-def set_last_bv(bv):
+def set_last_bv(bv: BinaryView) -> None:
     global last_bv
     last_bv = bv
     print("set_last_bv", bv)
 
 
 class SortedList:
-    def __init__(self):
-        self._list = []
+    def __init__(self) -> None:
+        self._list: List[int] = []
 
-    def insert_sorted(self, value):
+    def insert_sorted(self, value: int) -> None:
         if self.find_element(value):
             return
         bisect.insort(self._list, value)
 
-    def find_element(self, value):
+    def find_element(self, value: int) -> bool:
         pos = bisect.bisect_left(self._list, value)
         return pos != len(self._list) and self._list[pos] == value
 
-    def closest_left_match(self, value):
+    def closest_left_match(self, value: int) -> Optional[int]:
         pos = bisect.bisect_left(self._list, value)
         if pos == 0:
             return None
@@ -182,7 +182,7 @@ class Scumm6(Architecture):  # type: ignore
 
     op_addrs: Dict[str, SortedList] = defaultdict(SortedList)
 
-    def __init__(self):
+    def __init__(self) -> None:
         Architecture.__init__(self)
         self.disasm = Scumm6Disasm()
 
@@ -211,12 +211,13 @@ class Scumm6(Architecture):  # type: ignore
         print("last_bv not set, view not initialized?")
         return (None, None)
 
-    def prev_instruction(self, instr):
+    def prev_instruction(self, instr: Instruction) -> Instruction:
         view, filename = self.get_view(instr.data, instr.addr)
         if not view:
             raise Exception(f"prev_instruction: no view at {hex(instr.addr)}")
         assert filename
         prev_addr = self.op_addrs[filename].closest_left_match(instr.addr)
+        assert prev_addr
         # print(f'prev_instruction: addr:{instr.addr:x} -> prev:{prev_addr:x}')
         data2 = view.read(prev_addr, 256)
         dis = self.decode_instruction(data2, prev_addr)
@@ -258,7 +259,7 @@ class Scumm6(Architecture):  # type: ignore
         if not dis:
             return None
 
-        def tokenize_params(*params):
+        def tokenize_params(*params: Any) -> List[InstructionTextToken]:
             r = [
                 InstructionTextToken(
                     InstructionTextTokenType.BeginMemoryOperandToken, "("
@@ -294,14 +295,14 @@ class Scumm6(Architecture):  # type: ignore
             InstructionTextToken(InstructionTextTokenType.TextToken, intrinsic_name)
         ]
 
-        def can_tokenize(param):
+        def can_tokenize(param: Any) -> bool:
             if isinstance(param, int):
                 return True
             if isinstance(param, str):
                 return not param.startswith("scumm6")
             return False
 
-        def tokenize_talk_actor(body, tokens):
+        def tokenize_talk_actor(body: Any, tokens: List[InstructionTextToken]) -> None:
             args = []
             for tcmd in body.cmds:
                 if tcmd.has_str:
@@ -358,7 +359,7 @@ class Scumm6(Architecture):  # type: ignore
         #     start = il.const_pointer(4, 0x100000)
         #     offs = il.mult(4, il.const(4, 4), il.const(4, var_index))
         #     return il.add(4, start, offs)
-        def reg_name(block):
+        def reg_name(block: Any) -> str:
             if block.type == VarType.normal:
                 return f"N{block.data}"
             elif block.type == VarType.local:
@@ -370,7 +371,7 @@ class Scumm6(Architecture):  # type: ignore
             else:
                 raise Exception(f"reg_name: unsupported var type '{block.type}'")
 
-        def get_prev_dis(instr):
+        def get_prev_dis(instr: Instruction) -> Instruction:
             prev = self.prev_instruction(instr)
             if not prev:
                 raise Exception(
@@ -378,19 +379,20 @@ class Scumm6(Architecture):  # type: ignore
                 )
             return prev
 
-        def get_dis_value(instr):
+        def get_dis_value(instr: Instruction) -> int:
             op = instr.op
             if op.id not in [OpType.push_byte, OpType.push_word]:
                 raise Exception(
                     f"get_dis_value: unsupported op '{instr.id}' at {hex(instr.addr)}"
                 )
+            assert isinstance(op.body.data, int)
             return op.body.data
 
-        def get_prev_value(instr):
+        def get_prev_value(instr: Instruction) -> int:
             prev = get_prev_dis(instr)
             return get_dis_value(prev)
 
-        def do_pop_list(instr):
+        def do_pop_list(instr: Instruction) -> List[Any]:
             # binja doesn't support popping dynamic num of args from stack,
             # so try to figure out how many do we need to pop.
             num_args = get_prev_value(instr)
@@ -399,7 +401,7 @@ class Scumm6(Architecture):  # type: ignore
             args = [il.pop(4) for _ in range(num_args)]
             return args
 
-        def add_intrinsic(name, block):
+        def add_intrinsic(name: str, block: Any) -> None:
             pop_count = getattr(block, "pop_count", 0)
             push_count = getattr(block, "push_count", 0)
             pop_list = getattr(block, "pop_list", False)
@@ -413,7 +415,6 @@ class Scumm6(Architecture):  # type: ignore
             if pop_list and not block.pop_list_first:
                 args += do_pop_list(dis)
 
-            results = []
             if push_count:
                 assert push_count == 1
                 il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], name, args))

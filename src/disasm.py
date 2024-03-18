@@ -82,7 +82,7 @@ class Instruction(NamedTuple):
 
 
 class Scumm6Disasm:
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def decode_instruction(self, data: bytes, addr: int) -> Optional[Instruction]:

@@ -13,13 +13,13 @@ class Scumm6View(BinaryView):  # type: ignore
     long_name = "SCUMM6 Resources"
 
     @classmethod
-    def is_valid_for_data(self, data):
+    def is_valid_for_data(self, data: BinaryView) -> bool:
         header = data.read(0, 0x4)
         result = header[0:4] in [b"LECF"]
         print("is_valid_for_data", result, header[0:4])
         return result
 
-    def __init__(self, parent_view):
+    def __init__(self, parent_view: BinaryView) -> None:
         # parent_view is a binaryninja.binaryview.BinaryView
         BinaryView.__init__(
             self, parent_view=parent_view, file_metadata=parent_view.file
@@ -30,7 +30,7 @@ class Scumm6View(BinaryView):  # type: ignore
         data = parent_view.read(0, parent_view.end)
         self.scripts = self.disasm.decode_container(data)
 
-    def init(self):
+    def init(self) -> bool:
         arch = "SCUMM6"
         self.arch = Architecture[arch]
         self.platform = Architecture[arch].standalone_platform
@@ -61,11 +61,11 @@ class Scumm6View(BinaryView):  # type: ignore
     def perform_get_address_size(self) -> int:
         return 4
 
-    def perform_get_default_endianness(self):
+    def perform_get_default_endianness(self) -> Endianness:
         return Endianness.LittleEndian
 
-    def perform_is_executable(self):
+    def perform_is_executable(self) -> bool:
         return True
 
-    def perform_get_entry_point(self):
+    def perform_get_entry_point(self) -> int:
         return 0
