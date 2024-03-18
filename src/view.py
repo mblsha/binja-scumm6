@@ -1,13 +1,10 @@
-from pprint import pprint
-
 from binaryninja.binaryview import BinaryView
 from binaryninja.architecture import Architecture
-from binaryninja.types import Symbol
-from binaryninja.enums import SegmentFlag, SymbolType, SectionSemantics, Endianness
+from binaryninja.enums import SegmentFlag, SectionSemantics, Endianness
 from .scumm6 import LastBV
 from .disasm import Scumm6Disasm, ScriptAddr, State
 
-from typing import List, Tuple
+from typing import List
 
 
 class Scumm6View(BinaryView):  # type: ignore

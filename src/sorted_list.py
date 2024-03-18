@@ -1,6 +1,7 @@
 from typing import List, Optional
 import bisect
 
+
 # We use this to find the previous instruction.
 class SortedList:
     def __init__(self) -> None:

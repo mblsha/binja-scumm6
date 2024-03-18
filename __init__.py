@@ -1,7 +1,4 @@
-import sys
-import os
-
-from .src import binja_api
+from .src import binja_api  # noqa: F401
 from binaryninja import core_ui_enabled
 
 from .src.scumm6 import Scumm6

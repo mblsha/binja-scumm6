@@ -1,46 +1,29 @@
-from . import binja_api
+from . import binja_api  # noqa: F401
 
 from typing import Any, List, Optional, Tuple, Dict
 
-import struct
-import traceback
-import os
-from enum import Enum
 import threading
-from functools import partial
 from collections import defaultdict
 
 from binaryninja import core_ui_enabled
 from binaryninja.architecture import (
     Architecture,
-    IntrinsicIndex,
-    IntrinsicName,
-    IntrinsicType,
     IntrinsicInfo,
 )
 from binaryninja.lowlevelil import (
     LowLevelILLabel,
     LLIL_TEMP,
-    LowLevelILFunction,
-    ExpressionIndex,
 )
 from binaryninja.function import RegisterInfo, InstructionInfo, InstructionTextToken
 from binaryninja.binaryview import BinaryView
-from binaryninja.plugin import PluginCommand
-from binaryninja.interaction import AddressField, ChoiceField, get_form_input
-from binaryninja.types import Symbol, Type
 from binaryninja.enums import (
     Endianness,
     BranchType,
     InstructionTextTokenType,
-    LowLevelILOperation,
-    LowLevelILFlagCondition,
     FlagRole,
-    SegmentFlag,
     ImplicitRegisterExtend,
-    SymbolType,
 )
-from binaryninja import BinaryViewType, lowlevelil
+from binaryninja import lowlevelil
 
 if core_ui_enabled():
     from binaryninjaui import UIContext
@@ -48,12 +31,11 @@ if core_ui_enabled():
 from .disasm import Scumm6Disasm, Instruction, State
 from .scumm6_opcodes import Scumm6Opcodes
 
+from .sorted_list import SortedList
+
 OpType = Scumm6Opcodes.OpType
 VarType = Scumm6Opcodes.VarType
 SubopType = Scumm6Opcodes.SubopType
-
-
-from .sorted_list import SortedList
 
 
 # called by Scumm6View
@@ -249,7 +231,7 @@ class Scumm6(Architecture):  # type: ignore
         body = getattr(op, "body", None)
         # print(op, body, op.id)
         if body:
-            if getattr(body, "jump_offset", None) != None:
+            if getattr(body, "jump_offset", None) is not None:
                 result.add_branch(
                     BranchType.TrueBranch, addr + result.length + body.jump_offset
                 )
@@ -571,12 +553,14 @@ class Scumm6(Architecture):  # type: ignore
                 flags = get_prev_value(func_num)
                 # ScummEngine::runScript()
                 # https://github.com/scummvm/scummvm/blob/master/engines/scumm/script.cpp#L59
-                freeze_resistant = (flags & 1) != 0
+                # freeze_resistant = (flags & 1) != 0
                 recursive = (flags & 2) != 0
 
                 # FIXME: use func_ptr
                 if not recursive:
-                    il.append(il.intrinsic([], "stop_script", [il.const(4, func_num_value)]))
+                    il.append(
+                        il.intrinsic([], "stop_script", [il.const(4, func_num_value)])
+                    )
 
                 name = f"local{func_num_value}"
                 if name in room.funcs:
@@ -587,7 +571,9 @@ class Scumm6(Architecture):  # type: ignore
                     print(
                         f">>> {hex(addr)} calling function #{func_num_value} with {len(args)} args and flags {flags}"
                     )
-                    il.append(il.intrinsic([], op.id.name, [il.pop(4), il.pop(4)] + args))
+                    il.append(
+                        il.intrinsic([], op.id.name, [il.pop(4), il.pop(4)] + args)
+                    )
             else:
                 print(
                     f">>> {hex(addr)} calling function #{func_num_value} with {len(args)} args"
@@ -603,7 +589,7 @@ class Scumm6(Architecture):  # type: ignore
             add_intrinsic(op.id.name, body)
         elif getattr(body, "subop", None):
             assert body
-            if type(body.body) == Scumm6Opcodes.UnknownOp:
+            if isinstance(body.body, Scumm6Opcodes.UnknownOp):
                 print(
                     f'unknown_op {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}'
                 )
@@ -625,7 +611,7 @@ class Scumm6(Architecture):  # type: ignore
             implemented = False
             il.append(il.unimplemented())
 
-        if body and type(body) == Scumm6Opcodes.UnknownOp:
+        if body and isinstance(body, Scumm6Opcodes.UnknownOp):
             print(f'unknown_op {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}')
             implemented = False
             il.append(il.unimplemented())

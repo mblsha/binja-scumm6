@@ -1,17 +1,18 @@
 from .sorted_list import SortedList
 
+
 def test_sorted_list() -> None:
     def test_sl(sl: SortedList) -> None:
         assert len(sl) == 3
 
-        assert sl.find_element(0) == False
-        assert sl.find_element(10) == True
-        assert sl.find_element(20) == True
-        assert sl.find_element(30) == True
-        assert sl.find_element(100) == False
+        assert not sl.find_element(0)
+        assert sl.find_element(10)
+        assert sl.find_element(20)
+        assert sl.find_element(30)
+        assert not sl.find_element(100)
 
-        assert sl.closest_left_match(0) == None
-        assert sl.closest_left_match(10) == None
+        assert sl.closest_left_match(0) is None
+        assert sl.closest_left_match(10) is None
         assert sl.closest_left_match(11) == 10
         assert sl.closest_left_match(19) == 10
         assert sl.closest_left_match(20) == 10

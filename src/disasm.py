@@ -2,22 +2,21 @@ from kaitaistruct import KaitaiStream, BytesIO
 from .scumm6_opcodes import Scumm6Opcodes
 from .scumm6_container import Scumm6Container
 
-BlockType = Scumm6Container.BlockType
-
-
 from typing import Any, Dict, List, Tuple, Optional, NamedTuple
 from dataclasses import dataclass, field
 from .sorted_list import SortedList
 
+BlockType = Scumm6Container.BlockType
 
-def pretty_scumm(block: Scumm6Container.Block, pos: int = 0, level: int = 0) -> Any:
+
+def pretty_scumm(block: Any, pos: int = 0, level: int = 0) -> Any:
     if not getattr(block.block_type, "value", None):
         return block
 
     type_str = block.block_type.value.to_bytes(length=4, byteorder="big")
     r: Dict[str, Tuple[str, Any] | Any] = {}
 
-    if type(block.block_data) == Scumm6Container.NestedBlocks:
+    if isinstance(block.block_data, Scumm6Container.NestedBlocks):
         pos += 8
         arr = []
         for b in block.block_data.blocks:
@@ -63,9 +62,7 @@ class ScriptAddr(NamedTuple):
     room: int
 
 
-def get_script_addrs(
-    block: Scumm6Container.Block, state: State, pos: int = 0
-) -> List[ScriptAddr]:
+def get_script_addrs(block: Any, state: State, pos: int = 0) -> List[ScriptAddr]:
     r = []
 
     if block.block_type == BlockType.room:
@@ -74,12 +71,12 @@ def get_script_addrs(
         state.rooms_dict[room.start] = room
         state.rooms_addrs.insert_sorted(room.start)
 
-    if type(block.block_data) == Scumm6Container.NestedBlocks:
+    if isinstance(block.block_data, Scumm6Container.NestedBlocks):
         pos += 8
         for b in block.block_data.blocks:
             r.extend(get_script_addrs(b, state, pos))
             pos += b.block_size
-    elif type(block.block_data) == Scumm6Container.Script:
+    elif isinstance(block.block_data, Scumm6Container.Script):
         room = state.rooms[-1]
         assert room
         name = block.block_type.name
@@ -92,7 +89,7 @@ def get_script_addrs(
             name = "exit"
 
         start = pos + 8
-        assert not name in room.funcs
+        assert name not in room.funcs
         room.funcs[name] = start
 
         state.block_to_script[pos] = start
@@ -105,13 +102,13 @@ def get_script_addrs(
                 room=room.num,
             )
         )
-    elif type(block.block_data) == Scumm6Container.LocalScript:
+    elif isinstance(block.block_data, Scumm6Container.LocalScript):
         room = state.rooms[-1]
         assert room
 
         start = pos + 8 + 1
         name = f"local{block.block_data.index}"
-        assert not name in room.funcs
+        assert name not in room.funcs
         room.funcs[name] = start
 
         state.block_to_script[pos] = start
@@ -124,7 +121,7 @@ def get_script_addrs(
                 room=room.num,
             )
         )
-    elif type(block.block_data) == Scumm6Container.Loff:
+    elif isinstance(block.block_data, Scumm6Container.Loff):
         for room in block.block_data.rooms:
             state.room_ids[room.room_id] = room.room_offset
     # TODO: VerbScript

@@ -2,12 +2,13 @@ from .disasm import Scumm6Disasm
 
 from .scumm6_opcodes import Scumm6Opcodes
 
-OpType = Scumm6Opcodes.OpType
-
 import os
 from pprint import pprint
 
 from typing import List, Tuple
+
+OpType = Scumm6Opcodes.OpType
+
 
 # NOTE: the .lecf is the un-xored file
 path = os.path.join(os.path.dirname(__file__), "..", "DOTTDEMO.001.lecf")
@@ -52,7 +53,6 @@ def test_decode_container() -> None:
     assert state.room_ids[61] == 0x851D6
 
     assert len(state.block_to_script) == 65
-    assert (0x851D6 + 0x7368) != 0x8C546
     assert state.block_to_script[0x851D6 + 0x7368] == 0x8C546
 
 
