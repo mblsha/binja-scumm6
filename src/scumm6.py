@@ -45,7 +45,7 @@ from binaryninja import BinaryViewType, lowlevelil
 if core_ui_enabled():
     from binaryninjaui import UIContext
 
-from .disasm import Scumm6Disasm, Instruction
+from .disasm import Scumm6Disasm, Instruction, State
 from .scumm6_opcodes import Scumm6Opcodes
 
 OpType = Scumm6Opcodes.OpType
@@ -173,6 +173,8 @@ class Scumm6(Architecture):  # type: ignore
         }
     )
 
+    # FIXME: attach this state to the view?
+    # need to make sure it's a BinaryView subclass
     op_addrs: Dict[str, SortedList] = defaultdict(SortedList)
 
     def __init__(self) -> None:
@@ -205,9 +207,15 @@ class Scumm6(Architecture):  # type: ignore
             else:
                 # FIXME: could be because of the .synthetic_builtins section
                 print(
-                    f"get_view({hex(addr)}) data mismatch:\nwant: {data},\n got: {data2}"
+                    f"get_view({hex(addr)}) data mismatch:\nwant: {data!r},\n got: {data2!r}"
                 )
+        assert last_bv
         return (None, None)
+
+    def get_state(self, instr: Instruction) -> State:
+        # FIXME: this won't work correctly if we open several files
+        view = LastBV.get()
+        return view.state  # type: ignore
 
     def prev_instruction(self, instr: Instruction) -> Instruction:
         view, filename = self.get_view(instr.data, instr.addr)
@@ -539,22 +547,50 @@ class Scumm6(Architecture):  # type: ignore
             add_intrinsic(op.id.name, body)
             il.append(il.no_ret())
         elif op.id in [OpType.start_script, OpType.start_script_quick]:
+            # o6_startScript
+            # https://github.com/scummvm/scummvm/blob/master/engines/scumm/script_v6.cpp#L871
             # print(f'>> {op.id.name} at {hex(dis.addr)}')
             args = do_pop_list(dis)
             func_num = dis
             args = [il.pop(4) for _ in args]
             for _ in range(len(args) + 2):
                 func_num = self.prev_instruction(func_num)
+            func_num_value = get_dis_value(func_num)
+
+            # FIXME: extrat this to a function
+            # (addr, num) -> func_ptr
+            state = self.get_state(dis)
+            assert state
+            room_addr = state.rooms_addrs.closest_left_match(dis.addr)
+            assert room_addr
+            room = state.rooms_dict[room_addr]
+            assert room
+            # print(room)
 
             if op.id == OpType.start_script:
                 flags = get_prev_value(func_num)
-                print(
-                    f">>> {hex(addr)} calling function #{get_dis_value(func_num)} with {len(args)} args and flags {flags}"
-                )
-                il.append(il.intrinsic([], op.id.name, [il.pop(4), il.pop(4)] + args))
+                # ScummEngine::runScript()
+                # https://github.com/scummvm/scummvm/blob/master/engines/scumm/script.cpp#L59
+                freeze_resistant = (flags & 1) != 0
+                recursive = (flags & 2) != 0
+
+                # FIXME: use func_ptr
+                if not recursive:
+                    il.append(il.intrinsic([], "stop_script", [il.const(4, func_num_value)]))
+
+                name = f"local{func_num_value}"
+                if name in room.funcs:
+                    addr = room.funcs[name]
+                    print(f"found {name} at {hex(addr)}")
+                    il.append(il.call(il.const_pointer(4, addr)))
+                else:
+                    print(
+                        f">>> {hex(addr)} calling function #{func_num_value} with {len(args)} args and flags {flags}"
+                    )
+                    il.append(il.intrinsic([], op.id.name, [il.pop(4), il.pop(4)] + args))
             else:
                 print(
-                    f">>> {hex(addr)} calling function #{get_dis_value(func_num)} with {len(args)} args"
+                    f">>> {hex(addr)} calling function #{func_num_value} with {len(args)} args"
                 )
                 il.append(il.intrinsic([], op.id.name, [il.pop(4)] + args))
         elif op.id == OpType.stop_script:

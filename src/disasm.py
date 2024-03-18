@@ -13,8 +13,10 @@ from .sorted_list import SortedList
 def pretty_scumm(block: Scumm6Container.Block, pos: int = 0, level: int = 0) -> Any:
     if not getattr(block.block_type, "value", None):
         return block
-    type_str = block.block_type.value.to_bytes(length=4)
+
+    type_str = block.block_type.value.to_bytes(length=4, byteorder="big")
     r: Dict[str, Tuple[str, Any] | Any] = {}
+
     if type(block.block_data) == Scumm6Container.NestedBlocks:
         pos += 8
         arr = []
@@ -44,6 +46,14 @@ class State:
     rooms_dict: Dict[int, Room] = field(default_factory=dict)
     # start_addr
     rooms_addrs: SortedList = field(default_factory=SortedList)
+
+    # id -> start_addr
+    # used for global script pointers
+    room_ids: Dict[int, int] = field(default_factory=dict)
+
+    # block_addr -> script_addr
+    # used for global script pointers
+    block_to_script: Dict[int, int] = field(default_factory=dict)
 
 
 class ScriptAddr(NamedTuple):
@@ -85,6 +95,8 @@ def get_script_addrs(
         assert not name in room.funcs
         room.funcs[name] = start
 
+        state.block_to_script[pos] = start
+
         r.append(
             ScriptAddr(
                 start=start,
@@ -102,6 +114,8 @@ def get_script_addrs(
         assert not name in room.funcs
         room.funcs[name] = start
 
+        state.block_to_script[pos] = start
+
         r.append(
             ScriptAddr(
                 start=start,
@@ -110,6 +124,9 @@ def get_script_addrs(
                 room=room.num,
             )
         )
+    elif type(block.block_data) == Scumm6Container.Loff:
+        for room in block.block_data.rooms:
+            state.room_ids[room.room_id] = room.room_offset
     # TODO: VerbScript
     # elif type(block.block_data) == Scumm6Container.VerbScript:
     return r
@@ -144,6 +161,18 @@ class Scumm6Disasm:
             if "end of stream reached, but no terminator 0 found" in str(e):
                 return None
             raise
+
+    # https://github.com/scummvm/scummvm/blob/74b6c4d35aaeeb6892c358f0c3e41d8be98c79ea/engines/scumm/resource.cpp#L455
+    # DRCC: readResTypeList(rtScript): room_no -> room_offset
+
+    # DROO: readResTypeList(rtRoom)
+    def decode_rnam(self, data: bytes) -> Any:
+        ks = KaitaiStream(BytesIO(data))
+        r = Scumm6Container(ks)
+        for b in r.blocks:
+            if b.block_type == BlockType.dscr:
+                return b.block_data
+        return None
 
     def decode_container(self, data: bytes) -> Optional[Tuple[List[ScriptAddr], State]]:
         if len(data) <= 0:

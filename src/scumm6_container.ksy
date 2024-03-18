@@ -11,6 +11,7 @@ seq:
     repeat: eos
 
 enums:
+  # scummvm uses `findResourceData(MKTAG('B','O','X','D')` syntax
   block_type:
     # Index blocks
     0x524e414d: rnam

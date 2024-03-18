@@ -26,7 +26,7 @@ class Scumm6View(BinaryView):  # type: ignore
         BinaryView.__init__(
             self, parent_view=parent_view, file_metadata=parent_view.file
         )
-        LastBV.set(parent_view)
+        LastBV.set(self)
 
         self.disasm = Scumm6Disasm()
         data = parent_view.read(0, parent_view.end)
