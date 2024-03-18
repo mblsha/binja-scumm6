@@ -215,13 +215,14 @@ class Scumm6(Architecture):  # type: ignore
         view, filename = self.get_view(instr.data, instr.addr)
         if not view:
             raise Exception(f"prev_instruction: no view at {hex(instr.addr)}")
+        assert filename
         prev_addr = self.op_addrs[filename].closest_left_match(instr.addr)
         # print(f'prev_instruction: addr:{instr.addr:x} -> prev:{prev_addr:x}')
         data2 = view.read(prev_addr, 256)
         dis = self.decode_instruction(data2, prev_addr)
         if not dis:
             raise Exception(
-                f"prev_instruction: no disasm at {prev_addr:x} len{len(data)}"
+                f"prev_instruction: no disasm at {prev_addr:x} len{len(data2)}"
             )
         return dis
 

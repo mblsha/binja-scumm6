@@ -335,7 +335,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
@@ -343,7 +343,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -362,7 +362,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
@@ -370,7 +370,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -389,7 +389,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
@@ -429,7 +429,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
@@ -437,7 +437,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -485,7 +485,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
@@ -493,7 +493,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -512,7 +512,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
@@ -531,7 +531,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list
+                return self._m_pop_list  # type: ignore
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
@@ -539,7 +539,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first
+                return self._m_pop_list_first  # type: ignore
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
@@ -578,7 +578,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 3
             return getattr(self, '_m_pop_count', None)
@@ -586,7 +586,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -605,7 +605,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
@@ -613,7 +613,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list
+                return self._m_pop_list  # type: ignore
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
@@ -621,7 +621,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first
+                return self._m_pop_list_first  # type: ignore
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
@@ -641,7 +641,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
@@ -660,7 +660,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
@@ -668,7 +668,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list
+                return self._m_pop_list  # type: ignore
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
@@ -676,7 +676,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first
+                return self._m_pop_list_first  # type: ignore
 
             self._m_pop_list_first = False
             return getattr(self, '_m_pop_list_first', None)
@@ -778,7 +778,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
@@ -786,7 +786,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list
+                return self._m_pop_list  # type: ignore
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
@@ -794,7 +794,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first
+                return self._m_pop_list_first  # type: ignore
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
@@ -802,7 +802,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -821,7 +821,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 5
             return getattr(self, '_m_pop_count', None)
@@ -840,7 +840,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 0
             return getattr(self, '_m_pop_count', None)
@@ -860,7 +860,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 3
             return getattr(self, '_m_pop_count', None)
@@ -868,7 +868,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -888,7 +888,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
@@ -896,7 +896,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -926,7 +926,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 5
             return getattr(self, '_m_pop_count', None)
@@ -934,7 +934,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list
+                return self._m_pop_list  # type: ignore
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
@@ -942,7 +942,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first
+                return self._m_pop_list_first  # type: ignore
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
@@ -1017,7 +1017,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def type(self):
             if hasattr(self, '_m_type'):
-                return self._m_type
+                return self._m_type  # type: ignore
 
             self._m_type = Scumm6Opcodes.VarType.normal
             return getattr(self, '_m_type', None)
@@ -1037,7 +1037,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
@@ -1058,7 +1058,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 0
             return getattr(self, '_m_pop_count', None)
@@ -1125,7 +1125,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 4
             return getattr(self, '_m_pop_count', None)
@@ -1133,7 +1133,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -1153,7 +1153,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
@@ -1161,7 +1161,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -1235,7 +1235,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
             @property
             def has_str(self):
                 if hasattr(self, '_m_has_str'):
-                    return self._m_has_str
+                    return self._m_has_str  # type: ignore
 
                 self._m_has_str =  ((self.magic >= 32) and (self.magic != 255))
                 return getattr(self, '_m_has_str', None)
@@ -1243,7 +1243,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
             @property
             def last_char(self):
                 if hasattr(self, '_m_last_char'):
-                    return self._m_last_char
+                    return self._m_last_char  # type: ignore
 
                 self._m_last_char = (self.string_data[-1] if self.has_str else (0 if self.magic == 0 else 255))
                 return getattr(self, '_m_last_char', None)
@@ -1251,7 +1251,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
             @property
             def switch_cmd(self):
                 if hasattr(self, '_m_switch_cmd'):
-                    return self._m_switch_cmd
+                    return self._m_switch_cmd  # type: ignore
 
                 self._m_switch_cmd = (self.cmd if self.magic == 255 else self.magic)
                 return getattr(self, '_m_switch_cmd', None)
@@ -1271,7 +1271,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
@@ -1279,7 +1279,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list
+                return self._m_pop_list  # type: ignore
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
@@ -1287,7 +1287,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first
+                return self._m_pop_list_first  # type: ignore
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
@@ -1307,7 +1307,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
@@ -1315,7 +1315,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -1425,7 +1425,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 4
             return getattr(self, '_m_pop_count', None)
@@ -1444,7 +1444,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 3
             return getattr(self, '_m_pop_count', None)
@@ -1452,7 +1452,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list
+                return self._m_pop_list  # type: ignore
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
@@ -1460,7 +1460,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first
+                return self._m_pop_list_first  # type: ignore
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
@@ -1529,7 +1529,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 3
             return getattr(self, '_m_pop_count', None)
@@ -1548,7 +1548,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
@@ -1556,7 +1556,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list
+                return self._m_pop_list  # type: ignore
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
@@ -1564,7 +1564,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first
+                return self._m_pop_list_first  # type: ignore
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
@@ -1634,7 +1634,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
@@ -1642,7 +1642,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list
+                return self._m_pop_list  # type: ignore
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
@@ -1650,7 +1650,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first
+                return self._m_pop_list_first  # type: ignore
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
@@ -1658,7 +1658,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -1677,7 +1677,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
@@ -1685,7 +1685,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
@@ -1971,7 +1971,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count
+                return self._m_pop_count  # type: ignore
 
             self._m_pop_count = 3
             return getattr(self, '_m_pop_count', None)
@@ -1979,7 +1979,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         @property
         def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count
+                return self._m_push_count  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)

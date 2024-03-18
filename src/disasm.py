@@ -5,14 +5,14 @@ from .scumm6_container import Scumm6Container
 BlockType = Scumm6Container.BlockType
 
 
-from typing import Dict, List, Tuple, Optional, NamedTuple
+from typing import Any, Dict, List, Tuple, Optional, NamedTuple
 
 
-def pretty_scumm(block, pos=0, level=0):
+def pretty_scumm(block: Scumm6Container.Block, pos: int = 0, level: int = 0) -> Any:
     if not getattr(block.block_type, "value", None):
         return block
     type_str = block.block_type.value.to_bytes(length=4)
-    r = {}
+    r: Dict[str, Tuple[str, Any] | Any] = {}
     if type(block.block_data) == Scumm6Container.NestedBlocks:
         pos += 8
         arr = []
