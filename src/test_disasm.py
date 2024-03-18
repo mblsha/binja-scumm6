@@ -100,7 +100,12 @@ def test_get_script_ptr() -> None:
     assert r is not None
     _, state = r
 
+    # boot script
     assert disasm.get_script_ptr(state, 1, -1) == 0x8C546
+
+    assert disasm.get_script_ptr(state, 5, 0x826d) == 0x8493
+
+    # local scripts
     assert disasm.get_script_ptr(state, 200, 33360) == 33410
     assert disasm.get_script_ptr(state, 201, 33360) == 33444
 

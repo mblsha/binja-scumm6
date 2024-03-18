@@ -33,13 +33,17 @@ class Scumm6View(BinaryView):  # type: ignore
         self.scripts: List[ScriptAddr] = container[0]
         self.state: State = container[1]
 
+        # ScummEngine::runBootscript()
+        # global script #1 is normally the boot script
+        self.boot_script = self.disasm.get_script_ptr(self.state, 1, -1)
+
     def init(self) -> bool:
         arch = "SCUMM6"
         self.arch = Architecture[arch]
         self.platform = Architecture[arch].standalone_platform
 
         for start, end, name, room in self.scripts:
-            print("adding segment:", hex(start), hex(end), name)
+            # print("adding segment:", hex(start), hex(end), name)
             size = end - start
 
             self.add_auto_segment(
@@ -56,7 +60,10 @@ class Scumm6View(BinaryView):  # type: ignore
             if not self.get_function_at(start):
                 self.create_user_function(start)
                 f = self.get_function_at(start)
-                f.name = name
+                if start == self.boot_script:
+                    f.name = "boot_script_main"
+                else:
+                    f.name = name
 
         return True
 
@@ -70,4 +77,4 @@ class Scumm6View(BinaryView):  # type: ignore
         return True
 
     def perform_get_entry_point(self) -> int:
-        return 0
+        return self.boot_script
