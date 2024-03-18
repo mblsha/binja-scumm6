@@ -5,6 +5,9 @@ from .scumm6_container import Scumm6Container
 BlockType = Scumm6Container.BlockType
 
 
+from typing import List, Tuple, Optional
+
+
 def pretty_scumm(block, pos=0, level=0):
     if not getattr(block.block_type, "value", None):
         return block
@@ -67,7 +70,7 @@ class Scumm6Disasm:
     def __init__(self):
         pass
 
-    def decode_instruction(self, data: bytes, addr: int):
+    def decode_instruction(self, data: bytes, addr: int) -> Optional[Instruction]:
         if len(data) <= 0:
             return None
         try:
@@ -86,7 +89,7 @@ class Scumm6Disasm:
                 return None
             raise
 
-    def decode_container(self, data: bytes):
+    def decode_container(self, data: bytes) -> Optional[List[Tuple[int, int, str]]]:
         if len(data) <= 0:
             return None
         try:

@@ -8,7 +8,7 @@ from enum import Enum
 if getattr(kaitaistruct, 'API_VERSION', (0, 9)) < (0, 9):
     raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
 
-class Scumm6Container(KaitaiStruct):
+class Scumm6Container(KaitaiStruct):  # type: ignore
 
     class BlockType(Enum):
         adl = 4277324
@@ -73,7 +73,7 @@ class Scumm6Container(KaitaiStruct):
             i += 1
 
 
-    class Boxm(KaitaiStruct):
+    class Boxm(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -84,7 +84,7 @@ class Scumm6Container(KaitaiStruct):
             self.v1 = self._io.read_u1()
 
 
-    class Aary(KaitaiStruct):
+    class Aary(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -101,7 +101,7 @@ class Scumm6Container(KaitaiStruct):
                     break
                 i += 1
 
-        class Element(KaitaiStruct):
+        class Element(KaitaiStruct):  # type: ignore
             def __init__(self, _io, _parent=None, _root=None):
                 self._io = _io
                 self._parent = _parent
@@ -122,7 +122,7 @@ class Scumm6Container(KaitaiStruct):
 
 
 
-    class Rmih(KaitaiStruct):
+    class Rmih(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -133,7 +133,7 @@ class Scumm6Container(KaitaiStruct):
             self.num_z_buf = self._io.read_u2le()
 
 
-    class Dobj(KaitaiStruct):
+    class Dobj(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -151,7 +151,7 @@ class Scumm6Container(KaitaiStruct):
                 self.class_data.append(self._io.read_u4le())
 
 
-        class OwnerState(KaitaiStruct):
+        class OwnerState(KaitaiStruct):  # type: ignore
             def __init__(self, _io, _parent=None, _root=None):
                 self._io = _io
                 self._parent = _parent
@@ -164,7 +164,7 @@ class Scumm6Container(KaitaiStruct):
 
 
 
-    class UnknownBlock(KaitaiStruct):
+    class UnknownBlock(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -175,7 +175,7 @@ class Scumm6Container(KaitaiStruct):
             self.data = self._io.read_bytes_full()
 
 
-    class Apal(KaitaiStruct):
+    class Apal(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -188,7 +188,7 @@ class Scumm6Container(KaitaiStruct):
                 self.pal.append(Scumm6Container.Apal.Pal(self._io, self, self._root))
 
 
-        class Pal(KaitaiStruct):
+        class Pal(KaitaiStruct):  # type: ignore
             def __init__(self, _io, _parent=None, _root=None):
                 self._io = _io
                 self._parent = _parent
@@ -202,7 +202,7 @@ class Scumm6Container(KaitaiStruct):
 
 
 
-    class LocalScript(KaitaiStruct):
+    class LocalScript(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -214,7 +214,7 @@ class Scumm6Container(KaitaiStruct):
             self.data = self._io.read_bytes_full()
 
 
-    class Cdhd(KaitaiStruct):
+    class Cdhd(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -234,7 +234,7 @@ class Scumm6Container(KaitaiStruct):
             self.actor_dir = self._io.read_u1()
 
 
-    class Offs(KaitaiStruct):
+    class Offs(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -245,7 +245,7 @@ class Scumm6Container(KaitaiStruct):
             self.offset = self._io.read_u4le()
 
 
-    class Nlsc(KaitaiStruct):
+    class Nlsc(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -256,7 +256,7 @@ class Scumm6Container(KaitaiStruct):
             self.number_local_scripts = self._io.read_u1()
 
 
-    class Rmhd(KaitaiStruct):
+    class Rmhd(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -269,7 +269,7 @@ class Scumm6Container(KaitaiStruct):
             self.num_objects = self._io.read_u2le()
 
 
-    class Block(KaitaiStruct):
+    class Block(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -426,7 +426,7 @@ class Scumm6Container(KaitaiStruct):
                 self.block_data = Scumm6Container.UnknownBlock(_io__raw_block_data, self, self._root)
 
 
-    class IndexNoOffset(KaitaiStruct):
+    class IndexNoOffset(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -445,7 +445,7 @@ class Scumm6Container(KaitaiStruct):
 
 
 
-    class Rnam(KaitaiStruct):
+    class Rnam(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -462,7 +462,7 @@ class Scumm6Container(KaitaiStruct):
                     break
                 i += 1
 
-        class ResourceName(KaitaiStruct):
+        class ResourceName(KaitaiStruct):  # type: ignore
             def __init__(self, _io, _parent=None, _root=None):
                 self._io = _io
                 self._parent = _parent
@@ -477,7 +477,7 @@ class Scumm6Container(KaitaiStruct):
 
 
 
-    class Imhd(KaitaiStruct):
+    class Imhd(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -499,7 +499,7 @@ class Scumm6Container(KaitaiStruct):
                 self.hotspots.append(Scumm6Container.Imhd.Hotspot(self._io, self, self._root))
 
 
-        class Hotspot(KaitaiStruct):
+        class Hotspot(KaitaiStruct):  # type: ignore
             def __init__(self, _io, _parent=None, _root=None):
                 self._io = _io
                 self._parent = _parent
@@ -512,7 +512,7 @@ class Scumm6Container(KaitaiStruct):
 
 
 
-    class Loff(KaitaiStruct):
+    class Loff(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -526,7 +526,7 @@ class Scumm6Container(KaitaiStruct):
                 self.rooms.append(Scumm6Container.Loff.Room(self._io, self, self._root))
 
 
-        class Room(KaitaiStruct):
+        class Room(KaitaiStruct):  # type: ignore
             def __init__(self, _io, _parent=None, _root=None):
                 self._io = _io
                 self._parent = _parent
@@ -539,7 +539,7 @@ class Scumm6Container(KaitaiStruct):
 
 
 
-    class Maxs(KaitaiStruct):
+    class Maxs(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -562,7 +562,7 @@ class Scumm6Container(KaitaiStruct):
             self.num_images = self._io.read_u2le()
 
 
-    class Trns(KaitaiStruct):
+    class Trns(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -573,7 +573,7 @@ class Scumm6Container(KaitaiStruct):
             self.transparent_color = self._io.read_u1()
 
 
-    class Script(KaitaiStruct):
+    class Script(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -584,7 +584,7 @@ class Scumm6Container(KaitaiStruct):
             self.data = self._io.read_bytes_full()
 
 
-    class NestedBlocks(KaitaiStruct):
+    class NestedBlocks(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -600,7 +600,7 @@ class Scumm6Container(KaitaiStruct):
 
 
 
-    class VerbScript(KaitaiStruct):
+    class VerbScript(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -618,7 +618,7 @@ class Scumm6Container(KaitaiStruct):
                 i += 1
 
 
-    class Obna(KaitaiStruct):
+    class Obna(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -629,7 +629,7 @@ class Scumm6Container(KaitaiStruct):
             self.name = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
 
 
-    class Boxd(KaitaiStruct):
+    class Boxd(KaitaiStruct):  # type: ignore
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -643,7 +643,7 @@ class Scumm6Container(KaitaiStruct):
                 self.boxes.append(Scumm6Container.Boxd.Box(self._io, self, self._root))
 
 
-        class Box(KaitaiStruct):
+        class Box(KaitaiStruct):  # type: ignore
             def __init__(self, _io, _parent=None, _root=None):
                 self._io = _io
                 self._parent = _parent

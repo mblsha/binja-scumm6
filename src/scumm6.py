@@ -1,6 +1,6 @@
 from . import binja_api
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 import struct
 import traceback
@@ -84,7 +84,7 @@ class SortedList:
 
 # FIXME: create a fake memory segment for all the function names,
 # so that cross-references will work
-class Scumm6(Architecture):
+class Scumm6(Architecture):  # type: ignore
     name = "SCUMM6"
     address_size = 4
     default_int_size = 4
@@ -179,13 +179,13 @@ class Scumm6(Architecture):
         }
     )
 
-    op_addrs = defaultdict(SortedList)
+    op_addrs: Dict[str, SortedList] = defaultdict(SortedList)
 
     def __init__(self):
         Architecture.__init__(self)
         self.disasm = Scumm6Disasm()
 
-    def get_view(self, data: bytes, addr: int):
+    def get_view(self, data: bytes, addr: int) -> Tuple[Optional[BinaryView], Optional[str]]:
         if not core_ui_enabled():
             return (None, None)
 
@@ -222,7 +222,7 @@ class Scumm6(Architecture):
             )
         return dis
 
-    def decode_instruction(self, data: bytes, addr: int):
+    def decode_instruction(self, data: bytes, addr: int) -> Optional[Instruction]:
         dis = self.disasm.decode_instruction(data, addr)
         return dis
 
@@ -249,7 +249,7 @@ class Scumm6(Architecture):
 
     def get_instruction_text(
         self, data: bytes, addr: int
-    ) -> Optional[Tuple[List["function.InstructionTextToken"], int]]:
+    ) -> Optional[Tuple[List[InstructionTextToken], int]]:
         dis = self.decode_instruction(data, addr)
         if not dis:
             return None

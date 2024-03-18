@@ -8,7 +8,7 @@ from .scumm6 import set_last_bv
 from .disasm import Scumm6Disasm
 
 
-class Scumm6View(BinaryView):
+class Scumm6View(BinaryView):  # type: ignore
     name = "SCUMM6 View"
     long_name = "SCUMM6 Resources"
 
