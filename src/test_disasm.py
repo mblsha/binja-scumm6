@@ -14,8 +14,10 @@ with open(path, "rb") as f:
 
 def test_decode_container() -> None:
     disasm = Scumm6Disasm()
-    scripts = disasm.decode_container(data)
-    assert scripts is not None
+    r = disasm.decode_container(data)
+    assert r is not None
+    scripts, state = r
+
     pprint(scripts)
     assert len(scripts) == 65
     assert scripts[0] == (1179, 1180, "room1_exit", 1)
@@ -28,6 +30,17 @@ def test_decode_container() -> None:
     assert scripts[5] == (33444, 33546, "room2_local201", 2)
 
     assert scripts[-1] == (962497, 962967, "room12_scrp1", 12)
+
+    # state
+    pprint(state)
+    assert len(state.rooms) == 12
+    assert len(state.rooms_dict) == 12
+    assert len(state.rooms_addrs) == 12
+
+    assert state.rooms[0].num == 1
+    assert state.rooms[0].scrp == 0
+    assert state.rooms[0].funcs['exit'] == 1179
+    assert state.rooms[0].funcs['enter'] == 1188
 
 
 def test_decode_instruction_none() -> None:

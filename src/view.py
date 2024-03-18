@@ -5,7 +5,9 @@ from binaryninja.architecture import Architecture
 from binaryninja.types import Symbol
 from binaryninja.enums import SegmentFlag, SymbolType, SectionSemantics, Endianness
 from .scumm6 import set_last_bv
-from .disasm import Scumm6Disasm
+from .disasm import Scumm6Disasm, ScriptAddr, State
+
+from typing import List, Tuple
 
 
 class Scumm6View(BinaryView):  # type: ignore
@@ -28,14 +30,16 @@ class Scumm6View(BinaryView):  # type: ignore
 
         self.disasm = Scumm6Disasm()
         data = parent_view.read(0, parent_view.end)
-        self.scripts = self.disasm.decode_container(data)
+        container = self.disasm.decode_container(data)
+        assert container
+        self.scripts: List[ScriptAddr] = container[0]
+        self.state: State = container[1]
 
     def init(self) -> bool:
         arch = "SCUMM6"
         self.arch = Architecture[arch]
         self.platform = Architecture[arch].standalone_platform
 
-        assert self.scripts
         for start, end, name, room in self.scripts:
             print("adding segment:", hex(start), hex(end), name)
             size = end - start
