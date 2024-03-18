@@ -90,8 +90,32 @@ def test_decode_instruction() -> None:
 
 
 def test_decode_rnam() -> None:
-    r = decode_rnam_dscr(rnam)
-    assert r[1] == (61, 0x7368)
+    dscr = decode_rnam_dscr(rnam)
+    assert dscr[1] == (61, 0x7368)
+
+    disasm = Scumm6Disasm()
+    r = disasm.decode_container(lecf_path, lecf)
+    assert r is not None
+    _, state = r
+
+    for i in range(len(dscr)):
+        if dscr[i].room_no not in state.room_ids:
+            continue
+        ptr = disasm.get_script_ptr(state, i, -1)
+        assert ptr
+        print(f"{i} -> {hex(ptr)}")
+    # assert False
+
+
+def test_get_script_nums() -> None:
+    disasm = Scumm6Disasm()
+    r = disasm.decode_container(lecf_path, lecf)
+    assert r is not None
+    _, state = r
+
+    sn = disasm.get_script_nums(state)
+    assert sn[0x8C546] == 1
+    assert sn[0xEAFC1] == 139
 
 
 def test_get_script_ptr() -> None:
@@ -103,7 +127,8 @@ def test_get_script_ptr() -> None:
     # boot script
     assert disasm.get_script_ptr(state, 1, -1) == 0x8C546
 
-    assert disasm.get_script_ptr(state, 5, 0x826d) == 0x8493
+    assert disasm.get_script_ptr(state, 5, -1) == 0x8493
+    assert disasm.get_script_ptr(state, 121, -1) == 0x8DA90
 
     # local scripts
     assert disasm.get_script_ptr(state, 200, 33360) == 33410
@@ -112,4 +137,3 @@ def test_get_script_ptr() -> None:
     # FIXME: figure out how SCUMMVM handles this
     assert not disasm.get_script_ptr(state, 85, 0x8D53B)
     assert not disasm.get_script_ptr(state, 86, 0x8CCEA)
-

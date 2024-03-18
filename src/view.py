@@ -35,7 +35,11 @@ class Scumm6View(BinaryView):  # type: ignore
 
         # ScummEngine::runBootscript()
         # global script #1 is normally the boot script
-        self.boot_script = self.disasm.get_script_ptr(self.state, 1, -1)
+        boot_script = self.disasm.get_script_ptr(self.state, 1, -1)
+        assert boot_script
+        self.boot_script = boot_script
+
+        self.script_nums = self.disasm.get_script_nums(self.state)
 
     def init(self) -> bool:
         arch = "SCUMM6"
@@ -60,10 +64,15 @@ class Scumm6View(BinaryView):  # type: ignore
             if not self.get_function_at(start):
                 self.create_user_function(start)
                 f = self.get_function_at(start)
+
+                suffix = ""
+                if start in self.script_nums:
+                    suffix = f"_{self.script_nums[start]}"
+
                 if start == self.boot_script:
-                    f.name = "boot_script_main"
+                    f.name = "boot_script_main" + suffix
                 else:
-                    f.name = name
+                    f.name = name + suffix
 
         return True
 

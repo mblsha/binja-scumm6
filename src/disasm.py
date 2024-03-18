@@ -241,3 +241,18 @@ class Scumm6Disasm:
         room_addr = state.room_ids[res.room_no]
         block_addr = room_addr + res.room_offset
         return state.block_to_script[block_addr]
+
+    # script_addr -> script_num
+    @staticmethod
+    def get_script_nums(state: State) -> Dict[int, int]:
+        r: Dict[int, int] = {}
+
+        for i in range(len(state.dscr)):
+            if state.dscr[i].room_no not in state.room_ids:
+                continue
+            ptr = Scumm6Disasm.get_script_ptr(state, i, -1)
+            assert ptr
+            r[ptr] = i
+
+        return r
+
