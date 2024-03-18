@@ -4,7 +4,7 @@ from binaryninja.binaryview import BinaryView
 from binaryninja.architecture import Architecture
 from binaryninja.types import Symbol
 from binaryninja.enums import SegmentFlag, SymbolType, SectionSemantics, Endianness
-from .scumm6 import set_last_bv
+from .scumm6 import LastBV
 from .disasm import Scumm6Disasm, ScriptAddr, State
 
 from typing import List, Tuple
@@ -26,7 +26,7 @@ class Scumm6View(BinaryView):  # type: ignore
         BinaryView.__init__(
             self, parent_view=parent_view, file_metadata=parent_view.file
         )
-        set_last_bv(parent_view)
+        LastBV.set(parent_view)
 
         self.disasm = Scumm6Disasm()
         data = parent_view.read(0, parent_view.end)

@@ -52,15 +52,28 @@ OpType = Scumm6Opcodes.OpType
 VarType = Scumm6Opcodes.VarType
 SubopType = Scumm6Opcodes.SubopType
 
-last_bv: Optional[BinaryView] = None
 
 from .sorted_list import SortedList
 
+
 # called by Scumm6View
-def set_last_bv(bv: BinaryView) -> None:
-    global last_bv
-    last_bv = bv
-    print("set_last_bv", bv)
+class LastBV:
+    _last_bv: Optional[BinaryView] = None
+    _lock = threading.Lock()
+
+    @staticmethod
+    def set(bv: BinaryView) -> None:
+        with LastBV._lock:
+            print("set_last_bv", bv, threading.current_thread().name)
+            LastBV._last_bv = bv
+
+    @staticmethod
+    def get() -> Optional[BinaryView]:
+        with LastBV._lock:
+            result = LastBV._last_bv
+            if not result:
+                print("get_last_bv: no last_bv", threading.current_thread().name)
+            return result
 
 
 # FIXME: create a fake memory segment for all the function names,
@@ -183,12 +196,17 @@ class Scumm6(Architecture):  # type: ignore
                 continue
             return (view, view.file.filename)
 
-        global last_bv
+        last_bv = LastBV.get()
         if last_bv:
+            # check that the data matches in case last_bv is not the right view
             data2 = last_bv.read(addr, len(data))
             if data == data2:
                 return (last_bv, last_bv.file.filename)
-        print("last_bv not set, view not initialized?")
+            else:
+                # FIXME: could be because of the .synthetic_builtins section
+                print(
+                    f"get_view({hex(addr)}) data mismatch:\nwant: {data},\n got: {data2}"
+                )
         return (None, None)
 
     def prev_instruction(self, instr: Instruction) -> Instruction:
