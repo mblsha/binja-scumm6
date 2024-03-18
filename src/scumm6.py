@@ -42,6 +42,7 @@ from binaryninja.enums import (
     SymbolType,
 )
 from binaryninja import BinaryViewType, lowlevelil
+
 if core_ui_enabled():
     from binaryninjaui import UIContext
 
@@ -185,7 +186,9 @@ class Scumm6(Architecture):  # type: ignore
         Architecture.__init__(self)
         self.disasm = Scumm6Disasm()
 
-    def get_view(self, data: bytes, addr: int) -> Tuple[Optional[BinaryView], Optional[str]]:
+    def get_view(
+        self, data: bytes, addr: int
+    ) -> Tuple[Optional[BinaryView], Optional[str]]:
         if not core_ui_enabled():
             return (None, None)
 
@@ -321,10 +324,11 @@ class Scumm6(Architecture):  # type: ignore
                 OpType.print_actor,
                 OpType.print_ego,
             ]
+            and body
             and body.subop == SubopType.textstring
         ):
             tokenize_talk_actor(body.body, tokens)
-        elif op.id in [OpType.verb_ops] and body.subop == SubopType.verb_name:
+        elif op.id in [OpType.verb_ops] and body and body.subop == SubopType.verb_name:
             tokenize_talk_actor(body.body, tokens)
         elif body:
             args = [
@@ -420,6 +424,7 @@ class Scumm6(Architecture):  # type: ignore
         op = dis.op
         body = getattr(op, "body", None)
         if op.id in [OpType.push_byte, OpType.push_word]:
+            assert body
             il.append(il.push(4, il.const(4, body.data)))
         elif op.id in [OpType.write_byte_var, OpType.write_word_var]:
             # il.append(il.store(4, var_addr(body.data), il.pop(4)))
@@ -524,9 +529,11 @@ class Scumm6(Architecture):  # type: ignore
                 )
             )
             il.mark_label(t)
+            assert body
             il.append(il.jump(il.const(4, addr + dis.length + body.jump_offset)))
             il.mark_label(f)
         elif op.id in [OpType.jump]:
+            assert body
             il.append(il.jump(il.const(4, addr + dis.length + body.jump_offset)))
         elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
             add_intrinsic(op.id.name, body)
@@ -559,6 +566,7 @@ class Scumm6(Architecture):  # type: ignore
         elif not getattr(body, "call_func", True):
             add_intrinsic(op.id.name, body)
         elif getattr(body, "subop", None):
+            assert body
             if type(body.body) == Scumm6Opcodes.UnknownOp:
                 print(
                     f'unknown_op {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}'
@@ -592,6 +600,7 @@ class Scumm6(Architecture):  # type: ignore
                 raise Exception(
                     f"Can't save current addr: No view for data at {hex(addr)}"
                 )
+            assert filename
             self.op_addrs[filename].insert_sorted(addr)
             # print(self.op_addrs[filename]._list)
 
