@@ -1,4 +1,4 @@
-import binaryninja
+from . import binja_api
 
 from typing import List, Optional, Tuple
 
@@ -11,6 +11,7 @@ from functools import partial
 import bisect
 from collections import defaultdict
 
+from binaryninja import core_ui_enabled
 from binaryninja.architecture import (
     Architecture,
     IntrinsicIndex,
@@ -41,7 +42,8 @@ from binaryninja.enums import (
     SymbolType,
 )
 from binaryninja import BinaryViewType, lowlevelil
-from binaryninjaui import UIContext
+if core_ui_enabled():
+    from binaryninjaui import UIContext
 
 from .disasm import Scumm6Disasm, Instruction
 from .scumm6_opcodes import Scumm6Opcodes
@@ -184,6 +186,9 @@ class Scumm6(Architecture):
         self.disasm = Scumm6Disasm()
 
     def get_view(self, data: bytes, addr: int):
+        if not core_ui_enabled():
+            return (None, None)
+
         ctx = UIContext.activeContext()
         if not ctx:
             return (None, None)

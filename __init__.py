@@ -1,23 +1,26 @@
 import sys
 import os
-import binaryninja
+
+from . import binja_api
+from binaryninja import core_ui_enabled
 
 from .scumm6 import Scumm6
 
-Scumm6.register()
+if core_ui_enabled():
+    Scumm6.register()
 
-from .view import *
+    from .view import *
 
-Scumm6View.register()
+    Scumm6View.register()
 
-from binaryninja import Architecture, CallingConvention
-
-
-class ParametersInRegistersCallingConvention(CallingConvention):
-    name = "ParametersInRegisters"
+    from binaryninja import Architecture, CallingConvention
 
 
-arch = Architecture["SCUMM6"]
-arch.register_calling_convention(
-    ParametersInRegistersCallingConvention(arch, "default")
-)
+    class ParametersInRegistersCallingConvention(CallingConvention):
+        name = "ParametersInRegisters"
+
+
+    arch = Architecture["SCUMM6"]
+    arch.register_calling_convention(
+        ParametersInRegistersCallingConvention(arch, "default")
+    )
