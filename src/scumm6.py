@@ -226,7 +226,7 @@ class Scumm6(Architecture):  # type: ignore
         return dis
 
     def decode_instruction(self, data: bytes, addr: int) -> Optional[Instruction]:
-        dis = self.disasm.decode_instruction(data, addr)
+        dis: Optional[Instruction] = self.disasm.decode_instruction(data, addr)
         return dis
 
     def get_instruction_info(self, data: bytes, addr: int) -> Optional[InstructionInfo]:

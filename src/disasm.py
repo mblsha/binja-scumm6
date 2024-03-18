@@ -5,7 +5,7 @@ from .scumm6_container import Scumm6Container
 BlockType = Scumm6Container.BlockType
 
 
-from typing import List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, NamedTuple
 
 
 def pretty_scumm(block, pos=0, level=0):
@@ -25,7 +25,15 @@ def pretty_scumm(block, pos=0, level=0):
     return r
 
 
-def get_script_addrs(block, state, pos=0):
+class ScriptAddr(NamedTuple):
+    start: int
+    end: int
+    name: str
+
+
+def get_script_addrs(
+    block: Scumm6Container.Block, state: Dict[str, int], pos: int = 0
+) -> List[ScriptAddr]:
     r = []
 
     if block.block_type == BlockType.room:
@@ -47,10 +55,14 @@ def get_script_addrs(block, state, pos=0):
         elif block.block_type == BlockType.excd:
             name = "exit"
 
-        r.append(((pos + 8), (pos + block.block_size), f'room{state["room"]}_{name}'))
+        r.append(
+            ScriptAddr(
+                (pos + 8), (pos + block.block_size), f'room{state["room"]}_{name}'
+            )
+        )
     elif type(block.block_data) == Scumm6Container.LocalScript:
         r.append(
-            (
+            ScriptAddr(
                 (pos + 8 + 1),
                 (pos + block.block_size),
                 f'room{state["room"]}_local{block.block_data.index}',
@@ -61,9 +73,12 @@ def get_script_addrs(block, state, pos=0):
     return r
 
 
-from collections import namedtuple
-
-Instruction = namedtuple("Instruction", ["op", "id", "length", "data", "addr"])
+class Instruction(NamedTuple):
+    op: Scumm6Opcodes.Op
+    id: str
+    length: int
+    data: bytes
+    addr: int
 
 
 class Scumm6Disasm:
@@ -78,7 +93,6 @@ class Scumm6Disasm:
             r = Scumm6Opcodes(ks)
             op_i = str(r.op.id).replace("OpType.", "")
             return Instruction(r.op, id=op_i, length=ks.pos(), data=data, addr=addr)
-            # return r.op, op_i, ks.pos()
         except EOFError:
             return None
         except UnicodeDecodeError:
@@ -89,7 +103,7 @@ class Scumm6Disasm:
                 return None
             raise
 
-    def decode_container(self, data: bytes) -> Optional[List[Tuple[int, int, str]]]:
+    def decode_container(self, data: bytes) -> Optional[List[ScriptAddr]]:
         if len(data) <= 0:
             return None
         try:

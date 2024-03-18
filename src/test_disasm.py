@@ -6,6 +6,7 @@ OpType = Scumm6Opcodes.OpType
 import os
 from pprint import pprint
 
+# NOTE: the .lecf is the un-xored file
 path = os.path.join(os.path.dirname(__file__), "..",  "DOTTDEMO.001.lecf")
 with open(path, "rb") as f:
     data = f.read()
@@ -44,6 +45,7 @@ def test_decode_instruction() -> None:
     dis = disasm.decode_instruction(b"\x00\xff", 0)
     assert dis is not None
     assert dis.op.id == OpType.push_byte
+    assert dis.id == "push_byte"
     assert dis.op.body.data == -1
     assert dis.addr == 0
     assert dis.length == 2
@@ -51,5 +53,6 @@ def test_decode_instruction() -> None:
     dis = disasm.decode_instruction(b"\x00\x12", 0x1234)
     assert dis is not None
     assert dis.op.id == OpType.push_byte
+    assert dis.id == "push_byte"
     assert dis.op.body.data == 0x12
     assert dis.addr == 0x1234
