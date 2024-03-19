@@ -709,7 +709,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
             elif _on == Scumm6Opcodes.SubopType.left:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.textstring:
-                self.body = Scumm6Opcodes.TalkActor(self._io, self, self._root)
+                self.body = Scumm6Opcodes.Message(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.center:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             else:
@@ -1083,7 +1083,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
             elif _on == Scumm6Opcodes.SubopType.endd:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.verb_name:
-                self.body = Scumm6Opcodes.TalkActor(self._io, self, self._root)
+                self.body = Scumm6Opcodes.Message(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.verb_at:
                 self.body = Scumm6Opcodes.CallFuncPop2(self._io, self, self._root)
             elif _on == Scumm6Opcodes.SubopType.verb_hicolor:
@@ -1165,97 +1165,6 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
-
-
-    class TalkActor(KaitaiStruct):  # type: ignore
-
-        class TalkType(Enum):
-            newline = 1
-            keep_text = 2
-            wait = 3
-            get_int = 4
-            get_verb = 5
-            get_name = 6
-            get_string = 7
-            start_anim = 9
-            sound = 10
-            set_color = 12
-            unknown_13 = 13
-            set_font = 14
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):  # type: ignore
-            self.cmds = []
-            i = 0
-            while True:
-                _ = Scumm6Opcodes.TalkActor.TalkCmd(self._io, self, self._root)
-                self.cmds.append(_)
-                if _.last_char == 0:
-                    break
-                i += 1
-
-        class TalkCmd(KaitaiStruct):  # type: ignore
-            def __init__(self, _io, _parent=None, _root=None):  # type: ignore
-                self._io = _io
-                self._parent = _parent
-                self._root = _root if _root else self
-                self._read()
-
-            def _read(self):  # type: ignore
-                self.magic = self._io.read_u1()
-                if self.has_str:
-                    self.string_data = []
-                    i = 0
-                    while True:
-                        _ = self._io.read_u1()
-                        self.string_data.append(_)
-                        if  ((_ < 32) or (_ == 255)) :
-                            break
-                        i += 1
-
-                if self.magic == 255:
-                    self.cmd = self._io.read_u1()
-
-                if  ((not (self.has_str)) and (self.magic != 0)) :
-                    _on = self.switch_cmd
-                    if _on == 10:
-                        self.body = Scumm6Opcodes.Word7Data(self._io, self, self._root)
-                    elif _on == 4:
-                        self.body = Scumm6Opcodes.WordData(self._io, self, self._root)
-                    elif _on == 3:
-                        self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
-                    elif _on == 2:
-                        self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
-
-
-            @property
-            def has_str(self):  # type: ignore
-                if hasattr(self, '_m_has_str'):
-                    return self._m_has_str  # type: ignore
-
-                self._m_has_str =  ((self.magic >= 32) and (self.magic != 255))
-                return getattr(self, '_m_has_str', None)
-
-            @property
-            def last_char(self):  # type: ignore
-                if hasattr(self, '_m_last_char'):
-                    return self._m_last_char  # type: ignore
-
-                self._m_last_char = (self.string_data[-1] if self.has_str else (0 if self.magic == 0 else 255))
-                return getattr(self, '_m_last_char', None)
-
-            @property
-            def switch_cmd(self):  # type: ignore
-                if hasattr(self, '_m_switch_cmd'):
-                    return self._m_switch_cmd  # type: ignore
-
-                self._m_switch_cmd = (self.cmd if self.magic == 255 else self.magic)
-                return getattr(self, '_m_switch_cmd', None)
-
 
 
     class SetClass(KaitaiStruct):  # type: ignore
@@ -1476,6 +1385,263 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         def _read(self):  # type: ignore
             self.data = self._io.read_bits_int_le(12)
             self.type = KaitaiStream.resolve_enum(Scumm6Opcodes.VarType, self._io.read_bits_int_le(4))
+
+
+    class Message(KaitaiStruct):  # type: ignore
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):  # type: ignore
+            self.parts = []
+            i = 0
+            while True:
+                _ = Scumm6Opcodes.Message.Part(self._io, self, self._root)
+                self.parts.append(_)
+                if _.data == 0:
+                    break
+                i += 1
+
+        class Part(KaitaiStruct):  # type: ignore
+            def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                self._io = _io
+                self._parent = _parent
+                self._root = _root if _root else self
+                self._read()
+
+            def _read(self):  # type: ignore
+                self.data = self._io.read_u1()
+                _on = self.data
+                if _on == 0:
+                    self.content = Scumm6Opcodes.Message.Part.Terminator(self._io, self, self._root)
+                elif _on == 255:
+                    self.content = Scumm6Opcodes.Message.Part.SpecialSequence(self._io, self, self._root)
+                else:
+                    self.content = Scumm6Opcodes.Message.Part.RegularChar(self.data, self._io, self, self._root)
+
+            class Terminator(KaitaiStruct):  # type: ignore
+                def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                    self._io = _io
+                    self._parent = _parent
+                    self._root = _root if _root else self
+                    self._read()
+
+                def _read(self):  # type: ignore
+                    pass
+
+
+            class RegularChar(KaitaiStruct):  # type: ignore
+                def __init__(self, value, _io, _parent=None, _root=None):  # type: ignore
+                    self._io = _io
+                    self._parent = _parent
+                    self._root = _root if _root else self
+                    self.value = value
+                    self._read()
+
+                def _read(self):  # type: ignore
+                    pass
+
+
+            class SpecialSequence(KaitaiStruct):  # type: ignore
+                def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                    self._io = _io
+                    self._parent = _parent
+                    self._root = _root if _root else self
+                    self._read()
+
+                def _read(self):  # type: ignore
+                    self.code = self._io.read_u1()
+                    _on = self.code
+                    if _on == 14:
+                        self.payload = Scumm6Opcodes.Message.Part.SpecialSequence.SetFont(self._io, self, self._root)
+                    elif _on == 10:
+                        self.payload = Scumm6Opcodes.Message.Part.SpecialSequence.Sound(self._io, self, self._root)
+                    elif _on == 4:
+                        self.payload = Scumm6Opcodes.Message.Part.SpecialSequence.IntMessage(self._io, self, self._root)
+                    elif _on == 6:
+                        self.payload = Scumm6Opcodes.Message.Part.SpecialSequence.NameMessage(self._io, self, self._root)
+                    elif _on == 7:
+                        self.payload = Scumm6Opcodes.Message.Part.SpecialSequence.StringMessage(self._io, self, self._root)
+                    elif _on == 1:
+                        self.payload = Scumm6Opcodes.Message.Part.SpecialSequence.Newline(self._io, self, self._root)
+                    elif _on == 13:
+                        self.payload = Scumm6Opcodes.Message.Part.SpecialSequence.Unknown13(self._io, self, self._root)
+                    elif _on == 12:
+                        self.payload = Scumm6Opcodes.Message.Part.SpecialSequence.SetColor(self._io, self, self._root)
+                    elif _on == 3:
+                        self.payload = Scumm6Opcodes.Message.Part.SpecialSequence.Wait(self._io, self, self._root)
+                    elif _on == 5:
+                        self.payload = Scumm6Opcodes.Message.Part.SpecialSequence.VerbMessage(self._io, self, self._root)
+                    elif _on == 9:
+                        self.payload = Scumm6Opcodes.Message.Part.SpecialSequence.StartAnim(self._io, self, self._root)
+                    elif _on == 2:
+                        self.payload = Scumm6Opcodes.Message.Part.SpecialSequence.KeepText(self._io, self, self._root)
+                    else:
+                        self.payload = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
+
+                class VerbMessage(KaitaiStruct):  # type: ignore
+                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                        self._io = _io
+                        self._parent = _parent
+                        self._root = _root if _root else self
+                        self._read()
+
+                    def _read(self):  # type: ignore
+                        self.value = self._io.read_u2le()
+
+
+                class Wait(KaitaiStruct):  # type: ignore
+                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                        self._io = _io
+                        self._parent = _parent
+                        self._root = _root if _root else self
+                        self._read()
+
+                    def _read(self):  # type: ignore
+                        pass
+
+
+                class KeepText(KaitaiStruct):  # type: ignore
+                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                        self._io = _io
+                        self._parent = _parent
+                        self._root = _root if _root else self
+                        self._read()
+
+                    def _read(self):  # type: ignore
+                        pass
+
+
+                class StartAnim(KaitaiStruct):  # type: ignore
+                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                        self._io = _io
+                        self._parent = _parent
+                        self._root = _root if _root else self
+                        self._read()
+
+                    def _read(self):  # type: ignore
+                        self.value = self._io.read_u2le()
+
+
+                class NameMessage(KaitaiStruct):  # type: ignore
+                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                        self._io = _io
+                        self._parent = _parent
+                        self._root = _root if _root else self
+                        self._read()
+
+                    def _read(self):  # type: ignore
+                        self.value = self._io.read_u2le()
+
+
+                class SetColor(KaitaiStruct):  # type: ignore
+                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                        self._io = _io
+                        self._parent = _parent
+                        self._root = _root if _root else self
+                        self._read()
+
+                    def _read(self):  # type: ignore
+                        self.value = self._io.read_u2le()
+
+
+                class Unknown13(KaitaiStruct):  # type: ignore
+                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                        self._io = _io
+                        self._parent = _parent
+                        self._root = _root if _root else self
+                        self._read()
+
+                    def _read(self):  # type: ignore
+                        self.value = self._io.read_u2le()
+
+
+                class IntMessage(KaitaiStruct):  # type: ignore
+                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                        self._io = _io
+                        self._parent = _parent
+                        self._root = _root if _root else self
+                        self._read()
+
+                    def _read(self):  # type: ignore
+                        self.value = self._io.read_u2le()
+
+
+                class Sound(KaitaiStruct):  # type: ignore
+                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                        self._io = _io
+                        self._parent = _parent
+                        self._root = _root if _root else self
+                        self._read()
+
+                    def _read(self):  # type: ignore
+                        self.v1 = self._io.read_u2le()
+                        self.pad1 = self._io.read_bytes(2)
+                        if not self.pad1 == b"\xFF\x0A":
+                            raise kaitaistruct.ValidationNotEqualError(b"\xFF\x0A", self.pad1, self._io, u"/types/message/types/part/types/special_sequence/types/sound/seq/1")
+                        self.v2 = self._io.read_u2le()
+                        self.pad2 = self._io.read_bytes(2)
+                        if not self.pad2 == b"\xFF\x0A":
+                            raise kaitaistruct.ValidationNotEqualError(b"\xFF\x0A", self.pad2, self._io, u"/types/message/types/part/types/special_sequence/types/sound/seq/3")
+                        self.v3 = self._io.read_u2le()
+                        self.pad3 = self._io.read_bytes(2)
+                        if not self.pad3 == b"\xFF\x0A":
+                            raise kaitaistruct.ValidationNotEqualError(b"\xFF\x0A", self.pad3, self._io, u"/types/message/types/part/types/special_sequence/types/sound/seq/5")
+                        self.v4 = self._io.read_u2le()
+
+                    @property
+                    def value1(self):  # type: ignore
+                        if hasattr(self, '_m_value1'):
+                            return self._m_value1  # type: ignore
+
+                        self._m_value1 = ((self.v2 << 16) | self.v1)
+                        return getattr(self, '_m_value1', None)
+
+                    @property
+                    def value2(self):  # type: ignore
+                        if hasattr(self, '_m_value2'):
+                            return self._m_value2  # type: ignore
+
+                        self._m_value2 = ((self.v4 << 16) | self.v3)
+                        return getattr(self, '_m_value2', None)
+
+
+                class StringMessage(KaitaiStruct):  # type: ignore
+                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                        self._io = _io
+                        self._parent = _parent
+                        self._root = _root if _root else self
+                        self._read()
+
+                    def _read(self):  # type: ignore
+                        self.value = self._io.read_u2le()
+
+
+                class SetFont(KaitaiStruct):  # type: ignore
+                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                        self._io = _io
+                        self._parent = _parent
+                        self._root = _root if _root else self
+                        self._read()
+
+                    def _read(self):  # type: ignore
+                        self.value = self._io.read_u2le()
+
+
+                class Newline(KaitaiStruct):  # type: ignore
+                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                        self._io = _io
+                        self._parent = _parent
+                        self._root = _root if _root else self
+                        self._read()
+
+                    def _read(self):  # type: ignore
+                        pass
+
+
+
 
 
     class RoomOps(KaitaiStruct):  # type: ignore
@@ -1720,7 +1886,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
             elif _on == Scumm6Opcodes.OpType.stop_sentence:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.set_object_name:
-                self.body = Scumm6Opcodes.TalkActor(self._io, self, self._root)
+                self.body = Scumm6Opcodes.Message(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.end_cutscene:
                 self.body = Scumm6Opcodes.CallFuncPop0(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.draw_object:
@@ -1784,7 +1950,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
             elif _on == Scumm6Opcodes.OpType.nott:
                 self.body = Scumm6Opcodes.NoData(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.talk_actor:
-                self.body = Scumm6Opcodes.TalkActor(self._io, self, self._root)
+                self.body = Scumm6Opcodes.Message(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.cutscene:
                 self.body = Scumm6Opcodes.CallFuncList(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.set_blast_object_window:

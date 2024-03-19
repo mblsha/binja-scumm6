@@ -423,7 +423,7 @@ types:
             'op_type::get_verb_entrypoint': call_func_pop2_push
             'op_type::begin_override': begin_override
             'op_type::end_override': call_func_pop0
-            'op_type::set_object_name': talk_actor
+            'op_type::set_object_name': message
             'op_type::is_sound_running': call_func_pop1_push
             'op_type::set_box_flags': set_box_flags
             'op_type::create_box_matrix': call_func_pop0
@@ -461,9 +461,9 @@ types:
 
             # _actorToPrintStrFor = pop1()
             # then interpreter?
-            'op_type::talk_actor': talk_actor
+            'op_type::talk_actor': message
             # need to push(VAR_EGO)
-            # 'op_type::talk_ego': talk_actor
+            # 'op_type::talk_ego': message
 
             'op_type::dim_array': dim_array
             # 'op_type::dummy': no_data
@@ -496,59 +496,119 @@ types:
             _: unknown_op
     -webide-representation: '{id} {id:dec} {body}'
 
-  # scumm/string.cpp: convertMessageToString()
-  talk_actor:
-    enums:
-      talk_type:
-        1: newline
-        2: keep_text
-        3: wait
-        4: get_int
-        5: get_verb
-        6: get_name
-        7: get_string
-        9: start_anim
-        10: sound
-        12: set_color
-        13: unknown_13
-        14: set_font
+  # descumm-common.cpp: get_string()
+  # https://github.com/scummvm/scummvm-tools/blob/master/engines/scumm/descumm-common.cpp#L264
+  #
+  # also ScummEngine::convertMessageToString() (doesn't parse commands directly)
+  # https://github.com/scummvm/scummvm/blob/master/engines/scumm/string.cpp#L1379
+  message:
     types:
-      talk_cmd:
-        instances:
-          has_str:
-            value: magic >= 0x20 and magic != 0xFF
-          last_char:
-            value: 'has_str ? string_data.last : (magic == 0x00 ? 0x00 : 0xFF)'
-          switch_cmd:
-            value: 'magic == 0xFF ? cmd : magic'
+      part:
+        types:
+          terminator:
+            seq: []
+          regular_char:
+            seq: []
+            params:
+              - id: value
+                type: u1
+            -webide-representation: '{value:hex}'
+          special_sequence:
+            types:
+              newline:
+                seq: []
+              keep_text:
+                seq: []
+              wait:
+                seq: []
+              int_message:
+                seq:
+                  - id: value
+                    type: u2
+              verb_message:
+                seq:
+                  - id: value
+                    type: u2
+              name_message:
+                seq:
+                  - id: value
+                    type: u2
+              string_message:
+                seq:
+                  - id: value
+                    type: u2
+              start_anim:
+                seq:
+                  - id: value
+                    type: u2
+              sound:
+                instances:
+                  value1:
+                    value: (v2 << 16) | v1
+                  value2:
+                    value: (v4 << 16) | v3
+                seq:
+                  - id: v1
+                    type: u2
+                  - id: pad1
+                    contents: [0xff, 0x0a]
+                  - id: v2
+                    type: u2
+                  - id: pad2
+                    contents: [0xff, 0x0a]
+                  - id: v3
+                    type: u2
+                  - id: pad3
+                    contents: [0xff, 0x0a]
+                  - id: v4
+                    type: u2
+              set_color:
+                seq:
+                  - id: value
+                    type: u2
+              unknown13:
+                seq:
+                  - id: value
+                    type: u2
+              set_font:
+                seq:
+                  - id: value
+                    type: u2
+            seq:
+              - id: code
+                type: u1
+              - id: payload
+                type:
+                  switch-on: code
+                  cases:
+                    1: newline
+                    2: keep_text
+                    3: wait
+                    4: int_message
+                    5: verb_message
+                    6: name_message
+                    7: string_message
+                    9: start_anim
+                    10: sound
+                    12: set_color
+                    13: unknown13
+                    14: set_font
+                    _: unknown_op
         seq:
-          - id: magic
+          - id: data
             type: u1
-          - id: string_data
-            type: u1
-            repeat: until
-            repeat-until: _ < 0x20 or _ == 0xFF
-            if: has_str
-          - id: cmd
-            type: u1
-            if: magic == 0xFF
-          - id: body
-            if: not has_str and magic != 0x00
+          - id: content
             type:
-              switch-on: switch_cmd
+              switch-on: data
               cases:
-                10: word7_data
-                4: word_data
-                3: no_data
-                2: no_data
-                # _: unknown_op
-        -webide-representation: '{cmd}'
+                0x00: terminator
+                0xFF: special_sequence
+                _: regular_char(data)
     seq:
-      - id: cmds
-        type: talk_cmd
+      - id: parts
+        type: part
         repeat: until
-        repeat-until: _.last_char == 0x00
-    -webide-representation: '{data}'
+        repeat-until: _.data == 0x00
 
   no_data:
     seq:
@@ -995,7 +1055,7 @@ types:
             'subop_type::verb_init': call_func_pop1
             'subop_type::verb_image': call_func_pop1
             # FIXME: probably wrong?
-            'subop_type::verb_name': talk_actor
+            'subop_type::verb_name': message
             'subop_type::verb_color': call_func_pop1
             'subop_type::verb_hicolor': call_func_pop1
             'subop_type::verb_at': call_func_pop2
@@ -1186,7 +1246,7 @@ types:
             'subop_type::center': call_func_pop0
             'subop_type::left': call_func_pop0
             'subop_type::overhead': call_func_pop0
-            'subop_type::textstring': talk_actor # FIXME: rename to printString?
+            'subop_type::textstring': message
             'subop_type::mumble': call_func_pop0
             'subop_type::baseop': no_data
             'subop_type::endd': call_func_pop0
