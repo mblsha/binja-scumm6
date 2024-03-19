@@ -965,7 +965,7 @@ types:
         type: u1
     instances:
       type:
-        value: var_type::normal
+        value: var_type::scumm_var
     -webide-representation: '(i:{data:dec} {type})'
 
   word_var_data:

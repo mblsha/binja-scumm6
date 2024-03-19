@@ -153,12 +153,6 @@ def get_global_var(num: int) -> int:
     return GLOBAL_VARS_START + num * VAR_ITEM_SIZE
 
 
-# # FIXME: support switching based on var type
-# # use registers for local vars, and split to read/write funcs?
-# def var_addr(var_index):
-#     start = il.const_pointer(4, 0x100000)
-#     offs = il.mult(4, il.const(4, 4), il.const(4, var_index))
-#     return il.add(4, start, offs)
 def reg_name(block: Any) -> str:
     if block.type == VarType.scumm_var:
         return f"N{block.data}"
