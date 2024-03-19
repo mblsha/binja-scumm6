@@ -421,6 +421,17 @@ class Scumm6(Architecture):  # type: ignore
                     il, body, inc[op.id](4, vars.il_get_var(il, body), il.const(4, 1))
                 )
             )
+        # elif (
+        #     op.id in [OpType.array_ops]
+        #     and body
+        #     and body.subop == SubopType.assign_string
+        # ):
+        #     prefix_len = 1 + 2
+        #     string_start_ptr = dis.addr + prefix_len
+        #     string_len = dis.length - prefix_len
+        #     # ScummEngine_v6::o6_arrayOps()
+        #     # https://github.com/scummvm/scummvm/blob/master/engines/scumm/script_v6.cpp#L2330
+        #     pass
         # elif op.id in [OpType.byte_array_read, OpType.word_array_read]:
         #     il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # base
         #     il.append(il.set_reg(4, LLIL_TEMP(1), body.data)) # ?
