@@ -1,10 +1,13 @@
 from binaryninja.binaryview import BinaryView
 from binaryninja.architecture import Architecture
-from binaryninja.enums import SegmentFlag, SectionSemantics, Endianness
+from binaryninja.types import Symbol
+from binaryninja.enums import SymbolType, SegmentFlag, SectionSemantics, Endianness
 from .scumm6 import LastBV
 from .disasm import Scumm6Disasm, ScriptAddr, State, read_dscr
 
 from typing import List
+
+from . import vars
 
 
 class Scumm6View(BinaryView):  # type: ignore
@@ -45,6 +48,44 @@ class Scumm6View(BinaryView):  # type: ignore
         arch = "SCUMM6"
         self.arch = Architecture[arch]
         self.platform = Architecture[arch].standalone_platform
+
+        # create specinal segments for vars
+        self.add_auto_segment(
+            vars.SCUMM_VARS_START,
+            vars.SCUMM_VARS_SIZE,
+            0,
+            0,
+            SegmentFlag.SegmentReadable | SegmentFlag.SegmentWritable,
+        )
+        self.add_user_section(
+            "SCUMM VARs",
+            vars.SCUMM_VARS_START,
+            vars.SCUMM_VARS_SIZE,
+            SectionSemantics.ReadWriteDataSectionSemantics,
+        )
+        uint32_t = self.parse_type_string("uint32_t")[0]
+        for i in range(vars.NUM_VARS):
+            var = vars.get_scumm_var(i)
+            if var.name is None:
+                continue
+            self.define_user_symbol(
+                Symbol(SymbolType.DataSymbol, var.address, var.name)
+            )
+            self.define_user_data_var(var.address, uint32_t)
+
+        self.add_auto_segment(
+            vars.GLOBAL_VARS_START,
+            vars.GLOBAL_VARS_SIZE,
+            0,
+            0,
+            SegmentFlag.SegmentReadable | SegmentFlag.SegmentWritable,
+        )
+        self.add_user_section(
+            "Global VARs",
+            vars.GLOBAL_VARS_START,
+            vars.GLOBAL_VARS_SIZE,
+            SectionSemantics.ReadWriteDataSectionSemantics,
+        )
 
         for start, end, name, room in self.scripts:
             # print("adding segment:", hex(start), hex(end), name)

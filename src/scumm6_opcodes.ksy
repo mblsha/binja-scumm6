@@ -10,6 +10,8 @@ seq:
     # repeat: eos
 
 enums:
+  # ScummEngine_v6::setupOpcodes()
+  # https://github.com/scummvm/scummvm/blob/master/engines/scumm/script_v6.cpp
   op_type:
     0x00: push_byte
     0x01: push_word
@@ -307,8 +309,10 @@ enums:
     254: baseop
     255: endd
 
+  # ScummEngine::readVar()
+  # https://github.com/scummvm/scummvm/blob/master/engines/scumm/script.cpp#L533
   var_type:
-    0x0: normal
+    0x0: scumm_var  # _scummVar
     0x4: local
     0x8: room
     0xf: globall

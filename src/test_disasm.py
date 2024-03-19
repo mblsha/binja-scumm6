@@ -7,6 +7,7 @@ from pprint import pprint
 
 
 OpType = Scumm6Opcodes.OpType
+VarType = Scumm6Opcodes.VarType
 
 
 # NOTE: the .lecf is the un-xored file
@@ -86,6 +87,15 @@ def test_decode_instruction() -> None:
     assert dis.op.id == OpType.push_byte
     assert dis.id == "push_byte"
     assert dis.op.body.data == 0x12
+    assert dis.addr == 0x1234
+
+    # push_word_var 56
+    dis = disasm.decode_instruction(b"\x03\x38\x00", 0x1234)
+    assert dis is not None
+    assert dis.op.id == OpType.push_word_var
+    assert dis.id == "push_word_var"
+    assert dis.op.body.data == 56
+    assert dis.op.body.type == VarType.scumm_var
     assert dis.addr == 0x1234
 
 

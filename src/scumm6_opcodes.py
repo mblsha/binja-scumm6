@@ -308,7 +308,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         endd = 255
 
     class VarType(Enum):
-        normal = 0
+        scumm_var = 0
         local = 4
         room = 8
         globall = 15
@@ -1019,7 +1019,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
             if hasattr(self, '_m_type'):
                 return self._m_type  # type: ignore
 
-            self._m_type = Scumm6Opcodes.VarType.normal
+            self._m_type = Scumm6Opcodes.VarType.scumm_var
             return getattr(self, '_m_type', None)
 
 

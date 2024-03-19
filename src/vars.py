@@ -1,0 +1,203 @@
+from . import binja_api  # noqa: F401
+from binaryninja import lowlevelil
+
+from .scumm6_opcodes import Scumm6Opcodes
+from functools import lru_cache
+
+from typing import Dict, NamedTuple, Optional, Any
+
+VarType = Scumm6Opcodes.VarType
+
+
+# ScummEngine::setupScummVars()
+# https://github.com/scummvm/scummvm/blob/master/engines/scumm/vars.cpp
+@lru_cache(maxsize=None)
+def raw_scumm_vars(game_version: int = 6) -> Dict[str, int]:
+    r: Dict[str, int] = {}
+
+    r["VAR_KEYPRESS"] = 0
+    r["VAR_EGO"] = 1
+    r["VAR_CAMERA_POS_X"] = 2
+    r["VAR_HAVE_MSG"] = 3
+    r["VAR_ROOM"] = 4
+    r["VAR_OVERRIDE"] = 5
+    r["VAR_MACHINE_SPEED"] = 6
+    r["VAR_ME"] = 7
+    r["VAR_NUM_ACTOR"] = 8
+    r["VAR_CURRENTDRIVE"] = 10
+    r["VAR_TMR_1"] = 11
+    r["VAR_TMR_2"] = 12
+    r["VAR_TMR_3"] = 13
+    r["VAR_MUSIC_TIMER"] = 14
+    r["VAR_ACTOR_RANGE_MIN"] = 15
+    r["VAR_ACTOR_RANGE_MAX"] = 16
+    r["VAR_CAMERA_MIN_X"] = 17
+    r["VAR_CAMERA_MAX_X"] = 18
+    r["VAR_TIMER_NEXT"] = 19
+    r["VAR_VIRT_MOUSE_X"] = 20
+    r["VAR_VIRT_MOUSE_Y"] = 21
+    r["VAR_ROOM_RESOURCE"] = 22
+    r["VAR_LAST_SOUND"] = 23
+    r["VAR_CUTSCENEEXIT_KEY"] = 24
+    r["VAR_TALK_ACTOR"] = 25
+    r["VAR_CAMERA_FAST_X"] = 26
+    r["VAR_ENTRY_SCRIPT"] = 28
+    r["VAR_ENTRY_SCRIPT2"] = 29
+    r["VAR_EXIT_SCRIPT"] = 30
+    r["VAR_EXIT_SCRIPT2"] = 31
+    r["VAR_VERB_SCRIPT"] = 32
+    r["VAR_SENTENCE_SCRIPT"] = 33
+    r["VAR_INVENTORY_SCRIPT"] = 34
+    r["VAR_CUTSCENE_START_SCRIPT"] = 35
+    r["VAR_CUTSCENE_END_SCRIPT"] = 36
+    r["VAR_CHARINC"] = 37
+    r["VAR_WALKTO_OBJ"] = 38
+    r["VAR_HEAPSPACE"] = 40
+    r["VAR_RESTART_KEY"] = 42
+    r["VAR_PAUSE_KEY"] = 43
+    r["VAR_MOUSE_X"] = 44
+    r["VAR_MOUSE_Y"] = 45
+    r["VAR_TIMER"] = 46
+    r["VAR_TIMER_TOTAL"] = 47
+    r["VAR_SOUNDCARD"] = 48
+    r["VAR_VIDEOMODE"] = 49
+
+    # if (_game.id == GID_LOOM && _game.platform == Common::kPlatformPCEngine):
+    #     r["VAR_MAINMENU_KEY"] = 50
+
+    if game_version >= 4:
+        r["VAR_SCROLL_SCRIPT"] = 27
+        r["VAR_DEBUGMODE"] = 39
+        r["VAR_MAINMENU_KEY"] = 50
+        r["VAR_FIXEDDISK"] = 51
+        r["VAR_CURSORSTATE"] = 52
+        r["VAR_USERPUT"] = 53
+
+    if game_version >= 5:
+        r["VAR_SOUNDRESULT"] = 56
+        r["VAR_TALKSTOP_KEY"] = 57
+        r["VAR_FADE_DELAY"] = 59
+        r["VAR_SOUNDPARAM"] = 64
+        r["VAR_SOUNDPARAM2"] = 65
+        r["VAR_SOUNDPARAM3"] = 66
+        r["VAR_INPUTMODE"] = 67  # 1 is keyboard, 2 is joystick, 3 is mouse
+        r["VAR_MEMORY_PERFORMANCE"] = 68
+        r["VAR_VIDEO_PERFORMANCE"] = 69
+        r["VAR_ROOM_FLAG"] = 70
+        r["VAR_GAME_LOADED"] = 71
+        r["VAR_NEW_ROOM"] = 72
+
+    # ScummEngine_v6::setupScummVars()
+    r["VAR_ROOM_WIDTH"] = 41
+    r["VAR_ROOM_HEIGHT"] = 54
+
+    # if (_game.heversion >= 60) {
+    #     VAR_NOSUBTITLES = 60
+    # } else {
+    if True:
+        r["VAR_VOICE_MODE"] = 60  # 0 is voice, 1 is voice+text, 2 is text only
+        r["VAR_PRE_SAVELOAD_SCRIPT"] = 61
+        r["VAR_POST_SAVELOAD_SCRIPT"] = 62
+
+    r["VAR_LEFTBTN_HOLD"] = 74
+    r["VAR_RIGHTBTN_HOLD"] = 75
+
+    r["VAR_V6_EMSSPACE"] = 76
+    r["VAR_RANDOM_NR"] = 118
+
+    r["VAR_TIMEDATE_YEAR"] = 119
+    r["VAR_TIMEDATE_MONTH"] = 129
+    r["VAR_TIMEDATE_DAY"] = 128
+    r["VAR_TIMEDATE_HOUR"] = 125
+    r["VAR_TIMEDATE_MINUTE"] = 126
+
+    # Sam & Max specific
+    # if (_game.id == GID_SAMNMAX) {
+    #     VAR_V6_SOUNDMODE = 9
+    #     VAR_CHARSET_MASK = 123
+    # }
+
+    return r
+
+
+@lru_cache(maxsize=None)
+def scumm_vars_inverse() -> Dict[int, str]:
+    return {v: k for k, v in raw_scumm_vars().items()}
+
+
+NUM_VARS = 1024
+VAR_ITEM_SIZE = 4
+
+SCUMM_VARS_START = 0x40000000
+SCUMM_VARS_SIZE = NUM_VARS * VAR_ITEM_SIZE
+
+GLOBAL_VARS_START = SCUMM_VARS_START + SCUMM_VARS_SIZE
+GLOBAL_VARS_SIZE = NUM_VARS * VAR_ITEM_SIZE
+
+
+class ScummVar(NamedTuple):
+    name: Optional[str]
+    address: int
+
+
+def get_scumm_var(num: int) -> ScummVar:
+    address = SCUMM_VARS_START + num * VAR_ITEM_SIZE
+
+    if num in scumm_vars_inverse():
+        return ScummVar(name=scumm_vars_inverse()[num], address=address)
+
+    return ScummVar(name=None, address=address)
+
+
+def get_global_var(num: int) -> int:
+    return GLOBAL_VARS_START + num * VAR_ITEM_SIZE
+
+
+# # FIXME: support switching based on var type
+# # use registers for local vars, and split to read/write funcs?
+# def var_addr(var_index):
+#     start = il.const_pointer(4, 0x100000)
+#     offs = il.mult(4, il.const(4, 4), il.const(4, var_index))
+#     return il.add(4, start, offs)
+def reg_name(block: Any) -> str:
+    if block.type == VarType.scumm_var:
+        return f"N{block.data}"
+    elif block.type == VarType.local:
+        return f"L{block.data}"
+    elif block.type == VarType.room:
+        return f"R{block.data}"
+    elif block.type == VarType.globall:
+        return f"G{block.data}"
+    else:
+        raise Exception(f"reg_name: unsupported var type '{block.type}'")
+
+
+def il_get_var(il: lowlevelil.LowLevelILFunction, block: Any) -> Any:
+    if block.type == VarType.scumm_var:
+        return il.load(
+            VAR_ITEM_SIZE,
+            il.const_pointer(VAR_ITEM_SIZE, get_scumm_var(block.data).address),
+        )
+    elif block.type == VarType.globall:
+        return il.load(
+            VAR_ITEM_SIZE, il.const_pointer(VAR_ITEM_SIZE, get_global_var(block.data))
+        )
+
+    return il.reg(VAR_ITEM_SIZE, reg_name(block))
+
+
+def il_set_var(il: lowlevelil.LowLevelILFunction, block: Any, value: Any) -> Any:
+    if block.type == VarType.scumm_var:
+        return il.store(
+            VAR_ITEM_SIZE,
+            il.const_pointer(VAR_ITEM_SIZE, get_scumm_var(block.data).address),
+            value,
+        )
+    elif block.type == VarType.globall:
+        return il.store(
+            VAR_ITEM_SIZE,
+            il.const_pointer(VAR_ITEM_SIZE, get_global_var(block.data)),
+            value,
+        )
+
+    return il.set_reg(VAR_ITEM_SIZE, reg_name(block), value)
