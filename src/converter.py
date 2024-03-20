@@ -2,6 +2,7 @@ from . import disasm
 from kaitaistruct import KaitaiStream, BytesIO
 from .scumm6_opcodes import Scumm6Opcodes
 from .scumm6_container import Scumm6Container
+from .message import parse_message
 
 from typing import Any, NamedTuple, List
 
@@ -15,28 +16,29 @@ class StringInfo(NamedTuple):
     string: List[str]
 
 
-def visit_strings(data: bytes, start: int, end: int, script_name: str) -> List[StringInfo]:
+def visit_strings(
+    data: bytes, start: int, end: int, script_name: str
+) -> List[StringInfo]:
     r: List[StringInfo] = []
-    if script_name != 'room76_scrp3':
-        return r
-    print(script_name, hex(start), hex(end))
+    # if script_name != 'room76_scrp3':
+    #     return r
+    # print(script_name, hex(start), hex(end))
 
-    portion = data[start:end]
-    with open('portion.bin', 'wb') as f:
-        # f.write(b'SCRP')
-        # f.write((end - start + 8).to_bytes(4, 'big'))
-        f.write(portion)
+    # portion = data[start:end]
+    # with open('portion.bin', 'wb') as f:
+    #     # f.write(b'SCRP')
+    #     # f.write((end - start + 8).to_bytes(4, 'big'))
+    #     f.write(portion)
 
-    def tokenize_talk_actor(body: Any) -> List[str]:
+    def tokenize_talk_actor(body: Scumm6Opcodes.Message) -> List[str]:
+        message = parse_message(body)
         args = []
-        for tcmd in body.cmds:
-            if tcmd.has_str:
-                a = [chr(i) for i in tcmd.string_data]
-                args.append(chr(tcmd.magic) + "".join(a))
-            # elif getattr(tcmd, 'cmd', None):
-            #     args.append(tcmd.cmd.name)
-            # else:
-            #     args.append("UNKNOWN")
+        for i in message:
+            if isinstance(i, str):
+                args.append(i)
+            else:
+                args.append(str(i))
+
         return args
 
     def can_tokenize(param: Any) -> bool:
@@ -48,7 +50,7 @@ def visit_strings(data: bytes, start: int, end: int, script_name: str) -> List[S
 
     pos = start
     while pos < end:
-        data_view = data[pos:pos+256]
+        data_view = data[pos : pos + 256]  # noqa: E203
         dis = disasm.Scumm6Disasm().decode_instruction(data_view, pos)
         if not dis:
             break
@@ -58,9 +60,11 @@ def visit_strings(data: bytes, start: int, end: int, script_name: str) -> List[S
 
         op = dis.op
         body = getattr(op, "body", None)
-        if op.id in [OpType.talk_actor, OpType.set_object_name]:
+        if isinstance(body, Scumm6Opcodes.Message):
             strs = tokenize_talk_actor(body)
-            r.append(StringInfo(op_addr=hex(dis.addr), script_name=script_name, string=strs))
+            r.append(
+                StringInfo(op_addr=hex(dis.addr), script_name=script_name, string=strs)
+            )
         elif (
             op.id
             in [
@@ -75,7 +79,9 @@ def visit_strings(data: bytes, start: int, end: int, script_name: str) -> List[S
             and body.subop == SubopType.textstring
         ):
             strs = tokenize_talk_actor(body.body)
-            r.append(StringInfo(op_addr=hex(dis.addr), script_name=script_name, string=strs))
+            r.append(
+                StringInfo(op_addr=hex(dis.addr), script_name=script_name, string=strs)
+            )
         elif body:
             args = [
                 getattr(body, x) for x in dir(body) if can_tokenize(getattr(body, x))
@@ -87,10 +93,14 @@ def visit_strings(data: bytes, start: int, end: int, script_name: str) -> List[S
                     if can_tokenize(getattr(body.body, x))
                 ]
             for a in args:
-                r.append(StringInfo(op_addr=hex(dis.addr),
-                                    script_name=script_name, string=[a]))
+                r.append(
+                    StringInfo(
+                        op_addr=hex(dis.addr), script_name=script_name, string=[a]
+                    )
+                )
 
     return sorted(r, key=lambda x: x.op_addr)
+
 
 def read_resources(lecf_filename: str) -> Any:
     dscr = disasm.read_dscr(lecf_filename)

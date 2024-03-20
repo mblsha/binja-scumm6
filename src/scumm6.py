@@ -30,6 +30,7 @@ if core_ui_enabled():
 
 from .disasm import Scumm6Disasm, Instruction, State
 from .scumm6_opcodes import Scumm6Opcodes
+from .message import parse_message
 
 from .sorted_list import SortedList
 
@@ -292,19 +293,20 @@ class Scumm6(Architecture):  # type: ignore
                 return not param.startswith("scumm6")
             return False
 
-        def tokenize_talk_actor(body: Any, tokens: List[InstructionTextToken]) -> None:
+        def tokenize_talk_actor(
+            body: Scumm6Opcodes.Message, tokens: List[InstructionTextToken]
+        ) -> None:
+            message = parse_message(body)
             args = []
-            for tcmd in body.cmds:
-                if tcmd.has_str:
-                    a = [chr(i) for i in tcmd.string_data]
-                    args.append(chr(tcmd.magic) + "".join(a))
-                # elif getattr(tcmd, 'cmd', None):
-                #     args.append(tcmd.cmd.name)
+            for i in message:
+                if isinstance(i, str):
+                    args.append(i)
                 else:
-                    args.append("UNKNOWN")
+                    args.append(str(i.part_type))
             tokens += tokenize_params(*args)
 
-        if op.id in [OpType.talk_actor, OpType.set_object_name]:
+        if isinstance(body, Scumm6Opcodes.Message):
+            assert body
             tokenize_talk_actor(body, tokens)
         elif (
             op.id

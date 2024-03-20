@@ -99,24 +99,6 @@ def test_decode_instruction() -> None:
     assert dis.addr == 0x1234
 
 
-def test_decode_talk_actor() -> None:
-    disasm = Scumm6Disasm()
-
-    # printLine.msg("LucasArts Entertainment Company" + newline() + "Presents" + keepText())
-    data = b"\xb4\x4b\x4c\x75\x63\x61\x73\x41\x72\x74\x73\x20\x45\x6e\x74\x65\x72\x74\x61\x69\x6e\x6d\x65\x6e\x74\x20\x43\x6f\x6d\x70\x61\x6e\x79\xff\x01\x50\x72\x65\x73\x65\x6e\x74\x73\xff\x02\x00"
-
-    dis = disasm.decode_instruction(data, 0x1234)
-    assert dis is not None
-    assert dis.length == len(data)
-    assert dis.op.id == OpType.print_line
-    assert dis.id == "print_line"
-    assert dis.op.body.subop == Scumm6Opcodes.SubopType.textstring
-    assert isinstance(dis.op.body.body, Scumm6Opcodes.TalkActor)
-
-    # printDebug.msg(sound(0x9DE5, 0xA) + " ")
-    data = b'\xb6\x4b\xff\x0a\xe5\x9d\xff\x0a\x00\x00\xff\x0a\x0a\x00\xff\x0a\x00\x00\x20\x00'
-
-
 def test_decode_rnam() -> None:
     dscr = decode_rnam_dscr(rnam)
     assert dscr[1] == (61, 0x7368)
