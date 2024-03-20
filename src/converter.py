@@ -13,10 +13,10 @@ SubopType = Scumm6Opcodes.SubopType
 class StringInfo(NamedTuple):
     op_addr: str
     script_name: str
-    string: List[str]
+    string: str
 
 
-def visit_strings(
+def extract_strings(
     data: bytes, start: int, end: int, script_name: str
 ) -> List[StringInfo]:
     r: List[StringInfo] = []
@@ -30,23 +30,12 @@ def visit_strings(
     #     # f.write((end - start + 8).to_bytes(4, 'big'))
     #     f.write(portion)
 
-    def tokenize_talk_actor(body: Scumm6Opcodes.Message) -> List[str]:
-        message = parse_message(body)
-        args = []
-        for i in message:
+    def add_message_strings(dis: Any, body: Scumm6Opcodes.Message) -> None:
+        for i in parse_message(body):
             if isinstance(i, str):
-                args.append(i)
-            else:
-                args.append(str(i))
-
-        return args
-
-    def can_tokenize(param: Any) -> bool:
-        # if isinstance(param, int):
-        #     return True
-        if isinstance(param, str):
-            return not param.startswith("scumm6")
-        return False
+                r.append(
+                    StringInfo(op_addr=hex(dis.addr), script_name=script_name, string=i)
+                )
 
     pos = start
     while pos < end:
@@ -56,50 +45,19 @@ def visit_strings(
             break
         pos += dis.length
 
-        # print(hex(pos), dis.id)
-
         op = dis.op
         body = getattr(op, "body", None)
-        if isinstance(body, Scumm6Opcodes.Message):
-            strs = tokenize_talk_actor(body)
-            r.append(
-                StringInfo(op_addr=hex(dis.addr), script_name=script_name, string=strs)
-            )
-        elif (
-            op.id
-            in [
-                OpType.print_line,
-                OpType.print_text,
-                OpType.print_debug,
-                OpType.print_system,
-                OpType.print_actor,
-                OpType.print_ego,
-            ]
-            and body
-            and body.subop == SubopType.textstring
-        ):
-            strs = tokenize_talk_actor(body.body)
-            r.append(
-                StringInfo(op_addr=hex(dis.addr), script_name=script_name, string=strs)
-            )
-        elif body:
-            args = [
-                getattr(body, x) for x in dir(body) if can_tokenize(getattr(body, x))
-            ]
-            if getattr(body, "body", None):
-                args += [
-                    getattr(body.body, x)
-                    for x in dir(body.body)
-                    if can_tokenize(getattr(body.body, x))
-                ]
-            for a in args:
-                r.append(
-                    StringInfo(
-                        op_addr=hex(dis.addr), script_name=script_name, string=[a]
-                    )
-                )
 
-    return sorted(r, key=lambda x: x.op_addr)
+        if isinstance(body, Scumm6Opcodes.Message):
+            add_message_strings(dis, body)
+        elif (
+            body
+            and hasattr(body, "body")
+            and isinstance(body.body, Scumm6Opcodes.Message)
+        ):
+            add_message_strings(dis, body.body)
+
+    return r
 
 
 def read_resources(lecf_filename: str) -> Any:
@@ -114,10 +72,22 @@ def read_resources(lecf_filename: str) -> Any:
     state.dscr = dscr
 
     scripts = disasm.get_script_addrs(r.blocks[0], state, 0)
-    strings = []
-    for s in scripts:
-        strings.extend(visit_strings(data, s.start, s.end, s.name))
+    strings: List[StringInfo] = []
+    for script in scripts:
+        strings.extend(extract_strings(data, script.start, script.end, script.name))
 
+    dedup_strings = set()
+    for s in strings:
+        dedup_strings.add(s.string)
+
+    string_dict_block = b""
+    for s in sorted(dedup_strings):
+        string_dict_block += s.encode("utf-8") + b"\0"
+    string_dict_len = len(string_dict_block) + 8
+    result = b"Bstr" + string_dict_len.to_bytes(4, "big") + string_dict_block
+
+    with open("Bstr.bin", "wb") as f:
+        f.write(result)
     # deduplicate strings
     # string -> id
     # write strings in id order
@@ -125,4 +95,6 @@ def read_resources(lecf_filename: str) -> Any:
 
     # write table: script id -> addr
 
-    return strings
+    print(sorted(dedup_strings))
+
+    return result

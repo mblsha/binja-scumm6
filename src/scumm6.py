@@ -302,27 +302,18 @@ class Scumm6(Architecture):  # type: ignore
                 if isinstance(i, str):
                     args.append(i)
                 else:
-                    args.append(str(i.part_type))
+                    type_str = str(i.part_type).replace("PartType.", "")
+                    args.append(type_str)
             tokens += tokenize_params(*args)
 
         if isinstance(body, Scumm6Opcodes.Message):
             assert body
             tokenize_talk_actor(body, tokens)
         elif (
-            op.id
-            in [
-                OpType.print_line,
-                OpType.print_text,
-                OpType.print_debug,
-                OpType.print_system,
-                OpType.print_actor,
-                OpType.print_ego,
-            ]
-            and body
-            and body.subop == SubopType.textstring
+            body
+            and hasattr(body, "body")
+            and isinstance(body.body, Scumm6Opcodes.Message)
         ):
-            tokenize_talk_actor(body.body, tokens)
-        elif op.id in [OpType.verb_ops] and body and body.subop == SubopType.verb_name:
             tokenize_talk_actor(body.body, tokens)
         elif body:
             args = [
@@ -569,7 +560,18 @@ class Scumm6(Architecture):  # type: ignore
             add_intrinsic(op.id.name, body)
         elif getattr(body, "subop", None):
             assert body
-            if isinstance(body.body, Scumm6Opcodes.UnknownOp):
+            if isinstance(body.body, Scumm6Opcodes.Message):
+                message = parse_message(body.body)
+                has_string = False
+                for i in message:
+                    if isinstance(i, str):
+                        has_string = True
+                        break
+                if has_string:
+                    print(f"has_string {op.id} at {hex(dis.addr)}")
+                    il.append(il.push(4, il.const_pointer(4, dis.addr + 2)))
+                    add_intrinsic(f"{op.id.name}.{body.subop.name}", body.body)
+            elif isinstance(body.body, Scumm6Opcodes.UnknownOp):
                 print(
                     f'unknown_op {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}'
                 )
