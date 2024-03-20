@@ -61,7 +61,7 @@ def test_decode_container() -> None:
 
     assert len(state.dscr) == 140
 
-    assert len(state.bstr) == 51
+    assert len(state.bstr) == 58
 
 
 def test_decode_instruction_none() -> None:

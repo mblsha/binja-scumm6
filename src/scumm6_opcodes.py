@@ -466,7 +466,7 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
             self.array = self._io.read_u2le()
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.assign_string:
-                self.body = Scumm6Opcodes.StringData(self._io, self, self._root)
+                self.body = Scumm6Opcodes.Message(self._io, self, self._root)
             else:
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 

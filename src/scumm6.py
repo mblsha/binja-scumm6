@@ -558,36 +558,34 @@ class Scumm6(Architecture):  # type: ignore
                 il.append(il.no_ret())
         elif not getattr(body, "call_func", True):
             add_intrinsic(op.id.name, body)
+        elif isinstance(body, Scumm6Opcodes.Message):
+            message = parse_message(body)
+            state = self.get_state(dis)
+            args = []
+            for i in message:
+                if isinstance(i, str):
+                    str_addr = state.bstr[i]
+                    args.append(il.const_pointer(4, str_addr))
+            il.append(il.intrinsic([], op.id.name, args))
+        elif (
+            body
+            and hasattr(body, "body")
+            and isinstance(body.body, Scumm6Opcodes.Message)
+        ):
+            message = parse_message(body.body)
+            state = self.get_state(dis)
+            args = []
+            for i in message:
+                if isinstance(i, str):
+                    str_addr = state.bstr[i]
+                    args.append(il.const_pointer(4, str_addr))
+            name = f"{op.id.name}.{body.subop.name}"
+            il.append(il.intrinsic([], name, args))
         elif getattr(body, "subop", None):
-            assert body
-            if isinstance(body.body, Scumm6Opcodes.Message):
-                message = parse_message(body.body)
-                state = self.get_state(dis)
-                for i in message:
-                    if isinstance(i, str):
-                        str_addr = state.bstr[i]
-                        print(f"has_string {op.id} at {hex(dis.addr)}")
-                        il.append(il.push(4, il.const_pointer(4, str_addr)))
-                add_intrinsic(f"{op.id.name}.{body.subop.name}", body.body)
-            elif isinstance(body.body, Scumm6Opcodes.UnknownOp):
-                print(
-                    f'unknown_op {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}'
-                )
-                implemented = False
-                il.append(il.unimplemented())
-            else:
-                add_intrinsic(f"{op.id.name}.{body.subop.name}", body.body)
+            add_intrinsic(f"{op.id.name}.{body.subop.name}", body.body)
         elif op.id in [OpType.break_here]:
             il.append(il.intrinsic([], op.id.name, []))
-        elif op.id in [OpType.talk_actor]:
-            # FIXME: need pop!
-            # FIXME: want to print all the dialogue
-            il.append(il.intrinsic([], op.id.name, []))
         else:
-            if op.id not in [OpType.talk_actor]:
-                print(
-                    f'not implemented {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}'
-                )
             implemented = False
             il.append(il.unimplemented())
 
