@@ -4,8 +4,6 @@ from .scumm6_opcodes import Scumm6Opcodes
 from .scumm6_container import Scumm6Container
 from .message import parse_message
 
-import os
-
 from typing import Any, NamedTuple, List
 
 OpType = Scumm6Opcodes.OpType
@@ -81,8 +79,8 @@ def read_resources(lecf_filename: str, rnam_filename: str) -> bytes:
         strings.extend(extract_strings(lecf_data, script.start, script.end, script.name))
 
     dedup_strings = set()
-    for s in strings:
-        dedup_strings.add(s.string)
+    for si in strings:
+        dedup_strings.add(si.string)
 
     string_dict_block = b""
     for s in sorted(dedup_strings):

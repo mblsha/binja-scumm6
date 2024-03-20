@@ -1,7 +1,7 @@
 from . import binja_api  # noqa: F401
 from binaryninja.enums import SegmentFlag, SectionSemantics
 
-from .disasm import Scumm6Disasm, decode_rnam_dscr
+from .disasm import Scumm6Disasm
 
 from .scumm6_opcodes import Scumm6Opcodes
 

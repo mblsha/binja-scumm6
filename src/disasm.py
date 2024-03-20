@@ -1,7 +1,6 @@
 from . import binja_api  # noqa: F401
 from binaryninja.enums import SegmentFlag, SectionSemantics
 
-import os
 from kaitaistruct import KaitaiStream, BytesIO
 from .scumm6_opcodes import Scumm6Opcodes
 from .scumm6_container import Scumm6Container
@@ -176,7 +175,7 @@ def get_script_addrs(block: Any, state: State, pos: int = 0) -> List[ScriptAddr]
             ScriptAddr(
                 start=pos + 8,
                 end=pos + block.block_size,
-                name=f"Strings",
+                name="Strings",
                 create_function=False,
                 segment_flag=SegmentFlag.SegmentReadable,
                 section_semantics=SectionSemantics.ReadOnlyDataSectionSemantics,

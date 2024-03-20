@@ -582,6 +582,7 @@ class Scumm6(Architecture):  # type: ignore
             name = f"{op.id.name}.{body.subop.name}"
             il.append(il.intrinsic([], name, args))
         elif getattr(body, "subop", None):
+            assert body
             add_intrinsic(f"{op.id.name}.{body.subop.name}", body.body)
         elif op.id in [OpType.break_here]:
             il.append(il.intrinsic([], op.id.name, []))
