@@ -13,6 +13,9 @@ seq:
 enums:
   # scummvm uses `findResourceData(MKTAG('B','O','X','D')` syntax
   block_type:
+    # Binary-Ninja Specific Hacks
+    0x42737472: bstr
+
     # Index blocks
     0x524e414d: rnam
     0x4d415853: maxs
@@ -39,6 +42,17 @@ enums:
     0x524d494d: rmim
     0x524d4948: rmih
     0x494d3030: im00
+    0x494d3031: im01
+    0x494d3032: im02
+    0x494d3033: im03
+    0x494d3034: im04
+    0x494d3035: im05
+    0x494d3036: im06
+    0x494d3037: im07
+    0x494d3038: im08
+    0x494d3039: im09
+    0x494d3040: im10
+
     0x534d4150: smap
     0x5a506e6e: zpnn
     0x4f42494d: obim
@@ -78,6 +92,9 @@ types:
         type:
           switch-on: block_type
           cases:
+            # Binary-Ninja specific
+            'block_type::bstr': bstr
+
             # Index blocks .000
             'block_type::rnam': rnam
             'block_type::maxs': maxs
@@ -107,6 +124,16 @@ types:
             'block_type::rmim': nested_blocks
             'block_type::rmih': rmih
             'block_type::im00': nested_blocks
+            'block_type::im01': nested_blocks
+            'block_type::im02': nested_blocks
+            'block_type::im03': nested_blocks
+            'block_type::im04': nested_blocks
+            'block_type::im05': nested_blocks
+            'block_type::im06': nested_blocks
+            'block_type::im07': nested_blocks
+            'block_type::im08': nested_blocks
+            'block_type::im09': nested_blocks
+            'block_type::im10': nested_blocks
 
             'block_type::obim': nested_blocks
             'block_type::imhd': imhd
@@ -119,9 +146,11 @@ types:
 
             'block_type::encd': script
             'block_type::excd': script
-            'block_type::scrp': script
             'block_type::lscr': local_script
+            'block_type::scrp': script
             'block_type::verb': verb_script
+
+            'block_type::cost': cost
 
             # 'block_type::soun': nested_blocks
             _: unknown_block
@@ -217,9 +246,9 @@ types:
         type: u2
       - id: y
         type: u2
-      - id: w
+      - id: width
         type: u2
-      - id: h
+      - id: height
         type: u2
       - id: num_hotspots
         type: u2
@@ -253,11 +282,21 @@ types:
         type: u1
 
   verb_script:
+    types:
+      entry:
+        seq:
+          - id: entr
+            type: u1
+          - id: offset
+            type: u2
+            if: entr != 0x00
     seq:
-      - id: entry
-        type: u1
+      - id: entries
+        type: entry
         repeat: until
-        repeat-until: _ == 0x00
+        repeat-until: _.entr == 0x00
+      # - id: data
+      #   size-eos: true
 
   obna:
     seq:
@@ -330,6 +369,25 @@ types:
       - id: data
         size-eos: true
 
+  cost:
+    instances:
+      # FIXME: supposed to be different based on format bits
+      palette_size:
+        value: 16
+    seq:
+      - id: cost_size
+        type: u4
+      - id: header
+        type: u2
+      - id: num_anim
+        type: u1
+      - id: format
+        type: u1
+      - id: palette
+        type: u1
+        repeat: expr
+        repeat-expr: palette_size
+    -webide-representation: '{num_anim}'
 
 
 
@@ -441,6 +499,14 @@ types:
         type: u4le
         repeat: expr
         repeat-expr: num_entries
+
+  bstr:
+    seq:
+      - id: string
+        type: str
+        encoding: ASCII
+        terminator: 0
+        repeat: eos
 
   unknown_block:
     seq:

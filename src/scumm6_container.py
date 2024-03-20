@@ -19,6 +19,7 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
         apal = 1095778636
         boxd = 1112496196
         boxm = 1112496205
+        bstr = 1114862706
         cdhd = 1128548420
         char = 1128808786
         cost = 1129272148
@@ -32,6 +33,16 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
         encd = 1162756932
         excd = 1163412292
         im00 = 1229795376
+        im01 = 1229795377
+        im02 = 1229795378
+        im03 = 1229795379
+        im04 = 1229795380
+        im05 = 1229795381
+        im06 = 1229795382
+        im07 = 1229795383
+        im08 = 1229795384
+        im09 = 1229795385
+        im10 = 1229795392
         imhd = 1229801540
         imnn = 1229811310
         lecf = 1279607622
@@ -284,6 +295,10 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
                 self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.im02:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
             elif _on == Scumm6Container.BlockType.rmih:
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
@@ -308,6 +323,10 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
                 self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.im03:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
             elif _on == Scumm6Container.BlockType.rmim:
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
@@ -328,6 +347,10 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
                 self.block_data = Scumm6Container.Offs(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.im10:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
             elif _on == Scumm6Container.BlockType.lscr:
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
@@ -340,6 +363,10 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
                 self.block_data = Scumm6Container.Loff(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.cost:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.Cost(_io__raw_block_data, self, self._root)
             elif _on == Scumm6Container.BlockType.boxd:
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
@@ -348,6 +375,14 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
                 self.block_data = Scumm6Container.Cdhd(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.im04:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.im07:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
             elif _on == Scumm6Container.BlockType.droo:
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
@@ -368,6 +403,18 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
                 self.block_data = Scumm6Container.Aary(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.im08:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.bstr:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.Bstr(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.im06:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
             elif _on == Scumm6Container.BlockType.scrp:
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
@@ -380,6 +427,10 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
                 self.block_data = Scumm6Container.IndexNoOffset(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.im05:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
             elif _on == Scumm6Container.BlockType.rmhd:
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
@@ -388,6 +439,14 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
                 self.block_data = Scumm6Container.Script(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.im09:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.im01:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
             elif _on == Scumm6Container.BlockType.encd:
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
@@ -443,6 +502,32 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
             for i in range(self.num_entries):
                 self.room_offset.append(self._io.read_u4le())
 
+
+
+    class Cost(KaitaiStruct):  # type: ignore
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):  # type: ignore
+            self.cost_size = self._io.read_u4le()
+            self.header = self._io.read_u2le()
+            self.num_anim = self._io.read_u1()
+            self.format = self._io.read_u1()
+            self.palette = []
+            for i in range(self.palette_size):
+                self.palette.append(self._io.read_u1())
+
+
+        @property
+        def palette_size(self):  # type: ignore
+            if hasattr(self, '_m_palette_size'):
+                return self._m_palette_size  # type: ignore
+
+            self._m_palette_size = 16
+            return getattr(self, '_m_palette_size', None)
 
 
     class Rnam(KaitaiStruct):  # type: ignore
@@ -608,14 +693,28 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
             self._read()
 
         def _read(self):  # type: ignore
-            self.entry = []
+            self.entries = []
             i = 0
             while True:
-                _ = self._io.read_u1()
-                self.entry.append(_)
-                if _ == 0:
+                _ = Scumm6Container.VerbScript.Entry(self._io, self, self._root)
+                self.entries.append(_)
+                if _.entr == 0:
                     break
                 i += 1
+
+        class Entry(KaitaiStruct):  # type: ignore
+            def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                self._io = _io
+                self._parent = _parent
+                self._root = _root if _root else self
+                self._read()
+
+            def _read(self):  # type: ignore
+                self.entr = self._io.read_u1()
+                if self.entr != 0:
+                    self.offset = self._io.read_u2le()
+
+
 
 
     class Obna(KaitaiStruct):  # type: ignore
@@ -627,6 +726,22 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
 
         def _read(self):  # type: ignore
             self.name = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
+
+
+    class Bstr(KaitaiStruct):  # type: ignore
+        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):  # type: ignore
+            self.string = []
+            i = 0
+            while not self._io.is_eof():
+                self.string.append((self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII"))
+                i += 1
+
 
 
     class Boxd(KaitaiStruct):  # type: ignore
