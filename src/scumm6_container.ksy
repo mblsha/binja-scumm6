@@ -14,7 +14,16 @@ enums:
   # scummvm uses `findResourceData(MKTAG('B','O','X','D')` syntax
   block_type:
     # Binary-Ninja Specific Hacks
+    #
+    # Has all the strings referenced by the scripts. We can't
+    # make llil point to the strings within the instructions, so create a
+    # special section just for strings.
     0x42737472: bstr
+    # LECF replacement to indicate the file has necessary additional sections
+    # "Bstr" and "SCRP".
+    #
+    # "SCRP" is used to resolve the global script calls.
+    0x42736336: bsc6
 
     # Index blocks
     0x524e414d: rnam
@@ -94,6 +103,7 @@ types:
           cases:
             # Binary-Ninja specific
             'block_type::bstr': bstr
+            'block_type::bsc6': nested_blocks
 
             # Index blocks .000
             'block_type::rnam': rnam

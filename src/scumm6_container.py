@@ -19,6 +19,7 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
         apal = 1095778636
         boxd = 1112496196
         boxm = 1112496205
+        bsc6 = 1114858294
         bstr = 1114862706
         cdhd = 1128548420
         char = 1128808786
@@ -455,6 +456,10 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
                 self.block_data = Scumm6Container.Apal(_io__raw_block_data, self, self._root)
+            elif _on == Scumm6Container.BlockType.bsc6:
+                self._raw_block_data = self._io.read_bytes((self.block_size - 8))
+                _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
+                self.block_data = Scumm6Container.NestedBlocks(_io__raw_block_data, self, self._root)
             elif _on == Scumm6Container.BlockType.obna:
                 self._raw_block_data = self._io.read_bytes((self.block_size - 8))
                 _io__raw_block_data = KaitaiStream(BytesIO(self._raw_block_data))
