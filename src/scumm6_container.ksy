@@ -514,7 +514,7 @@ types:
     seq:
       - id: string
         type: str
-        encoding: ASCII
+        encoding: ISO-8859-1
         terminator: 0
         repeat: eos
 

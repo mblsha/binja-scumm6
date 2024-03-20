@@ -1,3 +1,6 @@
+from . import binja_api  # noqa: F401
+from binaryninja.enums import SegmentFlag, SectionSemantics
+
 from .disasm import Scumm6Disasm, decode_rnam_dscr
 
 from .scumm6_opcodes import Scumm6Opcodes
@@ -12,15 +15,10 @@ VarType = Scumm6Opcodes.VarType
 
 # NOTE: the .lecf is the un-xored file
 lecf_path = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "DOTTDEMO.001.lecf"
+    os.path.dirname(os.path.dirname(__file__)), "DOTTDEMO.bsc6"
 )
 with open(lecf_path, "rb") as f:
     lecf = f.read()
-rnam_path = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "DOTTDEMO.000.rnam"
-)
-with open(rnam_path, "rb") as f:
-    rnam = f.read()
 
 
 def test_decode_container() -> None:
@@ -30,17 +28,19 @@ def test_decode_container() -> None:
     scripts, state = r
 
     pprint(scripts)
-    assert len(scripts) == 65
-    assert scripts[0] == (1179, 1180, "room1_exit", 1)
-    assert scripts[1] == (1188, 1189, "room1_enter", 1)
-    assert scripts[2] == (33360, 33365, "room2_exit", 2)
-    assert scripts[3] == (33373, 33391, "room2_enter", 2)
+    assert len(scripts) == 66
+    sf = SegmentFlag.SegmentContainsCode
+    ss = SectionSemantics.ReadOnlyCodeSectionSemantics
+    assert scripts[0] == (1179, 1180, "room1_exit", True, sf, ss)
+    assert scripts[1] == (1188, 1189, "room1_enter", True, sf, ss)
+    assert scripts[2] == (33360, 33365, "room2_exit", True, sf, ss)
+    assert scripts[3] == (33373, 33391, "room2_enter", True, sf, ss)
 
     # LocalScripts
-    assert scripts[4] == (33410, 33435, "room2_local200", 2)
-    assert scripts[5] == (33444, 33546, "room2_local201", 2)
+    assert scripts[4] == (33410, 33435, "room2_local200", True, sf, ss)
+    assert scripts[5] == (33444, 33546, "room2_local201", True, sf, ss)
 
-    assert scripts[-1] == (962497, 962967, "room12_scrp1", 12)
+    assert scripts[-2] == (962497, 962967, "room12_scrp1", True, sf, ss)
 
     # state
     pprint(state)
@@ -60,6 +60,8 @@ def test_decode_container() -> None:
     assert state.block_to_script[0x851D6 + 0x7368] == 0x8C546
 
     assert len(state.dscr) == 140
+
+    assert len(state.bstr) == 51
 
 
 def test_decode_instruction_none() -> None:
@@ -97,24 +99,6 @@ def test_decode_instruction() -> None:
     assert dis.op.body.data == 56
     assert dis.op.body.type == VarType.scumm_var
     assert dis.addr == 0x1234
-
-
-def test_decode_rnam() -> None:
-    dscr = decode_rnam_dscr(rnam)
-    assert dscr[1] == (61, 0x7368)
-
-    disasm = Scumm6Disasm()
-    r = disasm.decode_container(lecf_path, lecf)
-    assert r is not None
-    _, state = r
-
-    for i in range(len(dscr)):
-        if dscr[i].room_no not in state.room_ids:
-            continue
-        ptr = disasm.get_script_ptr(state, i, -1)
-        assert ptr
-        print(f"{i} -> {hex(ptr)}")
-    # assert False
 
 
 def test_get_script_nums() -> None:

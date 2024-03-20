@@ -1,3 +1,6 @@
+from . import binja_api  # noqa: F401
+from binaryninja.enums import SegmentFlag, SectionSemantics
+
 import os
 from kaitaistruct import KaitaiStream, BytesIO
 from .scumm6_opcodes import Scumm6Opcodes
@@ -10,37 +13,14 @@ from .sorted_list import SortedList
 BlockType = Scumm6Container.BlockType
 
 
-def is_valid_filename(filename: str) -> bool:
-    if filename.endswith(".001.lecf"):
-        return True
-    raise ValueError(f"Invalid filename: {filename} (Expected '.001.lecf' extension)")
-
-
-def get_rnam_filename(filename: str) -> str:
-    return filename.replace(".001.lecf", ".000.rnam")
-
-
 class Resource(NamedTuple):
     room_no: int
     room_offset: int
 
 
-def read_dscr(lecf_filename: str) -> List[Resource]:
-    rnam_filename = get_rnam_filename(lecf_filename)
-    if not os.path.exists(rnam_filename):
-        raise ValueError(f"File not found: {rnam_filename}")
-
-    with open(rnam_filename, "rb") as f:
-        data = f.read()
-    return decode_rnam_dscr(data)
-
-
 # https://github.com/scummvm/scummvm/blob/74b6c4d35aaeeb6892c358f0c3e41d8be98c79ea/engines/scumm/resource.cpp#L455
 # DSCR: readResTypeList(rtScript): room_no -> room_offset
-def decode_rnam_dscr(data: bytes) -> List[Resource]:
-    ks = KaitaiStream(BytesIO(data))
-    r = Scumm6Container(ks)
-
+def decode_rnam_dscr(r: Scumm6Container) -> List[Resource]:
     dscr = None
     for b in r.blocks:
         if b.block_type == BlockType.dscr:
@@ -107,12 +87,17 @@ class State:
     # global script ids
     dscr: List[Resource] = field(default_factory=list)
 
+    # string -> addr
+    bstr: Dict[str, int] = field(default_factory=dict)
+
 
 class ScriptAddr(NamedTuple):
     start: int
     end: int
     name: str
-    room: int
+    create_function: bool
+    segment_flag: SegmentFlag
+    section_semantics: SectionSemantics
 
 
 def get_script_addrs(block: Any, state: State, pos: int = 0) -> List[ScriptAddr]:
@@ -152,7 +137,9 @@ def get_script_addrs(block: Any, state: State, pos: int = 0) -> List[ScriptAddr]
                 start=start,
                 end=pos + block.block_size,
                 name=f"room{room.num}_{name}",
-                room=room.num,
+                create_function=True,
+                segment_flag=SegmentFlag.SegmentContainsCode,
+                section_semantics=SectionSemantics.ReadOnlyCodeSectionSemantics,
             )
         )
     elif isinstance(block.block_data, Scumm6Container.LocalScript):
@@ -171,14 +158,33 @@ def get_script_addrs(block: Any, state: State, pos: int = 0) -> List[ScriptAddr]
                 start=start,
                 end=pos + block.block_size,
                 name=f"room{room.num}_{name}",
-                room=room.num,
+                create_function=True,
+                segment_flag=SegmentFlag.SegmentContainsCode,
+                section_semantics=SectionSemantics.ReadOnlyCodeSectionSemantics,
             )
         )
     elif isinstance(block.block_data, Scumm6Container.Loff):
         for room in block.block_data.rooms:
             state.room_ids[room.room_id] = room.room_offset
+    elif isinstance(block.block_data, Scumm6Container.Bstr):
+        start = pos + 8
+        for s in block.block_data.string:
+            state.bstr[s] = start
+            start += len(s) + 1
+
+        r.append(
+            ScriptAddr(
+                start=pos + 8,
+                end=pos + block.block_size,
+                name=f"Strings",
+                create_function=False,
+                segment_flag=SegmentFlag.SegmentReadable,
+                section_semantics=SectionSemantics.ReadOnlyDataSectionSemantics,
+            )
+        )
     # TODO: VerbScript
     # elif type(block.block_data) == Scumm6Container.VerbScript:
+
     return r
 
 
@@ -214,13 +220,17 @@ class Scumm6Disasm:
     def decode_container(
         lecf_filename: str, data: bytes
     ) -> Optional[Tuple[List[ScriptAddr], State]]:
-        dscr = read_dscr(lecf_filename)
-
         ks = KaitaiStream(BytesIO(data))
         r = Scumm6Container(ks)
         state = State()
-        state.dscr = dscr
-        return get_script_addrs(r.blocks[0], state, 0), state
+        state.dscr = decode_rnam_dscr(r)
+
+        pos = 0
+        scripts = []
+        for b in r.blocks:
+            scripts.extend(get_script_addrs(b, state, pos))
+            pos += b.block_size
+        return scripts, state
 
     @staticmethod
     def get_script_ptr(state: State, script_num: int, call_addr: int) -> Optional[int]:
@@ -255,4 +265,3 @@ class Scumm6Disasm:
             r[ptr] = i
 
         return r
-

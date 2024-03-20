@@ -8,13 +8,10 @@ lecf_path = os.path.join(
     # os.path.dirname(os.path.dirname(__file__)), "TENTACLE.001.lecf"
 )
 
+rnam_path = lecf_path.replace(".001.lecf", ".000.rnam")
 
 def test_converter() -> None:
-    r = converter.read_resources(lecf_path)
-    pprint(r)
-    assert r is not None
-    # assert False
-
-    # scripts, state = r
-    # assert scripts is not None
-    # assert state.dscr is not None
+    bsc6 = converter.read_resources(lecf_path, rnam_path)
+    assert len(bsc6) > 1000
+    # with open("dottdemo.bsc6", "wb") as f:
+    #     f.write(bsc6)

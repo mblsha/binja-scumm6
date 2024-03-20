@@ -562,15 +562,13 @@ class Scumm6(Architecture):  # type: ignore
             assert body
             if isinstance(body.body, Scumm6Opcodes.Message):
                 message = parse_message(body.body)
-                has_string = False
+                state = self.get_state(dis)
                 for i in message:
                     if isinstance(i, str):
-                        has_string = True
-                        break
-                if has_string:
-                    print(f"has_string {op.id} at {hex(dis.addr)}")
-                    il.append(il.push(4, il.const_pointer(4, dis.addr + 2)))
-                    add_intrinsic(f"{op.id.name}.{body.subop.name}", body.body)
+                        str_addr = state.bstr[i]
+                        print(f"has_string {op.id} at {hex(dis.addr)}")
+                        il.append(il.push(4, il.const_pointer(4, str_addr)))
+                add_intrinsic(f"{op.id.name}.{body.subop.name}", body.body)
             elif isinstance(body.body, Scumm6Opcodes.UnknownOp):
                 print(
                     f'unknown_op {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}'

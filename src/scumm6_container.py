@@ -744,7 +744,8 @@ class Scumm6Container(KaitaiStruct):  # type: ignore
             self.string = []
             i = 0
             while not self._io.is_eof():
-                self.string.append((self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII"))
+                self.string.append((self._io.read_bytes_term(0, False, True,
+                                                             True)).decode(u"ISO-8859-1"))
                 i += 1
 
 

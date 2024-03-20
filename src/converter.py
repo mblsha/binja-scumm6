@@ -4,6 +4,8 @@ from .scumm6_opcodes import Scumm6Opcodes
 from .scumm6_container import Scumm6Container
 from .message import parse_message
 
+import os
+
 from typing import Any, NamedTuple, List
 
 OpType = Scumm6Opcodes.OpType
@@ -60,21 +62,23 @@ def extract_strings(
     return r
 
 
-def read_resources(lecf_filename: str) -> Any:
-    dscr = disasm.read_dscr(lecf_filename)
-
+def read_resources(lecf_filename: str, rnam_filename: str) -> bytes:
     with open(lecf_filename, "rb") as f:
-        data = f.read()
-    ks = KaitaiStream(BytesIO(data))
+        lecf_data = f.read()
+    with open(rnam_filename, "rb") as f:
+        rnam_data = f.read()
+
+    ks = KaitaiStream(BytesIO(rnam_data))
     r = Scumm6Container(ks)
-
     state = disasm.State()
-    state.dscr = dscr
+    state.dscr = disasm.decode_rnam_dscr(r)
 
+    ks = KaitaiStream(BytesIO(lecf_data))
+    r = Scumm6Container(ks)
     scripts = disasm.get_script_addrs(r.blocks[0], state, 0)
     strings: List[StringInfo] = []
     for script in scripts:
-        strings.extend(extract_strings(data, script.start, script.end, script.name))
+        strings.extend(extract_strings(lecf_data, script.start, script.end, script.name))
 
     dedup_strings = set()
     for s in strings:
@@ -84,17 +88,11 @@ def read_resources(lecf_filename: str) -> Any:
     for s in sorted(dedup_strings):
         string_dict_block += s.encode("utf-8") + b"\0"
     string_dict_len = len(string_dict_block) + 8
-    result = b"Bstr" + string_dict_len.to_bytes(4, "big") + string_dict_block
+    bstr = b"Bstr" + string_dict_len.to_bytes(4, "big") + string_dict_block
 
-    with open("Bstr.bin", "wb") as f:
-        f.write(result)
-    # deduplicate strings
-    # string -> id
-    # write strings in id order
-    # write lookup table, op to string id
-
-    # write table: script id -> addr
+    bsc6 = lecf_data + bstr + rnam_data
+    bsc6 = b"Bsc6" + bsc6[4:]
 
     print(sorted(dedup_strings))
 
-    return result
+    return bsc6

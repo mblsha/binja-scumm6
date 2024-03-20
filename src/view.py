@@ -3,7 +3,7 @@ from binaryninja.architecture import Architecture
 from binaryninja.types import Symbol
 from binaryninja.enums import SymbolType, SegmentFlag, SectionSemantics, Endianness
 from .scumm6 import LastBV
-from .disasm import Scumm6Disasm, ScriptAddr, State, read_dscr
+from .disasm import Scumm6Disasm, ScriptAddr, State
 
 from typing import List
 
@@ -17,9 +17,7 @@ class Scumm6View(BinaryView):  # type: ignore
     @classmethod
     def is_valid_for_data(self, data: BinaryView) -> bool:
         header = data.read(0, 0x4)
-        result = header[0:4] in [b"LECF"]
-        if result:
-            _ = read_dscr(data.file.filename)
+        result = header[0:4] in [b"Bsc6"]
         return result
 
     def __init__(self, parent_view: BinaryView) -> None:
@@ -87,22 +85,22 @@ class Scumm6View(BinaryView):  # type: ignore
             SectionSemantics.ReadWriteDataSectionSemantics,
         )
 
-        for start, end, name, room in self.scripts:
+        for start, end, name, create_function, segment_flag, section_semantics in self.scripts:
             # print("adding segment:", hex(start), hex(end), name)
             size = end - start
 
             self.add_auto_segment(
-                start, size, start, size, SegmentFlag.SegmentContainsCode
+                start, size, start, size, segment_flag
             )
 
             self.add_user_section(
                 name,
                 start,
                 size,
-                SectionSemantics.ReadOnlyCodeSectionSemantics,
+                section_semantics,
             )
 
-            if not self.get_function_at(start):
+            if create_function and not self.get_function_at(start):
                 self.create_user_function(start)
                 f = self.get_function_at(start)
 
