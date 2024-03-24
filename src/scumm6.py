@@ -69,17 +69,15 @@ class Scumm6(Architecture):  # type: ignore
     default_int_size = 4
     max_instr_length = 256
     endianness = Endianness.LittleEndian
-    regs = (
-        {
-            "sp": RegisterInfo(
-                "sp", 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth
-            ),
-        }
-        | {f"N{i}": RegisterInfo(f"N{i}", 4) for i in range(1024)}  # normal
-        | {f"L{i}": RegisterInfo(f"L{i}", 4) for i in range(1024)}  # local
-        | {f"R{i}": RegisterInfo(f"R{i}", 4) for i in range(1024)}  # room
-        | {f"G{i}": RegisterInfo(f"G{i}", 4) for i in range(1024)}  # global
-    )
+    regs = {
+        "sp": RegisterInfo(
+            "sp", 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth
+        ),
+    } | {
+        # local
+        f"L{i}": RegisterInfo(f"L{i}", 4)
+        for i in range(vars.NUM_SCRIPT_LOCAL)
+    }
 
     stack_pointer = "sp"
     flags = ["n", "z", "v", "c"]
@@ -361,7 +359,7 @@ class Scumm6(Architecture):  # type: ignore
             # binja doesn't support popping dynamic num of args from stack,
             # so try to figure out how many do we need to pop.
             num_args = get_prev_value(instr)
-            # num_regs need to be popped separately
+            # num_args need to be popped separately
             il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
             args = [il.pop(4) for _ in range(num_args)]
             return args
@@ -510,10 +508,18 @@ class Scumm6(Architecture):  # type: ignore
         elif op.id in [OpType.start_script, OpType.start_script_quick]:
             # o6_startScript
             # https://github.com/scummvm/scummvm/blob/master/engines/scumm/script_v6.cpp#L871
-            # print(f'>> {op.id.name} at {hex(dis.addr)}')
-            args = do_pop_list(dis)
+
+            # args are last in stack
+            args = do_pop_list(dis)  # implicitly pops num_args
+
+            # need to somehow preserve the local state
+            SAVE_ARGS_REG_START = 10
+            for index, a in enumerate(args):
+                il.append(il.set_reg(4, LLIL_TEMP(SAVE_ARGS_REG_START + index), a))
+
+            # go back enough to get the function number,
+            # it's pushed before the args
             func_num = dis
-            args = [il.pop(4) for _ in args]
             for _ in range(len(args) + 2):
                 func_num = self.prev_instruction(func_num)
 
@@ -526,30 +532,28 @@ class Scumm6(Architecture):  # type: ignore
                 print(f"get_script_ptr failed: {func_num_value} at {hex(dis.addr)}")
                 raise
 
+            # fake pus to "read the func num"
+            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
+
             if op.id == OpType.start_script:
                 flags = get_prev_value(func_num)
+                # fake push to "read the flags"
+                il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))
                 # ScummEngine::runScript()
                 # https://github.com/scummvm/scummvm/blob/master/engines/scumm/script.cpp#L59
                 # freeze_resistant = (flags & 1) != 0
                 recursive = (flags & 2) != 0
 
-                # FIXME: use func_ptr
                 if not recursive:
                     il.append(
-                        il.intrinsic([], "stop_script", [il.const(4, func_num_value)])
+                        il.intrinsic([], "stop_script", [il.const_pointer(4, func_ptr)])
                     )
 
-                if func_ptr:
-                    il.append(il.call(il.const_pointer(4, func_ptr)))
-                else:
-                    il.append(
-                        il.intrinsic([], op.id.name, [il.pop(4), il.pop(4)] + args)
-                    )
-            else:
-                if func_ptr:
-                    il.append(il.call(il.const_pointer(4, func_ptr)))
-                else:
-                    il.append(il.intrinsic([], op.id.name, [il.pop(4)] + args))
+            for index, a in enumerate(args):
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(SAVE_ARGS_REG_START + index))))
+
+            # expect binja to use pushed args as function args
+            il.append(il.call(il.const_pointer(4, func_ptr)))
         elif op.id == OpType.stop_script:
             prev_value = get_prev_value(dis)
             il.append(il.intrinsic([], op.id.name, [il.pop(4)]))

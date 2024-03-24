@@ -125,16 +125,33 @@ def scumm_vars_inverse() -> Dict[int, str]:
     return {v: k for k, v in raw_scumm_vars().items()}
 
 
-NUM_VARS = 1024
+# ScummEngine::readVar() handles reading vars
+# need to read MAXS first
+
+# _scummVar: _numVariables at ScummEngine::allocateArrays()
+# vm.localvar: local: NUM_SCRIPT_LOCAL = 25 at scumm/script.h
+# _bitVars: _numBitVariables at ScummEngine::allocateArrays()
+
+# local for each script, are set when calling scripts
+NUM_SCRIPT_LOCAL = 25
+
+# scumm_vars, hold system state
+NUM_SCUMM_VARS = 800  # DOTTDEMO.000 / defined in MAXS section
 VAR_ITEM_SIZE = 4
 
 SCUMM_VARS_START = 0x40000000
-SCUMM_VARS_SIZE = NUM_VARS * VAR_ITEM_SIZE
+SCUMM_VARS_SIZE = NUM_SCUMM_VARS * VAR_ITEM_SIZE
 
-GLOBAL_VARS_START = SCUMM_VARS_START + SCUMM_VARS_SIZE
-GLOBAL_VARS_SIZE = NUM_VARS * VAR_ITEM_SIZE
+# we only need to allocate a single bit, but it's easier to mark
+# the whole byte as used in binja
+NUM_BITVARS = 2048  # DOTTDEMO.000 / defined in MAXS section
+BITVAR_ITEM_SIZE = 1
+
+BITVARS_START = SCUMM_VARS_START + SCUMM_VARS_SIZE
+BITVARS_SIZE = NUM_BITVARS * BITVAR_ITEM_SIZE
 
 
+# returns name for a given var number
 class ScummVar(NamedTuple):
     name: Optional[str]
     address: int
@@ -149,19 +166,13 @@ def get_scumm_var(num: int) -> ScummVar:
     return ScummVar(name=None, address=address)
 
 
-def get_global_var(num: int) -> int:
-    return GLOBAL_VARS_START + num * VAR_ITEM_SIZE
+def get_bit_var(num: int) -> int:
+    return BITVARS_START + num * BITVAR_ITEM_SIZE
 
 
 def reg_name(block: Any) -> str:
-    if block.type == VarType.scumm_var:
-        return f"N{block.data}"
-    elif block.type == VarType.local:
+    if block.type == VarType.local:
         return f"L{block.data}"
-    elif block.type == VarType.room:
-        return f"R{block.data}"
-    elif block.type == VarType.globall:
-        return f"G{block.data}"
     else:
         raise Exception(f"reg_name: unsupported var type '{block.type}'")
 
@@ -170,12 +181,10 @@ def il_get_var(il: lowlevelil.LowLevelILFunction, block: Any) -> Any:
     if block.type == VarType.scumm_var:
         return il.load(
             VAR_ITEM_SIZE,
-            il.const_pointer(VAR_ITEM_SIZE, get_scumm_var(block.data).address),
+            il.const_pointer(4, get_scumm_var(block.data).address),
         )
-    elif block.type == VarType.globall:
-        return il.load(
-            VAR_ITEM_SIZE, il.const_pointer(VAR_ITEM_SIZE, get_global_var(block.data))
-        )
+    elif block.type == VarType.bitvar:
+        return il.load(BITVAR_ITEM_SIZE, il.const_pointer(4, get_bit_var(block.data)))
 
     return il.reg(VAR_ITEM_SIZE, reg_name(block))
 
@@ -184,13 +193,13 @@ def il_set_var(il: lowlevelil.LowLevelILFunction, block: Any, value: Any) -> Any
     if block.type == VarType.scumm_var:
         return il.store(
             VAR_ITEM_SIZE,
-            il.const_pointer(VAR_ITEM_SIZE, get_scumm_var(block.data).address),
+            il.const_pointer(4, get_scumm_var(block.data).address),
             value,
         )
-    elif block.type == VarType.globall:
+    elif block.type == VarType.bitvar:
         return il.store(
-            VAR_ITEM_SIZE,
-            il.const_pointer(VAR_ITEM_SIZE, get_global_var(block.data)),
+            BITVAR_ITEM_SIZE,
+            il.const_pointer(4, get_bit_var(block.data)),
             value,
         )
 

@@ -78,6 +78,13 @@ def read_resources(lecf_filename: str, rnam_filename: str) -> bytes:
     for script in scripts:
         strings.extend(extract_strings(lecf_data, script.start, script.end, script.name))
 
+    # for script in scripts:
+    #     if not script.create_function:
+    #         continue
+    #     data = lecf_data[script.start : script.end]
+    #     with open(f"{script.name}.bin", "wb") as f:
+    #         f.write(data)
+
     dedup_strings = set()
     for si in strings:
         dedup_strings.add(si.string)

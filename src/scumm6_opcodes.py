@@ -309,9 +309,8 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
 
     class VarType(Enum):
         scumm_var = 0
-        local = 4
-        room = 8
-        globall = 15
+        local = 1
+        bitvar = 2
     def __init__(self, _io, _parent=None, _root=None):  # type: ignore
         self._io = _io
         self._parent = _parent
@@ -1383,8 +1382,8 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
             self._read()
 
         def _read(self):  # type: ignore
-            self.data = self._io.read_bits_int_le(12)
-            self.type = KaitaiStream.resolve_enum(Scumm6Opcodes.VarType, self._io.read_bits_int_le(4))
+            self.data = self._io.read_bits_int_le(14)
+            self.type = KaitaiStream.resolve_enum(Scumm6Opcodes.VarType, self._io.read_bits_int_le(2))
 
 
     class Message(KaitaiStruct):  # type: ignore

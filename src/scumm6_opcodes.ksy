@@ -312,10 +312,10 @@ enums:
   # ScummEngine::readVar()
   # https://github.com/scummvm/scummvm/blob/master/engines/scumm/script.cpp#L533
   var_type:
-    0x0: scumm_var  # _scummVar
-    0x4: local
-    0x8: room
-    0xf: globall
+    0x0: scumm_var  # _scummVar / var%d
+    0x1: local      # vm.localvar / localvar%d
+    0x2: bitvar     # _bitVars / bitvar%d
+                    # NOTE: v8+ uses roomVars instead of bitvars
 
 types:
   op:
@@ -1031,9 +1031,9 @@ types:
   word_var_data:
     seq:
       - id: data
-        type: b12
+        type: b14
       - id: type
-        type: b4
+        type: b2
         enum: var_type
     -webide-representation: '(i:{data:dec} {type})'
 
@@ -1279,7 +1279,7 @@ types:
         type:
           switch-on: subop
           cases:
-            'subop_type::assign_string': string_data
+            'subop_type::assign_string': message
             # 'subop_type::assign_int_list': no_data
             # 'subop_type::assign_2dim_list': no_data
             _: unknown_op

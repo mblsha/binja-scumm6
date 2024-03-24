@@ -62,7 +62,7 @@ class Scumm6View(BinaryView):  # type: ignore
             SectionSemantics.ReadWriteDataSectionSemantics,
         )
         uint32_t = self.parse_type_string("uint32_t")[0]
-        for i in range(vars.NUM_VARS):
+        for i in range(vars.NUM_SCUMM_VARS):
             var = vars.get_scumm_var(i)
             if var.name is None:
                 continue
@@ -72,16 +72,16 @@ class Scumm6View(BinaryView):  # type: ignore
             self.define_user_data_var(var.address, uint32_t)
 
         self.add_auto_segment(
-            vars.GLOBAL_VARS_START,
-            vars.GLOBAL_VARS_SIZE,
+            vars.BITVARS_START,
+            vars.BITVARS_SIZE,
             0,
             0,
             SegmentFlag.SegmentReadable | SegmentFlag.SegmentWritable,
         )
         self.add_user_section(
-            "Global VARs",
-            vars.GLOBAL_VARS_START,
-            vars.GLOBAL_VARS_SIZE,
+            "Bit VARs",
+            vars.BITVARS_START,
+            vars.BITVARS_SIZE,
             SectionSemantics.ReadWriteDataSectionSemantics,
         )
 

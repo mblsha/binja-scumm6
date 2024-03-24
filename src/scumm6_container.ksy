@@ -445,22 +445,30 @@ types:
         repeat: until
         repeat-until: _.var_no == 0x00
 
-  # FIXME: verify labels are correct
+  # ScummEngine_v6::readMAXS()
   maxs:
     seq:
-      - id: num_variables
+      - id: num_scumm_variables  # num_variables
         type: u2
+
+      - id: dummy1
+        type: u2
+
       - id: num_bit_variables
         type: u2
       - id: num_local_objects
         type: u2
-      - id: num_global_objects
+      - id: num_array
         type: u2
+
+      - id: dummy2
+        type: u2
+
       - id: num_verbs
         type: u2
-      - id: num_fl_object_slots
+      - id: num_fl_object
         type: u2
-      - id: num_arrays
+      - id: num_inventory
         type: u2
       - id: num_rooms
         type: u2
@@ -468,12 +476,15 @@ types:
         type: u2
       - id: num_sounds
         type: u2
-      - id: num_costumes
-        type: u2
       - id: num_charsets
         type: u2
-      - id: num_images
+      - id: num_costumes
         type: u2
+      - id: num_global_objects
+        type: u2
+    instances:
+      num_global_scripts:
+        value: 200
 
   index_no_offset:
     seq:
