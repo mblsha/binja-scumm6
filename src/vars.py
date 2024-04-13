@@ -150,6 +150,12 @@ BITVAR_ITEM_SIZE = 1
 BITVARS_START = SCUMM_VARS_START + SCUMM_VARS_SIZE
 BITVARS_SIZE = NUM_BITVARS * BITVAR_ITEM_SIZE
 
+NUM_ARRAY_VARS = 50  # DOTTDEMO.000 / defined in MAXS section
+VAR_ARRAY_ITEM_SIZE = 4
+VAR_ARRAY_NUM_ITEMS = 10
+ARRAYS_START = BITVARS_START + BITVARS_SIZE
+ARRAYS_SIZE = NUM_ARRAY_VARS * VAR_ARRAY_ITEM_SIZE * VAR_ARRAY_NUM_ITEMS
+
 
 # returns name for a given var number
 class ScummVar(NamedTuple):
@@ -186,7 +192,7 @@ def il_get_var(il: lowlevelil.LowLevelILFunction, block: Any) -> Any:
     elif block.type == VarType.bitvar:
         return il.load(BITVAR_ITEM_SIZE, il.const_pointer(4, get_bit_var(block.data)))
 
-    return il.reg(VAR_ITEM_SIZE, reg_name(block))
+    return il.reg(4, reg_name(block))
 
 
 def il_set_var(il: lowlevelil.LowLevelILFunction, block: Any, value: Any) -> Any:
@@ -203,4 +209,45 @@ def il_set_var(il: lowlevelil.LowLevelILFunction, block: Any, value: Any) -> Any
             value,
         )
 
-    return il.set_reg(VAR_ITEM_SIZE, reg_name(block), value)
+    return il.set_reg(4, reg_name(block), value)
+
+
+# Memory layout:
+# type: uint16_t
+#   kStringArray: 1-byte
+#   kIntArray: 2-byte
+# dim1: uint16_t
+# dim2: uint16_t
+# data: void*
+#
+# Example: defineArray(array, kStringArray, 0, len + 1);
+
+# https://github.com/scummvm/scummvm/blob/master/engines/scumm/script_v6.cpp
+# ScummEngine_v6::defineArray(int array, int type, int dim2, int dim1)
+
+def il_array_item_addr(
+    il: lowlevelil.LowLevelILFunction, array: int, index: Any, base: Any
+) -> Any:
+    array_size = VAR_ARRAY_ITEM_SIZE * VAR_ARRAY_NUM_ITEMS
+    array_start = il.const_pointer(4, ARRAYS_START + array * array_size)
+    return il.add(
+        4, array_start, il.mult(4, il.const(4, index), il.const(4, VAR_ARRAY_ITEM_SIZE))
+    )
+
+
+def il_get_array(il: lowlevelil.LowLevelILFunction, array: int, index: int,
+                 base: int) -> Any:
+    return il.load(
+        VAR_ARRAY_ITEM_SIZE,
+        il_array_item_addr(il, array, index),
+    )
+
+
+def il_set_array(
+    il: lowlevelil.LowLevelILFunction, array: int, index: Any, base: Any, value: Any
+) -> Any:
+    return il.store(
+        VAR_ARRAY_ITEM_SIZE,
+        il_array_item_addr(il, array, index, base),
+        value,
+    )
