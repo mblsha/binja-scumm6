@@ -1,7 +1,13 @@
-__pycache__/
+__pycache__
+_scripts
+.pytest_cache
+.mypy_cache
+
 *.code-workspace
 Session.vim
 
 *.rnam
 *.lecf
 *.bsc6
+*.000
+*.001

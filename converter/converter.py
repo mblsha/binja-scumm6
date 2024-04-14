@@ -1,13 +1,27 @@
-from . import disasm
+from ..src import disasm
 from kaitaistruct import KaitaiStream, BytesIO
-from .scumm6_opcodes import Scumm6Opcodes
-from .scumm6_container import Scumm6Container
-from .message import parse_message
+from ..src.scumm6_opcodes import Scumm6Opcodes
+from ..src.scumm6_container import Scumm6Container
+from ..src.message import parse_message
 
 from typing import Any, NamedTuple, List
 
 OpType = Scumm6Opcodes.OpType
 SubopType = Scumm6Opcodes.SubopType
+
+
+def read_xored_data(filename: str) -> bytes:
+    result = b""
+    with open(filename, "rb") as fr:
+        while True:
+            chunk = fr.read(1)
+            if not chunk:
+                break
+            # https://wiki.scummvm.org/index.php/SCUMM/Technical_Reference/SCUMM_6_resource_files#1.2_Basics
+            # says to use 0x69
+            converted = (chunk[0] ^ 0x69).to_bytes(1, byteorder="big")
+            result += converted
+    return result
 
 
 class StringInfo(NamedTuple):
@@ -60,12 +74,7 @@ def extract_strings(
     return r
 
 
-def read_resources(lecf_filename: str, rnam_filename: str) -> bytes:
-    with open(lecf_filename, "rb") as f:
-        lecf_data = f.read()
-    with open(rnam_filename, "rb") as f:
-        rnam_data = f.read()
-
+def read_resources(lecf_data: bytes, rnam_data: bytes) -> bytes:
     ks = KaitaiStream(BytesIO(rnam_data))
     r = Scumm6Container(ks)
     state = disasm.State()
@@ -76,7 +85,9 @@ def read_resources(lecf_filename: str, rnam_filename: str) -> bytes:
     scripts = disasm.get_script_addrs(r.blocks[0], state, 0)
     strings: List[StringInfo] = []
     for script in scripts:
-        strings.extend(extract_strings(lecf_data, script.start, script.end, script.name))
+        strings.extend(
+            extract_strings(lecf_data, script.start, script.end, script.name)
+        )
 
     # for script in scripts:
     #     if not script.create_function:
@@ -95,9 +106,9 @@ def read_resources(lecf_filename: str, rnam_filename: str) -> bytes:
     string_dict_len = len(string_dict_block) + 8
     bstr = b"Bstr" + string_dict_len.to_bytes(4, "big") + string_dict_block
 
+    # replace LECF with Bsc6, so the signature matcher in view.py works
+    # Note: order for bstr and rnam_data shouldn't matter.
     bsc6 = lecf_data + bstr + rnam_data
     bsc6 = b"Bsc6" + bsc6[4:]
-
-    print(sorted(dedup_strings))
 
     return bsc6
