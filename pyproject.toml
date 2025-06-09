@@ -7,7 +7,7 @@ name = "binja-scumm6"
 version = "0.1.0"
 description = "Binary Ninja SCUMM6 architecture plugin"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "kaitaistruct",
 ]
