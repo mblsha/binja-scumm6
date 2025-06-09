@@ -16,8 +16,6 @@ jobs:
           python-version: '3.11'
       - name: Install dependencies
         run: python -m pip install -e .[dev]
-      - name: Install helper package
-        run: pip install -e binja_helpers/binja_helpers
       - name: Run Ruff
         run: ruff check
       - name: Run Mypy and Flake8
