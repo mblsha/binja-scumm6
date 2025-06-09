@@ -180,7 +180,7 @@ def get_script_addrs(block: Any, state: State, pos: int = 0) -> List[ScriptAddr]
                 name="Strings",
                 create_function=False,
                 segment_flag=SegmentFlag.SegmentReadable,
-                section_semantics=SectionSemantics.ReadOnlyDataSectionSemantics,
+                section_semantics=SectionSemantics.ReadWriteDataSectionSemantics,
             )
         )
     # TODO: VerbScript
