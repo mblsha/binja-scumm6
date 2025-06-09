@@ -1,0 +1,3 @@
+[submodule "binja_helpers"]
+	path = binja_helpers
+	url = https://github.com/mblsha/binja-esr.git
