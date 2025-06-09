@@ -1,1 +1,28 @@
-binja_helpers/pyproject.toml
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "binja-esr"
+version = "0.1.0"
+description = "Binary Ninja SCUMM6 architecture plugin"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "kaitaistruct",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "mypy",
+    "ruff",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["binja_helpers"]
+
+[tool.coverage.run]
+source = ["src"]
