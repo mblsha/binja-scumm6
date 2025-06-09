@@ -32,7 +32,11 @@ else:
     os.environ["MYPYPATH"] = bn_path
     print(f"Using Binary Ninja from {bn_path}")
 
-stdout, stderr, exit_status = api.run(["--explicit-package-bases", "src", "converter"])
+# When this script is executed from outside the repository root the current
+# working directory may not contain the ``src`` and ``converter`` directories.
+# Use absolute paths so ``mypy`` can always locate the sources.
+source_dirs = [repo_root / "src", repo_root / "converter"]
+stdout, stderr, exit_status = api.run(["--explicit-package-bases", *(str(p) for p in source_dirs)])
 print(stdout, end="")
 print(stderr, end="", file=sys.stderr)
 sys.exit(exit_status)
