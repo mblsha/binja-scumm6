@@ -12,3 +12,17 @@ Session.vim
 *.000
 *.001
 binja_esr.egg-info
+
+# Coverage files
+.coverage
+coverage.xml
+
+# Egg info directories
+*.egg-info/
+
+# Demo files
+*.ZIP
+*.EXE
+*.IMS
+*.SOU
+

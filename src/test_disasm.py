@@ -32,7 +32,7 @@ def test_decode_container() -> None:
 
     pprint(scripts)
     assert len(scripts) == 66
-    sf = SegmentFlag.SegmentContainsCode
+    sf = getattr(SegmentFlag, "SegmentContainsCode", SegmentFlag.SegmentExecutable)
     ss = SectionSemantics.ReadOnlyCodeSectionSemantics
     assert scripts[0] == (1179, 1180, "room1_exit", True, sf, ss)
     assert scripts[1] == (1188, 1189, "room1_enter", True, sf, ss)
