@@ -5,18 +5,15 @@ from typing import Any, List, Optional, Tuple, Dict
 import threading
 from collections import defaultdict
 
-from binaryninja import core_ui_enabled
-from binaryninja.architecture import (
-    Architecture,
-    IntrinsicInfo,
-)
+from binaryninja import core_ui_enabled  # type: ignore[attr-defined]
+from binaryninja.architecture import Architecture, IntrinsicInfo  # type: ignore[attr-defined]
 from binaryninja.lowlevelil import (
     LowLevelILLabel,
     LLIL_TEMP,
 )
 from binaryninja.function import RegisterInfo, InstructionInfo, InstructionTextToken
 from binaryninja.binaryview import BinaryView
-from binaryninja.enums import (
+from binaryninja.enums import (  # type: ignore[attr-defined]
     Endianness,
     BranchType,
     InstructionTextTokenType,
@@ -63,7 +60,7 @@ class LastBV:
 
 # FIXME: create a fake memory segment for all the function names,
 # so that cross-references will work
-class Scumm6(Architecture):  # type: ignore
+class Scumm6(Architecture):
     name = "SCUMM6"
     address_size = 4
     default_int_size = 4
@@ -184,9 +181,9 @@ class Scumm6(Architecture):  # type: ignore
         last_bv = LastBV.get()
         if last_bv:
             # check that the data matches in case last_bv is not the right view
-            data2 = last_bv.read(addr, len(data))
+            data2 = last_bv.read(addr, len(data))  # type: ignore[attr-defined]
             if data == data2:
-                return (last_bv, last_bv.file.filename)
+                return (last_bv, last_bv.file.filename)  # type: ignore[attr-defined]
             else:
                 # FIXME: could be because of the .synthetic_builtins section
                 print(
@@ -208,7 +205,7 @@ class Scumm6(Architecture):  # type: ignore
         prev_addr = self.op_addrs[filename].closest_left_match(instr.addr)
         assert prev_addr
         # print(f'prev_instruction: addr:{instr.addr:x} -> prev:{prev_addr:x}')
-        data2 = view.read(prev_addr, 256)
+        data2 = view.read(prev_addr, 256)  # type: ignore[attr-defined]
         dis = self.decode_instruction(data2, prev_addr)
         if not dis:
             raise Exception(
@@ -480,8 +477,8 @@ class Scumm6(Architecture):  # type: ignore
             il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
         elif op.id in [OpType.nott]:
             il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
-            comp = il.compare_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0))
-            il.append(il.push(4, comp))
+            comp_res = il.compare_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0))
+            il.append(il.push(4, comp_res))
         elif op.id in [OpType.iff, OpType.if_not]:
             comp = {
                 OpType.iff: il.compare_not_equal,

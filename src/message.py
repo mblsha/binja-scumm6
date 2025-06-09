@@ -64,6 +64,6 @@ def parse_message(message: Scumm6Opcodes.Message) -> List[Union[str, Part]]:
             payload = p.content.payload
             part_type, args = MATCH_TYPE[type(payload)]
 
-            parts.append(Part(part_type, [getattr(payload, a) for a in args]))  # type: ignore
+            parts.append(Part(part_type, [getattr(payload, a) for a in args]))
 
     return parts
