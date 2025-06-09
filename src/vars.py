@@ -213,7 +213,7 @@ def il_set_var(il: lowlevelil.LowLevelILFunction, block: Any, value: Any) -> Any
 
 
 # Memory layout:
-# type: uint16_t
+# field types
 #   kStringArray: 1-byte
 #   kIntArray: 2-byte
 # dim1: uint16_t

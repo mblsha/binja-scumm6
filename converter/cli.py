@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
 import argparse
-import os
-import sys
-
 from . import converter
 
 
@@ -36,7 +33,7 @@ def main():
         raise argparse.ArgumentTypeError(f"{rnamn_path} must have a .001 extension")
 
     lecf_data = converter.read_xored_data(lecf_path)
-    rnam_data = converter.read_xored_data(rnam_path)
+    rnam_data = converter.read_xored_data(rnamn_path)
     assert lecf_data[:4] == b"LECF"
     assert rnam_data[:4] == b"RNAM"
 
