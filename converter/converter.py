@@ -1,8 +1,8 @@
-from ..src import disasm
+from src import disasm
 from kaitaistruct import KaitaiStream, BytesIO
-from ..src.scumm6_opcodes import Scumm6Opcodes
-from ..src.scumm6_container import Scumm6Container
-from ..src.message import parse_message
+from src.scumm6_opcodes import Scumm6Opcodes
+from src.scumm6_container import Scumm6Container
+from src.message import parse_message
 
 from typing import Any, NamedTuple, List
 

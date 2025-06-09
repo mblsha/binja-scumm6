@@ -1,4 +1,5 @@
 import os
+import pytest
 from . import converter
 
 lecf_path = os.path.join(
@@ -7,6 +8,9 @@ lecf_path = os.path.join(
 )
 
 rnam_path = lecf_path.replace(".001", ".000")
+
+if not os.path.exists(lecf_path) or not os.path.exists(rnam_path):
+    pytest.skip("DOTTDEMO sample not available", allow_module_level=True)
 
 
 def test_converter() -> None:

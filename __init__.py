@@ -1,9 +1,19 @@
 from binja_helpers.binja_helpers import binja_api  # noqa: F401
-from binaryninja import core_ui_enabled
+try:  # pragma: no cover - optional Binary Ninja dependency
+    from binaryninja import core_ui_enabled
+except Exception:  # pragma: no cover - Binary Ninja not available
+    def core_ui_enabled() -> bool:
+        return False
 
-from .src.scumm6 import Scumm6
+try:
+    from .src.scumm6 import Scumm6
+except Exception:
+    try:  # pragma: no cover - fallback when package layout differs
+        from src.scumm6 import Scumm6
+    except Exception:
+        Scumm6 = None  # type: ignore[misc]
 
-if core_ui_enabled():
+if Scumm6 is not None and core_ui_enabled():
     Scumm6.register()
 
     from .src.view import Scumm6View

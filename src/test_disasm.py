@@ -7,6 +7,7 @@ from .scumm6_opcodes import Scumm6Opcodes
 
 import os
 from pprint import pprint
+import pytest
 
 
 OpType = Scumm6Opcodes.OpType
@@ -17,6 +18,8 @@ VarType = Scumm6Opcodes.VarType
 lecf_path = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "DOTTDEMO.bsc6"
 )
+if not os.path.exists(lecf_path):
+    pytest.skip("DOTTDEMO sample not available", allow_module_level=True)
 with open(lecf_path, "rb") as f:
     lecf = f.read()
 
