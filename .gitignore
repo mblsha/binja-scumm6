@@ -2,6 +2,7 @@ __pycache__
 _scripts
 .pytest_cache
 .mypy_cache
+*.egg-info
 
 *.code-workspace
 Session.vim
