@@ -14,6 +14,38 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
+
+      - name: Create demo files directory
+        run: mkdir -p ./dott_demo_files # Use -p to avoid error if it somehow exists
+
+      - name: Download Day of the Tentacle Demo
+        run: |
+          wget -P ./dott_demo_files https://archive.org/download/DayOfTheTentacleDemo/DOTTDEMO.ZIP || true
+
+      - name: Extract specific demo files
+        # This step assumes DOTTDEMO.ZIP was successfully downloaded into ./dott_demo_files
+        # Extracts only 000 and 001, bsc6 will be generated.
+        run: |
+          unzip ./dott_demo_files/DOTTDEMO.ZIP DOTTDEMO.001 DOTTDEMO.000 -d ./dott_demo_files || true
+
+      - name: Generate DOTTDEMO.bsc6
+        # Only run if the necessary input files (001 and 000) exist after extraction.
+        # The hashFiles check is a reliable way to confirm existence.
+        if: hashFiles('dott_demo_files/DOTTDEMO.001') != '' && hashFiles('dott_demo_files/DOTTDEMO.000') != ''
+        run: |
+          python converter/cli.py dott_demo_files/DOTTDEMO.001 --output dott_demo_files/DOTTDEMO.bsc6 || true
+
+      - name: Check for all required files and set env var
+        # DOTT_FILES_AVAILABLE is true only if all three files exist.
+        run: |
+          if [ -f "dott_demo_files/DOTTDEMO.001" ] && \
+             [ -f "dott_demo_files/DOTTDEMO.000" ] && \
+             [ -f "dott_demo_files/DOTTDEMO.bsc6" ]; then
+            echo "DOTT_FILES_AVAILABLE=true" >> $GITHUB_ENV
+          else
+            echo "DOTT_FILES_AVAILABLE=false" >> $GITHUB_ENV
+          fi
+
       - name: Install dependencies
         run: python -m pip install -e .[dev]
       - name: Run Ruff

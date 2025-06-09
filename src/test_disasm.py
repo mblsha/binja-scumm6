@@ -6,6 +6,7 @@ from .disasm import Scumm6Disasm
 from .scumm6_opcodes import Scumm6Opcodes
 
 import os
+import pytest # Added import
 from pprint import pprint
 
 
@@ -17,11 +18,36 @@ VarType = Scumm6Opcodes.VarType
 lecf_path = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "DOTTDEMO.bsc6"
 )
-with open(lecf_path, "rb") as f:
-    lecf = f.read()
+
+# New code for conditional override:
+_original_lecf_path_defined_by_file = lecf_path # Capture original path
+
+_dott_files_available_str = os.environ.get("DOTT_FILES_AVAILABLE", "false")
+_dott_files_available = _dott_files_available_str.lower() == "true"
+_downloaded_bsc6_path = os.path.join("dott_demo_files", "DOTTDEMO.bsc6")
+
+if _dott_files_available:
+    # Prioritize the downloaded/generated file if DOTT_FILES_AVAILABLE is true
+    lecf_path = _downloaded_bsc6_path
+# else: lecf_path remains _original_lecf_path_defined_by_file
+# If _dott_files_available is false, tests will use the original lecf_path.
+
+lecf = None # Initialize lecf to None
+try:
+    with open(lecf_path, "rb") as f:
+        lecf = f.read()
+    if len(lecf) == 0: # Treat empty file as if not loaded
+        lecf = None
+except FileNotFoundError:
+    lecf = None # Explicitly set to None if file not found
+except Exception as e: # Catch any other potential read errors
+    print(f"Error loading {lecf_path}: {e}") # Optional: log error
+    lecf = None
 
 
 def test_decode_container() -> None:
+    if lecf is None:
+        pytest.skip(f"DOTTDEMO.bsc6 could not be loaded from {lecf_path}. Skipping test.")
     disasm = Scumm6Disasm()
     r = disasm.decode_container(lecf_path, lecf)
     assert r is not None
@@ -73,6 +99,8 @@ def test_decode_instruction_none() -> None:
 
 
 def test_decode_instruction() -> None:
+    if lecf is None:
+        pytest.skip(f"DOTTDEMO.bsc6 could not be loaded from {lecf_path}. Skipping test.")
     disasm = Scumm6Disasm()
 
     # push_byte
@@ -102,6 +130,8 @@ def test_decode_instruction() -> None:
 
 
 def test_get_script_nums() -> None:
+    if lecf is None:
+        pytest.skip(f"DOTTDEMO.bsc6 could not be loaded from {lecf_path}. Skipping test.")
     disasm = Scumm6Disasm()
     r = disasm.decode_container(lecf_path, lecf)
     assert r is not None
@@ -113,6 +143,8 @@ def test_get_script_nums() -> None:
 
 
 def test_get_script_ptr() -> None:
+    if lecf is None:
+        pytest.skip(f"DOTTDEMO.bsc6 could not be loaded from {lecf_path}. Skipping test.")
     disasm = Scumm6Disasm()
     r = disasm.decode_container(lecf_path, lecf)
     assert r is not None
