@@ -6,10 +6,16 @@ from mypy import api
 # Ensure repository root is in sys.path so sc62015 can be imported when the
 # script is run from the 'scripts' directory.
 repo_root = Path(__file__).resolve().parent.parent
-sys.path.append(str(repo_root))
+# Prepend the repository root so our in-tree packages are always preferred
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
+
+# ``binja_helpers`` itself contains a nested package with the same name.
+# Add that directory explicitly to handle relative imports when the package
+# isn't installed system-wide.
 helper_dir = repo_root / "binja_helpers" / "binja_helpers"
 if helper_dir.is_dir() and str(helper_dir) not in sys.path:
-    sys.path.insert(0, str(helper_dir))
+    sys.path.insert(1, str(helper_dir))
 
 bn_path = os.path.expanduser(
     "~/Applications/Binary Ninja.app/Contents/Resources/python/"
