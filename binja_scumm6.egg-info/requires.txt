@@ -1,0 +1,7 @@
+kaitaistruct
+
+[dev]
+pytest
+pytest-cov
+mypy
+ruff
