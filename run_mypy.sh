@@ -1,3 +1,2 @@
 #!/usr/bin/env bash
-
-mypy --explicit-package-bases .
+python scripts/run_mypy.py

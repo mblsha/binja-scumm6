@@ -20,6 +20,6 @@ if _helper_dir.is_dir() and str(_helper_dir) not in sys.path:
 # Import for side effects.  Expose as ``binja_helpers.binja_api`` for callers
 # that might expect to access it via this module.
 # noqa: E402 because this import must occur after modifying ``sys.path`` above.
-from binja_helpers import binja_api  # noqa: E402,F401
+from binja_helpers import binja_api  # type: ignore[attr-defined]  # noqa: E402,F401
 
 

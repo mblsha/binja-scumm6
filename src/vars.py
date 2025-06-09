@@ -226,7 +226,7 @@ def il_set_var(il: lowlevelil.LowLevelILFunction, block: Any, value: Any) -> Any
 # ScummEngine_v6::defineArray(int array, int type, int dim2, int dim1)
 
 def il_array_item_addr(
-    il: lowlevelil.LowLevelILFunction, array: int, index: Any, base: Any
+    il: lowlevelil.LowLevelILFunction, array: int, index: Any
 ) -> Any:
     array_size = VAR_ARRAY_ITEM_SIZE * VAR_ARRAY_NUM_ITEMS
     array_start = il.const_pointer(4, ARRAYS_START + array * array_size)
@@ -235,8 +235,9 @@ def il_array_item_addr(
     )
 
 
-def il_get_array(il: lowlevelil.LowLevelILFunction, array: int, index: int,
-                 base: int) -> Any:
+def il_get_array(
+    il: lowlevelil.LowLevelILFunction, array: int, index: int, base: int
+) -> Any:
     return il.load(
         VAR_ARRAY_ITEM_SIZE,
         il_array_item_addr(il, array, index),
@@ -248,6 +249,6 @@ def il_set_array(
 ) -> Any:
     return il.store(
         VAR_ARRAY_ITEM_SIZE,
-        il_array_item_addr(il, array, index, base),
+        il_array_item_addr(il, array, index),
         value,
     )

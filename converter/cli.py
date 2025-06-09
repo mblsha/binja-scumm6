@@ -4,7 +4,7 @@ import argparse
 from . import converter
 
 
-def valid_file_type(filename):
+def valid_file_type(filename: str) -> str:
     if not (filename.endswith(".000") or filename.endswith(".001")):
         raise argparse.ArgumentTypeError(
             f'File "{filename}" must have a .000 or .001 extension'
@@ -12,7 +12,7 @@ def valid_file_type(filename):
     return filename
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Convert SCUMM6 for analysis")
     parser.add_argument(
         "input_file",
