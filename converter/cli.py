@@ -1,7 +1,18 @@
 #!/usr/bin/env python
 
 import argparse
-from . import converter
+from pathlib import Path
+import importlib
+import importlib.util
+
+if __package__ is None or __package__ == "":
+    module_path = Path(__file__).resolve().parent / "converter.py"
+    spec = importlib.util.spec_from_file_location("converter", module_path)
+    assert spec and spec.loader
+    converter = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(converter)
+else:
+    from . import converter
 
 
 def valid_file_type(filename: str) -> str:
@@ -25,17 +36,20 @@ def main() -> None:
     args = parser.parse_args()
 
     output_file = args.output
-    files = sorted(args.input_file)
-    lecf_path, rnamn_path = files
-    if not lecf_path.endswith(".000"):
-        raise argparse.ArgumentTypeError(f"{lecf_path} must have a .000 extension")
-    if not rnamn_path.endswith(".001"):
-        raise argparse.ArgumentTypeError(f"{rnamn_path} must have a .001 extension")
+    lecf_data = None
+    rnam_data = None
+    for path in args.input_file:
+        data = converter.read_xored_data(path)
+        header = data[:4]
+        if header == b"LECF":
+            lecf_data = data
+        elif header == b"RNAM":
+            rnam_data = data
+        else:
+            raise argparse.ArgumentTypeError(f"{path} is not a valid SCUMM6 file")
 
-    lecf_data = converter.read_xored_data(lecf_path)
-    rnam_data = converter.read_xored_data(rnamn_path)
-    assert lecf_data[:4] == b"LECF"
-    assert rnam_data[:4] == b"RNAM"
+    if lecf_data is None or rnam_data is None:
+        raise argparse.ArgumentTypeError("Both .000 and .001 files are required")
 
     bsc6 = converter.read_resources(lecf_data, rnam_data)
     with open(output_file, "wb") as f:
