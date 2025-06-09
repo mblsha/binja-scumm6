@@ -11,3 +11,4 @@ Session.vim
 *.bsc6
 *.000
 *.001
+binja_esr.egg-info

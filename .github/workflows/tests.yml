@@ -16,6 +16,13 @@ jobs:
           python-version: '3.11'
       - name: Install dependencies
         run: python -m pip install -e .[dev]
+      - name: Download demo data
+        run: |
+          curl -L -o DOTTDEMO.ZIP https://archive.org/download/DayOfTheTentacleDemo/DOTTDEMO.ZIP || true
+          if [ -f DOTTDEMO.ZIP ]; then
+            unzip -q DOTTDEMO.ZIP
+            python converter/cli.py DOTTDEMO.000 DOTTDEMO.001 -o DOTTDEMO.bsc6
+          fi
       - name: Run Ruff
         run: ruff check
       - name: Run Mypy and Flake8

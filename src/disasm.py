@@ -9,6 +9,8 @@ from typing import Any, Dict, List, Tuple, Optional, NamedTuple
 from dataclasses import dataclass, field
 from .sorted_list import SortedList
 
+SEGMENT_CODE_FLAG = getattr(SegmentFlag, "SegmentContainsCode", SegmentFlag.SegmentExecutable)
+
 BlockType = Scumm6Container.BlockType
 
 
@@ -137,7 +139,7 @@ def get_script_addrs(block: Any, state: State, pos: int = 0) -> List[ScriptAddr]
                 end=pos + block.block_size,
                 name=f"room{room.num}_{name}",
                 create_function=True,
-                segment_flag=SegmentFlag.SegmentContainsCode,
+                segment_flag=SEGMENT_CODE_FLAG,
                 section_semantics=SectionSemantics.ReadOnlyCodeSectionSemantics,
             )
         )
@@ -158,7 +160,7 @@ def get_script_addrs(block: Any, state: State, pos: int = 0) -> List[ScriptAddr]
                 end=pos + block.block_size,
                 name=f"room{room.num}_{name}",
                 create_function=True,
-                segment_flag=SegmentFlag.SegmentContainsCode,
+                segment_flag=SEGMENT_CODE_FLAG,
                 section_semantics=SectionSemantics.ReadOnlyCodeSectionSemantics,
             )
         )

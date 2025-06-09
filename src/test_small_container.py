@@ -1,5 +1,3 @@
-import pytest
-
 from .disasm import Scumm6Disasm
 
 SMALL_BSC6 = (

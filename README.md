@@ -9,7 +9,9 @@ scripts, nor the shared memory access.
 
 Before opening the files, the .000 + .001 files from the game need to be
 converted to the .bsc6 format that de-xors them, squashes them together and
-extracts all the strings to a separate section.
+extracts all the strings to a separate section. The demo files can be obtained
+from
+[archive.org](https://archive.org/download/DayOfTheTentacleDemo/DOTTDEMO.ZIP).
 
 ```
 $ python converter/cli.py DOTTDEMO.000 DOTTDEMO.001 -o dottdemo.bsc6
