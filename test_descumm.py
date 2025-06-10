@@ -11,7 +11,6 @@ This module provides:
 
 import unittest
 import tempfile
-import shutil
 from pathlib import Path
 from typing import List, Optional, Tuple
 import subprocess

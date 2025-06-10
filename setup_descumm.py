@@ -18,7 +18,7 @@ import subprocess
 import urllib.request
 import zipfile
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import Optional, List
 import tempfile
 
 
@@ -285,18 +285,18 @@ exit(1)
             print(f"✅ Completed: {step_name}")
         
         # Extract and test script
-        print(f"\n📋 Extracting test script...")
+        print("\n📋 Extracting test script...")
         test_script = self.extract_test_script()
         if not test_script:
             print("❌ Failed to extract test script")
             return False
-        print(f"✅ Extracted test script")
+        print("✅ Extracted test script")
         
-        print(f"\n📋 Testing descumm tool...")
+        print("\n📋 Testing descumm tool...")
         if not self.test_descumm_tool(test_script):
             print("❌ Descumm tool test failed")
             return False
-        print(f"✅ Descumm tool test passed")
+        print("✅ Descumm tool test passed")
         
         print("\n🎉 Setup completed successfully!")
         print(f"Descumm tool is available at: {self.descumm_path}")
