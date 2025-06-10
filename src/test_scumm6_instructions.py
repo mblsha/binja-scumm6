@@ -11,15 +11,22 @@ Each test case focuses on a specific OpType and verifies both the
 disassembly output and the LLIL representation.
 """
 
+from dataclasses import dataclass
+from typing import Dict, List, Optional
+
+import pytest
+
 from binja_helpers.binja_helpers import binja_api  # noqa: F401
 
-from .disasm import Scumm6Disasm, Instruction
+from .disasm import Instruction, Scumm6Disasm
 from .scumm6_opcodes import Scumm6Opcodes
 
-from typing import List, Dict
-
 # Import test utilities from binja_helpers
-from binja_helpers.binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL, mllil
+from binja_helpers.binja_helpers.mock_llil import (
+    MockLLIL,
+    MockLowLevelILFunction,
+    mllil,
+)
 
 OpType = Scumm6Opcodes.OpType
 VarType = Scumm6Opcodes.VarType
@@ -202,11 +209,6 @@ def lift_instruction(instruction: Instruction, addr: int = 0x1234) -> List[MockL
         il.append(mllil("UNIMPL", []))
     
     return il.ils
-
-
-from dataclasses import dataclass
-from typing import Optional
-import pytest
 
 
 @dataclass
