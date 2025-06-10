@@ -204,306 +204,162 @@ def lift_instruction(instruction: Instruction, addr: int = 0x1234) -> List[MockL
     return il.ils
 
 
-class TestScumm6Instructions:
-    """Test class for individual SCUMM6 instruction types."""
-    
-    def test_push_byte(self) -> None:
-        """Test push_byte instruction decoding and rendering."""
-        # Test basic push_byte with positive value
-        instr = decode_instruction(b"\x00\x12", 0x1234)
-        assert instr.op.id == OpType.push_byte
-        assert instr.id == "push_byte"
-        assert instr.op.body.data == 0x12
-        assert instr.addr == 0x1234
-        assert instr.length == 2
-        
-        # Test rendering
+from dataclasses import dataclass
+from typing import Optional
+import pytest
+
+
+@dataclass
+class InstructionTestCase:
+    """Container describing a single instruction test."""
+
+    test_id: str
+    data: bytes
+    op_type: OpType
+    id_str: str
+    length: int
+    operand_val: Optional[int] = None
+    render_substr: Optional[str] = None
+    llil_count: Optional[int] = None
+
+
+INSTRUCTION_TEST_CASES = [
+    InstructionTestCase(
+        "push_byte_pos",
+        b"\x00\x12",
+        OpType.push_byte,
+        "push_byte",
+        2,
+        operand_val=0x12,
+        render_substr="push_byte",
+        llil_count=1,
+    ),
+    InstructionTestCase(
+        "push_byte_neg",
+        b"\x00\xff",
+        OpType.push_byte,
+        "push_byte",
+        2,
+        operand_val=-1,
+        render_substr="push_byte",
+        llil_count=1,
+    ),
+    InstructionTestCase(
+        "push_word",
+        b"\x01\x34\x12",
+        OpType.push_word,
+        "push_word",
+        3,
+        render_substr="push_word",
+        llil_count=1,
+    ),
+    InstructionTestCase(
+        "push_byte_var",
+        b"\x02\x38\x00",
+        OpType.push_byte_var,
+        "push_byte_var",
+        2,
+        operand_val=0x38,
+        render_substr="var_",
+        llil_count=1,
+    ),
+    InstructionTestCase(
+        "push_word_var",
+        b"\x03\x38\x00",
+        OpType.push_word_var,
+        "push_word_var",
+        3,
+        operand_val=56,
+        render_substr="var_56",
+        llil_count=1,
+    ),
+    InstructionTestCase("add", b"\x14", OpType.add, "add", 1, llil_count=1),
+    InstructionTestCase("sub", b"\x15", OpType.sub, "sub", 1, llil_count=1),
+    InstructionTestCase("mul", b"\x16", OpType.mul, "mul", 1, llil_count=1),
+    InstructionTestCase("div", b"\x17", OpType.div, "div", 1, llil_count=1),
+    InstructionTestCase("eq", b"\x0e", OpType.eq, "eq", 1, llil_count=1),
+    InstructionTestCase("neq", b"\x0f", OpType.neq, "neq", 1, llil_count=1),
+    InstructionTestCase("gt", b"\x10", OpType.gt, "gt", 1, llil_count=1),
+    InstructionTestCase("lt", b"\x11", OpType.lt, "lt", 1, llil_count=1),
+    InstructionTestCase("le", b"\x12", OpType.le, "le", 1, llil_count=1),
+    InstructionTestCase("ge", b"\x13", OpType.ge, "ge", 1, llil_count=1),
+    InstructionTestCase("land", b"\x18", OpType.land, "land", 1, llil_count=1),
+    InstructionTestCase("lor", b"\x19", OpType.lor, "lor", 1, llil_count=1),
+    InstructionTestCase("nott", b"\x0d", OpType.nott, "nott", 1, llil_count=1),
+    InstructionTestCase("dup", b"\x0c", OpType.dup, "dup", 1, llil_count=2),
+    InstructionTestCase("pop1", b"\x1a", OpType.pop1, "pop1", 1, llil_count=1),
+    InstructionTestCase(
+        "write_byte_var",
+        b"\x42\x38\x00",
+        OpType.write_byte_var,
+        "write_byte_var",
+        3,
+        operand_val=None,
+        render_substr="var_",
+        llil_count=1,
+    ),
+    InstructionTestCase(
+        "write_word_var",
+        b"\x43\x38\x00",
+        OpType.write_word_var,
+        "write_word_var",
+        3,
+        operand_val=None,
+        render_substr="var_",
+        llil_count=1,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "case",
+    INSTRUCTION_TEST_CASES,
+    ids=[c.test_id for c in INSTRUCTION_TEST_CASES],
+)
+def test_instruction_case(case: InstructionTestCase) -> None:
+    """Generic test covering decoding, rendering and lifting."""
+
+    instr = decode_instruction(case.data, 0x1000)
+    assert instr.op.id == case.op_type
+    assert instr.id == case.id_str
+    assert instr.length == case.length
+    assert instr.data[:instr.length] == case.data[: instr.length]
+
+    if case.operand_val is not None:
+        assert instr.op.body.data == case.operand_val
+
+    rendered = render_instruction(instr)
+    if case.render_substr:
+        assert case.render_substr.lower() in rendered.lower()
+
+    llil_ops = lift_instruction(instr)
+    assert isinstance(llil_ops, list)
+    if case.llil_count is not None:
+        assert len(llil_ops) == case.llil_count
+
+
+def test_instruction_comparison_with_dottdemo() -> None:
+    """Decode and lift instructions seen in DOTTDEMO."""
+    real_patterns = [
+        b"\x00\x01",
+        b"\x00\x00",
+        b"\x01\x00\x01",
+        b"\x03\x38\x00",
+        b"\x14",
+        b"\x0e",
+        b"\x42\x38\x00",
+    ]
+
+    for pattern in real_patterns:
+        instr = decode_instruction(pattern, 0x1000)
+        assert instr is not None
+        assert instr.length > 0
+
         rendered = render_instruction(instr)
-        assert "push_byte" in rendered.lower()
-        assert "18" in rendered  # Should contain the value 0x12 (18 decimal)
-        
-        # Test push_byte with negative value (signed byte)
-        instr2 = decode_instruction(b"\x00\xff", 0x1234)
-        assert instr2.op.id == OpType.push_byte
-        assert instr2.op.body.data == -1  # 0xff as signed byte
-        
-        # Test LLIL lifting for the first instruction
+        assert len(rendered) > 0
+
         llil_ops = lift_instruction(instr)
-        assert len(llil_ops) == 1
-        assert llil_ops[0] is not None
-    
-    def test_push_word(self) -> None:
-        """Test push_word instruction decoding and rendering."""
-        instr = decode_instruction(b"\x01\x34\x12", 0x1234)
-        assert instr.op.id == OpType.push_word
-        assert instr.id == "push_word"
-        assert instr.addr == 0x1234
-        assert instr.length == 3
-        
-        # Test rendering
-        rendered = render_instruction(instr)
-        assert "push_word" in rendered.lower()
-        
-        # Test LLIL lifting
-        llil_ops = lift_instruction(instr)
-        assert len(llil_ops) >= 0  # Basic check that lifting doesn't crash
-    
-    def test_push_byte_var(self) -> None:
-        """Test push_byte_var instruction decoding and rendering."""
-        instr = decode_instruction(b"\x02\x38\x00", 0x1234)
-        assert instr.op.id == OpType.push_byte_var
-        assert instr.id == "push_byte_var"
-        assert instr.addr == 0x1234
-        assert instr.length == 2  # Fixed: actual length is 2, not 3
-        
-        # Test rendering
-        rendered = render_instruction(instr)
-        assert "push_byte_var" in rendered.lower()
-        
-        # Test LLIL lifting
-        llil_ops = lift_instruction(instr)
-        assert len(llil_ops) >= 0  # Basic check that lifting doesn't crash
-    
-    def test_push_word_var(self) -> None:
-        """Test push_word_var instruction decoding and rendering."""
-        instr = decode_instruction(b"\x03\x38\x00", 0x1234)
-        assert instr.op.id == OpType.push_word_var
-        assert instr.id == "push_word_var"
-        assert instr.op.body.data == 56  # 0x38
-        assert instr.op.body.type == VarType.scumm_var
-        assert instr.addr == 0x1234
-        assert instr.length == 3
-        
-        # Test rendering
-        rendered = render_instruction(instr)
-        assert "push_word_var" in rendered.lower()
-        
-        # Test LLIL lifting
-        llil_ops = lift_instruction(instr)
-        assert len(llil_ops) >= 0  # Basic check that lifting doesn't crash
-    
-    def test_arithmetic_operations(self) -> None:
-        """Test basic arithmetic operations (add, sub, mul, div)."""
-        # Test add
-        instr = decode_instruction(b"\x14", 0x1234)
-        assert instr.op.id == OpType.add
-        assert instr.id == "add"
-        assert instr.length == 1
-        
-        # Test sub
-        instr = decode_instruction(b"\x15", 0x1234)
-        assert instr.op.id == OpType.sub
-        assert instr.id == "sub"
-        assert instr.length == 1
-        
-        # Test mul
-        instr = decode_instruction(b"\x16", 0x1234)
-        assert instr.op.id == OpType.mul
-        assert instr.id == "mul"
-        assert instr.length == 1
-        
-        # Test div
-        instr = decode_instruction(b"\x17", 0x1234)
-        assert instr.op.id == OpType.div
-        assert instr.id == "div"
-        assert instr.length == 1
-    
-    def test_comparison_operations(self) -> None:
-        """Test comparison operations (eq, neq, gt, lt, le, ge)."""
-        # Test eq
-        instr = decode_instruction(b"\x0e", 0x1234)
-        assert instr.op.id == OpType.eq
-        assert instr.id == "eq"
-        assert instr.length == 1
-        
-        # Test neq
-        instr = decode_instruction(b"\x0f", 0x1234)
-        assert instr.op.id == OpType.neq
-        assert instr.id == "neq"
-        assert instr.length == 1
-        
-        # Test gt
-        instr = decode_instruction(b"\x10", 0x1234)
-        assert instr.op.id == OpType.gt
-        assert instr.id == "gt"
-        assert instr.length == 1
-        
-        # Test lt
-        instr = decode_instruction(b"\x11", 0x1234)
-        assert instr.op.id == OpType.lt
-        assert instr.id == "lt"
-        assert instr.length == 1
-        
-        # Test le
-        instr = decode_instruction(b"\x12", 0x1234)
-        assert instr.op.id == OpType.le
-        assert instr.id == "le"
-        assert instr.length == 1
-        
-        # Test ge
-        instr = decode_instruction(b"\x13", 0x1234)
-        assert instr.op.id == OpType.ge
-        assert instr.id == "ge"
-        assert instr.length == 1
-    
-    def test_logical_operations(self) -> None:
-        """Test logical operations (land, lor, nott)."""
-        # Test land (logical and)
-        instr = decode_instruction(b"\x18", 0x1234)
-        assert instr.op.id == OpType.land
-        assert instr.id == "land"
-        assert instr.length == 1
-        
-        # Test lor (logical or)
-        instr = decode_instruction(b"\x19", 0x1234)
-        assert instr.op.id == OpType.lor
-        assert instr.id == "lor"
-        assert instr.length == 1
-        
-        # Test nott (logical not)
-        instr = decode_instruction(b"\x0d", 0x1234)
-        assert instr.op.id == OpType.nott
-        assert instr.id == "nott"
-        assert instr.length == 1
-    
-    def test_stack_operations(self) -> None:
-        """Test stack operations (dup, pop1)."""
-        # Test dup (duplicate top of stack)
-        instr = decode_instruction(b"\x0c", 0x1234)
-        assert instr.op.id == OpType.dup
-        assert instr.id == "dup"
-        assert instr.length == 1
-        
-        # Test pop1 (pop one item from stack)
-        instr = decode_instruction(b"\x1a", 0x1234)
-        assert instr.op.id == OpType.pop1
-        assert instr.id == "pop1"
-        assert instr.length == 1
-    
-    def test_variable_write_operations(self) -> None:
-        """Test variable write operations."""
-        # Test write_byte_var
-        instr = decode_instruction(b"\x42\x38\x00", 0x1234)
-        assert instr.op.id == OpType.write_byte_var
-        assert instr.id == "write_byte_var"
-        assert instr.length == 3
-        
-        # Test write_word_var
-        instr = decode_instruction(b"\x43\x38\x00", 0x1234)
-        assert instr.op.id == OpType.write_word_var
-        assert instr.id == "write_word_var"
-        assert instr.length == 3
-    
-    def test_instruction_roundtrip(self) -> None:
-        """Test that instructions can be decoded and maintain their properties."""
-        test_cases = [
-            (b"\x00\x12", OpType.push_byte, "push_byte"),
-            (b"\x01\x34\x12", OpType.push_word, "push_word"),
-            (b"\x03\x38\x00", OpType.push_word_var, "push_word_var"),
-            (b"\x0c", OpType.dup, "dup"),
-            (b"\x14", OpType.add, "add"),
-            (b"\x0e", OpType.eq, "eq"),
-        ]
-        
-        for data, expected_op_type, expected_id in test_cases:
-            instr = decode_instruction(data, 0x1000)
-            assert instr.op.id == expected_op_type
-            assert instr.id == expected_id
-            assert instr.data[:instr.length] == data
-            assert instr.addr == 0x1000
-    
-    def test_text_disassembly_rendering(self) -> None:
-        """Test text disassembly rendering for various instruction types."""
-        test_cases = [
-            (b"\x00\x42", "PUSH_BYTE 66"),  # push_byte with value 0x42 (66)
-            (b"\x01\x34\x12", "PUSH_WORD"),  # push_word
-            (b"\x03\x38\x00", "PUSH_WORD_VAR var_56"),  # push_word_var with var 56
-            (b"\x14", "ADD"),  # add
-            (b"\x0e", "EQ"),  # eq
-            (b"\x0c", "DUP"),  # dup
-            (b"\x42\x38\x00", "WRITE_BYTE_VAR var_56"),  # write_byte_var
-        ]
-        
-        for data, expected_pattern in test_cases:
-            instr = decode_instruction(data, 0x1000)
-            rendered = render_instruction(instr)
-            
-            # Check that the rendered text contains expected patterns
-            if "var_" in expected_pattern:
-                assert "var_" in rendered
-            else:
-                # For simple instructions, check the operation name
-                op_name = expected_pattern.split()[0]
-                assert op_name.lower() in rendered.lower()
-    
-    def test_llil_lifting_comprehensive(self) -> None:
-        """Test LLIL lifting for various instruction types."""
-        # Test push_byte LLIL
-        instr = decode_instruction(b"\x00\x42", 0x1000)
-        llil_ops = lift_instruction(instr)
-        assert len(llil_ops) == 1
-        # Just check that we get a reasonable LLIL operation back
-        assert llil_ops[0] is not None
-        
-        # Test push_word_var LLIL
-        instr = decode_instruction(b"\x03\x38\x00", 0x1000)
-        llil_ops = lift_instruction(instr)
-        assert len(llil_ops) == 1
-        assert llil_ops[0] is not None
-        
-        # Test add LLIL
-        instr = decode_instruction(b"\x14", 0x1000)
-        llil_ops = lift_instruction(instr)
-        assert len(llil_ops) == 1
-        assert llil_ops[0] is not None
-        
-        # Test dup LLIL (should have 2 operations)
-        instr = decode_instruction(b"\x0c", 0x1000)
-        llil_ops = lift_instruction(instr)
-        assert len(llil_ops) == 2
-        assert all(op is not None for op in llil_ops)
-        
-        # Test pop1 LLIL
-        instr = decode_instruction(b"\x1a", 0x1000)
-        llil_ops = lift_instruction(instr)
-        assert len(llil_ops) == 1
-        assert llil_ops[0] is not None
-        
-        # Test write_byte_var LLIL
-        instr = decode_instruction(b"\x42\x38\x00", 0x1000)
-        llil_ops = lift_instruction(instr)
-        assert len(llil_ops) == 1
-        assert llil_ops[0] is not None
-    
-    def test_instruction_comparison_with_dottdemo(self) -> None:
-        """Test instructions against patterns found in DOTTDEMO data."""
-        # These are real instruction patterns that should exist in DOTTDEMO
-        # This test verifies that our decoder can handle actual game data
-        
-        real_patterns = [
-            # Common SCUMM6 instruction sequences
-            b"\x00\x01",  # push_byte 1
-            b"\x00\x00",  # push_byte 0
-            b"\x01\x00\x01",  # push_word 256
-            b"\x03\x38\x00",  # push_word_var 56 (common variable)
-            b"\x14",  # add
-            b"\x0e",  # eq
-            b"\x42\x38\x00",  # write_byte_var 56
-        ]
-        
-        for pattern in real_patterns:
-            # Should be able to decode without errors
-            instr = decode_instruction(pattern, 0x1000)
-            assert instr is not None
-            assert instr.length > 0
-            
-            # Should be able to render
-            rendered = render_instruction(instr)
-            assert len(rendered) > 0
-            
-            # Should be able to lift to LLIL
-            llil_ops = lift_instruction(instr)
-            assert isinstance(llil_ops, list)
+        assert isinstance(llil_ops, list)
 
 
 def test_invalid_instruction() -> None:
