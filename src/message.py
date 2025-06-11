@@ -1,6 +1,6 @@
 from .scumm6_opcodes import Scumm6Opcodes
 
-from typing import List, NamedTuple, Union
+from typing import List, NamedTuple, Union, cast
 
 from enum import Enum, auto
 
@@ -53,7 +53,7 @@ def parse_message(message: Scumm6Opcodes.Message) -> List[Union[str, Part]]:
         if isinstance(p.content, S6Part.Terminator):
             if buf:
                 parts.append(buf)
-        elif isinstance(p.content, S6Part.RegularChar):
+        elif isinstance(cast(object, p.content), S6Part.RegularChar):
             buf += chr(p.content.value)
         else:
             if buf:
