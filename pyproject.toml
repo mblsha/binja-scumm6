@@ -26,3 +26,6 @@ exclude = ["binja_helpers"]
 
 [tool.coverage.run]
 source = ["src"]
+
+[tool.ruff]
+extend-exclude = ["scummvm-tools"]
