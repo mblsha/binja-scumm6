@@ -214,7 +214,24 @@ class Scumm6(Architecture):
         return dis
 
     def decode_instruction(self, data: bytes, addr: int) -> Optional[Instruction]:
-        dis: Optional[Instruction] = self.disasm.decode_instruction(data, addr)
+        dis = self.disasm.decode_instruction(data, addr)
+        if dis and not core_ui_enabled():
+            try:
+                from binja_helpers.binja_helpers.mock_analysis import MockAnalysisInfo
+
+                info = MockAnalysisInfo()
+                info.length = dis.length
+                op = dis.op
+                body = getattr(op, "body", None)
+                if body and getattr(body, "jump_offset", None) is not None:
+                    info.add_branch(
+                        BranchType.TrueBranch,
+                        addr + info.length + body.jump_offset,
+                    )
+                    info.add_branch(BranchType.FalseBranch, addr + info.length)
+                dis = dis._replace(analysis_info=info)
+            except Exception:
+                pass
         return dis
 
     def get_instruction_info(self, data: bytes, addr: int) -> Optional[InstructionInfo]:
