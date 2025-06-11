@@ -195,6 +195,7 @@ class Instruction(NamedTuple):
     length: int
     data: bytes
     addr: int
+    analysis_info: object | None = None
 
 
 class Scumm6Disasm:
