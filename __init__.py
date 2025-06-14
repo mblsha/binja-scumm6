@@ -1,4 +1,11 @@
-from binja_helpers.binja_helpers import binja_api  # noqa: F401
+from pathlib import Path
+import sys
+
+_plugin_dir = str(Path(__file__).resolve().parent)
+if _plugin_dir not in sys.path:
+    sys.path.insert(0, _plugin_dir)
+
+from binja_helpers.binja_helpers import binja_api  # noqa: E402,F401
 try:  # pragma: no cover - optional Binary Ninja dependency
     from binaryninja import core_ui_enabled
 except Exception:  # pragma: no cover - Binary Ninja not available
