@@ -7,7 +7,7 @@ from binaryninja import IntrinsicName
 from ...scumm6_opcodes import Scumm6Opcodes
 
 from .opcodes import Instruction
-from .generic import BinaryStackOp, UnaryStackOp, ComparisonStackOp, VariableWriteOp, ControlFlowOp
+from .generic import BinaryStackOp, UnaryStackOp, ComparisonStackOp, VariableWriteOp, ControlFlowOp, IntrinsicOp
 
 # Import the vars module to use the same LLIL generation logic
 from ... import vars
@@ -685,3 +685,73 @@ class Jump(ControlFlowOp):
         # Unconditional jump to target
         target_addr = addr + 3 + self.op_details.body.jump_offset  # 3 = instruction length
         il.append(il.jump(il.const(4, target_addr)))
+
+
+# =============================================================================
+# Group 3: Complex Engine Intrinsics
+# =============================================================================
+
+class DrawObject(IntrinsicOp):
+    """Draw object with 2 parameters: object ID and state."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "draw_object"
+
+
+class DrawObjectAt(IntrinsicOp):
+    """Draw object at position with 3 parameters: object ID, X, Y."""
+    
+    @property  
+    def intrinsic_name(self) -> str:
+        return "draw_object_at"
+
+
+class DrawBlastObject(IntrinsicOp):
+    """Draw blast object with complex parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "draw_blast_object"
+
+
+class Cutscene(IntrinsicOp):
+    """Start cutscene with variable number of parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "cutscene"
+    
+    @property
+    def pop_count(self) -> int:
+        """Cutscene uses call_func_list which requires complex argument parsing."""
+        # For call_func_list, we need to look at the actual body to determine argument count
+        if hasattr(self.op_details.body, 'args') and hasattr(self.op_details.body.args, '__len__'):
+            return len(self.op_details.body.args)
+        else:
+            # Default to 0 if we can't determine the argument count
+            return 0
+
+
+class EndCutscene(IntrinsicOp):
+    """End cutscene with no parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "end_cutscene"
+
+
+class StopMusic(IntrinsicOp):
+    """Stop music with no parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "stop_music"
+
+
+class FreezeUnfreeze(IntrinsicOp):
+    """Freeze/unfreeze with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "freeze_unfreeze"

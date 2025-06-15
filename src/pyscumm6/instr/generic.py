@@ -256,3 +256,71 @@ class ControlFlowOp(Instruction):
     def is_conditional(self) -> bool:
         """Return True if this is a conditional branch, False for unconditional."""
         pass
+
+
+class IntrinsicOp(Instruction):
+    """Base class for complex engine instructions that map to intrinsic calls."""
+    
+    @property
+    @abstractmethod  
+    def intrinsic_name(self) -> str:
+        """The name of the intrinsic to call."""
+        pass
+    
+    @property
+    def pop_count(self) -> int:
+        """Number of arguments to pop from stack. Can be overridden for complex cases."""
+        # Determine pop count from Kaitai type name
+        body_type_name = type(self.op_details.body).__name__
+        
+        if 'Pop1' in body_type_name:
+            return 1
+        elif 'Pop2' in body_type_name:
+            return 2
+        elif 'Pop3' in body_type_name:
+            return 3
+        elif 'Pop4' in body_type_name:
+            return 4
+        elif 'UnknownOp' in body_type_name:
+            # For UnknownOp, generate double unimplemented call
+            return 0
+        else:
+            return 0
+    
+    @property
+    def push_count(self) -> int:
+        """Number of values to push to stack. Can be overridden for complex cases."""
+        # Determine push count from Kaitai type name
+        body_type_name = type(self.op_details.body).__name__
+        
+        if 'Push' in body_type_name:
+            return 1
+        else:
+            return 0
+    
+    def render(self) -> List[Token]:
+        """Default rendering just shows the intrinsic name."""
+        return [TInstr(self.intrinsic_name)]
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Generate intrinsic call with appropriate parameter and return handling."""
+        # Handle UnknownOp case - generate double unimplemented
+        if isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp):
+            il.append(il.unimplemented())
+            il.append(il.unimplemented())
+            return
+        
+        # Pop arguments from stack
+        params = [il.pop(4) for _ in range(self.pop_count)]
+        
+        # Generate intrinsic call
+        if self.push_count > 0:
+            # Intrinsic with return value
+            outputs = [il.reg(4, LLIL_TEMP(i)) for i in range(self.push_count)]
+            il.append(il.intrinsic(outputs, self.intrinsic_name, params))
+            # Push return values back to stack
+            for out_reg in outputs:
+                il.append(il.push(4, out_reg))
+        else:
+            # Intrinsic without return value
+            il.append(il.intrinsic([], self.intrinsic_name, params))

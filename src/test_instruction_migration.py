@@ -332,6 +332,39 @@ instruction_test_cases = [
         comment="Jump with +100 offset",
         expected_disasm="jump(100)"
     ),
+    # Group 3: Complex Engine Intrinsics
+    InstructionTestCase(
+        test_id="draw_object_0x61",
+        data=b"\x61",
+        comment="Draw object intrinsic",
+        expected_disasm="draw_object"
+    ),
+    InstructionTestCase(
+        test_id="draw_object_at_0x62",
+        data=b"\x62",
+        comment="Draw object at position intrinsic",
+        expected_disasm="draw_object_at"
+    ),
+    # Note: draw_blast_object (0x63) test skipped - requires complex state handling
+    # Note: cutscene (0x68) test skipped - requires complex state handling for call_func_list
+    InstructionTestCase(
+        test_id="end_cutscene_0x67",
+        data=b"\x67",
+        comment="End cutscene intrinsic",
+        expected_disasm="end_cutscene"
+    ),
+    InstructionTestCase(
+        test_id="stop_music_0x69",
+        data=b"\x69",
+        comment="Stop music intrinsic",
+        expected_disasm="stop_music"
+    ),
+    InstructionTestCase(
+        test_id="freeze_unfreeze_0x6a",
+        data=b"\x6a",
+        comment="Freeze/unfreeze intrinsic",
+        expected_disasm="freeze_unfreeze"
+    ),
 ]
 
 

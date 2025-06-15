@@ -83,4 +83,12 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.jump: instructions.Jump,
     Scumm6Opcodes.OpType.write_byte_var: instructions.WriteByteVar,
     Scumm6Opcodes.OpType.write_word_var: instructions.WriteWordVar,
+    # Group 3: Complex Engine Intrinsics
+    Scumm6Opcodes.OpType.draw_object: instructions.DrawObject,
+    Scumm6Opcodes.OpType.draw_object_at: instructions.DrawObjectAt,
+    Scumm6Opcodes.OpType.draw_blast_object: instructions.DrawBlastObject,
+    Scumm6Opcodes.OpType.cutscene: instructions.Cutscene,
+    Scumm6Opcodes.OpType.end_cutscene: instructions.EndCutscene,
+    Scumm6Opcodes.OpType.stop_music: instructions.StopMusic,
+    Scumm6Opcodes.OpType.freeze_unfreeze: instructions.FreezeUnfreeze,
 }

@@ -57,6 +57,11 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 92 | `iff` | `Iff` | ✅ Complete |
 | 93 | `if_not` | `IfNot` | ✅ Complete |
 | 115 | `jump` | `Jump` | ✅ Complete |
+| 97 | `draw_object` | `DrawObject` | ✅ Complete |
+| 98 | `draw_object_at` | `DrawObjectAt` | ✅ Complete |
+| 103 | `end_cutscene` | `EndCutscene` | ✅ Complete |
+| 105 | `stop_music` | `StopMusic` | ✅ Complete |
+| 106 | `freeze_unfreeze` | `FreezeUnfreeze` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -143,21 +148,21 @@ These instructions have full LLIL implementations and should be migrated first:
 These instructions have complex implementations with sub-operations and may be better handled as intrinsics:
 
 ### Game Engine Operations
-- [ ] `draw_object` (97) - Draw object
-- [ ] `draw_object_at` (98) - Draw object at position
+- [x] `draw_object` (97) - Draw object
+- [x] `draw_object_at` (98) - Draw object at position
 - [ ] `draw_blast_object` (99) - Draw blast object
 - [ ] `set_blast_object_window` (100) - Set blast object window
 - [ ] `stamp_object` (205) - Stamp object
 
 ### Cutscene Operations
 - [ ] `cutscene` (104) - Start cutscene
-- [ ] `end_cutscene` (103) - End cutscene
+- [x] `end_cutscene` (103) - End cutscene
 
 ### Audio Operations
 - [ ] `start_sound` (116) - Start sound
 - [ ] `stop_sound` (117) - Stop sound
 - [ ] `start_music` (118) - Start music
-- [ ] `stop_music` (105) - Stop music
+- [x] `stop_music` (105) - Stop music
 - [ ] `is_sound_running` (152) - Check if sound is running
 - [ ] `sound_kludge` (172) - Sound system hack
 - [ ] `stop_talking` (209) - Stop talking
@@ -225,7 +230,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [ ] `stop_sentence` (179) - Stop sentence
 
 ### System Operations
-- [ ] `freeze_unfreeze` (106) - Freeze/unfreeze
+- [x] `freeze_unfreeze` (106) - Freeze/unfreeze
 - [ ] `cursor_command` (107) - Cursor command
 - [ ] `if_class_of_is` (109) - If class of is
 - [ ] `set_class` (110) - Set class
