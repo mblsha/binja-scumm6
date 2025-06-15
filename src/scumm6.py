@@ -17,7 +17,7 @@ from binaryninja.lowlevelil import (
     LowLevelILLabel,
     LLIL_TEMP,
 )
-from binaryninja.function import RegisterInfo, InstructionInfo, InstructionTextToken
+from binaryninja import RegisterInfo, InstructionInfo, InstructionTextToken
 from binaryninja.binaryview import BinaryView
 from binaryninja.enums import (
     Endianness,
