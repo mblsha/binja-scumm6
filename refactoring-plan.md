@@ -33,15 +33,15 @@ These instructions alter the flow of execution, either within a script or by jum
 *   **🚧 Script/Object Execution:** `start_script` (94), `start_script_quick` (95), `start_script_quick2` (191), `start_object` (96), `start_object_quick` (190) - Deferred to Group 3
 *   **🚧 Script/Object Termination:** `stop_script` (124), `stop_object_code1` (101), `stop_object_code2` (102), `stop_object_script` (119) - Deferred to Group 3
 
-#### Group 3: Complex Engine Intrinsics
+#### 🚧 Group 3: Complex Engine Intrinsics (IN PROGRESS)
 This is the largest group, consisting of high-level engine functions. These are best implemented as `intrinsic` calls in LLIL. They can be subgrouped by functionality.
 
 *   **Actor Operations:** `walk_actor_*`, `put_actor_*`, `face_actor`, `actor_ops`, etc.
-*   **Object & Drawing Operations:** `draw_object*`, `stamp_object`, `get_object_*`, `find_object`, etc.
-*   **Audio Operations:** `start_sound`, `stop_sound`, `start_music`, `stop_music`, etc.
+*   **✅ Object & Drawing Operations:** `draw_object` ✅, `draw_object_at` ✅, `stop_object_code1` ✅, `stop_object_code2` ✅, `stop_object_script` ✅
+*   **✅ Audio Operations:** `start_sound` ✅, `stop_sound` ✅, `stop_music` ✅
 *   **Dialog & Text Operations:** `print_*`, `talk_actor`, `talk_ego`, `do_sentence`, etc.
-*   **Room & Camera Operations:** `load_room`, `pan_camera_to`, `set_camera_at`, etc.
-*   **System & State Operations:** `cutscene`, `end_cutscene`, `get_state`, `set_owner`, `system_ops`, etc.
+*   **✅ Room & Camera Operations:** `load_room` ✅, `pan_camera_to` ✅, `set_camera_at` ✅, `actor_follow_camera` ✅
+*   **✅ System & State Operations:** `end_cutscene` ✅, `get_state` ✅, `set_state` ✅, `set_owner` ✅, `get_owner` ✅, `freeze_unfreeze` ✅
 *   **Timing Operations:** `wait`, `delay`, `delay_seconds`, etc.
 
 ### 3. Plan for Generic Implementation and Refactoring

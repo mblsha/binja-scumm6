@@ -395,6 +395,54 @@ instruction_test_cases = [
         comment="Stop sound intrinsic",
         expected_disasm="stop_sound"
     ),
+    InstructionTestCase(
+        test_id="pan_camera_to_0x78",
+        data=b"\x78",
+        comment="Pan camera to position intrinsic",
+        expected_disasm="pan_camera_to"
+    ),
+    InstructionTestCase(
+        test_id="actor_follow_camera_0x79",
+        data=b"\x79",
+        comment="Actor follow camera intrinsic",
+        expected_disasm="actor_follow_camera"
+    ),
+    InstructionTestCase(
+        test_id="set_camera_at_0x7a",
+        data=b"\x7a",
+        comment="Set camera at position intrinsic",
+        expected_disasm="set_camera_at"
+    ),
+    InstructionTestCase(
+        test_id="load_room_0x7b",
+        data=b"\x7b",
+        comment="Load room intrinsic",
+        expected_disasm="load_room"
+    ),
+    InstructionTestCase(
+        test_id="get_state_0x6f",
+        data=b"\x6f",
+        comment="Get state intrinsic",
+        expected_disasm="get_state"
+    ),
+    InstructionTestCase(
+        test_id="set_state_0x70",
+        data=b"\x70",
+        comment="Set state intrinsic",
+        expected_disasm="set_state"
+    ),
+    InstructionTestCase(
+        test_id="set_owner_0x71",
+        data=b"\x71",
+        comment="Set owner intrinsic",
+        expected_disasm="set_owner"
+    ),
+    InstructionTestCase(
+        test_id="get_owner_0x72",
+        data=b"\x72",
+        comment="Get owner intrinsic",
+        expected_disasm="get_owner"
+    ),
 ]
 
 

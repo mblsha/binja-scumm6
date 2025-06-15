@@ -805,3 +805,67 @@ class StopSound(IntrinsicOp):
     @property
     def intrinsic_name(self) -> str:
         return "stop_sound"
+
+
+class PanCameraTo(IntrinsicOp):
+    """Pan camera to position with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "pan_camera_to"
+
+
+class ActorFollowCamera(IntrinsicOp):
+    """Actor follow camera with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "actor_follow_camera"
+
+
+class SetCameraAt(IntrinsicOp):
+    """Set camera at position with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "set_camera_at"
+
+
+class LoadRoom(IntrinsicOp):
+    """Load room with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "load_room"
+
+
+class GetState(IntrinsicOp):
+    """Get state with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_state"
+
+
+class SetState(IntrinsicOp):
+    """Set state with 2 parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "set_state"
+
+
+class SetOwner(IntrinsicOp):
+    """Set owner with 2 parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "set_owner"
+
+
+class GetOwner(IntrinsicOp):
+    """Get owner with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_owner"

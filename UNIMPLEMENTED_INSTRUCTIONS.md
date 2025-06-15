@@ -67,6 +67,14 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 119 | `stop_object_script` | `StopObjectScript` | ✅ Complete |
 | 116 | `start_sound` | `StartSound` | ✅ Complete |
 | 117 | `stop_sound` | `StopSound` | ✅ Complete |
+| 120 | `pan_camera_to` | `PanCameraTo` | ✅ Complete |
+| 121 | `actor_follow_camera` | `ActorFollowCamera` | ✅ Complete |
+| 122 | `set_camera_at` | `SetCameraAt` | ✅ Complete |
+| 123 | `load_room` | `LoadRoom` | ✅ Complete |
+| 111 | `get_state` | `GetState` | ✅ Complete |
+| 112 | `set_state` | `SetState` | ✅ Complete |
+| 113 | `set_owner` | `SetOwner` | ✅ Complete |
+| 114 | `get_owner` | `GetOwner` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -173,12 +181,12 @@ These instructions have complex implementations with sub-operations and may be b
 - [ ] `stop_talking` (209) - Stop talking
 
 ### Camera Operations
-- [ ] `pan_camera_to` (120) - Pan camera to position
-- [ ] `actor_follow_camera` (121) - Actor follow camera
-- [ ] `set_camera_at` (122) - Set camera at position
+- [x] `pan_camera_to` (120) - Pan camera to position
+- [x] `actor_follow_camera` (121) - Actor follow camera
+- [x] `set_camera_at` (122) - Set camera at position
 
 ### Room Operations
-- [ ] `load_room` (123) - Load room
+- [x] `load_room` (123) - Load room
 - [ ] `load_room_with_ego` (133) - Load room with ego
 - [ ] `pseudo_room` (161) - Pseudo room operation
 - [ ] `room_ops` (156) - Room operations (complex)
@@ -239,10 +247,10 @@ These instructions have complex implementations with sub-operations and may be b
 - [ ] `cursor_command` (107) - Cursor command
 - [ ] `if_class_of_is` (109) - If class of is
 - [ ] `set_class` (110) - Set class
-- [ ] `get_state` (111) - Get state
-- [ ] `set_state` (112) - Set state
-- [ ] `set_owner` (113) - Set owner
-- [ ] `get_owner` (114) - Get owner
+- [x] `get_state` (111) - Get state
+- [x] `set_state` (112) - Set state
+- [x] `set_owner` (113) - Set owner
+- [x] `get_owner` (114) - Get owner
 - [ ] `begin_override` (149) - Begin override
 - [ ] `end_override` (150) - End override
 - [ ] `set_object_name` (151) - Set object name

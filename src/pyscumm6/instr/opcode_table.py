@@ -96,4 +96,12 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.stop_object_script: instructions.StopObjectScript,
     Scumm6Opcodes.OpType.start_sound: instructions.StartSound,
     Scumm6Opcodes.OpType.stop_sound: instructions.StopSound,
+    Scumm6Opcodes.OpType.pan_camera_to: instructions.PanCameraTo,
+    Scumm6Opcodes.OpType.actor_follow_camera: instructions.ActorFollowCamera,
+    Scumm6Opcodes.OpType.set_camera_at: instructions.SetCameraAt,
+    Scumm6Opcodes.OpType.load_room: instructions.LoadRoom,
+    Scumm6Opcodes.OpType.get_state: instructions.GetState,
+    Scumm6Opcodes.OpType.set_state: instructions.SetState,
+    Scumm6Opcodes.OpType.set_owner: instructions.SetOwner,
+    Scumm6Opcodes.OpType.get_owner: instructions.GetOwner,
 }
