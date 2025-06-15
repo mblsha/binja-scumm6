@@ -254,6 +254,66 @@ instruction_test_cases = [
         comment="Read from word array 0x1234 (4660)",
         expected_disasm="word_array_read(array_4660)"
     ),
+    InstructionTestCase(
+        test_id="byte_array_indexed_read_0x0a",
+        data=b"\x0a\x05",
+        comment="Indexed read from byte array 5",
+        expected_disasm="byte_array_indexed_read(array_5)"
+    ),
+    InstructionTestCase(
+        test_id="word_array_indexed_read_0x0b",
+        data=b"\x0b\x34\x12",
+        comment="Indexed read from word array 0x1234 (4660)",
+        expected_disasm="word_array_indexed_read(array_4660)"
+    ),
+    InstructionTestCase(
+        test_id="byte_array_write_0x46",
+        data=b"\x46\x05",
+        comment="Write to byte array 5",
+        expected_disasm="byte_array_write(array_5)"
+    ),
+    InstructionTestCase(
+        test_id="word_array_write_0x47",
+        data=b"\x47\x34\x12",
+        comment="Write to word array 0x1234 (4660)",
+        expected_disasm="word_array_write(array_4660)"
+    ),
+    InstructionTestCase(
+        test_id="byte_array_indexed_write_0x4a",
+        data=b"\x4a\x05",
+        comment="Indexed write to byte array 5",
+        expected_disasm="byte_array_indexed_write(array_5)"
+    ),
+    InstructionTestCase(
+        test_id="word_array_indexed_write_0x4b",
+        data=b"\x4b\x34\x12",
+        comment="Indexed write to word array 0x1234 (4660)",
+        expected_disasm="word_array_indexed_write(array_4660)"
+    ),
+    InstructionTestCase(
+        test_id="byte_array_inc_0x52",
+        data=b"\x52",
+        comment="Increment byte array element",
+        expected_disasm="byte_array_inc"
+    ),
+    InstructionTestCase(
+        test_id="word_array_inc_0x53",
+        data=b"\x53",
+        comment="Increment word array element",
+        expected_disasm="word_array_inc"
+    ),
+    InstructionTestCase(
+        test_id="byte_array_dec_0x5a",
+        data=b"\x5a",
+        comment="Decrement byte array element",
+        expected_disasm="byte_array_dec"
+    ),
+    InstructionTestCase(
+        test_id="word_array_dec_0x5b",
+        data=b"\x5b",
+        comment="Decrement word array element",
+        expected_disasm="word_array_dec"
+    ),
 ]
 
 
@@ -264,8 +324,8 @@ def get_old_llil(case: InstructionTestCase) -> List[MockLLIL]:
     LastBV.set(view)  # type: ignore[arg-type]
     arch = OldScumm6Architecture()
     il = MockLowLevelILFunction()
-    
-    # Handle known bug in write_byte_var where it crashes due to Kaitai parsing issue
+
+    # FIXME: Handle known bug in write_byte_var where it crashes due to Kaitai parsing issue
     if case.test_id == "write_byte_var_0x42":
         try:
             arch.get_instruction_low_level_il(case.data, case.addr, il)
@@ -277,7 +337,7 @@ def get_old_llil(case: InstructionTestCase) -> List[MockLLIL]:
             raise
     else:
         arch.get_instruction_low_level_il(case.data, case.addr, il)
-    
+
     return il.ils
 
 
@@ -335,15 +395,15 @@ def test_disasm_consistency(case: InstructionTestCase) -> None:
     """Verify that both implementations produce consistent disassembly."""
     if case.expected_disasm is None:
         pytest.skip("No expected disassembly provided for this test case")
-    
+
     old_disasm = get_old_disasm(case)
     new_disasm = get_new_disasm(case)
-    
+
     # Check that the new implementation matches the expected disassembly exactly
     assert new_disasm == case.expected_disasm, \
         f"New implementation disassembly mismatch for {case.test_id}: " \
         f"expected '{case.expected_disasm}', got '{new_disasm}'"
-    
+
     # For the old implementation, check that it contains the expected instruction name
     # (it may have additional parameters, which is acceptable)
     if old_disasm is not None:
@@ -353,7 +413,7 @@ def test_disasm_consistency(case: InstructionTestCase) -> None:
             f"for {case.test_id}: got '{old_disasm}'"
     else:
         pytest.fail(f"Old implementation returned None for {case.test_id}")
-    
+
     # Verify that both implementations at least agree on the instruction name
     if old_disasm and new_disasm:
         old_instr_name = old_disasm.split('(')[0]

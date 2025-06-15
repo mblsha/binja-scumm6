@@ -374,3 +374,209 @@ class WordArrayRead(Instruction):
             [il.pop(4)]  # parameter: pop base from stack
         ))
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+
+
+class ByteArrayIndexedRead(Instruction):
+
+    def render(self) -> List[Token]:
+        array_id = self.op_details.body.array
+        return [
+            TInstr("byte_array_indexed_read"),
+            TSep("("),
+            TInt(f"array_{array_id}"),
+            TSep(")"),
+        ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.ByteArrayIndexedRead), \
+            f"Expected ByteArrayIndexedRead body, got {type(self.op_details.body)}"
+
+        # Generate intrinsic call to match expected implementation
+        # The intrinsic pops two values from stack (index, base) and pushes the result
+        il.append(il.intrinsic(
+            [il.reg(4, LLIL_TEMP(0))],  # output
+            IntrinsicName("byte_array_indexed_read"),  # intrinsic name
+            [il.pop(4), il.pop(4)]  # parameters: pop index and base from stack
+        ))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+
+
+class WordArrayIndexedRead(Instruction):
+
+    def render(self) -> List[Token]:
+        array_id = self.op_details.body.array
+        return [
+            TInstr("word_array_indexed_read"),
+            TSep("("),
+            TInt(f"array_{array_id}"),
+            TSep(")"),
+        ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.WordArrayIndexedRead), \
+            f"Expected WordArrayIndexedRead body, got {type(self.op_details.body)}"
+
+        # Generate intrinsic call to match expected implementation  
+        # The intrinsic pops two values from stack (index, base) and pushes the result
+        il.append(il.intrinsic(
+            [il.reg(4, LLIL_TEMP(0))],  # output
+            IntrinsicName("word_array_indexed_read"),  # intrinsic name
+            [il.pop(4), il.pop(4)]  # parameters: pop index and base from stack
+        ))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+
+
+class ByteArrayWrite(Instruction):
+
+    def render(self) -> List[Token]:
+        array_id = self.op_details.body.array
+        return [
+            TInstr("byte_array_write"),
+            TSep("("),
+            TInt(f"array_{array_id}"),
+            TSep(")"),
+        ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.ByteArrayWrite), \
+            f"Expected ByteArrayWrite body, got {type(self.op_details.body)}"
+
+        # Generate intrinsic call - pops value and base, pushes result
+        il.append(il.intrinsic(
+            [il.reg(4, LLIL_TEMP(0))],  # output
+            IntrinsicName("byte_array_write"),  # intrinsic name
+            [il.pop(4), il.pop(4)]  # parameters: pop value and base from stack
+        ))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+
+
+class WordArrayWrite(Instruction):
+
+    def render(self) -> List[Token]:
+        array_id = self.op_details.body.array
+        return [
+            TInstr("word_array_write"),
+            TSep("("),
+            TInt(f"array_{array_id}"),
+            TSep(")"),
+        ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.WordArrayWrite), \
+            f"Expected WordArrayWrite body, got {type(self.op_details.body)}"
+
+        # Generate intrinsic call - pops value and base, pushes result
+        il.append(il.intrinsic(
+            [il.reg(4, LLIL_TEMP(0))],  # output
+            IntrinsicName("word_array_write"),  # intrinsic name
+            [il.pop(4), il.pop(4)]  # parameters: pop value and base from stack
+        ))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+
+
+class ByteArrayIndexedWrite(Instruction):
+
+    def render(self) -> List[Token]:
+        array_id = self.op_details.body.array
+        return [
+            TInstr("byte_array_indexed_write"),
+            TSep("("),
+            TInt(f"array_{array_id}"),
+            TSep(")"),
+        ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.ByteArrayIndexedWrite), \
+            f"Expected ByteArrayIndexedWrite body, got {type(self.op_details.body)}"
+
+        # Generate intrinsic call - pops value, index, and base, pushes result
+        il.append(il.intrinsic(
+            [il.reg(4, LLIL_TEMP(0))],  # output
+            IntrinsicName("byte_array_indexed_write"),  # intrinsic name
+            [il.pop(4), il.pop(4), il.pop(4)]  # parameters: pop value, index, base from stack
+        ))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+
+
+class WordArrayIndexedWrite(Instruction):
+
+    def render(self) -> List[Token]:
+        array_id = self.op_details.body.array
+        return [
+            TInstr("word_array_indexed_write"),
+            TSep("("),
+            TInt(f"array_{array_id}"),
+            TSep(")"),
+        ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.WordArrayIndexedWrite), \
+            f"Expected WordArrayIndexedWrite body, got {type(self.op_details.body)}"
+
+        # Generate intrinsic call - pops value, index, and base, pushes result
+        il.append(il.intrinsic(
+            [il.reg(4, LLIL_TEMP(0))],  # output
+            IntrinsicName("word_array_indexed_write"),  # intrinsic name
+            [il.pop(4), il.pop(4), il.pop(4)]  # parameters: pop value, index, base from stack
+        ))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+
+
+class ByteArrayInc(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("byte_array_inc")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp), \
+            f"Expected UnknownOp body, got {type(self.op_details.body)}"
+
+        # These operations are not implemented in the original scumm6.py
+        # They fall through to UnknownOp and generate two unimplemented() calls like other UnknownOp instructions
+        il.append(il.unimplemented())
+        il.append(il.unimplemented())
+
+
+class WordArrayInc(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("word_array_inc")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp), \
+            f"Expected UnknownOp body, got {type(self.op_details.body)}"
+
+        # These operations are not implemented in the original scumm6.py
+        # They fall through to UnknownOp and generate two unimplemented() calls like other UnknownOp instructions
+        il.append(il.unimplemented())
+        il.append(il.unimplemented())
+
+
+class ByteArrayDec(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("byte_array_dec")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp), \
+            f"Expected UnknownOp body, got {type(self.op_details.body)}"
+
+        # These operations are not implemented in the original scumm6.py
+        # They fall through to UnknownOp and generate two unimplemented() calls like other UnknownOp instructions
+        il.append(il.unimplemented())
+        il.append(il.unimplemented())
+
+
+class WordArrayDec(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("word_array_dec")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp), \
+            f"Expected UnknownOp body, got {type(self.op_details.body)}"
+
+        # These operations are not implemented in the original scumm6.py
+        # They fall through to UnknownOp and generate two unimplemented() calls like other UnknownOp instructions
+        il.append(il.unimplemented())
+        il.append(il.unimplemented())

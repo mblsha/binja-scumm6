@@ -44,6 +44,16 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 7 | `word_array_read` | `WordArrayRead` | ✅ Complete |
 | 66 | `write_byte_var` | `WriteByteVar` | ✅ Complete (with known Kaitai bug) |
 | 67 | `write_word_var` | `WriteWordVar` | ✅ Complete |
+| 10 | `byte_array_indexed_read` | `ByteArrayIndexedRead` | ✅ Complete |
+| 11 | `word_array_indexed_read` | `WordArrayIndexedRead` | ✅ Complete |
+| 70 | `byte_array_write` | `ByteArrayWrite` | ✅ Complete |
+| 71 | `word_array_write` | `WordArrayWrite` | ✅ Complete |
+| 74 | `byte_array_indexed_write` | `ByteArrayIndexedWrite` | ✅ Complete |
+| 75 | `word_array_indexed_write` | `WordArrayIndexedWrite` | ✅ Complete |
+| 82 | `byte_array_inc` | `ByteArrayInc` | ✅ Complete (UnknownOp) |
+| 83 | `word_array_inc` | `WordArrayInc` | ✅ Complete (UnknownOp) |
+| 90 | `byte_array_dec` | `ByteArrayDec` | ✅ Complete (UnknownOp) |
+| 91 | `word_array_dec` | `WordArrayDec` | ✅ Complete (UnknownOp) |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -90,16 +100,16 @@ These instructions have full LLIL implementations and should be migrated first:
 ### Array Operations
 - [x] `byte_array_read` (6) - Read from byte array
 - [x] `word_array_read` (7) - Read from word array
-- [ ] `byte_array_indexed_read` (10) - Indexed byte array read
-- [ ] `word_array_indexed_read` (11) - Indexed word array read
-- [ ] `byte_array_write` (70) - Write to byte array
-- [ ] `word_array_write` (71) - Write to word array
-- [ ] `byte_array_indexed_write` (74) - Indexed byte array write
-- [ ] `word_array_indexed_write` (75) - Indexed word array write
-- [ ] `byte_array_inc` (82) - Increment byte array element
-- [ ] `word_array_inc` (83) - Increment word array element
-- [ ] `byte_array_dec` (90) - Decrement byte array element
-- [ ] `word_array_dec` (91) - Decrement word array element
+- [x] `byte_array_indexed_read` (10) - Indexed byte array read
+- [x] `word_array_indexed_read` (11) - Indexed word array read
+- [x] `byte_array_write` (70) - Write to byte array
+- [x] `word_array_write` (71) - Write to word array
+- [x] `byte_array_indexed_write` (74) - Indexed byte array write
+- [x] `word_array_indexed_write` (75) - Indexed word array write
+- [x] `byte_array_inc` (82) - Increment byte array element
+- [x] `word_array_inc` (83) - Increment word array element
+- [x] `byte_array_dec` (90) - Decrement byte array element
+- [x] `word_array_dec` (91) - Decrement word array element
 
 ### Control Flow
 - [ ] `iff` (92) - If true (conditional branch)
