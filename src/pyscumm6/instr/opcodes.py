@@ -1,11 +1,11 @@
 # src/pyscumm6/instr/opcodes.py
-from typing import List, Optional, Generator
+from typing import List, Optional, Any
 from binja_helpers.tokens import Token
 from binaryninja.lowlevelil import LowLevelILFunction
 from binaryninja.function import InstructionInfo
 
 class Instruction:
-    def __init__(self, op_details, length: int):
+    def __init__(self, op_details: Any, length: int):
         self.op_details = op_details # The Kaitai-decoded object
         self._length = length
 
@@ -23,4 +23,3 @@ class Instruction:
 
     def length(self) -> int:
         return self._length
-
