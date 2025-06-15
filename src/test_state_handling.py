@@ -147,10 +147,10 @@ def test_lift_talk_actor_with_state() -> None:
         # Check for the intrinsic call
         intrinsic_il = il.ils[0]
         assert intrinsic_il.op == 'INTRINSIC'
-        assert intrinsic_il.name == 'talk_actor'
+        assert hasattr(intrinsic_il, 'name') and intrinsic_il.name == 'talk_actor'
 
         # Check that we have parameters
-        assert len(intrinsic_il.params) > 0
+        assert hasattr(intrinsic_il, 'params') and len(intrinsic_il.params) > 0
         
         # Check the first parameter - should be a pointer to the resolved string
         string_ptr_arg = intrinsic_il.params[0]
@@ -186,7 +186,7 @@ def test_lift_talk_actor_with_unknown_string() -> None:
             
             intrinsic_il = il.ils[0]
             assert intrinsic_il.op == 'INTRINSIC'
-            assert intrinsic_il.name == 'talk_actor'
+            assert hasattr(intrinsic_il, 'name') and intrinsic_il.name == 'talk_actor'
             
         except KeyError as e:
             # This is the expected behavior for unknown strings

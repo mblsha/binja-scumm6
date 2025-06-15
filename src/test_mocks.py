@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any
 from binja_helpers.mock_binaryview import MockBinaryView
 
 
-class MockScumm6BinaryView(MockBinaryView):  # type: ignore[misc]
+class MockScumm6BinaryView(MockBinaryView):
     """Enhanced mock BinaryView for SCUMM6 state testing."""
     
     def __init__(self, state: Optional[Any] = None, filename: str = "test.bsc6"):

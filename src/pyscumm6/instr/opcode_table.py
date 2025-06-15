@@ -4,18 +4,40 @@ from typing import Dict, Type
 from ...scumm6_opcodes import Scumm6Opcodes
 from .opcodes import Instruction
 from . import instructions
+from .generic import make_push_constant_instruction, make_intrinsic_instruction
 
 # This map is the core of the new dispatcher.
 # The key is the enum value from the Kaitai-generated parser.
 # The value is the Python class that handles that instruction.
 OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
-    Scumm6Opcodes.OpType.push_byte: instructions.PushByte,
-    Scumm6Opcodes.OpType.push_word: instructions.PushWord,
-    Scumm6Opcodes.OpType.push_byte_var: instructions.PushByteVar,
-    Scumm6Opcodes.OpType.push_word_var: instructions.PushWordVar,
-    Scumm6Opcodes.OpType.dup: instructions.Dup,
-    Scumm6Opcodes.OpType.pop1: instructions.Pop1,
-    Scumm6Opcodes.OpType.pop2: instructions.Pop2,
+    # --- Using Factories ---
+    Scumm6Opcodes.OpType.push_byte: make_push_constant_instruction(
+        "push_byte", Scumm6Opcodes.ByteData, 4
+    ),
+    Scumm6Opcodes.OpType.push_word: make_push_constant_instruction(
+        "push_word", Scumm6Opcodes.WordData, 4
+    ),
+    Scumm6Opcodes.OpType.abs: make_intrinsic_instruction(
+        "abs", Scumm6Opcodes.CallFuncPop1Push, pop_count=1, push_count=1
+    ),
+    Scumm6Opcodes.OpType.break_here: make_intrinsic_instruction(
+        "break_here", Scumm6Opcodes.NoData, pop_count=0, push_count=0
+    ),
+    Scumm6Opcodes.OpType.pop1: make_intrinsic_instruction(
+        "pop1", Scumm6Opcodes.CallFuncPop1, pop_count=1, push_count=0
+    ),
+    # pop2 also has a CallFuncPop1 body
+    Scumm6Opcodes.OpType.pop2: make_intrinsic_instruction(
+        "pop2", Scumm6Opcodes.CallFuncPop1, pop_count=1, push_count=0
+    ),
+    Scumm6Opcodes.OpType.get_random_number: make_intrinsic_instruction(
+        "get_random_number", Scumm6Opcodes.CallFuncPop1Push, pop_count=1, push_count=1
+    ),
+    Scumm6Opcodes.OpType.get_random_number_range: make_intrinsic_instruction(
+        "get_random_number_range", Scumm6Opcodes.CallFuncPop2Push, pop_count=2, push_count=1
+    ),
+
+    # --- Using Base Classes ---
     Scumm6Opcodes.OpType.add: instructions.Add,
     Scumm6Opcodes.OpType.sub: instructions.Sub,
     Scumm6Opcodes.OpType.mul: instructions.Mul,
@@ -29,17 +51,18 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.lt: instructions.Lt,
     Scumm6Opcodes.OpType.le: instructions.Le,
     Scumm6Opcodes.OpType.ge: instructions.Ge,
-    Scumm6Opcodes.OpType.abs: instructions.Abs,
+
+    # --- Keeping Full Implementations for Complex Cases ---
+    Scumm6Opcodes.OpType.push_byte_var: instructions.PushByteVar,
+    Scumm6Opcodes.OpType.push_word_var: instructions.PushWordVar,
+    Scumm6Opcodes.OpType.dup: instructions.Dup,
     Scumm6Opcodes.OpType.band: instructions.Band,
     Scumm6Opcodes.OpType.bor: instructions.Bor,
     Scumm6Opcodes.OpType.byte_var_inc: instructions.ByteVarInc,
     Scumm6Opcodes.OpType.word_var_inc: instructions.WordVarInc,
     Scumm6Opcodes.OpType.byte_var_dec: instructions.ByteVarDec,
     Scumm6Opcodes.OpType.word_var_dec: instructions.WordVarDec,
-    Scumm6Opcodes.OpType.break_here: instructions.BreakHere,
     Scumm6Opcodes.OpType.dummy: instructions.Dummy,
-    Scumm6Opcodes.OpType.get_random_number: instructions.GetRandomNumber,
-    Scumm6Opcodes.OpType.get_random_number_range: instructions.GetRandomNumberRange,
     Scumm6Opcodes.OpType.pick_one_of: instructions.PickOneOf,
     Scumm6Opcodes.OpType.pick_one_of_default: instructions.PickOneOfDefault,
     Scumm6Opcodes.OpType.shuffle: instructions.Shuffle,
