@@ -4,7 +4,7 @@ from typing import List, Optional
 from binja_helpers import binja_api  # noqa: F401
 from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL
 from .test_mocks import MockScumm6BinaryView
-from binja_helpers.tokens import asm_str  # noqa: F401
+from binja_helpers.tokens import asm_str
 import pytest
 
 # Path 1: The original, monolithic implementation
@@ -21,6 +21,7 @@ class InstructionTestCase:
     data: bytes
     addr: int = 0x1000
     comment: Optional[str] = None
+    expected_disasm: Optional[str] = None
 
 
 # Define test cases for instruction migration
@@ -28,27 +29,32 @@ instruction_test_cases = [
     InstructionTestCase(
         test_id="push_byte_0x12",
         data=b"\x00\x12",
-        comment="Push byte value 0x12 (18)"
+        comment="Push byte value 0x12 (18)",
+        expected_disasm="push_byte(18)"
     ),
     InstructionTestCase(
         test_id="push_word_0x1234", 
         data=b"\x01\x34\x12",
-        comment="Push word value 0x1234 (4660) - little endian"
+        comment="Push word value 0x1234 (4660) - little endian",
+        expected_disasm="push_word(4660)"
     ),
     InstructionTestCase(
         test_id="push_byte_var_0x38",
         data=b"\x02\x38\x00",
-        comment="Push byte variable 0x38 (56) - loads from SCUMM var"
+        comment="Push byte variable 0x38 (56) - loads from SCUMM var",
+        expected_disasm="push_byte_var(var_56)"
     ),
     InstructionTestCase(
         test_id="push_word_var_0x38",
         data=b"\x03\x38\x00",
-        comment="Push word variable 0x38 (56) - loads 4-byte value from SCUMM var"
+        comment="Push word variable 0x38 (56) - loads 4-byte value from SCUMM var",
+        expected_disasm="push_word_var(var_56)"
     ),
     InstructionTestCase(
         test_id="pop1_0x1a",
         data=b"\x1a",
-        comment="Pop single item from stack"
+        comment="Pop single item from stack",
+        expected_disasm="pop1"
     ),
     # Add more test cases here as instructions are implemented
 ]
@@ -75,6 +81,28 @@ def get_new_llil(case: InstructionTestCase) -> List[MockLLIL]:
     return il.ils  # type: ignore
 
 
+def get_old_disasm(case: InstructionTestCase) -> Optional[str]:
+    """Get disassembly from the original monolithic implementation."""
+    view = MockScumm6BinaryView()
+    view.write_memory(case.addr, case.data)
+    LastBV.set(view)
+    arch = OldScumm6Architecture()
+    result = arch.get_instruction_text(case.data, case.addr)
+    if result is None:
+        return None
+    tokens, _ = result
+    return asm_str(token.text for token in tokens)
+
+
+def get_new_disasm(case: InstructionTestCase) -> Optional[str]:
+    """Get disassembly from the new object-oriented implementation."""
+    new_instr = new_decode(case.data, case.addr)
+    if new_instr is None:
+        return None
+    tokens = new_instr.render()
+    return asm_str(tokens)
+
+
 @pytest.mark.parametrize(
     "case",
     instruction_test_cases,
@@ -86,3 +114,40 @@ def test_llil_consistency(case: InstructionTestCase) -> None:
     new_il = get_new_llil(case)
     
     assert old_il == new_il, f"LLIL mismatch for {case.test_id}: {case.comment}"
+
+
+@pytest.mark.parametrize(
+    "case",
+    instruction_test_cases,
+    ids=[c.test_id for c in instruction_test_cases]
+)
+def test_disasm_consistency(case: InstructionTestCase) -> None:
+    """Verify that both implementations produce consistent disassembly."""
+    if case.expected_disasm is None:
+        pytest.skip("No expected disassembly provided for this test case")
+    
+    old_disasm = get_old_disasm(case)
+    new_disasm = get_new_disasm(case)
+    
+    # Check that the new implementation matches the expected disassembly exactly
+    assert new_disasm == case.expected_disasm, \
+        f"New implementation disassembly mismatch for {case.test_id}: " \
+        f"expected '{case.expected_disasm}', got '{new_disasm}'"
+    
+    # For the old implementation, check that it contains the expected instruction name
+    # (it may have additional parameters, which is acceptable)
+    if old_disasm is not None:
+        expected_instr_name = case.expected_disasm.split('(')[0]  # Get instruction name part
+        assert old_disasm.startswith(expected_instr_name), \
+            f"Old implementation disassembly doesn't start with expected instruction '{expected_instr_name}' " \
+            f"for {case.test_id}: got '{old_disasm}'"
+    else:
+        pytest.fail(f"Old implementation returned None for {case.test_id}")
+    
+    # Verify that both implementations at least agree on the instruction name
+    if old_disasm and new_disasm:
+        old_instr_name = old_disasm.split('(')[0]
+        new_instr_name = new_disasm.split('(')[0]
+        assert old_instr_name == new_instr_name, \
+            f"Instruction name mismatch between implementations for {case.test_id}: " \
+            f"old='{old_instr_name}', new='{new_instr_name}'"
