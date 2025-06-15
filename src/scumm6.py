@@ -13,6 +13,10 @@ from binaryninja.lowlevelil import (
 )
 from binaryninja.function import RegisterInfo, InstructionInfo, InstructionTextToken
 from binaryninja.binaryview import BinaryView
+try:
+    from binaryninja.interaction import UIContext  # type: ignore[attr-defined]
+except ImportError:
+    from binaryninja import UIContext  # type: ignore[attr-defined]
 from binaryninja.enums import (
     Endianness,
     BranchType,
@@ -58,24 +62,24 @@ class LastBV:
 # FIXME: create a fake memory segment for all the function names,
 # so that cross-references will work
 class Scumm6(Architecture):
-    name = "SCUMM6"
+    name = "SCUMM6"  # type: ignore[assignment]
     address_size = 4
     default_int_size = 4
     max_instr_length = 256
     endianness = Endianness.LittleEndian
-    regs = {
+    regs = {  # type: ignore[assignment]
         "sp": RegisterInfo(
-            "sp", 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth
+            "sp", 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth  # type: ignore[arg-type]
         ),
     } | {
         # local
-        f"L{i}": RegisterInfo(f"L{i}", 4)
+        f"L{i}": RegisterInfo(f"L{i}", 4)  # type: ignore[arg-type]
         for i in range(vars.NUM_SCRIPT_LOCAL)
     }
 
-    stack_pointer = "sp"
+    stack_pointer = "sp"  # type: ignore[assignment]
     flags = ["n", "z", "v", "c"]
-    flag_write_types = ["*"]
+    flag_write_types = ["*"]  # type: ignore[list-item]
     flags_written_by_flag_write_type = {
         "*": ["n", "z", "v", "c"],
     }
@@ -165,7 +169,7 @@ class Scumm6(Architecture):
         if not ctx:
             return (None, None)
         for view, filename in ctx.getAvailableBinaryViews():
-            if str(view.arch) != self.name:
+            if str(view.arch) != self.name:  # type: ignore[has-type]
                 continue
             data2 = view.read(addr, len(data))
             if data != data2:
@@ -175,9 +179,9 @@ class Scumm6(Architecture):
         last_bv = LastBV.get()
         if last_bv:
             # check that the data matches in case last_bv is not the right view
-            data2 = last_bv.read(addr, len(data))  # type: ignore[attr-defined]
+            data2 = last_bv.read(addr, len(data))
             if data == data2:
-                return (last_bv, last_bv.file.filename)  # type: ignore[attr-defined]
+                return (last_bv, last_bv.file.filename)
             else:
                 # FIXME: could be because of the .synthetic_builtins section
                 print(
@@ -189,7 +193,8 @@ class Scumm6(Architecture):
     def get_state(self, instr: Instruction) -> State:
         # FIXME: this won't work correctly if we open several files
         view = LastBV.get()
-        return view.state  # type: ignore
+        assert view is not None
+        return view.state  # type: ignore[no-any-return,attr-defined]
 
     def prev_instruction(self, instr: Instruction) -> Instruction:
         view, filename = self.get_view(instr.data, instr.addr)
@@ -199,7 +204,7 @@ class Scumm6(Architecture):
         prev_addr = self.op_addrs[filename].closest_left_match(instr.addr)
         assert prev_addr
         # print(f'prev_instruction: addr:{instr.addr:x} -> prev:{prev_addr:x}')
-        data2 = view.read(prev_addr, 256)  # type: ignore[attr-defined]
+        data2 = view.read(prev_addr, 256)
         dis = self.decode_instruction(data2, prev_addr)
         if not dis:
             raise Exception(
@@ -209,6 +214,8 @@ class Scumm6(Architecture):
 
     def decode_instruction(self, data: bytes, addr: int) -> Optional[Instruction]:
         dis = self.disasm.decode_instruction(data, addr)
+        if dis is None:
+            return None
         try:
             info = MockAnalysisInfo()
             info.length = dis.length
@@ -385,10 +392,10 @@ class Scumm6(Architecture):
 
             if push_count:
                 assert push_count == 1
-                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], name, args))
+                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], name, args))  # type: ignore[arg-type]
                 il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
             else:
-                il.append(il.intrinsic([], name, args))
+                il.append(il.intrinsic([], name, args))  # type: ignore[arg-type]  # type: ignore[arg-type]
 
         implemented = True
         op = dis.op
@@ -549,16 +556,17 @@ class Scumm6(Architecture):
                 # freeze_resistant = (flags & 1) != 0
                 recursive = (flags & 2) != 0
 
-                if not recursive:
+                if not recursive and func_ptr is not None:
                     il.append(
-                        il.intrinsic([], "stop_script", [il.const_pointer(4, func_ptr)])
+                        il.intrinsic([], "stop_script", [il.const_pointer(4, func_ptr)])  # type: ignore[arg-type]
                     )
 
             for index, a in enumerate(args):
                 il.append(il.push(4, il.reg(4, LLIL_TEMP(SAVE_ARGS_REG_START + index))))
 
             # expect binja to use pushed args as function args
-            il.append(il.call(il.const_pointer(4, func_ptr)))
+            if func_ptr is not None:
+                il.append(il.call(il.const_pointer(4, func_ptr)))
         elif op.id == OpType.stop_script:
             prev_value = get_prev_value(dis)
             il.append(il.intrinsic([], op.id.name, [il.pop(4)]))
@@ -589,7 +597,7 @@ class Scumm6(Architecture):
                     str_addr = state.bstr[i]
                     args.append(il.const_pointer(4, str_addr))
             name = f"{op.id.name}.{body.subop.name}"
-            il.append(il.intrinsic([], name, args))
+            il.append(il.intrinsic([], name, args))  # type: ignore[arg-type]
         elif getattr(body, "subop", None):
             assert body
             add_intrinsic(f"{op.id.name}.{body.subop.name}", body.body)
