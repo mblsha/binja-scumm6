@@ -14,7 +14,19 @@ function build_and_run
     end
     
     echo "🔍 Running mypy..."
+    echo "  Running mypy with real Binary Ninja (if available)..."
     bash scripts/run_mypy.sh
+    if test $status -ne 0
+        echo "❌ mypy failed with real Binary Ninja"
+        return 1
+    end
+    
+    echo "  Running mypy with mocked Binary Ninja..."
+    env FORCE_BINJA_MOCK=1 bash scripts/run_mypy.sh
+    if test $status -ne 0
+        echo "❌ mypy failed with mocked Binary Ninja"
+        return 1
+    end
     
     echo "🧪 Running pytest with coverage..."
     python scripts/run_pytest_direct.py

@@ -58,24 +58,24 @@ class LastBV:
 # FIXME: create a fake memory segment for all the function names,
 # so that cross-references will work
 class Scumm6(Architecture):
-    name: str = "SCUMM6"  # type: ignore[assignment]
+    name: str = "SCUMM6"
     address_size = 4
     default_int_size = 4
     max_instr_length = 256
     endianness = Endianness.LittleEndian
-    regs = {  # type: ignore[assignment]
+    regs = {
         "sp": RegisterInfo(
-            "sp", 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth  # type: ignore[arg-type]
+            "sp", 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth
         ),
     } | {
         # local
-        f"L{i}": RegisterInfo(f"L{i}", 4)  # type: ignore[arg-type]
+        f"L{i}": RegisterInfo(f"L{i}", 4)
         for i in range(vars.NUM_SCRIPT_LOCAL)
     }
 
-    stack_pointer: str = "sp"  # type: ignore[assignment]
+    stack_pointer: str = "sp"
     flags = ["n", "z", "v", "c"]
-    flag_write_types: List[str] = ["*"]  # type: ignore[assignment]
+    flag_write_types: List[str] = ["*"]
     flags_written_by_flag_write_type = {
         "*": ["n", "z", "v", "c"],
     }
@@ -377,10 +377,10 @@ class Scumm6(Architecture):
 
             if push_count:
                 assert push_count == 1
-                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], name, args))  # type: ignore[arg-type]
+                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], name, args))
                 il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
             else:
-                il.append(il.intrinsic([], name, args))  # type: ignore[arg-type]
+                il.append(il.intrinsic([], name, args))
 
         implemented = True
         op = dis.op
@@ -543,7 +543,7 @@ class Scumm6(Architecture):
 
                 if not recursive and func_ptr is not None:
                     il.append(
-                        il.intrinsic([], "stop_script", [il.const_pointer(4, func_ptr)])  # type: ignore[arg-type]
+                        il.intrinsic([], "stop_script", [il.const_pointer(4, func_ptr)])
                     )
 
             for index, a in enumerate(args):
@@ -582,7 +582,7 @@ class Scumm6(Architecture):
                     str_addr = state.bstr[i]
                     args.append(il.const_pointer(4, str_addr))
             name = f"{op.id.name}.{body.subop.name}"
-            il.append(il.intrinsic([], name, args))  # type: ignore[arg-type]
+            il.append(il.intrinsic([], name, args))
         elif getattr(body, "subop", None):
             assert body
             add_intrinsic(f"{op.id.name}.{body.subop.name}", body.body)

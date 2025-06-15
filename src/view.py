@@ -1,5 +1,4 @@
 from binaryninja.binaryview import BinaryView
-from binaryninja.architecture import Architecture
 from binaryninja.types import Symbol
 from binaryninja.enums import SymbolType, SegmentFlag, SectionSemantics, Endianness
 from .scumm6 import LastBV
@@ -44,9 +43,11 @@ class Scumm6View(BinaryView):
         self.script_nums = self.disasm.get_script_nums(self.state)
 
     def init(self) -> bool:
-        arch = "SCUMM6"
-        self.arch = Architecture[arch]
-        self.platform = Architecture[arch].standalone_platform
+        from binaryninja import Architecture
+        arch_name = "SCUMM6"
+        arch = Architecture[arch_name]  # type: ignore[type-arg,valid-type]
+        self.arch = arch
+        self.platform = arch.standalone_platform
 
         # create specinal segments for vars
         self.add_auto_segment(            vars.SCUMM_VARS_START,
