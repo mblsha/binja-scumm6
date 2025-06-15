@@ -31,4 +31,5 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.ge: instructions.Ge,
     Scumm6Opcodes.OpType.abs: instructions.Abs,
     Scumm6Opcodes.OpType.band: instructions.Band,
+    Scumm6Opcodes.OpType.bor: instructions.Bor,
 }
