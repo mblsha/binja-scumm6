@@ -141,6 +141,11 @@ instruction_test_cases = [
         data=b"\xd6",
         comment="Bitwise AND of top two stack items"
     ),
+    InstructionTestCase(
+        test_id="bor_0xd7",
+        data=b"\xd7",
+        comment="Bitwise OR of top two stack items"
+    ),
 ]
 
 

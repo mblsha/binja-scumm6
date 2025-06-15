@@ -375,3 +375,19 @@ class Band(Instruction):
         # 2. One from the UnknownOp check
         il.append(il.unimplemented())
         il.append(il.unimplemented())
+
+
+class Bor(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("bor")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp), \
+            f"Expected UnknownOp body, got {type(self.op_details.body)}"
+
+        # The original implementation generates two unimplemented() calls for UnknownOp:
+        # 1. One from the else clause (fallthrough)
+        # 2. One from the UnknownOp check
+        il.append(il.unimplemented())
+        il.append(il.unimplemented())

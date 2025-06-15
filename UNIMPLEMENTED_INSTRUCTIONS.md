@@ -28,6 +28,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 167 | `pop2` | `Pop2` | ✅ Complete |
 | 196 | `abs` | `Abs` | ✅ Complete |
 | 214 | `band` | `Band` | ✅ Complete |
+| 215 | `bor` | `Bor` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -53,7 +54,7 @@ These instructions have full LLIL implementations and should be migrated first:
 - [x] `lor` (25) - Logical OR
 - [x] `nott` (13) - Logical NOT
 - [x] `band` (214) - Bitwise AND
-- [ ] `bor` (215) - Bitwise OR
+- [x] `bor` (215) - Bitwise OR
 
 ### Comparison Operations
 - [x] `eq` (14) - Equal
