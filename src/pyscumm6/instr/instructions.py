@@ -118,3 +118,16 @@ class Pop1(Instruction):
             f"Expected CallFuncPop1 body, got {type(self.op_details.body)}"
 
         il.append(il.intrinsic([], "pop1", [il.pop(4)]))
+
+
+class Pop2(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("pop2")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.CallFuncPop1), \
+            f"Expected CallFuncPop1 body, got {type(self.op_details.body)}"
+
+        # Despite the name "pop2", this instruction only pops 1 item (as per CallFuncPop1)
+        il.append(il.intrinsic([], "pop2", [il.pop(4)]))
