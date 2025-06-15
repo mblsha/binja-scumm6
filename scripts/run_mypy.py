@@ -33,17 +33,21 @@ else:
     except ImportError:
         has_binja = False
 
+mypath = []
+stub_dir = os.path.join(os.path.dirname(__file__), "..", "binja_helpers_tmp", "stubs")
+if os.path.exists(stub_dir):
+    mypath.append(os.path.abspath(stub_dir))
+    print(f"Using stubs from {mypath[0]}")
+else:
+    print("Warning: Stub directory not found, mypy may fail")
+
 if not has_binja:
     from binja_helpers import binja_api  # noqa: F401
-    stub_dir = os.path.join(os.path.dirname(__file__), "..", "binja_helpers_tmp", "stubs")
-    if os.path.exists(stub_dir):
-        os.environ["MYPYPATH"] = os.path.abspath(stub_dir)
-        print(f"Using stubs from {os.environ['MYPYPATH']}")
-    else:
-        print("Warning: Stub directory not found, mypy may fail")
 else:
-    os.environ["MYPYPATH"] = bn_path
+    mypath.append(bn_path)
     print(f"Using Binary Ninja from {bn_path}")
+
+os.environ["MYPYPATH"] = os.pathsep.join(mypath)
 
 stdout, stderr, exit_status = api.run(["--explicit-package-bases", "src", "converter"])
 print(stdout, end="")

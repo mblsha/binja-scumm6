@@ -42,8 +42,9 @@ if test "$include_binja" = true
             "binaryninja/__init__.py" \
             "binaryninja/architecture.py" \
             "binaryninja/binaryview.py" \
-            "binaryninja/lowlevelil.py"
-        
+            "binaryninja/lowlevelil.py" \
+            "binaryninja/enums"
+
         # Add each allowed file if it exists
         for file in $binja_allowlist
             set -l full_path "$binja_api_path/$file"
