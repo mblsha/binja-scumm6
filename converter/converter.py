@@ -102,7 +102,7 @@ def read_resources(lecf_data: bytes, rnam_data: bytes) -> bytes:
 
     string_dict_block = b""
     for s in sorted(dedup_strings):
-        string_dict_block += s.encode("utf-8") + b"\0"
+        string_dict_block += s.encode("iso-8859-1") + b"\0"
     string_dict_len = len(string_dict_block) + 8
     bstr = b"Bstr" + string_dict_len.to_bytes(4, "big") + string_dict_block
 
