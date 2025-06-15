@@ -170,6 +170,11 @@ instruction_test_cases = [
         data=b"\xbd",
         comment="Dummy/no-op instruction"
     ),
+    InstructionTestCase(
+        test_id="get_random_number_0x87",
+        data=b"\x87",
+        comment="Get random number"
+    ),
 ]
 
 

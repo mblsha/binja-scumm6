@@ -34,6 +34,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 86 | `byte_var_dec` | `ByteVarDec` | ✅ Complete |
 | 87 | `word_var_dec` | `WordVarDec` | ✅ Complete |
 | 108 | `break_here` | `BreakHere` | ✅ Complete |
+| 135 | `get_random_number` | `GetRandomNumber` | ✅ Complete |
 | 189 | `dummy` | `Dummy` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
@@ -236,7 +237,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [ ] `delay_frames` (202) - Delay frames
 
 ### Random/Math Operations
-- [ ] `get_random_number` (135) - Get random number
+- [x] `get_random_number` (135) - Get random number
 - [ ] `get_random_number_range` (136) - Get random number in range
 - [ ] `pick_one_of` (203) - Pick one of
 - [ ] `pick_one_of_default` (204) - Pick one of with default
