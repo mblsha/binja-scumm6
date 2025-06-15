@@ -191,6 +191,11 @@ instruction_test_cases = [
         data=b"\xcb",
         comment="Pick one of multiple options"
     ),
+    InstructionTestCase(
+        test_id="pick_one_of_default_0xcc",
+        data=b"\xcc",
+        comment="Pick one of multiple options with default"
+    ),
 ]
 
 

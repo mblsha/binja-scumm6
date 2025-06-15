@@ -41,4 +41,5 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.get_random_number: instructions.GetRandomNumber,
     Scumm6Opcodes.OpType.get_random_number_range: instructions.GetRandomNumberRange,
     Scumm6Opcodes.OpType.pick_one_of: instructions.PickOneOf,
+    Scumm6Opcodes.OpType.pick_one_of_default: instructions.PickOneOfDefault,
 }

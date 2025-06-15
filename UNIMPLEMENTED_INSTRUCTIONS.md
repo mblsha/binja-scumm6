@@ -38,6 +38,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 136 | `get_random_number_range` | `GetRandomNumberRange` | ✅ Complete |
 | 189 | `dummy` | `Dummy` | ✅ Complete |
 | 203 | `pick_one_of` | `PickOneOf` | ✅ Complete |
+| 204 | `pick_one_of_default` | `PickOneOfDefault` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -242,7 +243,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `get_random_number` (135) - Get random number
 - [x] `get_random_number_range` (136) - Get random number in range
 - [x] `pick_one_of` (203) - Pick one of
-- [ ] `pick_one_of_default` (204) - Pick one of with default
+- [x] `pick_one_of_default` (204) - Pick one of with default
 - [ ] `pick_var_random` (227) - Pick variable random
 - [ ] `shuffle` (212) - Shuffle
 
