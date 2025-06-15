@@ -18,4 +18,5 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.pop2: instructions.Pop2,
     Scumm6Opcodes.OpType.add: instructions.Add,
     Scumm6Opcodes.OpType.sub: instructions.Sub,
+    Scumm6Opcodes.OpType.mul: instructions.Mul,
 }
