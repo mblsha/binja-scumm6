@@ -33,8 +33,10 @@ import pytest
 
 # Run pytest with the provided arguments
 if __name__ == "__main__":
-    sys.exit(pytest.main([
-        "--cov=src", 
-        "--cov-report=xml", 
-        "--cov-report=term"
-    ] + sys.argv[1:]))
+    sys.exit(pytest.main([] + sys.argv[1:]))
+
+    # sys.exit(pytest.main([
+    #     "--cov=src",
+    #     "--cov-report=xml",
+    #     "--cov-report=term"
+    # ] + sys.argv[1:]))
