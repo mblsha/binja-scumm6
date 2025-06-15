@@ -344,3 +344,18 @@ class Ge(Instruction):
         # Push result: b >= a
         comp_res = il.compare_signed_greater_equal(4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))
         il.append(il.push(4, comp_res))
+
+
+class Abs(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("abs")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.CallFuncPop1Push), \
+            f"Expected CallFuncPop1Push body, got {type(self.op_details.body)}"
+
+        # The original implementation uses add_intrinsic for CallFuncPop1Push
+        # which pops 1 value, calls intrinsic, and pushes 1 result
+        il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], "abs", [il.pop(4)]))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
