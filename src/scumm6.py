@@ -58,7 +58,7 @@ class LastBV:
 # FIXME: create a fake memory segment for all the function names,
 # so that cross-references will work
 class Scumm6(Architecture):
-    name: str = "SCUMM6"
+    name = "SCUMM6"
     address_size = 4
     default_int_size = 4
     max_instr_length = 256
@@ -73,9 +73,9 @@ class Scumm6(Architecture):
         for i in range(vars.NUM_SCRIPT_LOCAL)
     }
 
-    stack_pointer: str = "sp"
+    stack_pointer = "sp"
     flags = ["n", "z", "v", "c"]
-    flag_write_types: List[str] = ["*"]
+    flag_write_types = ["*"]
     flags_written_by_flag_write_type = {
         "*": ["n", "z", "v", "c"],
     }
