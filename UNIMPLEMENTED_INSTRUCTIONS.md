@@ -2,12 +2,6 @@
 
 This document tracks the migration of SCUMM6 instructions from the monolithic `scumm6.py` implementation to the new object-oriented instruction architecture in `src/pyscumm6/`.
 
-## Migration Progress
-
-- **Total Opcodes**: 237+ instructions defined in SCUMM6
-- **Migrated**: 6 instructions (`PushByte`, `PushWord`, `PushByteVar`, `PushWordVar`, `Dup`, `Pop1`)
-- **Remaining**: 231+ instructions
-
 ## ✅ Migrated Instructions
 
 | Opcode | Name | Class | Status |
@@ -25,7 +19,7 @@ These instructions have full LLIL implementations and should be migrated first:
 
 ### Stack Operations
 - [x] `push_word` (1) - Push word constant
-- [x] `push_byte_var` (2) - Push byte variable 
+- [x] `push_byte_var` (2) - Push byte variable
 - [x] `push_word_var` (3) - Push word variable
 - [x] `dup` (12) - Duplicate top stack item
 - [x] `pop1` (26) - Pop single item
@@ -33,7 +27,7 @@ These instructions have full LLIL implementations and should be migrated first:
 
 ### Arithmetic Operations
 - [ ] `add` (20) - Addition
-- [ ] `sub` (21) - Subtraction  
+- [ ] `sub` (21) - Subtraction
 - [ ] `mul` (22) - Multiplication
 - [ ] `div` (23) - Division
 - [ ] `abs` (196) - Absolute value
@@ -57,7 +51,7 @@ These instructions have full LLIL implementations and should be migrated first:
 - [ ] `write_byte_var` (66) - Write byte to variable
 - [ ] `write_word_var` (67) - Write word to variable
 - [ ] `byte_var_inc` (78) - Increment byte variable
-- [ ] `word_var_inc` (79) - Increment word variable  
+- [ ] `word_var_inc` (79) - Increment word variable
 - [ ] `byte_var_dec` (86) - Decrement byte variable
 - [ ] `word_var_dec` (87) - Decrement word variable
 
@@ -89,7 +83,7 @@ These instructions have full LLIL implementations and should be migrated first:
 - [ ] `is_script_running` (139) - Check if script is running
 - [ ] `is_room_script_running` (216) - Check if room script is running
 
-### Object Operations  
+### Object Operations
 - [ ] `start_object` (96) - Start object
 - [ ] `start_object_quick` (190) - Start object quick
 - [ ] `stop_object_code1` (101) - Stop object code (variant 1)
@@ -116,7 +110,7 @@ These instructions have complex implementations with sub-operations and may be b
 
 ### Audio Operations
 - [ ] `start_sound` (116) - Start sound
-- [ ] `stop_sound` (117) - Stop sound  
+- [ ] `stop_sound` (117) - Stop sound
 - [ ] `start_music` (118) - Start music
 - [ ] `stop_music` (105) - Stop music
 - [ ] `is_sound_running` (152) - Check if sound is running
@@ -252,7 +246,7 @@ These instructions have complex implementations with sub-operations and may be b
 2. **Create the instruction class in `src/pyscumm6/instr/instructions.py`**
    ```python
    class InstructionName(Instruction):
-       
+
        def render(self) -> List[Token]:
            # Extract value from self.op_details.body
            value = self.op_details.body.data
@@ -262,12 +256,12 @@ These instructions have complex implementations with sub-operations and may be b
                TInt(str(value)),  # or other token types as needed
                TSep(")"),
            ]
-       
+
        def lift(self, il: LowLevelILFunction, addr: int) -> None:
            # Add type assertion for the Kaitai struct
            assert isinstance(self.op_details.body, Scumm6Opcodes.ExpectedType), \
                f"Expected ExpectedType body, got {type(self.op_details.body)}"
-           
+
            # Copy LLIL logic from scumm6.py
            value = self.op_details.body.data
            il.append(...)  # Your LLIL implementation
