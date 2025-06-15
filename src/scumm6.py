@@ -185,7 +185,7 @@ class Scumm6(Architecture):
         # FIXME: this won't work correctly if we open several files
         view = LastBV.get()
         assert view is not None
-        return view.state  # type: ignore[no-any-return,attr-defined]
+        return view.state  # type: ignore[no-any-return,attr-defined,unused-ignore]
 
     def prev_instruction(self, instr: Instruction) -> Instruction:
         view, filename = self.get_view(instr.data, instr.addr)

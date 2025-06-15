@@ -44,7 +44,7 @@ class Scumm6View(BinaryView):
         self.script_nums = self.disasm.get_script_nums(self.state)
 
     def init(self) -> bool:
-        arch = Architecture["SCUMM6"]  # type: ignore
+        arch = Architecture["SCUMM6"]  # type: ignore[type-arg,name-defined,unused-ignore]
         self.arch = arch
         self.platform = arch.standalone_platform
 

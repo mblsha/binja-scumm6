@@ -1,6 +1,6 @@
 from binja_helpers import binja_api  # noqa: F401
 from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL
-from binja_helpers.mock_scumm6_view import MockScumm6BinaryView
+from .test_mocks import MockScumm6BinaryView
 from binja_helpers.tokens import asm_str  # noqa: F401
 import pytest
 from typing import List
