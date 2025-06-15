@@ -29,7 +29,7 @@ function build_and_run
     echo "🧪 Running pytest..."
     python scripts/run_pytest_direct.py
 
-    echo "✅ All checks passed!"
+    echo "Done running tests! 🎉"
 end
 
 # Parse command line arguments

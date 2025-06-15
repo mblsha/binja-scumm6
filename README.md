@@ -34,10 +34,10 @@ $ ./run-tests.fish
 
 # Peculiarities
 
-Binary Ninja doesn't normally support state in Architectures, but we need it in
-order to properly mark function calls and some other stuff.
+Binary Ninja architecture plugins are designed to be stateless. However, correctly analyzing SCUMM6 bytecode requires global context that is not available within a single instruction's bytes. This plugin works around this limitation by persisting a global `State` object on the `BinaryView` for several key reasons:
 
-In order to decoded text strings outside of Disassembler view we need to extract
-them to a separate segment, otherwise they'd be considered part of the decoded
-instructions, and the text won't be visible.
+*   **Resolving Script Calls:** Opcodes like `start_script` take a numeric script ID as an argument, not a direct address. To resolve this ID to a callable address, the plugin must look up the ID in metadata tables (`DSCR` and `LOFF` blocks) parsed from the entire file's structure. Storing this information allows the plugin to generate proper `call` instructions in the Low-Level IL, which is essential for building an accurate Control-Flow Graph (CFG) and enabling cross-references.
 
+*   **Resolving String References:** For improved analysis, the converter utility extracts all dialogue and text into a separate `Bstr` section. When an instruction like `talk_actor` is lifted, the plugin needs to find the address of its corresponding string within this section to create a valid pointer. This requires a pre-computed map of strings to their addresses, which is maintained in the global state.
+
+The `Scumm6View` is responsible for creating and holding this state upon loading a file. The `Scumm6` architecture then accesses it via a helper (`LastBV`) to perform context-aware instruction lifting.

@@ -1,4 +1,5 @@
 from binaryninja.binaryview import BinaryView
+from binaryninja import Architecture
 from binaryninja.types import Symbol
 from binaryninja.enums import SymbolType, SegmentFlag, SectionSemantics, Endianness
 from .scumm6 import LastBV
@@ -43,9 +44,7 @@ class Scumm6View(BinaryView):
         self.script_nums = self.disasm.get_script_nums(self.state)
 
     def init(self) -> bool:
-        from binaryninja import Architecture
-        arch_name = "SCUMM6"
-        arch = Architecture[arch_name]  # type: ignore[type-arg,valid-type]
+        arch = Architecture["SCUMM6"]  # type: ignore
         self.arch = arch
         self.platform = arch.standalone_platform
 
