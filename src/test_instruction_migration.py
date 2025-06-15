@@ -35,6 +35,7 @@ def get_new_llil(data: bytes, addr: int) -> List[MockLLIL]:
 
 @pytest.mark.parametrize("opcode_name, opcode_bytes", [
     ("push_byte", b"\x00\x12"),
+    ("push_word", b"\x01\x34\x12"),  # 0x1234 = 4660
     # ... more test cases will be added here
 ])
 def test_llil_consistency(opcode_name: str, opcode_bytes: bytes) -> None:

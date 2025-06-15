@@ -10,6 +10,7 @@ from . import instructions
 # The value is the Python class that handles that instruction.
 OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.push_byte: instructions.PushByte,
+    Scumm6Opcodes.OpType.push_word: instructions.PushWord,
     # As you implement more instructions, you will add them here:
     # Scumm6Opcodes.OpType.add: instructions.Add,
 }

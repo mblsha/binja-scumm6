@@ -25,3 +25,22 @@ class PushByte(Instruction):
         
         value = self.op_details.body.data
         il.append(il.push(4, il.const(4, value)))
+
+
+class PushWord(Instruction):
+    
+    def render(self) -> List[Token]:
+        value = self.op_details.body.data
+        return [
+            TInstr("push_word"),
+            TSep("("),
+            TInt(str(value)),
+            TSep(")"),
+        ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.WordData), \
+            f"Expected WordData body, got {type(self.op_details.body)}"
+        
+        value = self.op_details.body.data
+        il.append(il.push(4, il.const(4, value)))
