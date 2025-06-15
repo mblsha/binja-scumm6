@@ -180,6 +180,11 @@ instruction_test_cases = [
         data=b"\x88",
         comment="Get random number in range"
     ),
+    InstructionTestCase(
+        test_id="pick_one_of_0xcb",
+        data=b"\xcb",
+        comment="Pick one of multiple options"
+    ),
 ]
 
 
