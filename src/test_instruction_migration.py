@@ -65,6 +65,11 @@ instruction_test_cases = [
         data=b"\x14",
         comment="Add top two stack items"
     ),
+    InstructionTestCase(
+        test_id="sub_0x15",
+        data=b"\x15",
+        comment="Subtract top two stack items"
+    ),
 ]
 
 
