@@ -9,7 +9,7 @@ from typing import List
 from .scumm6 import Scumm6 as OldScumm6Architecture, LastBV
 
 # Path 2: The new, refactored implementation (decoder to be created)
-# from src.pyscumm6.disasm import decode as new_decode
+from .pyscumm6.disasm import decode as new_decode
 
 
 # Wrapper to get LLIL from the old architecture
@@ -25,11 +25,12 @@ def get_old_llil(data: bytes, addr: int) -> List[MockLLIL]:
 
 # Wrapper to get LLIL from the new instruction object
 def get_new_llil(data: bytes, addr: int) -> List[MockLLIL]:
-    # new_instr = new_decode(data, addr)
-    # il = MockLowLevelILFunction()
-    # new_instr.lift(il, addr)
-    # return il.ils
-    pytest.xfail("New decoder not yet implemented for this opcode.")
+    new_instr = new_decode(data, addr)
+    if new_instr is None:
+        pytest.xfail("New decoder not yet implemented for this opcode.")
+    il = MockLowLevelILFunction()
+    new_instr.lift(il, addr)
+    return il.ils  # type: ignore
 
 
 @pytest.mark.parametrize("opcode_name, opcode_bytes", [
@@ -40,4 +41,5 @@ def test_llil_consistency(opcode_name: str, opcode_bytes: bytes) -> None:
     old_il = get_old_llil(opcode_bytes, 0x1000)
     new_il = get_new_llil(opcode_bytes, 0x1000)
 
+    # This assertion should now pass for push_byte
     assert old_il == new_il
