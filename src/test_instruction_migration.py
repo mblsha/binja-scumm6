@@ -190,6 +190,11 @@ instruction_test_cases = [
         data=b"\xcc",
         comment="Pick one of multiple options with default"
     ),
+    InstructionTestCase(
+        test_id="shuffle_0xd4",
+        data=b"\xd4",
+        comment="Shuffle array or list"
+    ),
 ]
 
 
