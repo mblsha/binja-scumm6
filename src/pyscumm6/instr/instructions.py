@@ -477,5 +477,18 @@ class WordVarDec(Instruction):
         il.append(vars.il_set_var(il, self.op_details.body, decremented_value))
 
 
+class BreakHere(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("break_here")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
+            f"Expected NoData body, got {type(self.op_details.body)}"
+
+        # Original implementation: il.append(il.intrinsic([], IntrinsicName(op.id.name), []))
+        il.append(il.intrinsic([], "break_here", []))
+
+
 
 
