@@ -5,8 +5,8 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 ## Migration Progress
 
 - **Total Opcodes**: 237+ instructions defined in SCUMM6
-- **Migrated**: 2 instructions (`PushByte`, `PushWord`)
-- **Remaining**: 235+ instructions
+- **Migrated**: 3 instructions (`PushByte`, `PushWord`, `Pop1`)
+- **Remaining**: 234+ instructions
 
 ## ✅ Migrated Instructions
 
@@ -14,6 +14,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 |--------|------|-------|--------|
 | 0 | `push_byte` | `PushByte` | ✅ Complete |
 | 1 | `push_word` | `PushWord` | ✅ Complete |
+| 26 | `pop1` | `Pop1` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -24,7 +25,7 @@ These instructions have full LLIL implementations and should be migrated first:
 - [ ] `push_byte_var` (2) - Push byte variable 
 - [ ] `push_word_var` (3) - Push word variable
 - [ ] `dup` (12) - Duplicate top stack item
-- [ ] `pop1` (26) - Pop single item
+- [x] `pop1` (26) - Pop single item
 - [ ] `pop2` (167) - Pop two items
 
 ### Arithmetic Operations

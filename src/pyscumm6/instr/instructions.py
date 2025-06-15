@@ -44,3 +44,15 @@ class PushWord(Instruction):
         
         value = self.op_details.body.data
         il.append(il.push(4, il.const(4, value)))
+
+
+class Pop1(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("pop1")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.CallFuncPop1), \
+            f"Expected CallFuncPop1 body, got {type(self.op_details.body)}"
+
+        il.append(il.intrinsic([], "pop1", [il.pop(4)]))

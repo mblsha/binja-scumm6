@@ -35,6 +35,11 @@ instruction_test_cases = [
         data=b"\x01\x34\x12",
         comment="Push word value 0x1234 (4660) - little endian"
     ),
+    InstructionTestCase(
+        test_id="pop1_0x1a",
+        data=b"\x1a",
+        comment="Pop single item from stack"
+    ),
     # Add more test cases here as instructions are implemented
 ]
 
