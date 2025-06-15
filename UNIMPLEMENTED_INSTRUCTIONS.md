@@ -15,6 +15,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 21 | `sub` | `Sub` | ✅ Complete |
 | 22 | `mul` | `Mul` | ✅ Complete |
 | 23 | `div` | `Div` | ✅ Complete |
+| 24 | `land` | `Land` | ✅ Complete |
 | 26 | `pop1` | `Pop1` | ✅ Complete |
 | 167 | `pop2` | `Pop2` | ✅ Complete |
 
@@ -38,7 +39,7 @@ These instructions have full LLIL implementations and should be migrated first:
 - [ ] `abs` (196) - Absolute value
 
 ### Logical Operations
-- [ ] `land` (24) - Logical AND
+- [x] `land` (24) - Logical AND
 - [ ] `lor` (25) - Logical OR
 - [ ] `nott` (13) - Logical NOT
 - [ ] `band` (214) - Bitwise AND

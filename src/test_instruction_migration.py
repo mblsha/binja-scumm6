@@ -86,6 +86,11 @@ instruction_test_cases = [
         data=b"\x17",
         comment="Divide top two stack items"
     ),
+    InstructionTestCase(
+        test_id="land_0x18",
+        data=b"\x18",
+        comment="Logical AND of top two stack items"
+    ),
 ]
 
 
