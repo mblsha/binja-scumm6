@@ -106,6 +106,11 @@ instruction_test_cases = [
         data=b"\x0e",
         comment="Equal comparison of top two stack items"
     ),
+    InstructionTestCase(
+        test_id="neq_0x0f",
+        data=b"\x0f",
+        comment="Not equal comparison of top two stack items"
+    ),
 ]
 
 
