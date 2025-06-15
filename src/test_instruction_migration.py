@@ -150,6 +150,11 @@ instruction_test_cases = [
         data=b"\x4f\x38\x00",
         comment="Increment word variable 0x38 (56)"
     ),
+    InstructionTestCase(
+        test_id="byte_var_dec_0x56",
+        data=b"\x56\x38",
+        comment="Decrement byte variable 0x38 (56)"
+    ),
 ]
 
 
