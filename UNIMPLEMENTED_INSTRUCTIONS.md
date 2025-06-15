@@ -238,15 +238,76 @@ These instructions have complex implementations with sub-operations and may be b
 
 ## Migration Guidelines
 
+### Step-by-Step Migration Process:
+
+1. **Find the instruction implementation in `scumm6.py`**
+   - Search for the opcode in `get_instruction_low_level_il()` method
+   - Note how it handles the LLIL generation
+   - Check if it's handled as an intrinsic or has special logic
+
+2. **Create the instruction class in `src/pyscumm6/instr/instructions.py`**
+   ```python
+   class InstructionName(Instruction):
+       
+       def render(self) -> List[Token]:
+           # Extract value from self.op_details.body
+           value = self.op_details.body.data
+           return [
+               TInstr("instruction_name"),
+               TSep("("),
+               TInt(str(value)),  # or other token types as needed
+               TSep(")"),
+           ]
+       
+       def lift(self, il: LowLevelILFunction, addr: int) -> None:
+           # Add type assertion for the Kaitai struct
+           assert isinstance(self.op_details.body, Scumm6Opcodes.ExpectedType), \
+               f"Expected ExpectedType body, got {type(self.op_details.body)}"
+           
+           # Copy LLIL logic from scumm6.py
+           value = self.op_details.body.data
+           il.append(...)  # Your LLIL implementation
+   ```
+
+3. **Determine the correct Kaitai type**
+   - Check `scumm6_opcodes.py` for the body type
+   - Common types: `ByteData`, `WordData`, `ByteVarData`, `WordVarData`, `NoData`
+   - Can test with: `python -c "from src.scumm6_opcodes import Scumm6Opcodes; print(dir(Scumm6Opcodes))"`
+
+4. **Add to opcode mapping in `src/pyscumm6/instr/opcode_table.py`**
+   ```python
+   OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
+       # ... existing mappings ...
+       Scumm6Opcodes.OpType.instruction_name: instructions.InstructionName,
+   }
+   ```
+
+5. **Add test case in `src/test_instruction_migration.py`**
+   ```python
+   @pytest.mark.parametrize("opcode_name, opcode_bytes", [
+       # ... existing tests ...
+       ("instruction_name", b"\xXX\xYY\xZZ"),  # Add comment explaining the bytes
+   ])
+   ```
+
+6. **Run the test**
+   ```bash
+   FORCE_BINJA_MOCK=1 python -m pytest src/test_instruction_migration.py -v
+   ```
+
+7. **Update this tracking document**
+   - Move instruction from "Priority Instructions" to "Migrated Instructions"
+   - Update migration counts
+   - Mark with [x] in the priority list
+
 ### For Simple Instructions:
-1. Create class in `src/pyscumm6/instr/instructions.py`
-2. Implement `render()` method for disassembly
-3. Implement `lift()` method copying LLIL logic from `scumm6.py`
-4. Add to `OPCODE_MAP` in `opcode_table.py`
-5. Add test case in `test_instruction_migration.py`
+Instructions that just push/pop values or perform basic operations on the stack.
 
 ### For Complex Instructions:
-Consider implementing as intrinsics with proper typing rather than attempting to lift complex game engine operations to LLIL.
+Instructions with sub-operations (like `array_ops`, `actor_ops`) may need:
+- Additional parsing of sub-operation codes
+- Multiple render formats based on sub-op
+- Consider implementing as intrinsics with proper typing
 
 ## Notes
 
