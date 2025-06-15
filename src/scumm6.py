@@ -395,7 +395,7 @@ class Scumm6(Architecture):
                 il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], name, args))  # type: ignore[arg-type]
                 il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
             else:
-                il.append(il.intrinsic([], name, args))  # type: ignore[arg-type]  # type: ignore[arg-type]
+                il.append(il.intrinsic([], name, args))  # type: ignore[arg-type]
 
         implemented = True
         op = dis.op

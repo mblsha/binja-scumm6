@@ -19,8 +19,12 @@ $ python converter/cli.py DOTTDEMO.000 DOTTDEMO.001 -o dottdemo.bsc6
 
 # Running tests
 
-```
-$ ptw --afterrun ./run_mypy.sh --beforerun reset
+## Quick test run
+
+Run all linting, type checking, and unit tests once:
+
+```bash
+$ ./run-tests.fish
 ```
 
 # Limitations

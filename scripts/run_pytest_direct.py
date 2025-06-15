@@ -11,8 +11,8 @@ from pathlib import Path
 # Force use of mock
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-# Ensure repository root is in sys.path
-repo_root = Path(__file__).resolve().parent
+# Ensure repository root is in sys.path (go up one level from scripts dir)
+repo_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(repo_root))
 
 # Add binja_helpers to path FIRST

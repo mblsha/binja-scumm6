@@ -29,4 +29,4 @@ exclude = ["binja_helpers"]
 source = ["src"]
 
 [tool.ruff]
-extend-exclude = ["scummvm-tools"]
+extend-exclude = ["scummvm-tools", "scripts/run_pytest_direct.py", "scripts/run_pytest.py"]
