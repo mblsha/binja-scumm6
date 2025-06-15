@@ -211,3 +211,19 @@ class Land(Instruction):
         il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
         # Push result: b && a (logical AND)
         il.append(il.push(4, il.and_expr(4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))))
+
+
+class Lor(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("lor")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
+            f"Expected NoData body, got {type(self.op_details.body)}"
+
+        # Pop two values from stack: a (top), b (second)
+        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
+        il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
+        # Push result: b || a (logical OR)
+        il.append(il.push(4, il.or_expr(4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))))

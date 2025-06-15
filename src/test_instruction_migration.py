@@ -91,6 +91,11 @@ instruction_test_cases = [
         data=b"\x18",
         comment="Logical AND of top two stack items"
     ),
+    InstructionTestCase(
+        test_id="lor_0x19",
+        data=b"\x19",
+        comment="Logical OR of top two stack items"
+    ),
 ]
 
 
