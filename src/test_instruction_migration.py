@@ -35,6 +35,11 @@ instruction_test_cases = [
         data=b"\x01\x34\x12",
         comment="Push word value 0x1234 (4660) - little endian"
     ),
+    InstructionTestCase(
+        test_id="push_byte_var_0x38",
+        data=b"\x02\x38",
+        comment="Push byte variable 0x38 (56)"
+    ),
     # Add more test cases here as instructions are implemented
 ]
 

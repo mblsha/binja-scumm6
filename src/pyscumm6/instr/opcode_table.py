@@ -11,6 +11,7 @@ from . import instructions
 OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.push_byte: instructions.PushByte,
     Scumm6Opcodes.OpType.push_word: instructions.PushWord,
+    Scumm6Opcodes.OpType.push_byte_var: instructions.PushByteVar,
     # As you implement more instructions, you will add them here:
     # Scumm6Opcodes.OpType.add: instructions.Add,
 }
