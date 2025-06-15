@@ -53,8 +53,6 @@ def parse_message(message: Scumm6Opcodes.Message) -> List[Union[str, Part]]:
         if isinstance(p.content, S6Part.Terminator):
             if buf:
                 parts.append(buf)
-        elif isinstance(p.content, S6Part.RegularChar):
-            buf += chr(p.content.value)
         elif isinstance(p.content, S6Part.SpecialSequence):
             if buf:
                 parts.append(buf)
@@ -64,5 +62,7 @@ def parse_message(message: Scumm6Opcodes.Message) -> List[Union[str, Part]]:
             part_type, args = MATCH_TYPE[type(payload)]
 
             parts.append(Part(part_type, [getattr(payload, a) for a in args]))
+        elif isinstance(p.content, S6Part.RegularChar):
+            buf += chr(p.content.value)
 
     return parts
