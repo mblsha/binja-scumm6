@@ -23,8 +23,7 @@ from binaryninja.enums import (  # type: ignore[attr-defined]
 )
 from binaryninja import lowlevelil
 
-if core_ui_enabled():
-    from binaryninjaui import UIContext
+# UIContext import moved to get_view method where it's used
 
 from .disasm import Scumm6Disasm, Instruction, State
 from .scumm6_opcodes import Scumm6Opcodes
@@ -168,6 +167,8 @@ class Scumm6(Architecture):
         if not core_ui_enabled():
             return (None, None)
 
+        # UIContext is only available when core UI is enabled
+        from binaryninjaui import UIContext
         ctx = UIContext.activeContext()
         if not ctx:
             return (None, None)
