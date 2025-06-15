@@ -755,3 +755,53 @@ class FreezeUnfreeze(IntrinsicOp):
     @property
     def intrinsic_name(self) -> str:
         return "freeze_unfreeze"
+
+
+class StopObjectCode1(IntrinsicOp):
+    """Stop object code (variant 1) with no parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "stop_object_code1"
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Override to add no_ret() call as in original implementation."""
+        super().lift(il, addr)
+        il.append(il.no_ret())
+
+
+class StopObjectCode2(IntrinsicOp):
+    """Stop object code (variant 2) with no parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "stop_object_code2"
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Override to add no_ret() call as in original implementation."""
+        super().lift(il, addr)
+        il.append(il.no_ret())
+
+
+class StopObjectScript(IntrinsicOp):
+    """Stop object script with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "stop_object_script"
+
+
+class StartSound(IntrinsicOp):
+    """Start sound with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "start_sound"
+
+
+class StopSound(IntrinsicOp):
+    """Stop sound with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "stop_sound"

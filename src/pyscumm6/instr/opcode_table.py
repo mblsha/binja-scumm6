@@ -91,4 +91,9 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.end_cutscene: instructions.EndCutscene,
     Scumm6Opcodes.OpType.stop_music: instructions.StopMusic,
     Scumm6Opcodes.OpType.freeze_unfreeze: instructions.FreezeUnfreeze,
+    Scumm6Opcodes.OpType.stop_object_code1: instructions.StopObjectCode1,
+    Scumm6Opcodes.OpType.stop_object_code2: instructions.StopObjectCode2,
+    Scumm6Opcodes.OpType.stop_object_script: instructions.StopObjectScript,
+    Scumm6Opcodes.OpType.start_sound: instructions.StartSound,
+    Scumm6Opcodes.OpType.stop_sound: instructions.StopSound,
 }

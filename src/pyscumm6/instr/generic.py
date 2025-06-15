@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from typing import List, Type, Any
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
-from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
+from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
 from binaryninja.enums import BranchType
 
 from .opcodes import Instruction
@@ -237,7 +237,7 @@ class VariableWriteOp(Instruction):
 class ControlFlowOp(Instruction):
     """Base class for control flow instructions that need CFG analysis support."""
     
-    def analyze(self, info, addr: int) -> None:
+    def analyze(self, info: Any, addr: int) -> None:
         """Analyze instruction for Control Flow Graph integration."""
         assert isinstance(self.op_details.body, Scumm6Opcodes.JumpData), \
             f"Expected JumpData body, got {type(self.op_details.body)}"

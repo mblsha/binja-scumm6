@@ -62,6 +62,11 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 103 | `end_cutscene` | `EndCutscene` | ✅ Complete |
 | 105 | `stop_music` | `StopMusic` | ✅ Complete |
 | 106 | `freeze_unfreeze` | `FreezeUnfreeze` | ✅ Complete |
+| 101 | `stop_object_code1` | `StopObjectCode1` | ✅ Complete |
+| 102 | `stop_object_code2` | `StopObjectCode2` | ✅ Complete |
+| 119 | `stop_object_script` | `StopObjectScript` | ✅ Complete |
+| 116 | `start_sound` | `StartSound` | ✅ Complete |
+| 117 | `stop_sound` | `StopSound` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -136,9 +141,9 @@ These instructions have full LLIL implementations and should be migrated first:
 ### Object Operations
 - [ ] `start_object` (96) - Start object
 - [ ] `start_object_quick` (190) - Start object quick
-- [ ] `stop_object_code1` (101) - Stop object code (variant 1)
-- [ ] `stop_object_code2` (102) - Stop object code (variant 2)
-- [ ] `stop_object_script` (119) - Stop object script
+- [x] `stop_object_code1` (101) - Stop object code (variant 1)
+- [x] `stop_object_code2` (102) - Stop object code (variant 2)
+- [x] `stop_object_script` (119) - Stop object script
 
 ### Utility
 - [x] `break_here` (108) - Breakpoint/debug instruction
@@ -159,8 +164,8 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `end_cutscene` (103) - End cutscene
 
 ### Audio Operations
-- [ ] `start_sound` (116) - Start sound
-- [ ] `stop_sound` (117) - Stop sound
+- [x] `start_sound` (116) - Start sound
+- [x] `stop_sound` (117) - Stop sound
 - [ ] `start_music` (118) - Start music
 - [x] `stop_music` (105) - Stop music
 - [ ] `is_sound_running` (152) - Check if sound is running
