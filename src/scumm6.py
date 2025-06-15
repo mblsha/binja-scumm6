@@ -6,15 +6,14 @@ from typing import Any, List, Optional, Tuple, Dict
 import threading
 from collections import defaultdict
 
-from binaryninja import core_ui_enabled  # type: ignore[attr-defined]
-from binaryninja.architecture import Architecture, IntrinsicInfo  # type: ignore[attr-defined]
+from binaryninja import Architecture, IntrinsicInfo
 from binaryninja.lowlevelil import (
     LowLevelILLabel,
     LLIL_TEMP,
 )
 from binaryninja.function import RegisterInfo, InstructionInfo, InstructionTextToken
 from binaryninja.binaryview import BinaryView
-from binaryninja.enums import (  # type: ignore[attr-defined]
+from binaryninja.enums import (
     Endianness,
     BranchType,
     InstructionTextTokenType,
@@ -22,9 +21,6 @@ from binaryninja.enums import (  # type: ignore[attr-defined]
     ImplicitRegisterExtend,
 )
 from binaryninja import lowlevelil
-
-if core_ui_enabled():
-    from binaryninjaui import UIContext
 
 from .disasm import Scumm6Disasm, Instruction, State
 from .scumm6_opcodes import Scumm6Opcodes
@@ -165,9 +161,6 @@ class Scumm6(Architecture):
     def get_view(
         self, data: bytes, addr: int
     ) -> Tuple[Optional[BinaryView], Optional[str]]:
-        if not core_ui_enabled():
-            return (None, None)
-
         ctx = UIContext.activeContext()
         if not ctx:
             return (None, None)
@@ -216,21 +209,20 @@ class Scumm6(Architecture):
 
     def decode_instruction(self, data: bytes, addr: int) -> Optional[Instruction]:
         dis = self.disasm.decode_instruction(data, addr)
-        if dis and not core_ui_enabled():
-            try:
-                info = MockAnalysisInfo()
-                info.length = dis.length
-                op = dis.op
-                body = getattr(op, "body", None)
-                if body and getattr(body, "jump_offset", None) is not None:
-                    info.add_branch(
-                        BranchType.TrueBranch,
-                        addr + info.length + body.jump_offset,
-                    )
-                    info.add_branch(BranchType.FalseBranch, addr + info.length)
-                dis = dis._replace(analysis_info=info)
-            except Exception:
-                pass
+        try:
+            info = MockAnalysisInfo()
+            info.length = dis.length
+            op = dis.op
+            body = getattr(op, "body", None)
+            if body and getattr(body, "jump_offset", None) is not None:
+                info.add_branch(
+                    BranchType.TrueBranch,
+                    addr + info.length + body.jump_offset,
+                )
+                info.add_branch(BranchType.FalseBranch, addr + info.length)
+            dis = dis._replace(analysis_info=info)
+        except Exception:
+            pass
         return dis
 
     def get_instruction_info(self, data: bytes, addr: int) -> Optional[InstructionInfo]:

@@ -53,7 +53,7 @@ def parse_message(message: Scumm6Opcodes.Message) -> List[Union[str, Part]]:
         if isinstance(p.content, S6Part.Terminator):
             if buf:
                 parts.append(buf)
-        elif isinstance(p.content, S6Part.RegularChar):  # type: ignore[unreachable]
+        elif isinstance(p.content, S6Part.RegularChar):
             buf += chr(p.content.value)
         else:
             if buf:
