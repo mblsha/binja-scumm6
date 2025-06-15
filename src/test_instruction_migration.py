@@ -175,6 +175,11 @@ instruction_test_cases = [
         data=b"\x87",
         comment="Get random number"
     ),
+    InstructionTestCase(
+        test_id="get_random_number_range_0x88",
+        data=b"\x88",
+        comment="Get random number in range"
+    ),
 ]
 
 
