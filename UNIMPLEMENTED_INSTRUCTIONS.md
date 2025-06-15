@@ -103,6 +103,15 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 171 | `get_actor_anim_counter` | `GetActorAnimCounter` | ✅ Complete |
 | 179 | `stop_sentence` | `StopSentence` | ✅ Complete |
 | 209 | `stop_talking` | `StopTalking` | ✅ Complete |
+| 118 | `start_music` | `StartMusic` | ✅ Complete |
+| 124 | `stop_script` | `StopScript` | ✅ Complete |
+| 169 | `wait` | `Wait` | ✅ Complete |
+| 176 | `delay` | `Delay` | ✅ Complete |
+| 177 | `delay_seconds` | `DelaySeconds` | ✅ Complete |
+| 178 | `delay_minutes` | `DelayMinutes` | ✅ Complete |
+| 202 | `delay_frames` | `DelayFrames` | ✅ Complete |
+| 216 | `is_room_script_running` | `IsRoomScriptRunning` | ✅ Complete |
+| 237 | `get_object_new_dir` | `GetObjectNewDir` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -170,9 +179,9 @@ These instructions have full LLIL implementations and should be migrated first:
 - [ ] `start_script` (94) - Start script with flags
 - [ ] `start_script_quick` (95) - Start script without flags
 - [ ] `start_script_quick2` (191) - Start script quick variant 2
-- [ ] `stop_script` (124) - Stop script
+- [x] `stop_script` (124) - Stop script
 - [x] `is_script_running` (139) - Check if script is running
-- [ ] `is_room_script_running` (216) - Check if room script is running
+- [x] `is_room_script_running` (216) - Check if room script is running
 
 ### Object Operations
 - [ ] `start_object` (96) - Start object
@@ -202,7 +211,7 @@ These instructions have complex implementations with sub-operations and may be b
 ### Audio Operations
 - [x] `start_sound` (116) - Start sound
 - [x] `stop_sound` (117) - Stop sound
-- [ ] `start_music` (118) - Start music
+- [x] `start_music` (118) - Start music
 - [x] `stop_music` (105) - Stop music
 - [x] `is_sound_running` (152) - Check if sound is running
 - [ ] `sound_kludge` (172) - Sound system hack
@@ -243,7 +252,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `get_object_x` (141) - Get object X position
 - [x] `get_object_y` (142) - Get object Y position
 - [x] `get_object_old_dir` (143) - Get object old direction
-- [ ] `get_object_new_dir` (237) - Get object new direction
+- [x] `get_object_new_dir` (237) - Get object new direction
 - [ ] `find_object` (160) - Find object
 - [ ] `find_all_objects` (221) - Find all objects
 
@@ -297,11 +306,11 @@ These instructions have complex implementations with sub-operations and may be b
 - [ ] `array_ops` (164) - Array operations (complex)
 
 ### Timing Operations
-- [ ] `wait` (169) - Wait
-- [ ] `delay` (176) - Delay
-- [ ] `delay_seconds` (177) - Delay seconds
-- [ ] `delay_minutes` (178) - Delay minutes
-- [ ] `delay_frames` (202) - Delay frames
+- [x] `wait` (169) - Wait
+- [x] `delay` (176) - Delay
+- [x] `delay_seconds` (177) - Delay seconds
+- [x] `delay_minutes` (178) - Delay minutes
+- [x] `delay_frames` (202) - Delay frames
 
 ### Random/Math Operations
 - [x] `get_random_number` (135) - Get random number

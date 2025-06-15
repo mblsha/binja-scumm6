@@ -1097,3 +1097,77 @@ class StopSentence(IntrinsicOp):
     @property
     def intrinsic_name(self) -> str:
         return "stop_sentence"
+
+
+# Timing Operations
+class Wait(IntrinsicOp):
+    """Wait for actor with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "wait"
+
+
+class Delay(IntrinsicOp):
+    """Delay with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "delay"
+
+
+class DelaySeconds(IntrinsicOp):
+    """Delay seconds with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "delay_seconds"
+
+
+class DelayMinutes(IntrinsicOp):
+    """Delay minutes with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "delay_minutes"
+
+
+class DelayFrames(IntrinsicOp):
+    """Delay frames with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "delay_frames"
+
+
+# Simple Script/Control Operations
+class StartMusic(IntrinsicOp):
+    """Start music with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "start_music"
+
+
+class StopScript(IntrinsicOp):
+    """Stop script with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "stop_script"
+
+
+class IsRoomScriptRunning(IntrinsicOp):
+    """Check if room script is running with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "is_room_script_running"
+
+
+class GetObjectNewDir(IntrinsicOp):
+    """Get object new direction with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_object_new_dir"

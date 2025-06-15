@@ -133,4 +133,15 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.create_box_matrix: instructions.CreateBoxMatrix,
     Scumm6Opcodes.OpType.stop_talking: instructions.StopTalking,
     Scumm6Opcodes.OpType.stop_sentence: instructions.StopSentence,
+    # Timing Operations
+    Scumm6Opcodes.OpType.wait: instructions.Wait,
+    Scumm6Opcodes.OpType.delay: instructions.Delay,
+    Scumm6Opcodes.OpType.delay_seconds: instructions.DelaySeconds,
+    Scumm6Opcodes.OpType.delay_minutes: instructions.DelayMinutes,
+    Scumm6Opcodes.OpType.delay_frames: instructions.DelayFrames,
+    # Simple Script/Control Operations
+    Scumm6Opcodes.OpType.start_music: instructions.StartMusic,
+    Scumm6Opcodes.OpType.stop_script: instructions.StopScript,
+    Scumm6Opcodes.OpType.is_room_script_running: instructions.IsRoomScriptRunning,
+    Scumm6Opcodes.OpType.get_object_new_dir: instructions.GetObjectNewDir,
 }

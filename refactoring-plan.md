@@ -47,7 +47,9 @@ This is the largest group, consisting of high-level engine functions. These are 
 *   **✅ Verb Operations:** `do_sentence` ✅, `get_verb_from_xy` ✅
 *   **✅ Room & Camera Operations:** `load_room` ✅, `pan_camera_to` ✅, `set_camera_at` ✅, `actor_follow_camera` ✅
 *   **✅ System & State Operations:** `end_cutscene` ✅, `get_state` ✅, `set_state` ✅, `set_owner` ✅, `get_owner` ✅, `freeze_unfreeze` ✅, `begin_override` ✅, `end_override` ✅, `set_object_name` ✅, `set_box_flags` ✅, `create_box_matrix` ✅
-*   **Timing Operations:** `wait`, `delay`, `delay_seconds`, etc.
+*   **✅ Timing Operations:** `wait` ✅, `delay` ✅, `delay_seconds` ✅, `delay_minutes` ✅, `delay_frames` ✅
+*   **✅ Additional Script Operations:** `start_music` ✅, `stop_script` ✅, `is_room_script_running` ✅
+*   **✅ Additional Object Operations:** `get_object_new_dir` ✅
 
 ### 3. Plan for Generic Implementation and Refactoring
 
