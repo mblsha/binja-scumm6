@@ -208,7 +208,7 @@ def lift_instruction(instruction: Instruction, addr: int = 0x1234) -> List[MockL
         # For unimplemented instructions, add a placeholder
         il.append(mllil("UNIMPL", []))
 
-    return il.ils  # type: ignore[no-any-return]
+    return il.ils
 
 
 @dataclass
