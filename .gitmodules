@@ -1,5 +1,5 @@
 [submodule "binja_helpers"]
-	path = binja_helpers
+	path = binja_helpers_tmp
 	url = https://github.com/mblsha/binja-esr.git
 [submodule "scummvm-tools"]
 	path = scummvm-tools

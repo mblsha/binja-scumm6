@@ -7,7 +7,7 @@ from mypy import api
 # script is run from the 'scripts' directory.
 repo_root = Path(__file__).resolve().parent.parent
 sys.path.append(str(repo_root))
-helper_dir = repo_root / "binja_helpers" / "binja_helpers"
+helper_dir = repo_root / "binja_helpers_tmp"
 if helper_dir.is_dir() and str(helper_dir) not in sys.path:
     sys.path.insert(0, str(helper_dir))
 
@@ -24,7 +24,7 @@ except ImportError:
     has_binja = False
 
 if not has_binja:
-    from binja_helpers.binja_helpers import binja_api  # noqa: F401
+    from binja_helpers import binja_api  # noqa: F401
     stub_dir = os.path.join(os.path.dirname(__file__), "..", "binja_helpers", "stubs")
     os.environ["MYPYPATH"] = os.path.abspath(stub_dir)
     print(f"Using stubs from {os.environ['MYPYPATH']}")
