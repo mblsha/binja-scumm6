@@ -1,5 +1,5 @@
 # src/pyscumm6/instr/opcodes.py
-from typing import List, Optional, Generator
+from typing import List, Optional
 from binja_helpers.tokens import Token
 from binaryninja.lowlevelil import LowLevelILFunction
 from binaryninja.function import InstructionInfo
