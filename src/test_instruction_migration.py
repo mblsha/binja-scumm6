@@ -51,6 +51,11 @@ instruction_test_cases = [
         expected_disasm="push_word_var(var_56)"
     ),
     InstructionTestCase(
+        test_id="dup_0x0c",
+        data=b"\x0c",
+        comment="Duplicate top stack item"
+    ),
+    InstructionTestCase(
         test_id="pop1_0x1a",
         data=b"\x1a",
         comment="Pop single item from stack",
