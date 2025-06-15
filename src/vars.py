@@ -184,6 +184,14 @@ def reg_name(block: Any) -> str:
 
 
 def il_get_var(il: lowlevelil.LowLevelILFunction, block: Any) -> Any:
+    # Handle ByteData that doesn't have type attribute (for push_byte_var compatibility)
+    if not hasattr(block, 'type'):
+        # Default to scumm_var for ByteData without type
+        return il.load(
+            VAR_ITEM_SIZE,
+            il.const_pointer(4, get_scumm_var(block.data).address),
+        )
+    
     if block.type == VarType.scumm_var:
         return il.load(
             VAR_ITEM_SIZE,

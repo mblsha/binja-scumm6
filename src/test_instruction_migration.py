@@ -36,6 +36,16 @@ instruction_test_cases = [
         comment="Push word value 0x1234 (4660) - little endian"
     ),
     InstructionTestCase(
+        test_id="push_byte_var_0x38",
+        data=b"\x02\x38\x00",
+        comment="Push byte variable 0x38 (56) - loads from SCUMM var"
+    ),
+    InstructionTestCase(
+        test_id="push_word_var_0x38",
+        data=b"\x03\x38\x00",
+        comment="Push word variable 0x38 (56) - loads 4-byte value from SCUMM var"
+    ),
+    InstructionTestCase(
         test_id="pop1_0x1a",
         data=b"\x1a",
         comment="Pop single item from stack"

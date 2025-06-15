@@ -26,7 +26,7 @@ end
 
 # Define exclusions
 set -l exclusions \
-    --exclude binja_helpers_tmp/sc62015 \
+    # --exclude binja_helpers_tmp/sc62015 \
     --exclude scummvm-tools
 
 # Get all files using fd, respecting .gitignore and custom exclusions

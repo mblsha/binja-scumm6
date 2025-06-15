@@ -7,6 +7,9 @@ from ...scumm6_opcodes import Scumm6Opcodes
 
 from .opcodes import Instruction
 
+# Import the vars module to use the same LLIL generation logic
+from ... import vars
+
 
 class PushByte(Instruction):
     
@@ -44,6 +47,50 @@ class PushWord(Instruction):
         
         value = self.op_details.body.data
         il.append(il.push(4, il.const(4, value)))
+
+
+class PushByteVar(Instruction):
+    
+    def render(self) -> List[Token]:
+        var_id = self.op_details.body.data
+        return [
+            TInstr("push_byte_var"),
+            TSep("("),
+            TInt(f"var_{var_id}"),
+            TSep(")"),
+        ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.ByteData), \
+            f"Expected ByteData body, got {type(self.op_details.body)}"
+        
+        # Create a wrapper that adds the missing type attribute for compatibility
+        # with the existing vars.il_get_var function
+        class VarBlock:
+            def __init__(self, data: int, var_type: Scumm6Opcodes.VarType):
+                self.data = data
+                self.type = var_type
+        
+        var_block = VarBlock(self.op_details.body.data, Scumm6Opcodes.VarType.scumm_var)
+        il.append(il.push(4, vars.il_get_var(il, var_block)))
+
+
+class PushWordVar(Instruction):
+    
+    def render(self) -> List[Token]:
+        var_id = self.op_details.body.data
+        return [
+            TInstr("push_word_var"),
+            TSep("("),
+            TInt(f"var_{var_id}"),
+            TSep(")"),
+        ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.WordVarData), \
+            f"Expected WordVarData body, got {type(self.op_details.body)}"
+        
+        il.append(il.push(4, vars.il_get_var(il, self.op_details.body)))
 
 
 class Pop1(Instruction):
