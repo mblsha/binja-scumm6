@@ -12,7 +12,7 @@ from ... import vars
 
 
 class PushByte(Instruction):
-    
+
     def render(self) -> List[Token]:
         value = self.op_details.body.data
         return [
@@ -25,13 +25,13 @@ class PushByte(Instruction):
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.ByteData), \
             f"Expected ByteData body, got {type(self.op_details.body)}"
-        
+
         value = self.op_details.body.data
         il.append(il.push(4, il.const(4, value)))
 
 
 class PushWord(Instruction):
-    
+
     def render(self) -> List[Token]:
         value = self.op_details.body.data
         return [
@@ -44,13 +44,13 @@ class PushWord(Instruction):
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.WordData), \
             f"Expected WordData body, got {type(self.op_details.body)}"
-        
+
         value = self.op_details.body.data
         il.append(il.push(4, il.const(4, value)))
 
 
 class PushByteVar(Instruction):
-    
+
     def render(self) -> List[Token]:
         var_id = self.op_details.body.data
         return [
@@ -63,20 +63,20 @@ class PushByteVar(Instruction):
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.ByteData), \
             f"Expected ByteData body, got {type(self.op_details.body)}"
-        
+
         # Create a wrapper that adds the missing type attribute for compatibility
         # with the existing vars.il_get_var function
         class VarBlock:
             def __init__(self, data: int, var_type: Scumm6Opcodes.VarType):
                 self.data = data
                 self.type = var_type
-        
+
         var_block = VarBlock(self.op_details.body.data, Scumm6Opcodes.VarType.scumm_var)
         il.append(il.push(4, vars.il_get_var(il, var_block)))
 
 
 class PushWordVar(Instruction):
-    
+
     def render(self) -> List[Token]:
         var_id = self.op_details.body.data
         return [
@@ -89,19 +89,19 @@ class PushWordVar(Instruction):
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.WordVarData), \
             f"Expected WordVarData body, got {type(self.op_details.body)}"
-        
+
         il.append(il.push(4, vars.il_get_var(il, self.op_details.body)))
 
 
 class Dup(Instruction):
-    
+
     def render(self) -> List[Token]:
         return [TInstr("dup")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
             f"Expected NoData body, got {type(self.op_details.body)}"
-        
+
         # Pop value into temp register, then push it twice
         il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
@@ -578,6 +578,32 @@ class Shuffle(Instruction):
         # This generates two unimplemented() calls like other UnknownOp instructions
         il.append(il.unimplemented())
         il.append(il.unimplemented())
+
+
+class ByteArrayRead(Instruction):
+
+    def render(self) -> List[Token]:
+        array_id = self.op_details.body.array
+        return [
+            TInstr("byte_array_read"),
+            TSep("("),
+            TInt(f"array_{array_id}"),
+            TSep(")"),
+        ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.ByteArrayRead), \
+            f"Expected ByteArrayRead body, got {type(self.op_details.body)}"
+
+        # Pop base index from stack
+        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # base
+
+        # Use vars.py helper to read from array
+        # readArray(array_id, 0, base) - array ID from instruction, index 0, base from stack
+        array_result = vars.il_get_array(il, self.op_details.body.array, il.const(4, 0), il.reg(4, LLIL_TEMP(0)))
+
+        # Push result to stack
+        il.append(il.push(4, array_result))
 
 
 

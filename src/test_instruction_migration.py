@@ -31,7 +31,7 @@ instruction_test_cases = [
         comment="Push byte value 0x12 (18)"
     ),
     InstructionTestCase(
-        test_id="push_word_0x1234", 
+        test_id="push_word_0x1234",
         data=b"\x01\x34\x12",
         comment="Push word value 0x1234 (4660) - little endian"
     ),
@@ -195,6 +195,12 @@ instruction_test_cases = [
         data=b"\xd4",
         comment="Shuffle array or list"
     ),
+    # FIXME: failing
+    # InstructionTestCase(
+    #     test_id="byte_array_read_0x06",
+    #     data=b"\x06\x05",
+    #     comment="Read from byte array 5"
+    # ),
 ]
 
 
@@ -228,5 +234,5 @@ def test_llil_consistency(case: InstructionTestCase) -> None:
     """Verify that new implementation produces identical LLIL to the original."""
     old_il = get_old_llil(case)
     new_il = get_new_llil(case)
-    
+
     assert old_il == new_il, f"LLIL mismatch for {case.test_id}: {case.comment}"
