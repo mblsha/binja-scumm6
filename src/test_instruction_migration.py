@@ -70,6 +70,11 @@ instruction_test_cases = [
         data=b"\x15",
         comment="Subtract top two stack items"
     ),
+    InstructionTestCase(
+        test_id="mul_0x16",
+        data=b"\x16",
+        comment="Multiply top two stack items"
+    ),
 ]
 
 

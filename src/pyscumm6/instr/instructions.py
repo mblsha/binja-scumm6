@@ -163,3 +163,19 @@ class Sub(Instruction):
         il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
         # Push result: b - a
         il.append(il.push(4, il.sub(4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))))
+
+
+class Mul(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("mul")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
+            f"Expected NoData body, got {type(self.op_details.body)}"
+
+        # Pop two values from stack: a (top), b (second)
+        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
+        il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
+        # Push result: b * a
+        il.append(il.push(4, il.mult(4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))))

@@ -13,6 +13,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 12 | `dup` | `Dup` | ✅ Complete |
 | 20 | `add` | `Add` | ✅ Complete |
 | 21 | `sub` | `Sub` | ✅ Complete |
+| 22 | `mul` | `Mul` | ✅ Complete |
 | 26 | `pop1` | `Pop1` | ✅ Complete |
 | 167 | `pop2` | `Pop2` | ✅ Complete |
 
@@ -31,7 +32,7 @@ These instructions have full LLIL implementations and should be migrated first:
 ### Arithmetic Operations
 - [x] `add` (20) - Addition
 - [x] `sub` (21) - Subtraction
-- [ ] `mul` (22) - Multiplication
+- [x] `mul` (22) - Multiplication
 - [ ] `div` (23) - Division
 - [ ] `abs` (196) - Absolute value
 
