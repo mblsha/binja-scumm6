@@ -310,3 +310,20 @@ class Lt(Instruction):
         # Push result: b < a
         comp_res = il.compare_signed_less_than(4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))
         il.append(il.push(4, comp_res))
+
+
+class Le(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("le")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
+            f"Expected NoData body, got {type(self.op_details.body)}"
+
+        # Pop two values from stack: a (top), b (second)
+        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
+        il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
+        # Push result: b <= a
+        comp_res = il.compare_signed_less_equal(4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))
+        il.append(il.push(4, comp_res))

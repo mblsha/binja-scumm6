@@ -121,6 +121,11 @@ instruction_test_cases = [
         data=b"\x11",
         comment="Less than comparison of top two stack items"
     ),
+    InstructionTestCase(
+        test_id="le_0x12",
+        data=b"\x12",
+        comment="Less than or equal comparison of top two stack items"
+    ),
 ]
 
 

@@ -16,6 +16,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 15 | `neq` | `Neq` | ✅ Complete |
 | 16 | `gt` | `Gt` | ✅ Complete |
 | 17 | `lt` | `Lt` | ✅ Complete |
+| 18 | `le` | `Le` | ✅ Complete |
 | 20 | `add` | `Add` | ✅ Complete |
 | 21 | `sub` | `Sub` | ✅ Complete |
 | 22 | `mul` | `Mul` | ✅ Complete |
@@ -56,7 +57,7 @@ These instructions have full LLIL implementations and should be migrated first:
 - [x] `neq` (15) - Not equal
 - [x] `gt` (16) - Greater than
 - [x] `lt` (17) - Less than
-- [ ] `le` (18) - Less than or equal
+- [x] `le` (18) - Less than or equal
 - [ ] `ge` (19) - Greater than or equal
 
 ### Variable Operations
