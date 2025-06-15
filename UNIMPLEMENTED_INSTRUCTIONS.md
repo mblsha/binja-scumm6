@@ -29,6 +29,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 196 | `abs` | `Abs` | ✅ Complete |
 | 214 | `band` | `Band` | ✅ Complete |
 | 215 | `bor` | `Bor` | ✅ Complete |
+| 78 | `byte_var_inc` | `ByteVarInc` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -67,7 +68,7 @@ These instructions have full LLIL implementations and should be migrated first:
 ### Variable Operations
 - [ ] `write_byte_var` (66) - Write byte to variable
 - [ ] `write_word_var` (67) - Write word to variable
-- [ ] `byte_var_inc` (78) - Increment byte variable
+- [x] `byte_var_inc` (78) - Increment byte variable
 - [ ] `word_var_inc` (79) - Increment word variable
 - [ ] `byte_var_dec` (86) - Decrement byte variable
 - [ ] `word_var_dec` (87) - Decrement word variable
