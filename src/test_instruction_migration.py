@@ -165,6 +165,11 @@ instruction_test_cases = [
         data=b"\x6c",
         comment="Breakpoint/debug instruction"
     ),
+    InstructionTestCase(
+        test_id="dummy_0xbd",
+        data=b"\xbd",
+        comment="Dummy/no-op instruction"
+    ),
 ]
 
 

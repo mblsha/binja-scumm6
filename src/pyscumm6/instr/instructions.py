@@ -490,5 +490,20 @@ class BreakHere(Instruction):
         il.append(il.intrinsic([], "break_here", []))
 
 
+class Dummy(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("dummy")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp), \
+            f"Expected UnknownOp body, got {type(self.op_details.body)}"
+
+        # Original implementation: falls through to else case then gets caught by UnknownOp check
+        # This generates two unimplemented() calls like other UnknownOp instructions
+        il.append(il.unimplemented())
+        il.append(il.unimplemented())
+
+
 
 
