@@ -75,6 +75,34 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 112 | `set_state` | `SetState` | ✅ Complete |
 | 113 | `set_owner` | `SetOwner` | ✅ Complete |
 | 114 | `get_owner` | `GetOwner` | ✅ Complete |
+| 129 | `face_actor` | `FaceActor` | ✅ Complete |
+| 130 | `animate_actor` | `AnimateActor` | ✅ Complete |
+| 131 | `do_sentence` | `DoSentence` | ✅ Complete |
+| 132 | `pickup_object` | `PickupObject` | ✅ Complete |
+| 138 | `get_actor_moving` | `GetActorMoving` | ✅ Complete |
+| 139 | `is_script_running` | `IsScriptRunning` | ✅ Complete |
+| 140 | `get_actor_room` | `GetActorRoom` | ✅ Complete |
+| 141 | `get_object_x` | `GetObjectX` | ✅ Complete |
+| 142 | `get_object_y` | `GetObjectY` | ✅ Complete |
+| 143 | `get_object_old_dir` | `GetObjectOldDir` | ✅ Complete |
+| 144 | `get_actor_walk_box` | `GetActorWalkBox` | ✅ Complete |
+| 145 | `get_actor_costume` | `GetActorCostume` | ✅ Complete |
+| 146 | `find_inventory` | `FindInventory` | ✅ Complete |
+| 147 | `get_inventory_count` | `GetInventoryCount` | ✅ Complete |
+| 148 | `get_verb_from_xy` | `GetVerbFromXy` | ✅ Complete |
+| 149 | `begin_override` | `BeginOverride` | ✅ Complete |
+| 150 | `end_override` | `EndOverride` | ✅ Complete |
+| 151 | `set_object_name` | `SetObjectName` | ✅ Complete |
+| 152 | `is_sound_running` | `IsSoundRunning` | ✅ Complete |
+| 153 | `set_box_flags` | `SetBoxFlags` | ✅ Complete |
+| 154 | `create_box_matrix` | `CreateBoxMatrix` | ✅ Complete |
+| 159 | `get_actor_from_xy` | `GetActorFromXy` | ✅ Complete |
+| 162 | `get_actor_elevation` | `GetActorElevation` | ✅ Complete |
+| 168 | `get_actor_width` | `GetActorWidth` | ✅ Complete |
+| 170 | `get_actor_scale_x` | `GetActorScaleX` | ✅ Complete |
+| 171 | `get_actor_anim_counter` | `GetActorAnimCounter` | ✅ Complete |
+| 179 | `stop_sentence` | `StopSentence` | ✅ Complete |
+| 209 | `stop_talking` | `StopTalking` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -143,7 +171,7 @@ These instructions have full LLIL implementations and should be migrated first:
 - [ ] `start_script_quick` (95) - Start script without flags
 - [ ] `start_script_quick2` (191) - Start script quick variant 2
 - [ ] `stop_script` (124) - Stop script
-- [ ] `is_script_running` (139) - Check if script is running
+- [x] `is_script_running` (139) - Check if script is running
 - [ ] `is_room_script_running` (216) - Check if room script is running
 
 ### Object Operations
@@ -176,9 +204,9 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `stop_sound` (117) - Stop sound
 - [ ] `start_music` (118) - Start music
 - [x] `stop_music` (105) - Stop music
-- [ ] `is_sound_running` (152) - Check if sound is running
+- [x] `is_sound_running` (152) - Check if sound is running
 - [ ] `sound_kludge` (172) - Sound system hack
-- [ ] `stop_talking` (209) - Stop talking
+- [x] `stop_talking` (209) - Stop talking
 
 ### Camera Operations
 - [x] `pan_camera_to` (120) - Pan camera to position
@@ -196,37 +224,37 @@ These instructions have complex implementations with sub-operations and may be b
 - [ ] `walk_actor_to` (126) - Walk actor to position
 - [ ] `put_actor_at_xy` (127) - Put actor at coordinates
 - [ ] `put_actor_at_object` (128) - Put actor at object
-- [ ] `face_actor` (129) - Face actor
-- [ ] `animate_actor` (130) - Animate actor
-- [ ] `get_actor_moving` (138) - Get actor moving state
-- [ ] `get_actor_room` (140) - Get actor room
-- [ ] `get_actor_walk_box` (144) - Get actor walk box
-- [ ] `get_actor_costume` (145) - Get actor costume
-- [ ] `get_actor_from_xy` (159) - Get actor from coordinates
-- [ ] `get_actor_elevation` (162) - Get actor elevation
-- [ ] `get_actor_width` (168) - Get actor width
-- [ ] `get_actor_scale_x` (170) - Get actor scale X
-- [ ] `get_actor_anim_counter` (171) - Get actor animation counter
+- [x] `face_actor` (129) - Face actor
+- [x] `animate_actor` (130) - Animate actor
+- [x] `get_actor_moving` (138) - Get actor moving state
+- [x] `get_actor_room` (140) - Get actor room
+- [x] `get_actor_walk_box` (144) - Get actor walk box
+- [x] `get_actor_costume` (145) - Get actor costume
+- [x] `get_actor_from_xy` (159) - Get actor from coordinates
+- [x] `get_actor_elevation` (162) - Get actor elevation
+- [x] `get_actor_width` (168) - Get actor width
+- [x] `get_actor_scale_x` (170) - Get actor scale X
+- [x] `get_actor_anim_counter` (171) - Get actor animation counter
 - [ ] `is_actor_in_box` (175) - Check if actor in box
 - [ ] `get_actor_layer` (236) - Get actor layer
 - [ ] `actor_ops` (157) - Actor operations (complex)
 
 ### Object Query Operations
-- [ ] `get_object_x` (141) - Get object X position
-- [ ] `get_object_y` (142) - Get object Y position
-- [ ] `get_object_old_dir` (143) - Get object old direction
+- [x] `get_object_x` (141) - Get object X position
+- [x] `get_object_y` (142) - Get object Y position
+- [x] `get_object_old_dir` (143) - Get object old direction
 - [ ] `get_object_new_dir` (237) - Get object new direction
 - [ ] `find_object` (160) - Find object
 - [ ] `find_all_objects` (221) - Find all objects
 
 ### Inventory Operations
-- [ ] `pickup_object` (132) - Pick up object
-- [ ] `find_inventory` (146) - Find inventory item
-- [ ] `get_inventory_count` (147) - Get inventory count
+- [x] `pickup_object` (132) - Pick up object
+- [x] `find_inventory` (146) - Find inventory item
+- [x] `get_inventory_count` (147) - Get inventory count
 
 ### Verb Operations
-- [ ] `do_sentence` (131) - Do sentence
-- [ ] `get_verb_from_xy` (148) - Get verb from coordinates
+- [x] `do_sentence` (131) - Do sentence
+- [x] `get_verb_from_xy` (148) - Get verb from coordinates
 - [ ] `get_verb_entrypoint` (163) - Get verb entrypoint
 - [ ] `verb_ops` (158) - Verb operations (complex)
 - [ ] `save_restore_verbs` (165) - Save/restore verbs
@@ -240,7 +268,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [ ] `print_ego` (185) - Print ego dialog
 - [ ] `talk_actor` (186) - Talk actor
 - [ ] `talk_ego` (187) - Talk ego
-- [ ] `stop_sentence` (179) - Stop sentence
+- [x] `stop_sentence` (179) - Stop sentence
 
 ### System Operations
 - [x] `freeze_unfreeze` (106) - Freeze/unfreeze
@@ -251,11 +279,11 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `set_state` (112) - Set state
 - [x] `set_owner` (113) - Set owner
 - [x] `get_owner` (114) - Get owner
-- [ ] `begin_override` (149) - Begin override
-- [ ] `end_override` (150) - End override
-- [ ] `set_object_name` (151) - Set object name
-- [ ] `set_box_flags` (153) - Set box flags
-- [ ] `create_box_matrix` (154) - Create box matrix
+- [x] `begin_override` (149) - Begin override
+- [x] `end_override` (150) - End override
+- [x] `set_object_name` (151) - Set object name
+- [x] `set_box_flags` (153) - Set box flags
+- [x] `create_box_matrix` (154) - Create box matrix
 - [ ] `draw_box` (166) - Draw box
 - [ ] `system_ops` (174) - System operations (complex)
 - [ ] `set_box_set` (228) - Set box set

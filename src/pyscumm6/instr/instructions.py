@@ -869,3 +869,231 @@ class GetOwner(IntrinsicOp):
     @property
     def intrinsic_name(self) -> str:
         return "get_owner"
+
+
+# Simple Actor Query Operations
+class IsScriptRunning(IntrinsicOp):
+    """Check if script is running with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "is_script_running"
+
+
+class IsSoundRunning(IntrinsicOp):
+    """Check if sound is running with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "is_sound_running"
+
+
+class GetActorMoving(IntrinsicOp):
+    """Get actor moving state with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_actor_moving"
+
+
+class GetActorRoom(IntrinsicOp):
+    """Get actor room with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_actor_room"
+
+
+class GetActorCostume(IntrinsicOp):
+    """Get actor costume with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_actor_costume"
+
+
+class GetActorWalkBox(IntrinsicOp):
+    """Get actor walk box with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_actor_walk_box"
+
+
+class GetInventoryCount(IntrinsicOp):
+    """Get inventory count with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_inventory_count"
+
+
+class FindInventory(IntrinsicOp):
+    """Find inventory item with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "find_inventory"
+
+
+class GetObjectX(IntrinsicOp):
+    """Get object X position with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_object_x"
+
+
+class GetObjectY(IntrinsicOp):
+    """Get object Y position with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_object_y"
+
+
+class GetObjectOldDir(IntrinsicOp):
+    """Get object old direction with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_object_old_dir"
+
+
+class AnimateActor(IntrinsicOp):
+    """Animate actor with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "animate_actor"
+
+
+class FaceActor(IntrinsicOp):
+    """Face actor with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "face_actor"
+
+
+class PickupObject(IntrinsicOp):
+    """Pick up object with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "pickup_object"
+
+
+# Two-Parameter Intrinsics
+class SetBoxFlags(IntrinsicOp):
+    """Set box flags with 2 parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "set_box_flags"
+
+
+class SetObjectName(IntrinsicOp):
+    """Set object name with 2 parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "set_object_name"
+
+
+class DoSentence(IntrinsicOp):
+    """Do sentence with 2 parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "do_sentence"
+
+
+# Actor Query Operations with Return Values
+class GetActorElevation(IntrinsicOp):
+    """Get actor elevation with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_actor_elevation"
+
+
+class GetActorWidth(IntrinsicOp):
+    """Get actor width with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_actor_width"
+
+
+class GetActorScaleX(IntrinsicOp):
+    """Get actor scale X with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_actor_scale_x"
+
+
+class GetActorAnimCounter(IntrinsicOp):
+    """Get actor animation counter with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_actor_anim_counter"
+
+
+class GetVerbFromXy(IntrinsicOp):
+    """Get verb from coordinates with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_verb_from_xy"
+
+
+class GetActorFromXy(IntrinsicOp):
+    """Get actor from coordinates with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_actor_from_xy"
+
+
+# Zero-Parameter Intrinsics
+class BeginOverride(IntrinsicOp):
+    """Begin override with no parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "begin_override"
+
+
+class EndOverride(IntrinsicOp):
+    """End override with no parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "end_override"
+
+
+class CreateBoxMatrix(IntrinsicOp):
+    """Create box matrix with no parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "create_box_matrix"
+
+
+class StopTalking(IntrinsicOp):
+    """Stop talking with no parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "stop_talking"
+
+
+class StopSentence(IntrinsicOp):
+    """Stop sentence with no parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "stop_sentence"
