@@ -53,7 +53,7 @@ def parse_message(message: Scumm6Opcodes.Message) -> List[Union[str, Part]]:
         if isinstance(p.content, S6Part.Terminator):
             if buf:
                 parts.append(buf)
-        elif isinstance(p.content, S6Part.SpecialSequence):  # type: ignore[unreachable]
+        elif isinstance(p.content, S6Part.SpecialSequence):
             if buf:
                 parts.append(buf)
             buf = ""
