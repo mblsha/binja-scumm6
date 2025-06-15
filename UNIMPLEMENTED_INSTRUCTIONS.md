@@ -13,6 +13,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 12 | `dup` | `Dup` | ✅ Complete |
 | 13 | `nott` | `Nott` | ✅ Complete |
 | 14 | `eq` | `Eq` | ✅ Complete |
+| 15 | `neq` | `Neq` | ✅ Complete |
 | 20 | `add` | `Add` | ✅ Complete |
 | 21 | `sub` | `Sub` | ✅ Complete |
 | 22 | `mul` | `Mul` | ✅ Complete |
@@ -50,7 +51,7 @@ These instructions have full LLIL implementations and should be migrated first:
 
 ### Comparison Operations
 - [x] `eq` (14) - Equal
-- [ ] `neq` (15) - Not equal
+- [x] `neq` (15) - Not equal
 - [ ] `gt` (16) - Greater than
 - [ ] `lt` (17) - Less than
 - [ ] `le` (18) - Less than or equal
