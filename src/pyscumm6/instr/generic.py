@@ -182,3 +182,52 @@ class ComparisonStackOp(Instruction):
         op2 = il.reg(4, LLIL_TEMP(0))
         comp_res = il_func(4, op1, op2)
         il.append(il.push(4, comp_res))
+
+
+class VariableWriteOp(Instruction):
+    """Base class for instructions that pop a value and write it to a variable."""
+    
+    @property
+    @abstractmethod
+    def instruction_name(self) -> str:
+        """The name of this instruction for rendering."""
+        pass
+    
+    @property
+    @abstractmethod
+    def expected_body_type(self) -> type:
+        """The expected Kaitai struct body type."""
+        pass
+    
+    def render(self) -> List[Token]:
+        # Handle potential UnknownOp case for write_byte_var due to Kaitai bug
+        if isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp):
+            # For write_byte_var which has a Kaitai mapping bug
+            return [TInstr(self.instruction_name), TSep("("), TInstr("var_?"), TSep(")")]
+        else:
+            var_id = self.op_details.body.data
+            return [
+                TInstr(self.instruction_name),
+                TSep("("),
+                TInt(f"var_{var_id}"),
+                TSep(")"),
+            ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        from ... import vars
+        
+        # Handle the case where write_byte_var has UnknownOp due to Kaitai bug
+        if isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp):
+            # This is a known bug in the Kaitai struct - write_byte_var falls through to UnknownOp
+            # In the original implementation, trying to access body.type causes an AttributeError
+            # and the method returns without adding any LLIL operations.
+            # For compatibility, we need to match this behavior exactly.
+            return
+        else:
+            # Normal case - proper variable write
+            assert isinstance(self.op_details.body, self.expected_body_type), \
+                f"Expected {self.expected_body_type.__name__} body, got {type(self.op_details.body)}"
+            
+            # Pop value from stack and write to variable
+            value = il.pop(4)
+            il.append(vars.il_set_var(il, self.op_details.body, value))

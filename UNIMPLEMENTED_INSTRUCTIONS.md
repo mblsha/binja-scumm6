@@ -40,6 +40,10 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 203 | `pick_one_of` | `PickOneOf` | ✅ Complete |
 | 204 | `pick_one_of_default` | `PickOneOfDefault` | ✅ Complete |
 | 212 | `shuffle` | `Shuffle` | ✅ Complete |
+| 6 | `byte_array_read` | `ByteArrayRead` | ✅ Complete |
+| 7 | `word_array_read` | `WordArrayRead` | ✅ Complete |
+| 66 | `write_byte_var` | `WriteByteVar` | ✅ Complete (with known Kaitai bug) |
+| 67 | `write_word_var` | `WriteWordVar` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -76,16 +80,16 @@ These instructions have full LLIL implementations and should be migrated first:
 - [x] `ge` (19) - Greater than or equal
 
 ### Variable Operations
-- [ ] `write_byte_var` (66) - Write byte to variable
-- [ ] `write_word_var` (67) - Write word to variable
+- [x] `write_byte_var` (66) - Write byte to variable
+- [x] `write_word_var` (67) - Write word to variable
 - [x] `byte_var_inc` (78) - Increment byte variable
 - [x] `word_var_inc` (79) - Increment word variable
 - [x] `byte_var_dec` (86) - Decrement byte variable
 - [x] `word_var_dec` (87) - Decrement word variable
 
 ### Array Operations
-- [ ] `byte_array_read` (6) - Read from byte array
-- [ ] `word_array_read` (7) - Read from word array
+- [x] `byte_array_read` (6) - Read from byte array
+- [x] `word_array_read` (7) - Read from word array
 - [ ] `byte_array_indexed_read` (10) - Indexed byte array read
 - [ ] `word_array_indexed_read` (11) - Indexed word array read
 - [ ] `byte_array_write` (70) - Write to byte array

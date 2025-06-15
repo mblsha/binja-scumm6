@@ -3,10 +3,11 @@
 from typing import List
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
+from binaryninja import IntrinsicName
 from ...scumm6_opcodes import Scumm6Opcodes
 
 from .opcodes import Instruction
-from .generic import BinaryStackOp, UnaryStackOp, ComparisonStackOp
+from .generic import BinaryStackOp, UnaryStackOp, ComparisonStackOp, VariableWriteOp
 
 # Import the vars module to use the same LLIL generation logic
 from ... import vars
@@ -330,12 +331,46 @@ class ByteArrayRead(Instruction):
         assert isinstance(self.op_details.body, Scumm6Opcodes.ByteArrayRead), \
             f"Expected ByteArrayRead body, got {type(self.op_details.body)}"
 
-        # Pop base index from stack
-        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # base
+        # Generate intrinsic call to match old implementation
+        # The intrinsic pops one value from stack and pushes the result
+        il.append(il.intrinsic(
+            [il.reg(4, LLIL_TEMP(0))],  # output
+            IntrinsicName("byte_array_read"),  # intrinsic name
+            [il.pop(4)]  # parameter: pop base from stack
+        ))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
 
-        # Use vars.py helper to read from array
-        # readArray(array_id, 0, base) - array ID from instruction, index 0, base from stack
-        array_result = vars.il_get_array(il, self.op_details.body.array, il.const(4, 0), il.reg(4, LLIL_TEMP(0)))
 
-        # Push result to stack
-        il.append(il.push(4, array_result))
+class WriteByteVar(VariableWriteOp):
+    instruction_name = "write_byte_var"
+    expected_body_type = Scumm6Opcodes.ByteVarData
+
+
+class WriteWordVar(VariableWriteOp):
+    instruction_name = "write_word_var" 
+    expected_body_type = Scumm6Opcodes.WordVarData
+
+
+class WordArrayRead(Instruction):
+
+    def render(self) -> List[Token]:
+        array_id = self.op_details.body.array
+        return [
+            TInstr("word_array_read"),
+            TSep("("),
+            TInt(f"array_{array_id}"),
+            TSep(")"),
+        ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.WordArrayRead), \
+            f"Expected WordArrayRead body, got {type(self.op_details.body)}"
+
+        # Generate intrinsic call to match old implementation
+        # The intrinsic pops one value from stack and pushes the result
+        il.append(il.intrinsic(
+            [il.reg(4, LLIL_TEMP(0))],  # output
+            IntrinsicName("word_array_read"),  # intrinsic name
+            [il.pop(4)]  # parameter: pop base from stack
+        ))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))

@@ -67,4 +67,7 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.pick_one_of_default: instructions.PickOneOfDefault,
     Scumm6Opcodes.OpType.shuffle: instructions.Shuffle,
     Scumm6Opcodes.OpType.byte_array_read: instructions.ByteArrayRead,
+    Scumm6Opcodes.OpType.word_array_read: instructions.WordArrayRead,
+    Scumm6Opcodes.OpType.write_byte_var: instructions.WriteByteVar,
+    Scumm6Opcodes.OpType.write_word_var: instructions.WriteWordVar,
 }
