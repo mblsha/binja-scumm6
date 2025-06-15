@@ -270,7 +270,7 @@ def get_old_disasm(case: InstructionTestCase) -> Optional[str]:
     if result is None:
         return None
     tokens, _ = result
-    return asm_str(token.text for token in tokens)
+    return str(asm_str(token.text for token in tokens))
 
 
 def get_new_disasm(case: InstructionTestCase) -> Optional[str]:
@@ -279,7 +279,7 @@ def get_new_disasm(case: InstructionTestCase) -> Optional[str]:
     if new_instr is None:
         return None
     tokens = new_instr.render()
-    return asm_str(tokens)
+    return str(asm_str(tokens))
 
 
 @pytest.mark.parametrize(
