@@ -131,3 +131,19 @@ class Pop2(Instruction):
 
         # Despite the name "pop2", this instruction only pops 1 item (as per CallFuncPop1)
         il.append(il.intrinsic([], "pop2", [il.pop(4)]))
+
+
+class Add(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("add")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
+            f"Expected NoData body, got {type(self.op_details.body)}"
+
+        # Pop two values from stack: a (top), b (second)
+        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
+        il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
+        # Push result: b + a
+        il.append(il.push(4, il.add(4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))))

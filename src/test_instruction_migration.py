@@ -66,7 +66,11 @@ instruction_test_cases = [
         data=b"\xa7",
         comment="Pop two items from stack"
     ),
-    # Add more test cases here as instructions are implemented
+    InstructionTestCase(
+        test_id="add_0x14",
+        data=b"\x14",
+        comment="Add top two stack items"
+    ),
 ]
 
 
