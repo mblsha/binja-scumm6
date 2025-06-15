@@ -75,6 +75,11 @@ instruction_test_cases = [
         data=b"\x16",
         comment="Multiply top two stack items"
     ),
+    InstructionTestCase(
+        test_id="div_0x17",
+        data=b"\x17",
+        comment="Divide top two stack items"
+    ),
 ]
 
 
