@@ -11,6 +11,8 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 2 | `push_byte_var` | `PushByteVar` | ✅ Complete |
 | 3 | `push_word_var` | `PushWordVar` | ✅ Complete |
 | 12 | `dup` | `Dup` | ✅ Complete |
+| 13 | `nott` | `Nott` | ✅ Complete |
+| 14 | `eq` | `Eq` | ✅ Complete |
 | 20 | `add` | `Add` | ✅ Complete |
 | 21 | `sub` | `Sub` | ✅ Complete |
 | 22 | `mul` | `Mul` | ✅ Complete |
@@ -42,12 +44,12 @@ These instructions have full LLIL implementations and should be migrated first:
 ### Logical Operations
 - [x] `land` (24) - Logical AND
 - [x] `lor` (25) - Logical OR
-- [ ] `nott` (13) - Logical NOT
+- [x] `nott` (13) - Logical NOT
 - [ ] `band` (214) - Bitwise AND
 - [ ] `bor` (215) - Bitwise OR
 
 ### Comparison Operations
-- [ ] `eq` (14) - Equal
+- [x] `eq` (14) - Equal
 - [ ] `neq` (15) - Not equal
 - [ ] `gt` (16) - Greater than
 - [ ] `lt` (17) - Less than
