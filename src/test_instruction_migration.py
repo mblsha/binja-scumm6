@@ -140,6 +140,11 @@ instruction_test_cases = [
         data=b"\xd7",
         comment="Bitwise OR of top two stack items"
     ),
+    InstructionTestCase(
+        test_id="byte_var_inc_0x4e",
+        data=b"\x4e\x38",
+        comment="Increment byte variable 0x38 (56)"
+    ),
 ]
 
 
