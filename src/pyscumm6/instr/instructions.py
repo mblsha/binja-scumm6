@@ -520,6 +520,21 @@ class GetRandomNumber(Instruction):
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
 
 
+class GetRandomNumberRange(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("get_random_number_range")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.CallFuncPop2Push), \
+            f"Expected CallFuncPop2Push body, got {type(self.op_details.body)}"
+
+        # CallFuncPop2Push instructions use add_intrinsic which pops 2 values and pushes 1 result
+        # Following the same pattern as the original add_intrinsic function
+        il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], "get_random_number_range", [il.pop(4), il.pop(4)]))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+
+
 
 
 
