@@ -12,6 +12,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 3 | `push_word_var` | `PushWordVar` | ✅ Complete |
 | 12 | `dup` | `Dup` | ✅ Complete |
 | 26 | `pop1` | `Pop1` | ✅ Complete |
+| 167 | `pop2` | `Pop2` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -23,7 +24,7 @@ These instructions have full LLIL implementations and should be migrated first:
 - [x] `push_word_var` (3) - Push word variable
 - [x] `dup` (12) - Duplicate top stack item
 - [x] `pop1` (26) - Pop single item
-- [ ] `pop2` (167) - Pop two items
+- [x] `pop2` (167) - Pop single item (despite the name)
 
 ### Arithmetic Operations
 - [ ] `add` (20) - Addition
