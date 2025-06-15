@@ -101,19 +101,28 @@ jobs:
         run: |
           if [ ! -f DOTTDEMO.ZIP ]; then
             echo "📥 Downloading demo data..."
-            curl -L -o DOTTDEMO.ZIP https://archive.org/download/DayOfTheTentacleDemo/DOTTDEMO.ZIP || echo "Demo download failed, tests will be skipped"
+            if ! curl -L -o DOTTDEMO.ZIP https://archive.org/download/DayOfTheTentacleDemo/DOTTDEMO.ZIP; then
+              echo "❌ Demo download failed! This is required for tests."
+              exit 1
+            fi
           else
             echo "✅ Demo data already cached"
           fi
           
           if [ -f DOTTDEMO.ZIP ] && [ ! -f DOTTDEMO.000 ]; then
             echo "📂 Extracting demo data..."
-            unzip -q DOTTDEMO.ZIP
+            if ! unzip -o -q DOTTDEMO.ZIP; then
+              echo "❌ Demo extraction failed!"
+              exit 1
+            fi
           fi
           
           if [ -f DOTTDEMO.000 ] && [ -f DOTTDEMO.001 ] && [ ! -f DOTTDEMO.bsc6 ]; then
             echo "🔄 Converting demo data..."
-            python converter/cli.py DOTTDEMO.000 DOTTDEMO.001 -o DOTTDEMO.bsc6 || echo "Demo conversion failed, tests will be skipped"
+            if ! python converter/cli.py DOTTDEMO.000 DOTTDEMO.001 -o DOTTDEMO.bsc6; then
+              echo "❌ Demo conversion failed!"
+              exit 1
+            fi
           fi
       
       - name: Run Pytest with coverage
