@@ -1,22 +1,38 @@
 from binja_helpers import binja_api  # noqa: F401
-from binja_helpers.mock_llil import MockLowLevelILFunction
+from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL
 from binja_helpers.tokens import asm_str  # noqa: F401
 import pytest
+from typing import List, cast
+import sys
+import types
+from binaryninja.binaryview import BinaryView
+
+# Set up additional mock modules needed by scumm6.py
+bn = sys.modules.get("binaryninja")
+if bn and not hasattr(bn, "core_ui_enabled"):
+    bn.core_ui_enabled = lambda: False  # type: ignore[attr-defined]
+    if "binaryninja.function" not in sys.modules:
+        func_mod = types.ModuleType("binaryninja.function")
+        func_mod.RegisterInfo = bn.RegisterInfo  # type: ignore[attr-defined]
+        func_mod.InstructionInfo = bn.InstructionInfo  # type: ignore[attr-defined]
+        func_mod.InstructionTextToken = bn.InstructionTextToken  # type: ignore[attr-defined]
+        sys.modules["binaryninja.function"] = func_mod
 
 # Path 1: The original, monolithic implementation
-from src.scumm6 import Scumm6 as OldScumm6Architecture, LastBV
+from .scumm6 import Scumm6 as OldScumm6Architecture, LastBV  # noqa: E402
 
 # Path 2: The new, refactored implementation (decoder to be created)
 # from src.pyscumm6.disasm import decode as new_decode
 
 
 # Wrapper to get LLIL from the old architecture
-def get_old_llil(data: bytes, addr: int):
+def get_old_llil(data: bytes, addr: int) -> List[MockLLIL]:
     class DummyFile:
         filename = "<dummy>"
 
-    class DummyView:
+    class DummyView(BinaryView):
         def __init__(self, buf: bytes, base: int) -> None:
+            super().__init__()
             self._buf = buf
             self._base = base
             self.file = DummyFile()
@@ -31,11 +47,11 @@ def get_old_llil(data: bytes, addr: int):
     arch = OldScumm6Architecture()
     il = MockLowLevelILFunction()
     arch.get_instruction_low_level_il(data, addr, il)
-    return il.ils
+    return cast(List[MockLLIL], il.ils)
 
 
 # Wrapper to get LLIL from the new instruction object
-def get_new_llil(data: bytes, addr: int):
+def get_new_llil(data: bytes, addr: int) -> List[MockLLIL]:
     # new_instr = new_decode(data, addr)
     # il = MockLowLevelILFunction()
     # new_instr.lift(il, addr)
