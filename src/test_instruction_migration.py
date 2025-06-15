@@ -166,6 +166,11 @@ instruction_test_cases = [
         data=b"\x57\x38\x00",
         comment="Decrement word variable 0x38 (56)"
     ),
+    InstructionTestCase(
+        test_id="break_here_0x6c",
+        data=b"\x6c",
+        comment="Breakpoint/debug instruction"
+    ),
 ]
 
 

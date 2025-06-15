@@ -33,6 +33,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 79 | `word_var_inc` | `WordVarInc` | ✅ Complete |
 | 86 | `byte_var_dec` | `ByteVarDec` | ✅ Complete |
 | 87 | `word_var_dec` | `WordVarDec` | ✅ Complete |
+| 108 | `break_here` | `BreakHere` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -112,7 +113,7 @@ These instructions have full LLIL implementations and should be migrated first:
 - [ ] `stop_object_script` (119) - Stop object script
 
 ### Utility
-- [ ] `break_here` (108) - Breakpoint/debug instruction
+- [x] `break_here` (108) - Breakpoint/debug instruction
 
 ## 🏗️ Complex Instructions (Intrinsic Candidates)
 
