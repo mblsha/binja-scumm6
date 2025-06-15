@@ -2,12 +2,12 @@
 
 from typing import List
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
-from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
+from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName
 from ...scumm6_opcodes import Scumm6Opcodes
 
 from .opcodes import Instruction
-from .generic import BinaryStackOp, UnaryStackOp, ComparisonStackOp, VariableWriteOp
+from .generic import BinaryStackOp, UnaryStackOp, ComparisonStackOp, VariableWriteOp, ControlFlowOp
 
 # Import the vars module to use the same LLIL generation logic
 from ... import vars
@@ -580,3 +580,108 @@ class WordArrayDec(Instruction):
         # They fall through to UnknownOp and generate two unimplemented() calls like other UnknownOp instructions
         il.append(il.unimplemented())
         il.append(il.unimplemented())
+
+
+class Iff(ControlFlowOp):
+
+    def render(self) -> List[Token]:
+        jump_offset = self.op_details.body.jump_offset
+        return [
+            TInstr("iff"),
+            TSep("("),
+            TInt(str(jump_offset)),
+            TSep(")"),
+        ]
+
+    def is_conditional(self) -> bool:
+        return True
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.JumpData), \
+            f"Expected JumpData body, got {type(self.op_details.body)}"
+
+        # Create labels for true and false branches
+        t = LowLevelILLabel()
+        f = LowLevelILLabel()
+        
+        # Pop condition value from stack
+        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
+        
+        # If condition != 0, jump to target (iff = "if true")
+        il.append(
+            il.if_expr(
+                il.compare_not_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0)), t, f
+            )
+        )
+        
+        # True branch - jump to target
+        il.mark_label(t)
+        target_addr = addr + 3 + self.op_details.body.jump_offset  # 3 = instruction length
+        il.append(il.jump(il.const(4, target_addr)))
+        
+        # False branch - continue to next instruction
+        il.mark_label(f)
+
+
+class IfNot(ControlFlowOp):
+
+    def render(self) -> List[Token]:
+        jump_offset = self.op_details.body.jump_offset
+        return [
+            TInstr("if_not"),
+            TSep("("),
+            TInt(str(jump_offset)),
+            TSep(")"),
+        ]
+
+    def is_conditional(self) -> bool:
+        return True
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.JumpData), \
+            f"Expected JumpData body, got {type(self.op_details.body)}"
+
+        # Create labels for true and false branches
+        t = LowLevelILLabel()
+        f = LowLevelILLabel()
+        
+        # Pop condition value from stack
+        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
+        
+        # If condition == 0, jump to target (if_not = "if false")
+        il.append(
+            il.if_expr(
+                il.compare_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0)), t, f
+            )
+        )
+        
+        # True branch - jump to target
+        il.mark_label(t)
+        target_addr = addr + 3 + self.op_details.body.jump_offset  # 3 = instruction length
+        il.append(il.jump(il.const(4, target_addr)))
+        
+        # False branch - continue to next instruction
+        il.mark_label(f)
+
+
+class Jump(ControlFlowOp):
+
+    def render(self) -> List[Token]:
+        jump_offset = self.op_details.body.jump_offset
+        return [
+            TInstr("jump"),
+            TSep("("),
+            TInt(str(jump_offset)),
+            TSep(")"),
+        ]
+
+    def is_conditional(self) -> bool:
+        return False
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.JumpData), \
+            f"Expected JumpData body, got {type(self.op_details.body)}"
+
+        # Unconditional jump to target
+        target_addr = addr + 3 + self.op_details.body.jump_offset  # 3 = instruction length
+        il.append(il.jump(il.const(4, target_addr)))

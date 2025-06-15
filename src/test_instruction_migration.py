@@ -314,6 +314,24 @@ instruction_test_cases = [
         comment="Decrement word array element",
         expected_disasm="word_array_dec"
     ),
+    InstructionTestCase(
+        test_id="iff_positive_offset_0x5c",
+        data=b"\x5c\x14\x00",
+        comment="If true with +20 offset",
+        expected_disasm="iff(20)"
+    ),
+    InstructionTestCase(
+        test_id="if_not_zero_offset_0x5d",
+        data=b"\x5d\x00\x00",
+        comment="If false with 0 offset",
+        expected_disasm="if_not(0)"
+    ),
+    InstructionTestCase(
+        test_id="jump_positive_offset_0x73",
+        data=b"\x73\x64\x00",
+        comment="Jump with +100 offset",
+        expected_disasm="jump(100)"
+    ),
 ]
 
 

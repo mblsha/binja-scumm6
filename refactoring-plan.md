@@ -15,23 +15,23 @@ This approach will not only accelerate the implementation of the remaining ~100 
 
 Based on `UNIMPLEMENTED_INSTRUCTIONS.md`, the remaining instructions can be categorized as follows.
 
-#### Group 1: Variable and Array Operations
+#### ✅ Group 1: Variable and Array Operations (COMPLETED)
 These instructions read from or write to the game's state variables and dynamically sized arrays. They are a high priority as they are fundamental to game logic.
 
-*   **Variable Writes:** `write_byte_var` (66), `write_word_var` (67)
-*   **Array Reads:** `byte_array_read` (6), `word_array_read` (7), `byte_array_indexed_read` (10), `word_array_indexed_read` (11)
-*   **Array Writes:** `byte_array_write` (70), `word_array_write` (71), `byte_array_indexed_write` (74), `word_array_indexed_write` (75)
-*   **Array Increments/Decrements:** `byte_array_inc` (82), `word_array_inc` (83), `byte_array_dec` (90), `word_array_dec` (91)
-*   **Array Dimensioning:** `dim_array` (188), `dim2dim_array` (192), `array_ops` (164)
+*   **✅ Variable Writes:** `write_byte_var` (66), `write_word_var` (67)
+*   **✅ Array Reads:** `byte_array_read` (6), `word_array_read` (7), `byte_array_indexed_read` (10), `word_array_indexed_read` (11)
+*   **✅ Array Writes:** `byte_array_write` (70), `word_array_write` (71), `byte_array_indexed_write` (74), `word_array_indexed_write` (75)
+*   **✅ Array Increments/Decrements:** `byte_array_inc` (82), `word_array_inc` (83), `byte_array_dec` (90), `word_array_dec` (91)
+*   **🚧 Array Dimensioning:** `dim_array` (188), `dim2dim_array` (192), `array_ops` (164) - Deferred to Group 3
 
-#### Group 2: Control Flow
+#### ✅ Group 2: Control Flow (COMPLETED)
 These instructions alter the flow of execution, either within a script or by jumping to another script. They are critical for building an accurate Control-Flow Graph (CFG).
 
-*   **Conditional Jumps:** `iff` (92), `if_not` (93)
-*   **Unconditional Jumps:** `jump` (115)
-*   **Script Jumps:** `jump_to_script` (213)
-*   **Script/Object Execution:** `start_script` (94), `start_script_quick` (95), `start_script_quick2` (191), `start_object` (96), `start_object_quick` (190)
-*   **Script/Object Termination:** `stop_script` (124), `stop_object_code1` (101), `stop_object_code2` (102), `stop_object_script` (119)
+*   **✅ Conditional Jumps:** `iff` (92), `if_not` (93)
+*   **✅ Unconditional Jumps:** `jump` (115)
+*   **🚧 Script Jumps:** `jump_to_script` (213) - Deferred to Group 3
+*   **🚧 Script/Object Execution:** `start_script` (94), `start_script_quick` (95), `start_script_quick2` (191), `start_object` (96), `start_object_quick` (190) - Deferred to Group 3
+*   **🚧 Script/Object Termination:** `stop_script` (124), `stop_object_code1` (101), `stop_object_code2` (102), `stop_object_script` (119) - Deferred to Group 3
 
 #### Group 3: Complex Engine Intrinsics
 This is the largest group, consisting of high-level engine functions. These are best implemented as `intrinsic` calls in LLIL. They can be subgrouped by functionality.

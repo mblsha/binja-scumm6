@@ -54,6 +54,9 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 83 | `word_array_inc` | `WordArrayInc` | ✅ Complete (UnknownOp) |
 | 90 | `byte_array_dec` | `ByteArrayDec` | ✅ Complete (UnknownOp) |
 | 91 | `word_array_dec` | `WordArrayDec` | ✅ Complete (UnknownOp) |
+| 92 | `iff` | `Iff` | ✅ Complete |
+| 93 | `if_not` | `IfNot` | ✅ Complete |
+| 115 | `jump` | `Jump` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -112,9 +115,9 @@ These instructions have full LLIL implementations and should be migrated first:
 - [x] `word_array_dec` (91) - Decrement word array element
 
 ### Control Flow
-- [ ] `iff` (92) - If true (conditional branch)
-- [ ] `if_not` (93) - If false (conditional branch)
-- [ ] `jump` (115) - Unconditional jump
+- [x] `iff` (92) - If true (conditional branch)
+- [x] `if_not` (93) - If false (conditional branch)
+- [x] `jump` (115) - Unconditional jump
 - [ ] `jump_to_script` (213) - Jump to script
 
 ### Script Operations

@@ -3,7 +3,8 @@
 from abc import abstractmethod
 from typing import List, Type, Any
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
-from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
+from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
+from binaryninja.enums import BranchType
 
 from .opcodes import Instruction
 from ...scumm6_opcodes import Scumm6Opcodes
@@ -231,3 +232,27 @@ class VariableWriteOp(Instruction):
             # Pop value from stack and write to variable
             value = il.pop(4)
             il.append(vars.il_set_var(il, self.op_details.body, value))
+
+
+class ControlFlowOp(Instruction):
+    """Base class for control flow instructions that need CFG analysis support."""
+    
+    def analyze(self, info, addr: int) -> None:
+        """Analyze instruction for Control Flow Graph integration."""
+        assert isinstance(self.op_details.body, Scumm6Opcodes.JumpData), \
+            f"Expected JumpData body, got {type(self.op_details.body)}"
+        
+        # Calculate target address (relative to end of instruction)
+        target_addr = addr + info.length + self.op_details.body.jump_offset
+        
+        # Add branches based on instruction type
+        if self.is_conditional():
+            info.add_branch(BranchType.TrueBranch, target_addr)
+            info.add_branch(BranchType.FalseBranch, addr + info.length)
+        else:
+            info.add_branch(BranchType.UnconditionalBranch, target_addr)
+    
+    @abstractmethod
+    def is_conditional(self) -> bool:
+        """Return True if this is a conditional branch, False for unconditional."""
+        pass
