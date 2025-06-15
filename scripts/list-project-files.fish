@@ -43,7 +43,7 @@ if test "$include_binja" = true
             "binaryninja/architecture.py" \
             "binaryninja/binaryview.py" \
             "binaryninja/lowlevelil.py" \
-            "binaryninja/enums"
+            "binaryninja/enums.py"
 
         # Add each allowed file if it exists
         for file in $binja_allowlist
