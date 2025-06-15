@@ -45,8 +45,8 @@ class Scumm6View(BinaryView):
 
     def init(self) -> bool:
         arch = "SCUMM6"
-        self.arch = Architecture[arch]
-        self.platform = Architecture[arch].standalone_platform
+        self.arch = Architecture[arch]  # type: ignore[misc]
+        self.platform = Architecture[arch].standalone_platform  # type: ignore[misc]
 
         # create specinal segments for vars
         self.add_auto_segment(            vars.SCUMM_VARS_START,
