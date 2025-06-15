@@ -34,6 +34,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 86 | `byte_var_dec` | `ByteVarDec` | ✅ Complete |
 | 87 | `word_var_dec` | `WordVarDec` | ✅ Complete |
 | 108 | `break_here` | `BreakHere` | ✅ Complete |
+| 189 | `dummy` | `Dummy` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -254,7 +255,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [ ] `get_animate_variable` (210) - Get animate variable
 - [ ] `kernel_get_functions` (200) - Kernel get functions
 - [ ] `kernel_set_functions` (201) - Kernel set functions
-- [ ] `dummy` (189) - Dummy/no-op instruction
+- [x] `dummy` (189) - Dummy/no-op instruction
 
 ## Migration Guidelines
 
