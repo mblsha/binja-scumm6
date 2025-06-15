@@ -53,7 +53,8 @@ instruction_test_cases = [
     InstructionTestCase(
         test_id="dup_0x0c",
         data=b"\x0c",
-        comment="Duplicate top stack item"
+        comment="Duplicate top stack item",
+        expected_disasm="dup"
     ),
     InstructionTestCase(
         test_id="pop1_0x1a",
@@ -64,142 +65,170 @@ instruction_test_cases = [
     InstructionTestCase(
         test_id="pop2_0xa7",
         data=b"\xa7",
-        comment="Pop two items from stack"
+        comment="Pop two items from stack",
+        expected_disasm="pop2"
     ),
     InstructionTestCase(
         test_id="add_0x14",
         data=b"\x14",
-        comment="Add top two stack items"
+        comment="Add top two stack items",
+        expected_disasm="add"
     ),
     InstructionTestCase(
         test_id="sub_0x15",
         data=b"\x15",
-        comment="Subtract top two stack items"
+        comment="Subtract top two stack items",
+        expected_disasm="sub"
     ),
     InstructionTestCase(
         test_id="mul_0x16",
         data=b"\x16",
-        comment="Multiply top two stack items"
+        comment="Multiply top two stack items",
+        expected_disasm="mul"
     ),
     InstructionTestCase(
         test_id="div_0x17",
         data=b"\x17",
-        comment="Divide top two stack items"
+        comment="Divide top two stack items",
+        expected_disasm="div"
     ),
     InstructionTestCase(
         test_id="land_0x18",
         data=b"\x18",
-        comment="Logical AND of top two stack items"
+        comment="Logical AND of top two stack items",
+        expected_disasm="land"
     ),
     InstructionTestCase(
         test_id="lor_0x19",
         data=b"\x19",
-        comment="Logical OR of top two stack items"
+        comment="Logical OR of top two stack items",
+        expected_disasm="lor"
     ),
     InstructionTestCase(
         test_id="nott_0x0d",
         data=b"\x0d",
-        comment="Logical NOT of top stack item"
+        comment="Logical NOT of top stack item",
+        expected_disasm="nott"
     ),
     InstructionTestCase(
         test_id="eq_0x0e",
         data=b"\x0e",
-        comment="Equal comparison of top two stack items"
+        comment="Equal comparison of top two stack items",
+        expected_disasm="eq"
     ),
     InstructionTestCase(
         test_id="neq_0x0f",
         data=b"\x0f",
-        comment="Not equal comparison of top two stack items"
+        comment="Not equal comparison of top two stack items",
+        expected_disasm="neq"
     ),
     InstructionTestCase(
         test_id="gt_0x10",
         data=b"\x10",
-        comment="Greater than comparison of top two stack items"
+        comment="Greater than comparison of top two stack items",
+        expected_disasm="gt"
     ),
     InstructionTestCase(
         test_id="lt_0x11",
         data=b"\x11",
-        comment="Less than comparison of top two stack items"
+        comment="Less than comparison of top two stack items",
+        expected_disasm="lt"
     ),
     InstructionTestCase(
         test_id="le_0x12",
         data=b"\x12",
-        comment="Less than or equal comparison of top two stack items"
+        comment="Less than or equal comparison of top two stack items",
+        expected_disasm="le"
     ),
     InstructionTestCase(
         test_id="ge_0x13",
         data=b"\x13",
-        comment="Greater than or equal comparison of top two stack items"
+        comment="Greater than or equal comparison of top two stack items",
+        expected_disasm="ge"
     ),
     InstructionTestCase(
         test_id="abs_0xc4",
         data=b"\xc4",
-        comment="Absolute value of top stack item"
+        comment="Absolute value of top stack item",
+        expected_disasm="abs"
     ),
     InstructionTestCase(
         test_id="band_0xd6",
         data=b"\xd6",
-        comment="Bitwise AND of top two stack items"
+        comment="Bitwise AND of top two stack items",
+        expected_disasm="band"
     ),
     InstructionTestCase(
         test_id="bor_0xd7",
         data=b"\xd7",
-        comment="Bitwise OR of top two stack items"
+        comment="Bitwise OR of top two stack items",
+        expected_disasm="bor"
     ),
     InstructionTestCase(
         test_id="byte_var_inc_0x4e",
         data=b"\x4e\x38",
-        comment="Increment byte variable 0x38 (56)"
+        comment="Increment byte variable 0x38 (56)",
+        expected_disasm="byte_var_inc(var_56)"
     ),
     InstructionTestCase(
         test_id="word_var_inc_0x4f",
         data=b"\x4f\x38\x00",
-        comment="Increment word variable 0x38 (56)"
+        comment="Increment word variable 0x38 (56)",
+        expected_disasm="word_var_inc(var_56)"
     ),
     InstructionTestCase(
         test_id="byte_var_dec_0x56",
         data=b"\x56\x38",
-        comment="Decrement byte variable 0x38 (56)"
+        comment="Decrement byte variable 0x38 (56)",
+        expected_disasm="byte_var_dec(var_56)"
     ),
     InstructionTestCase(
         test_id="word_var_dec_0x57",
         data=b"\x57\x38\x00",
-        comment="Decrement word variable 0x38 (56)"
+        comment="Decrement word variable 0x38 (56)",
+        expected_disasm="word_var_dec(var_56)"
     ),
     InstructionTestCase(
         test_id="break_here_0x6c",
         data=b"\x6c",
-        comment="Breakpoint/debug instruction"
+        comment="Breakpoint/debug instruction",
+        expected_disasm="break_here"
     ),
     InstructionTestCase(
         test_id="dummy_0xbd",
         data=b"\xbd",
-        comment="Dummy/no-op instruction"
+        comment="Dummy/no-op instruction",
+        expected_disasm="dummy"
     ),
     InstructionTestCase(
         test_id="get_random_number_0x87",
         data=b"\x87",
-        comment="Get random number"
+        comment="Get random number",
+        expected_disasm="get_random_number"
     ),
     InstructionTestCase(
         test_id="get_random_number_range_0x88",
         data=b"\x88",
-        comment="Get random number in range"
+        comment="Get random number in range",
+        expected_disasm="get_random_number_range"
     ),
     InstructionTestCase(
         test_id="pick_one_of_0xcb",
         data=b"\xcb",
-        comment="Pick one of multiple options"
+        comment="Pick one of multiple options",
+        expected_disasm="pick_one_of"
     ),
     InstructionTestCase(
         test_id="pick_one_of_default_0xcc",
         data=b"\xcc",
-        comment="Pick one of multiple options with default"
+        comment="Pick one of multiple options with default",
+        expected_disasm="pick_one_of_default"
     ),
     InstructionTestCase(
         test_id="shuffle_0xd4",
         data=b"\xd4",
-        comment="Shuffle array or list"
+        comment="Shuffle array or list",
+        expected_disasm="shuffle"
     ),
     # FIXME: failing
     # InstructionTestCase(
