@@ -130,6 +130,11 @@ instruction_test_cases = [
         data=b"\xc4",
         comment="Absolute value of top stack item"
     ),
+    InstructionTestCase(
+        test_id="band_0xd6",
+        data=b"\xd6",
+        comment="Bitwise AND of top two stack items"
+    ),
 ]
 
 
