@@ -505,5 +505,21 @@ class Dummy(Instruction):
         il.append(il.unimplemented())
 
 
+class GetRandomNumber(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("get_random_number")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.CallFuncPop1Push), \
+            f"Expected CallFuncPop1Push body, got {type(self.op_details.body)}"
+
+        # CallFuncPop1Push instructions use add_intrinsic which pops 1 value and pushes 1 result
+        # Following the same pattern as the original add_intrinsic function
+        il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], "get_random_number", [il.pop(4)]))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+
+
+
 
 

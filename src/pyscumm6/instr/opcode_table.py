@@ -38,4 +38,5 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.word_var_dec: instructions.WordVarDec,
     Scumm6Opcodes.OpType.break_here: instructions.BreakHere,
     Scumm6Opcodes.OpType.dummy: instructions.Dummy,
+    Scumm6Opcodes.OpType.get_random_number: instructions.GetRandomNumber,
 }
