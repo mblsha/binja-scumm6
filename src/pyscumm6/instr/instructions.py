@@ -179,3 +179,19 @@ class Mul(Instruction):
         il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
         # Push result: b * a
         il.append(il.push(4, il.mult(4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))))
+
+
+class Div(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("div")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
+            f"Expected NoData body, got {type(self.op_details.body)}"
+
+        # Pop two values from stack: a (top), b (second)
+        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
+        il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
+        # Push result: b / a (signed division)
+        il.append(il.push(4, il.div_signed(4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))))
