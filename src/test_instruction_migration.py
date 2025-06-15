@@ -96,6 +96,16 @@ instruction_test_cases = [
         data=b"\x19",
         comment="Logical OR of top two stack items"
     ),
+    InstructionTestCase(
+        test_id="nott_0x0d",
+        data=b"\x0d",
+        comment="Logical NOT of top stack item"
+    ),
+    InstructionTestCase(
+        test_id="eq_0x0e",
+        data=b"\x0e",
+        comment="Equal comparison of top two stack items"
+    ),
 ]
 
 

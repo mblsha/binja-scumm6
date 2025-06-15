@@ -227,3 +227,35 @@ class Lor(Instruction):
         il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
         # Push result: b || a (logical OR)
         il.append(il.push(4, il.or_expr(4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))))
+
+
+class Nott(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("nott")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
+            f"Expected NoData body, got {type(self.op_details.body)}"
+
+        # Pop one value from stack and check if it equals 0 (logical NOT)
+        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
+        comp_res = il.compare_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0))
+        il.append(il.push(4, comp_res))
+
+
+class Eq(Instruction):
+
+    def render(self) -> List[Token]:
+        return [TInstr("eq")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
+            f"Expected NoData body, got {type(self.op_details.body)}"
+
+        # Pop two values from stack: a (top), b (second)
+        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
+        il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
+        # Push result: b == a
+        comp_res = il.compare_equal(4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))
+        il.append(il.push(4, comp_res))
