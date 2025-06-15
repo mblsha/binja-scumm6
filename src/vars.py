@@ -1,4 +1,4 @@
-from binja_helpers.binja_helpers import binja_api  # noqa: F401
+from binja_helpers import binja_api  # noqa: F401
 from binaryninja import lowlevelil
 
 from .scumm6_opcodes import Scumm6Opcodes

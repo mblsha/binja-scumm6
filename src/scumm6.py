@@ -1,4 +1,5 @@
-from binja_helpers.binja_helpers import binja_api  # noqa: F401
+from binja_helpers import binja_api  # noqa: F401
+from binja_helpers.mock_analysis import MockAnalysisInfo
 
 from typing import Any, List, Optional, Tuple, Dict
 
@@ -217,8 +218,6 @@ class Scumm6(Architecture):
         dis = self.disasm.decode_instruction(data, addr)
         if dis and not core_ui_enabled():
             try:
-                from binja_helpers.binja_helpers.mock_analysis import MockAnalysisInfo
-
                 info = MockAnalysisInfo()
                 info.length = dis.length
                 op = dis.op

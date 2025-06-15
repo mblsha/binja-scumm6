@@ -1,26 +1,30 @@
 from pathlib import Path
 import sys
 
-_plugin_dir = str(Path(__file__).resolve().parent)
-if _plugin_dir not in sys.path:
-    sys.path.insert(0, _plugin_dir)
+# FIXME: this might be outdated, and possibly could be removed
+_scumm6_dir = Path(__file__).resolve().parent
+if str(_scumm6_dir) not in sys.path:
+    sys.path.insert(0, str(_scumm6_dir))
 
-from binja_helpers.binja_helpers import binja_api  # noqa: E402,F401
-try:  # pragma: no cover - optional Binary Ninja dependency
+# Add the vendored binja_helpers directory to sys.path to resolve its internal imports.
+_helpers_dir = _scumm6_dir / "binja_helpers"
+if _helpers_dir.is_dir() and str(_helpers_dir) not in sys.path:
+    sys.path.insert(0, str(_helpers_dir))
+
+# With the new path, we import directly from the 'binja_helpers' library package.
+# The original 'from binja_helpers.binja_helpers import binja_api' will no longer work.
+from binja_helpers import binja_api  # noqa: E402,F401
+
+try:
     from binaryninja import core_ui_enabled
-except Exception:  # pragma: no cover - Binary Ninja not available
+except Exception:
     def core_ui_enabled() -> bool:
         return False
 
-try:
-    from .src.scumm6 import Scumm6
-except Exception:
-    try:  # pragma: no cover - fallback when package layout differs
-        from src.scumm6 import Scumm6
-    except Exception:
-        Scumm6 = None  # type: ignore[misc]
 
-if Scumm6 is not None and core_ui_enabled():
+if core_ui_enabled():
+    from .src.scumm6 import Scumm6
+
     Scumm6.register()
 
     from .src.view import Scumm6View

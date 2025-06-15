@@ -16,13 +16,13 @@ from typing import Dict, List, Optional
 
 import pytest
 
-from binja_helpers.binja_helpers import binja_api  # noqa: F401
+from binja_helpers import binja_api  # noqa: F401
 
 from .disasm import Instruction, Scumm6Disasm
 from .scumm6_opcodes import Scumm6Opcodes
 
 # Import test utilities from binja_helpers
-from binja_helpers.binja_helpers.mock_llil import (
+from binja_helpers.mock_llil import (
     MockLLIL,
     MockLowLevelILFunction,
     mllil,
@@ -35,7 +35,7 @@ VarType = Scumm6Opcodes.VarType
 # Each OpType maps to a representative byte sequence
 INSTRUCTION_TEST_DATA: Dict[OpType, bytes] = {
     OpType.push_byte: b"\x00\x12",
-    OpType.push_word: b"\x01\x34\x12", 
+    OpType.push_word: b"\x01\x34\x12",
     OpType.push_byte_var: b"\x02\x38\x00",
     OpType.push_word_var: b"\x03\x38\x00",
     OpType.dup: b"\x0c",
@@ -61,14 +61,14 @@ INSTRUCTION_TEST_DATA: Dict[OpType, bytes] = {
 def decode_instruction(data: bytes, addr: int = 0x1234) -> Instruction:
     """
     Decode a SCUMM6 instruction from byte data.
-    
+
     Args:
         data: Raw instruction bytes
         addr: Address where the instruction is located
-        
+
     Returns:
         Decoded Instruction object
-        
+
     Raises:
         ValueError: If instruction cannot be decoded
     """
@@ -82,25 +82,25 @@ def decode_instruction(data: bytes, addr: int = 0x1234) -> Instruction:
 def render_instruction(instruction: Instruction) -> str:
     """
     Render an instruction to its text disassembly representation.
-    
+
     Args:
         instruction: The instruction to render
-        
+
     Returns:
         String representation of the disassembly
     """
     # Basic rendering - this should be enhanced to match actual SCUMM6 disassembly format
     op_name = instruction.id.upper()
-    
+
     # Add operand information based on instruction type
     if hasattr(instruction.op, 'body') and hasattr(instruction.op.body, 'data'):
         data = instruction.op.body.data
         if instruction.op.id in [OpType.push_byte, OpType.push_word]:
             return f"{op_name} {data}"
-        elif instruction.op.id in [OpType.push_byte_var, OpType.push_word_var, 
+        elif instruction.op.id in [OpType.push_byte_var, OpType.push_word_var,
                                    OpType.write_byte_var, OpType.write_word_var]:
             return f"{op_name} var_{data}"
-    
+
     # For simple operations without operands
     return op_name
 
@@ -108,106 +108,106 @@ def render_instruction(instruction: Instruction) -> str:
 def lift_instruction(instruction: Instruction, addr: int = 0x1234) -> List[MockLLIL]:
     """
     Lift an instruction to LLIL representation.
-    
+
     Args:
         instruction: The instruction to lift
         addr: Address of the instruction
-        
+
     Returns:
         List of LLIL operations
     """
     il = MockLowLevelILFunction()
-    
+
     # Basic LLIL lifting for SCUMM6 instructions
     # This is a simplified implementation - actual lifting would be more complex
-    
+
     if instruction.op.id == OpType.push_byte:
         # Push byte constant onto stack
         value = instruction.op.body.data
         il.append(mllil("PUSH.b", [mllil("CONST.b", [value])]))
-    
+
     elif instruction.op.id == OpType.push_word:
         # Push word constant onto stack
         value = instruction.op.body.data
         il.append(mllil("PUSH.w", [mllil("CONST.w", [value])]))
-    
+
     elif instruction.op.id == OpType.push_byte_var:
         # Push byte variable onto stack
         var_id = instruction.op.body.data
         il.append(mllil("PUSH.b", [mllil("LOAD.b", [mllil("CONST.l", [var_id])])]))
-    
+
     elif instruction.op.id == OpType.push_word_var:
         # Push word variable onto stack
         var_id = instruction.op.body.data
         il.append(mllil("PUSH.w", [mllil("LOAD.w", [mllil("CONST.l", [var_id])])]))
-    
+
     elif instruction.op.id == OpType.add:
         # Pop two values, add them, push result
         il.append(mllil("PUSH.w", [mllil("ADD.w", [mllil("POP.w", []), mllil("POP.w", [])])]))
-    
+
     elif instruction.op.id == OpType.sub:
         # Pop two values, subtract them, push result
         il.append(mllil("PUSH.w", [mllil("SUB.w", [mllil("POP.w", []), mllil("POP.w", [])])]))
-    
+
     elif instruction.op.id == OpType.mul:
         # Pop two values, multiply them, push result
         il.append(mllil("PUSH.w", [mllil("MUL.w", [mllil("POP.w", []), mllil("POP.w", [])])]))
-    
+
     elif instruction.op.id == OpType.div:
         # Pop two values, divide them, push result
         il.append(mllil("PUSH.w", [mllil("DIV.w", [mllil("POP.w", []), mllil("POP.w", [])])]))
-    
+
     elif instruction.op.id == OpType.eq:
         # Pop two values, compare for equality, push result
         il.append(mllil("PUSH.b", [mllil("CMP_E.w", [mllil("POP.w", []), mllil("POP.w", [])])]))
-    
+
     elif instruction.op.id == OpType.neq:
         # Pop two values, compare for inequality, push result
         il.append(mllil("PUSH.b", [mllil("CMP_NE.w", [mllil("POP.w", []), mllil("POP.w", [])])]))
-    
+
     elif instruction.op.id == OpType.gt:
         # Pop two values, compare greater than, push result
         il.append(mllil("PUSH.b", [mllil("CMP_SGT.w", [mllil("POP.w", []), mllil("POP.w", [])])]))
-    
+
     elif instruction.op.id == OpType.lt:
         # Pop two values, compare less than, push result
         il.append(mllil("PUSH.b", [mllil("CMP_SLT.w", [mllil("POP.w", []), mllil("POP.w", [])])]))
-    
+
     elif instruction.op.id == OpType.dup:
         # Duplicate top of stack
         il.append(mllil("PUSH.w", [mllil("POP.w", [])]))
         il.append(mllil("PUSH.w", [mllil("POP.w", [])]))
-    
+
     elif instruction.op.id == OpType.pop1:
         # Pop one item from stack
         il.append(mllil("POP.w", []))
-    
+
     elif instruction.op.id == OpType.nott:
         # Logical NOT of top stack item
         il.append(mllil("PUSH.b", [mllil("NOT.b", [mllil("POP.b", [])])]))
-    
+
     elif instruction.op.id == OpType.land:
         # Logical AND of two stack items
         il.append(mllil("PUSH.b", [mllil("AND.b", [mllil("POP.b", []), mllil("POP.b", [])])]))
-    
+
     elif instruction.op.id == OpType.lor:
         # Logical OR of two stack items
         il.append(mllil("PUSH.b", [mllil("OR.b", [mllil("POP.b", []), mllil("POP.b", [])])]))
-    
+
     elif instruction.op.id == OpType.write_byte_var:
         # Pop value and write to byte variable
         var_id = instruction.op.body.data
         il.append(mllil("STORE.b", [mllil("CONST.l", [var_id]), mllil("POP.b", [])]))
-    
+
     elif instruction.op.id == OpType.write_word_var:
         # Pop value and write to word variable
         var_id = instruction.op.body.data
         il.append(mllil("STORE.w", [mllil("CONST.l", [var_id]), mllil("POP.w", [])]))
-    
+
     else:
         # For unimplemented instructions, add a placeholder
         il.append(mllil("UNIMPL", []))
-    
+
     return il.ils
 
 
@@ -367,10 +367,10 @@ def test_instruction_comparison_with_dottdemo() -> None:
 def test_invalid_instruction() -> None:
     """Test handling of invalid instruction data."""
     disasm = Scumm6Disasm()
-    
+
     # Empty data
     assert disasm.decode_instruction(b"", 0) is None
-    
+
     # Insufficient data for push_byte (needs 2 bytes)
     assert disasm.decode_instruction(b"\x00", 0) is None
 
@@ -386,7 +386,7 @@ def test_instruction_lengths() -> None:
         (b"\x14", 1),  # add
         (b"\x42\x38\x00", 3),  # write_byte_var
     ]
-    
+
     for data, expected_length in test_cases:
         instr = decode_instruction(data, 0x1000)
         assert instr.length == expected_length

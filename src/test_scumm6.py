@@ -3,12 +3,12 @@ from typing import List, Optional, Tuple
 
 import pytest
 
-from binja_helpers.binja_helpers import binja_api  # noqa: F401
+from binja_helpers import binja_api  # noqa: F401
 import sys
 import types
 import enum
 from binaryninja.enums import BranchType
-from binja_helpers.binja_helpers.mock_analysis import MockAnalysisInfo
+from binja_helpers.mock_analysis import MockAnalysisInfo
 
 bn = sys.modules.get("binaryninja")
 if bn and not hasattr(bn, "core_ui_enabled"):
