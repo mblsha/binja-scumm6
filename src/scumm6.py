@@ -6,7 +6,13 @@ from typing import Any, List, Optional, Tuple, Dict
 import threading
 from collections import defaultdict
 
-from binaryninja import Architecture, IntrinsicInfo
+from binaryninja import (
+    Architecture,
+    IntrinsicInfo,
+    RegisterName,
+    FlagWriteTypeName,
+    IntrinsicName,
+)
 from binaryninja.lowlevelil import (
     LowLevelILLabel,
     LLIL_TEMP,
@@ -64,18 +70,18 @@ class Scumm6(Architecture):
     max_instr_length = 256
     endianness = Endianness.LittleEndian
     regs = {
-        "sp": RegisterInfo(
-            "sp", 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth
+        RegisterName("sp"): RegisterInfo(
+            RegisterName("sp"), 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth
         ),
     } | {
         # local
-        f"L{i}": RegisterInfo(f"L{i}", 4)
+        RegisterName(f"L{i}"): RegisterInfo(RegisterName(f"L{i}"), 4)
         for i in range(vars.NUM_SCRIPT_LOCAL)
     }
 
     stack_pointer = "sp"
     flags = ["n", "z", "v", "c"]
-    flag_write_types = ["*"]
+    flag_write_types = [FlagWriteTypeName("*")]
     flags_written_by_flag_write_type = {
         "*": ["n", "z", "v", "c"],
     }
@@ -377,10 +383,10 @@ class Scumm6(Architecture):
 
             if push_count:
                 assert push_count == 1
-                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], name, args))
+                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], IntrinsicName(name), args))
                 il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
             else:
-                il.append(il.intrinsic([], name, args))
+                il.append(il.intrinsic([], IntrinsicName(name), args))
 
         implemented = True
         op = dis.op
@@ -543,7 +549,7 @@ class Scumm6(Architecture):
 
                 if not recursive and func_ptr is not None:
                     il.append(
-                        il.intrinsic([], "stop_script", [il.const_pointer(4, func_ptr)])
+                        il.intrinsic([], IntrinsicName("stop_script"), [il.const_pointer(4, func_ptr)])
                     )
 
             for index, a in enumerate(args):
@@ -554,7 +560,7 @@ class Scumm6(Architecture):
                 il.append(il.call(il.const_pointer(4, func_ptr)))
         elif op.id == OpType.stop_script:
             prev_value = get_prev_value(dis)
-            il.append(il.intrinsic([], op.id.name, [il.pop(4)]))
+            il.append(il.intrinsic([], IntrinsicName(op.id.name), [il.pop(4)]))
             if prev_value == 0:
                 # stopObjectCode
                 il.append(il.no_ret())
@@ -568,7 +574,7 @@ class Scumm6(Architecture):
                 if isinstance(i, str):
                     str_addr = state.bstr[i]
                     args.append(il.const_pointer(4, str_addr))
-            il.append(il.intrinsic([], op.id.name, args))
+            il.append(il.intrinsic([], IntrinsicName(op.id.name), args))
         elif (
             body
             and hasattr(body, "body")
@@ -582,12 +588,12 @@ class Scumm6(Architecture):
                     str_addr = state.bstr[i]
                     args.append(il.const_pointer(4, str_addr))
             name = f"{op.id.name}.{body.subop.name}"
-            il.append(il.intrinsic([], name, args))
+            il.append(il.intrinsic([], IntrinsicName(name), args))
         elif getattr(body, "subop", None):
             assert body
             add_intrinsic(f"{op.id.name}.{body.subop.name}", body.body)
         elif op.id in [OpType.break_here]:
-            il.append(il.intrinsic([], op.id.name, []))
+            il.append(il.intrinsic([], IntrinsicName(op.id.name), []))
         else:
             implemented = False
             il.append(il.unimplemented())

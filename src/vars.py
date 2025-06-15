@@ -1,5 +1,5 @@
 from binja_helpers import binja_api  # noqa: F401
-from binaryninja import lowlevelil
+from binaryninja import RegisterName, lowlevelil
 
 from .scumm6_opcodes import Scumm6Opcodes
 from functools import lru_cache
@@ -192,7 +192,7 @@ def il_get_var(il: lowlevelil.LowLevelILFunction, block: Any) -> Any:
     elif block.type == VarType.bitvar:
         return il.load(BITVAR_ITEM_SIZE, il.const_pointer(4, get_bit_var(block.data)))
 
-    return il.reg(4, reg_name(block))
+    return il.reg(4, RegisterName(reg_name(block)))
 
 
 def il_set_var(il: lowlevelil.LowLevelILFunction, block: Any, value: Any) -> Any:
@@ -209,7 +209,7 @@ def il_set_var(il: lowlevelil.LowLevelILFunction, block: Any, value: Any) -> Any
             value,
         )
 
-    return il.set_reg(4, reg_name(block), value)
+    return il.set_reg(4, RegisterName(reg_name(block)), value)
 
 
 # Memory layout:
