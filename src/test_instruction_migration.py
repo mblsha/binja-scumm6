@@ -125,6 +125,11 @@ instruction_test_cases = [
         data=b"\x13",
         comment="Greater than or equal comparison of top two stack items"
     ),
+    InstructionTestCase(
+        test_id="abs_0xc4",
+        data=b"\xc4",
+        comment="Absolute value of top stack item"
+    ),
 ]
 
 
