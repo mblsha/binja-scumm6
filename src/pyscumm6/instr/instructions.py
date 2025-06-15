@@ -435,5 +435,26 @@ class WordVarInc(Instruction):
         il.append(vars.il_set_var(il, self.op_details.body, incremented_value))
 
 
+class ByteVarDec(Instruction):
+
+    def render(self) -> List[Token]:
+        var_id = self.op_details.body.data
+        return [
+            TInstr("byte_var_dec"),
+            TSep("("),
+            TInt(f"var_{var_id}"),
+            TSep(")"),
+        ]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.ByteVarData), \
+            f"Expected ByteVarData body, got {type(self.op_details.body)}"
+
+        # Original implementation: vars.il_set_var(il, body, il.sub(4, vars.il_get_var(il, body), il.const(4, 1)))
+        current_value = vars.il_get_var(il, self.op_details.body)
+        decremented_value = il.sub(4, current_value, il.const(4, 1))
+        il.append(vars.il_set_var(il, self.op_details.body, decremented_value))
+
+
 
 
