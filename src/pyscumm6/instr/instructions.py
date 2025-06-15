@@ -1171,3 +1171,127 @@ class GetObjectNewDir(IntrinsicOp):
     @property
     def intrinsic_name(self) -> str:
         return "get_object_new_dir"
+
+
+# Distance/Geometry Operations
+class DistObjectObject(IntrinsicOp):
+    """Distance between two objects with 2 parameters, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "dist_object_object"
+
+
+class DistObjectPt(IntrinsicOp):
+    """Distance from object to point with 3 parameters, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "dist_object_pt"
+
+
+class DistPtPt(IntrinsicOp):
+    """Distance between two points with 4 parameters, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "dist_pt_pt"
+
+
+class GetPixel(IntrinsicOp):
+    """Get pixel color with 2 parameters, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_pixel"
+
+
+# Simple Query Operations
+class FindObject(IntrinsicOp):
+    """Find object with 2 parameters, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "find_object"
+
+
+class GetVerbEntrypoint(IntrinsicOp):
+    """Get verb entrypoint with 2 parameters, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_verb_entrypoint"
+
+
+class IsActorInBox(IntrinsicOp):
+    """Check if actor is in box with 2 parameters, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "is_actor_in_box"
+
+
+# Simple Actor Movement Operations
+class WalkActorToObj(IntrinsicOp):
+    """Walk actor to object with 3 parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "walk_actor_to_obj"
+
+
+class WalkActorTo(IntrinsicOp):
+    """Walk actor to position with 3 parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "walk_actor_to"
+
+
+class PutActorAtXy(IntrinsicOp):
+    """Put actor at coordinates with 4 parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "put_actor_at_xy"
+
+
+class PutActorAtObject(IntrinsicOp):
+    """Put actor at object with 3 parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "put_actor_at_object"
+
+
+# Additional Simple Operations
+class GetDatetime(IntrinsicOp):
+    """Get date/time with no parameters, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_date_time"
+
+
+class GetAnimateVariable(IntrinsicOp):
+    """Get animate variable with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_animate_variable"
+
+
+class PickVarRandom(IntrinsicOp):
+    """Pick variable random with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "pick_var_random"
+
+
+class GetActorLayer(IntrinsicOp):
+    """Get actor layer with 1 parameter, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "get_actor_layer"

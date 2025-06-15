@@ -112,6 +112,21 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 202 | `delay_frames` | `DelayFrames` | ✅ Complete |
 | 216 | `is_room_script_running` | `IsRoomScriptRunning` | ✅ Complete |
 | 237 | `get_object_new_dir` | `GetObjectNewDir` | ✅ Complete |
+| 125 | `walk_actor_to_obj` | `WalkActorToObj` | ✅ Complete |
+| 126 | `walk_actor_to` | `WalkActorTo` | ✅ Complete |
+| 127 | `put_actor_at_xy` | `PutActorAtXy` | ✅ Complete |
+| 128 | `put_actor_at_object` | `PutActorAtObject` | ✅ Complete |
+| 160 | `find_object` | `FindObject` | ✅ Complete |
+| 163 | `get_verb_entrypoint` | `GetVerbEntrypoint` | ✅ Complete |
+| 175 | `is_actor_in_box` | `IsActorInBox` | ✅ Complete |
+| 197 | `dist_object_object` | `DistObjectObject` | ✅ Complete |
+| 198 | `dist_object_pt` | `DistObjectPt` | ✅ Complete |
+| 199 | `dist_pt_pt` | `DistPtPt` | ✅ Complete |
+| 208 | `get_date_time` | `GetDatetime` | ✅ Complete |
+| 210 | `get_animate_variable` | `GetAnimateVariable` | ✅ Complete |
+| 225 | `get_pixel` | `GetPixel` | ✅ Complete |
+| 227 | `pick_var_random` | `PickVarRandom` | ✅ Complete |
+| 236 | `get_actor_layer` | `GetActorLayer` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -229,10 +244,10 @@ These instructions have complex implementations with sub-operations and may be b
 - [ ] `room_ops` (156) - Room operations (complex)
 
 ### Actor Operations
-- [ ] `walk_actor_to_obj` (125) - Walk actor to object
-- [ ] `walk_actor_to` (126) - Walk actor to position
-- [ ] `put_actor_at_xy` (127) - Put actor at coordinates
-- [ ] `put_actor_at_object` (128) - Put actor at object
+- [x] `walk_actor_to_obj` (125) - Walk actor to object
+- [x] `walk_actor_to` (126) - Walk actor to position
+- [x] `put_actor_at_xy` (127) - Put actor at coordinates
+- [x] `put_actor_at_object` (128) - Put actor at object
 - [x] `face_actor` (129) - Face actor
 - [x] `animate_actor` (130) - Animate actor
 - [x] `get_actor_moving` (138) - Get actor moving state
@@ -244,8 +259,8 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `get_actor_width` (168) - Get actor width
 - [x] `get_actor_scale_x` (170) - Get actor scale X
 - [x] `get_actor_anim_counter` (171) - Get actor animation counter
-- [ ] `is_actor_in_box` (175) - Check if actor in box
-- [ ] `get_actor_layer` (236) - Get actor layer
+- [x] `is_actor_in_box` (175) - Check if actor in box
+- [x] `get_actor_layer` (236) - Get actor layer
 - [ ] `actor_ops` (157) - Actor operations (complex)
 
 ### Object Query Operations
@@ -253,7 +268,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `get_object_y` (142) - Get object Y position
 - [x] `get_object_old_dir` (143) - Get object old direction
 - [x] `get_object_new_dir` (237) - Get object new direction
-- [ ] `find_object` (160) - Find object
+- [x] `find_object` (160) - Find object
 - [ ] `find_all_objects` (221) - Find all objects
 
 ### Inventory Operations
@@ -264,7 +279,7 @@ These instructions have complex implementations with sub-operations and may be b
 ### Verb Operations
 - [x] `do_sentence` (131) - Do sentence
 - [x] `get_verb_from_xy` (148) - Get verb from coordinates
-- [ ] `get_verb_entrypoint` (163) - Get verb entrypoint
+- [x] `get_verb_entrypoint` (163) - Get verb entrypoint
 - [ ] `verb_ops` (158) - Verb operations (complex)
 - [ ] `save_restore_verbs` (165) - Save/restore verbs
 
@@ -317,19 +332,19 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `get_random_number_range` (136) - Get random number in range
 - [x] `pick_one_of` (203) - Pick one of
 - [x] `pick_one_of_default` (204) - Pick one of with default
-- [ ] `pick_var_random` (227) - Pick variable random
+- [x] `pick_var_random` (227) - Pick variable random
 - [x] `shuffle` (212) - Shuffle
 
 ### Distance/Geometry Operations
-- [ ] `dist_object_object` (197) - Distance object to object
-- [ ] `dist_object_pt` (198) - Distance object to point
-- [ ] `dist_pt_pt` (199) - Distance point to point
-- [ ] `get_pixel` (225) - Get pixel
+- [x] `dist_object_object` (197) - Distance object to object
+- [x] `dist_object_pt` (198) - Distance object to point
+- [x] `dist_pt_pt` (199) - Distance point to point
+- [x] `get_pixel` (225) - Get pixel
 
 ### Special Operations
 - [ ] `is_any_of` (173) - Is any of
-- [ ] `get_date_time` (208) - Get date/time
-- [ ] `get_animate_variable` (210) - Get animate variable
+- [x] `get_date_time` (208) - Get date/time
+- [x] `get_animate_variable` (210) - Get animate variable
 - [ ] `kernel_get_functions` (200) - Kernel get functions
 - [ ] `kernel_set_functions` (201) - Kernel set functions
 - [x] `dummy` (189) - Dummy/no-op instruction

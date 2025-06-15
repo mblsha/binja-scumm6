@@ -144,4 +144,23 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.stop_script: instructions.StopScript,
     Scumm6Opcodes.OpType.is_room_script_running: instructions.IsRoomScriptRunning,
     Scumm6Opcodes.OpType.get_object_new_dir: instructions.GetObjectNewDir,
+    # Distance/Geometry Operations
+    Scumm6Opcodes.OpType.dist_object_object: instructions.DistObjectObject,
+    Scumm6Opcodes.OpType.dist_object_pt: instructions.DistObjectPt,
+    Scumm6Opcodes.OpType.dist_pt_pt: instructions.DistPtPt,
+    Scumm6Opcodes.OpType.get_pixel: instructions.GetPixel,
+    # Simple Query Operations
+    Scumm6Opcodes.OpType.find_object: instructions.FindObject,
+    Scumm6Opcodes.OpType.get_verb_entrypoint: instructions.GetVerbEntrypoint,
+    Scumm6Opcodes.OpType.is_actor_in_box: instructions.IsActorInBox,
+    # Simple Actor Movement Operations
+    Scumm6Opcodes.OpType.walk_actor_to_obj: instructions.WalkActorToObj,
+    Scumm6Opcodes.OpType.walk_actor_to: instructions.WalkActorTo,
+    Scumm6Opcodes.OpType.put_actor_at_xy: instructions.PutActorAtXy,
+    Scumm6Opcodes.OpType.put_actor_at_object: instructions.PutActorAtObject,
+    # Additional Simple Operations
+    Scumm6Opcodes.OpType.get_date_time: instructions.GetDatetime,
+    Scumm6Opcodes.OpType.get_animate_variable: instructions.GetAnimateVariable,
+    Scumm6Opcodes.OpType.pick_var_random: instructions.PickVarRandom,
+    Scumm6Opcodes.OpType.get_actor_layer: instructions.GetActorLayer,
 }
