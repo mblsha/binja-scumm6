@@ -11,6 +11,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 2 | `push_byte_var` | `PushByteVar` | ✅ Complete |
 | 3 | `push_word_var` | `PushWordVar` | ✅ Complete |
 | 12 | `dup` | `Dup` | ✅ Complete |
+| 20 | `add` | `Add` | ✅ Complete |
 | 26 | `pop1` | `Pop1` | ✅ Complete |
 | 167 | `pop2` | `Pop2` | ✅ Complete |
 
@@ -27,7 +28,7 @@ These instructions have full LLIL implementations and should be migrated first:
 - [x] `pop2` (167) - Pop single item (despite the name)
 
 ### Arithmetic Operations
-- [ ] `add` (20) - Addition
+- [x] `add` (20) - Addition
 - [ ] `sub` (21) - Subtraction
 - [ ] `mul` (22) - Multiplication
 - [ ] `div` (23) - Division
