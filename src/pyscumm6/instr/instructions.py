@@ -2,7 +2,7 @@
 
 from typing import List
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
-from binaryninja.lowlevelil import LowLevelILFunction
+from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
 from ...scumm6_opcodes import Scumm6Opcodes
 
 from .opcodes import Instruction
@@ -91,6 +91,21 @@ class PushWordVar(Instruction):
             f"Expected WordVarData body, got {type(self.op_details.body)}"
         
         il.append(il.push(4, vars.il_get_var(il, self.op_details.body)))
+
+
+class Dup(Instruction):
+    
+    def render(self) -> List[Token]:
+        return [TInstr("dup")]
+
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
+            f"Expected NoData body, got {type(self.op_details.body)}"
+        
+        # Pop value into temp register, then push it twice
+        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
 
 
 class Pop1(Instruction):

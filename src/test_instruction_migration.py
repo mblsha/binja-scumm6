@@ -46,6 +46,11 @@ instruction_test_cases = [
         comment="Push word variable 0x38 (56) - loads 4-byte value from SCUMM var"
     ),
     InstructionTestCase(
+        test_id="dup_0x0c",
+        data=b"\x0c",
+        comment="Duplicate top stack item"
+    ),
+    InstructionTestCase(
         test_id="pop1_0x1a",
         data=b"\x1a",
         comment="Pop single item from stack"
