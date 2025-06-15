@@ -7,7 +7,7 @@ if str(_scumm6_dir) not in sys.path:
     sys.path.insert(0, str(_scumm6_dir))
 
 # Add the vendored binja_helpers directory to sys.path to resolve its internal imports.
-_helpers_dir = _scumm6_dir / "binja_helpers"
+_helpers_dir = _scumm6_dir / "binja_helpers_tmp"
 if _helpers_dir.is_dir() and str(_helpers_dir) not in sys.path:
     sys.path.insert(0, str(_helpers_dir))
 

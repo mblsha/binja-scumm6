@@ -192,7 +192,7 @@ def il_get_var(il: lowlevelil.LowLevelILFunction, block: Any) -> Any:
     elif block.type == VarType.bitvar:
         return il.load(BITVAR_ITEM_SIZE, il.const_pointer(4, get_bit_var(block.data)))
 
-    return il.reg(4, reg_name(block))
+    return il.reg(4, reg_name(block))  # type: ignore[arg-type]
 
 
 def il_set_var(il: lowlevelil.LowLevelILFunction, block: Any, value: Any) -> Any:
@@ -209,7 +209,7 @@ def il_set_var(il: lowlevelil.LowLevelILFunction, block: Any, value: Any) -> Any
             value,
         )
 
-    return il.set_reg(4, reg_name(block), value)
+    return il.set_reg(4, reg_name(block), value)  # type: ignore[arg-type]
 
 
 # Memory layout:
