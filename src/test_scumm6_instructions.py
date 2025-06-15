@@ -12,18 +12,17 @@ disassembly output and the LLIL representation.
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import pytest
 
-from binja_helpers import binja_api  # noqa: F401
+from binja_helpers.binja_helpers import binja_api  # noqa: F401
 
 from .disasm import Instruction, Scumm6Disasm
 from .scumm6_opcodes import Scumm6Opcodes
 
 # Import test utilities from binja_helpers
-from binja_helpers.mock_llil import (
-    MockLLIL,
+from binja_helpers.binja_helpers.mock_llil import (
     MockLowLevelILFunction,
     mllil,
 )
@@ -105,7 +104,7 @@ def render_instruction(instruction: Instruction) -> str:
     return op_name
 
 
-def lift_instruction(instruction: Instruction, addr: int = 0x1234) -> List[MockLLIL]:
+def lift_instruction(instruction: Instruction, addr: int = 0x1234) -> List[Any]:
     """
     Lift an instruction to LLIL representation.
 

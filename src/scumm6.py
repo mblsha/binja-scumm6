@@ -1,5 +1,5 @@
-from binja_helpers import binja_api  # noqa: F401
-from binja_helpers.mock_analysis import MockAnalysisInfo
+from binja_helpers.binja_helpers import binja_api  # noqa: F401
+from binja_helpers.binja_helpers.mock_analysis import MockAnalysisInfo
 
 from typing import Any, List, Optional, Tuple, Dict
 

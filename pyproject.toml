@@ -3,7 +3,7 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "binja-scumm6"
+name = "binja_scumm6"
 version = "0.1.0"
 description = "Binary Ninja SCUMM6 architecture plugin"
 readme = "README.md"

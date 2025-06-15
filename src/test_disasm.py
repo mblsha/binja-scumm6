@@ -1,4 +1,4 @@
-from binja_helpers import binja_api  # noqa: F401
+from binja_helpers.binja_helpers import binja_api  # noqa: F401
 from binaryninja.enums import SegmentFlag, SectionSemantics
 
 from .disasm import Scumm6Disasm

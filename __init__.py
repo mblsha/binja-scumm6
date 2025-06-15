@@ -13,7 +13,7 @@ if _helpers_dir.is_dir() and str(_helpers_dir) not in sys.path:
 
 # With the new path, we import directly from the 'binja_helpers' library package.
 # The original 'from binja_helpers.binja_helpers import binja_api' will no longer work.
-from binja_helpers import binja_api  # noqa: E402,F401
+from binja_helpers.binja_helpers import binja_api  # noqa: E402,F401
 
 try:
     from binaryninja import core_ui_enabled
