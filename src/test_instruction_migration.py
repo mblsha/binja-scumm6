@@ -155,6 +155,11 @@ instruction_test_cases = [
         data=b"\x56\x38",
         comment="Decrement byte variable 0x38 (56)"
     ),
+    InstructionTestCase(
+        test_id="word_var_dec_0x57",
+        data=b"\x57\x38\x00",
+        comment="Decrement word variable 0x38 (56)"
+    ),
 ]
 
 
