@@ -1,46 +1,73 @@
+from dataclasses import dataclass
+from typing import List, Optional
+
 from binja_helpers import binja_api  # noqa: F401
 from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL
 from .test_mocks import MockScumm6BinaryView
 from binja_helpers.tokens import asm_str  # noqa: F401
 import pytest
-from typing import List
 
 # Path 1: The original, monolithic implementation
 from .scumm6 import Scumm6 as OldScumm6Architecture, LastBV
 
-# Path 2: The new, refactored implementation (decoder to be created)
+# Path 2: The new, refactored implementation
 from .pyscumm6.disasm import decode as new_decode
 
 
-# Wrapper to get LLIL from the old architecture
-def get_old_llil(data: bytes, addr: int) -> List[MockLLIL]:
+@dataclass
+class InstructionTestCase:
+    """Test case for validating instruction migration."""
+    test_id: str
+    data: bytes
+    addr: int = 0x1000
+    comment: Optional[str] = None
+
+
+# Define test cases for instruction migration
+instruction_test_cases = [
+    InstructionTestCase(
+        test_id="push_byte_0x12",
+        data=b"\x00\x12",
+        comment="Push byte value 0x12 (18)"
+    ),
+    InstructionTestCase(
+        test_id="push_word_0x1234", 
+        data=b"\x01\x34\x12",
+        comment="Push word value 0x1234 (4660) - little endian"
+    ),
+    # Add more test cases here as instructions are implemented
+]
+
+
+def get_old_llil(case: InstructionTestCase) -> List[MockLLIL]:
+    """Get LLIL from the original monolithic implementation."""
     view = MockScumm6BinaryView()
-    view.write_memory(addr, data)
+    view.write_memory(case.addr, case.data)
     LastBV.set(view)
     arch = OldScumm6Architecture()
     il = MockLowLevelILFunction()
-    arch.get_instruction_low_level_il(data, addr, il)
+    arch.get_instruction_low_level_il(case.data, case.addr, il)
     return il.ils  # type: ignore
 
 
-# Wrapper to get LLIL from the new instruction object
-def get_new_llil(data: bytes, addr: int) -> List[MockLLIL]:
-    new_instr = new_decode(data, addr)
+def get_new_llil(case: InstructionTestCase) -> List[MockLLIL]:
+    """Get LLIL from the new object-oriented implementation."""
+    new_instr = new_decode(case.data, case.addr)
     if new_instr is None:
         pytest.xfail("New decoder not yet implemented for this opcode.")
     il = MockLowLevelILFunction()
-    new_instr.lift(il, addr)
+    new_instr.lift(il, case.addr)
     return il.ils  # type: ignore
 
 
-@pytest.mark.parametrize("opcode_name, opcode_bytes", [
-    ("push_byte", b"\x00\x12"),
-    ("push_word", b"\x01\x34\x12"),  # 0x1234 = 4660
-    # ... more test cases will be added here
-])
-def test_llil_consistency(opcode_name: str, opcode_bytes: bytes) -> None:
-    old_il = get_old_llil(opcode_bytes, 0x1000)
-    new_il = get_new_llil(opcode_bytes, 0x1000)
-
-    # This assertion should now pass for push_byte
-    assert old_il == new_il
+@pytest.mark.parametrize(
+    "case",
+    instruction_test_cases,
+    ids=[c.test_id for c in instruction_test_cases]
+)
+def test_llil_consistency(case: InstructionTestCase) -> None:
+    """Verify that new implementation produces identical LLIL to the original."""
+    old_il = get_old_llil(case)
+    new_il = get_new_llil(case)
+    
+    assert old_il == new_il, f"LLIL mismatch for {case.test_id}: {case.comment}"
