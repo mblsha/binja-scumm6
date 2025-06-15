@@ -17,6 +17,7 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 16 | `gt` | `Gt` | ✅ Complete |
 | 17 | `lt` | `Lt` | ✅ Complete |
 | 18 | `le` | `Le` | ✅ Complete |
+| 19 | `ge` | `Ge` | ✅ Complete |
 | 20 | `add` | `Add` | ✅ Complete |
 | 21 | `sub` | `Sub` | ✅ Complete |
 | 22 | `mul` | `Mul` | ✅ Complete |
@@ -58,7 +59,7 @@ These instructions have full LLIL implementations and should be migrated first:
 - [x] `gt` (16) - Greater than
 - [x] `lt` (17) - Less than
 - [x] `le` (18) - Less than or equal
-- [ ] `ge` (19) - Greater than or equal
+- [x] `ge` (19) - Greater than or equal
 
 ### Variable Operations
 - [ ] `write_byte_var` (66) - Write byte to variable
