@@ -123,7 +123,8 @@ test_cases = [
 
 @pytest.mark.parametrize("case", test_cases, ids=[c.test_id for c in test_cases])
 def test_instruction_analysis(case: InfoTestCase) -> None:
-    arch = Scumm6()
+    # Use legacy decoder for test consistency
+    arch = Scumm6(use_new_decoder=False)
     dis = arch.decode_instruction(case.data, case.addr)
 
     if case.decode_fails:

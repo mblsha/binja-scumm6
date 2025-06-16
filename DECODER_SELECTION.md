@@ -9,9 +9,9 @@ The SCUMM6 Binary Ninja plugin now supports two different decoders:
 
 ## Usage
 
-### Default Architecture (Legacy)
+### Default Architecture (New Semantic)
 ```python
-# Uses legacy decoder by default
+# Uses new semantic decoder by default
 arch = Scumm6()
 ```
 
@@ -74,9 +74,9 @@ python test_decoder_selection.py
 ## Architecture Registration
 
 In Binary Ninja, you'll see three SCUMM6 architecture options:
-- `SCUMM6` - Default (legacy decoder)
+- `SCUMM6` - Default (new semantic decoder)
 - `SCUMM6-Legacy` - Explicit legacy decoder
-- `SCUMM6-New` - New semantic decoder
+- `SCUMM6-New` - Explicit new semantic decoder
 
 ## Benefits
 

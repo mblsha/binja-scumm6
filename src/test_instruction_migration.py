@@ -8,7 +8,8 @@ from binja_helpers.tokens import asm_str
 import pytest
 
 # Path 1: The original, monolithic implementation
-from .scumm6 import Scumm6 as OldScumm6Architecture, LastBV
+# Import Scumm6Legacy to ensure we're testing against the legacy decoder
+from .scumm6 import Scumm6Legacy as OldScumm6Architecture, LastBV
 
 # Path 2: The new, refactored implementation
 from .pyscumm6.disasm import decode as new_decode

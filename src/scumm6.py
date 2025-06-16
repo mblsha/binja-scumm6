@@ -164,7 +164,7 @@ class Scumm6(Architecture):
     # need to make sure it's a BinaryView subclass
     op_addrs: Dict[str, SortedList] = defaultdict(SortedList)
 
-    def __init__(self, use_new_decoder: bool = False) -> None:
+    def __init__(self, use_new_decoder: bool = True) -> None:
         Architecture.__init__(self)
         self.disasm = Scumm6Disasm()
         self.use_new_decoder = use_new_decoder
