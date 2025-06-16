@@ -5,6 +5,7 @@ from ...scumm6_opcodes import Scumm6Opcodes
 from .opcodes import Instruction
 from . import instructions
 from .generic import make_push_constant_instruction, make_intrinsic_instruction
+from .registry import INSTRUCTION_REGISTRY
 
 # This map is the core of the new dispatcher.
 # The key is the enum value from the Kaitai-generated parser.
@@ -37,17 +38,17 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
         "get_random_number_range", Scumm6Opcodes.CallFuncPop2Push, pop_count=2, push_count=1
     ),
 
-    # --- Using Base Classes ---
-    Scumm6Opcodes.OpType.add: instructions.Add,
-    Scumm6Opcodes.OpType.sub: instructions.Sub,
-    Scumm6Opcodes.OpType.mul: instructions.Mul,
-    Scumm6Opcodes.OpType.div: instructions.Div,
-    Scumm6Opcodes.OpType.land: instructions.Land,
-    Scumm6Opcodes.OpType.lor: instructions.Lor,
-    Scumm6Opcodes.OpType.nott: instructions.Nott,
-    Scumm6Opcodes.OpType.eq: instructions.Eq,
-    Scumm6Opcodes.OpType.neq: instructions.Neq,
-    Scumm6Opcodes.OpType.gt: instructions.Gt,
+    # --- Auto-Generated Stack Operations ---
+    Scumm6Opcodes.OpType.add: INSTRUCTION_REGISTRY["add"],
+    Scumm6Opcodes.OpType.sub: INSTRUCTION_REGISTRY["sub"],
+    Scumm6Opcodes.OpType.mul: INSTRUCTION_REGISTRY["mul"],
+    Scumm6Opcodes.OpType.div: INSTRUCTION_REGISTRY["div"],
+    Scumm6Opcodes.OpType.land: INSTRUCTION_REGISTRY["land"],
+    Scumm6Opcodes.OpType.lor: INSTRUCTION_REGISTRY["lor"],
+    Scumm6Opcodes.OpType.nott: INSTRUCTION_REGISTRY["nott"],
+    Scumm6Opcodes.OpType.eq: INSTRUCTION_REGISTRY["eq"],
+    Scumm6Opcodes.OpType.neq: INSTRUCTION_REGISTRY["neq"],
+    Scumm6Opcodes.OpType.gt: INSTRUCTION_REGISTRY["gt"],
     Scumm6Opcodes.OpType.lt: instructions.Lt,
     Scumm6Opcodes.OpType.le: instructions.Le,
     Scumm6Opcodes.OpType.ge: instructions.Ge,
