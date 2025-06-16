@@ -36,6 +36,10 @@ from .sorted_list import SortedList
 
 from . import vars
 
+# Import new decoder
+from .pyscumm6.disasm import decode as new_decode
+from .pyscumm6.instr.opcodes import Instruction as NewInstruction
+
 OpType = Scumm6Opcodes.OpType
 VarType = Scumm6Opcodes.VarType
 SubopType = Scumm6Opcodes.SubopType
@@ -160,9 +164,10 @@ class Scumm6(Architecture):
     # need to make sure it's a BinaryView subclass
     op_addrs: Dict[str, SortedList] = defaultdict(SortedList)
 
-    def __init__(self) -> None:
+    def __init__(self, use_new_decoder: bool = False) -> None:
         Architecture.__init__(self)
         self.disasm = Scumm6Disasm()
+        self.use_new_decoder = use_new_decoder
 
     def get_view(
         self, data: bytes, addr: int
@@ -204,24 +209,77 @@ class Scumm6(Architecture):
         return dis
 
     def decode_instruction(self, data: bytes, addr: int) -> Optional[Instruction]:
-        dis = self.disasm.decode_instruction(data, addr)
-        if dis is None:
-            return None
-        try:
-            info = MockAnalysisInfo()
-            info.length = dis.length
-            op = dis.op
-            body = getattr(op, "body", None)
-            if body and getattr(body, "jump_offset", None) is not None:
+        if self.use_new_decoder:
+            # Use new object-oriented decoder
+            new_instr = new_decode(data, addr)
+            if new_instr is None:
+                return None
+            
+            # Convert new instruction to legacy format for compatibility
+            return self._convert_new_to_legacy(new_instr, addr)
+        else:
+            # Use legacy decoder
+            dis = self.disasm.decode_instruction(data, addr)
+            if dis is None:
+                return None
+            try:
+                info = MockAnalysisInfo()
+                info.length = dis.length
+                op = dis.op
+                body = getattr(op, "body", None)
+                if body and getattr(body, "jump_offset", None) is not None:
+                    info.add_branch(
+                        BranchType.TrueBranch,
+                        addr + info.length + body.jump_offset,
+                    )
+                    info.add_branch(BranchType.FalseBranch, addr + info.length)
+                dis = dis._replace(analysis_info=info)
+            except Exception:
+                pass
+            return dis
+
+    def _convert_new_to_legacy(self, new_instr: NewInstruction, addr: int) -> Instruction:
+        """Convert new instruction format to legacy format for compatibility."""
+        # Create a mock legacy instruction with the same basic properties
+        # This is a compatibility shim to allow the new decoder to work with legacy code
+        
+        info = MockAnalysisInfo()
+        info.length = new_instr._length
+        
+        # Create analysis info for control flow instructions
+        if hasattr(new_instr, 'is_conditional') and new_instr.is_conditional():
+            # For conditional instructions, add branch info
+            if hasattr(new_instr.op_details.body, 'jump_offset'):
+                jump_offset = new_instr.op_details.body.jump_offset
                 info.add_branch(
                     BranchType.TrueBranch,
-                    addr + info.length + body.jump_offset,
+                    addr + info.length + jump_offset,
                 )
                 info.add_branch(BranchType.FalseBranch, addr + info.length)
-            dis = dis._replace(analysis_info=info)
-        except Exception:
-            pass
-        return dis
+        elif hasattr(new_instr, 'is_conditional') and not new_instr.is_conditional():
+            # For unconditional jumps
+            if hasattr(new_instr.op_details.body, 'jump_offset'):
+                jump_offset = new_instr.op_details.body.jump_offset
+                info.add_branch(
+                    BranchType.UnconditionalBranch,
+                    addr + info.length + jump_offset,
+                )
+        
+        # Create a legacy-compatible instruction object
+        # Extract first few bytes as data (legacy format expects this)
+        # Note: This is a compatibility shim and may not have all the data
+        data_bytes = bytes(new_instr._length)  # placeholder data
+        
+        legacy_instr = Instruction(
+            op=new_instr.op_details,
+            id=new_instr.op_details.opcode.name,  
+            length=new_instr._length,
+            data=data_bytes,
+            addr=addr,
+            analysis_info=info
+        )
+        
+        return legacy_instr
 
     def get_instruction_info(self, data: bytes, addr: int) -> Optional[InstructionInfo]:
         dis = self.decode_instruction(data, addr)
@@ -247,9 +305,33 @@ class Scumm6(Architecture):
     def get_instruction_text(
         self, data: bytes, addr: int
     ) -> Optional[Tuple[List[InstructionTextToken], int]]:
-        dis = self.decode_instruction(data, addr)
-        if not dis:
-            return None
+        if self.use_new_decoder:
+            # Use new decoder directly for better performance and semantic output
+            new_instr = new_decode(data, addr)
+            if new_instr is None:
+                return None
+            
+            # Get tokens from new instruction rendering
+            tokens = new_instr.render()
+            
+            # Convert to Binary Ninja tokens
+            binja_tokens = []
+            for token in tokens:
+                # Our tokens have a to_binja() method
+                if hasattr(token, 'to_binja'):
+                    binja_tokens.append(token.to_binja())
+                else:
+                    # Fallback for any other token types
+                    binja_tokens.append(InstructionTextToken(
+                        InstructionTextTokenType.TextToken, str(token)
+                    ))
+            
+            return binja_tokens, new_instr._length
+        else:
+            # Use legacy decoder
+            dis = self.decode_instruction(data, addr)
+            if not dis:
+                return None
 
         def tokenize_params(*params: Any) -> List[InstructionTextToken]:
             r = [
@@ -333,9 +415,22 @@ class Scumm6(Architecture):
     def get_instruction_low_level_il(
         self, data: bytes, addr: int, il: lowlevelil.LowLevelILFunction
     ) -> Optional[int]:
-        dis = self.decode_instruction(data, addr)
-        if not dis:
-            return None
+        if self.use_new_decoder:
+            # Use new decoder directly for LLIL generation
+            new_instr = new_decode(data, addr)
+            if new_instr is None:
+                return None
+            
+            # Generate LLIL using new instruction's lift method
+            new_instr.lift(il, addr)
+            
+            # Return the instruction length
+            return new_instr._length
+        else:
+            # Use legacy decoder
+            dis = self.decode_instruction(data, addr)
+            if not dis:
+                return None
 
         def get_prev_dis(instr: Instruction) -> Instruction:
             prev = self.prev_instruction(instr)
@@ -614,3 +709,19 @@ class Scumm6(Architecture):
             # print(self.op_addrs[filename]._list)
 
         return dis.length
+
+
+class Scumm6Legacy(Scumm6):
+    """SCUMM6 Architecture using legacy decoder (default behavior)."""
+    name = "SCUMM6-Legacy"
+
+    def __init__(self) -> None:
+        super().__init__(use_new_decoder=False)
+
+
+class Scumm6New(Scumm6):
+    """SCUMM6 Architecture using new object-oriented decoder with semantic representations.""" 
+    name = "SCUMM6-New"
+
+    def __init__(self) -> None:
+        super().__init__(use_new_decoder=True)
