@@ -1,11 +1,11 @@
 """Smart factory functions for generating instruction classes."""
 
-from typing import Type, Dict, List
+from typing import Type, Dict, List, Union
 from binja_helpers.tokens import Token
 
 from .opcodes import Instruction
 from .smart_bases import (SmartIntrinsicOp, SmartVariableOp, SmartArrayOp, SmartComplexOp, 
-                         SmartStackOp, SmartBinaryOp, SmartUnaryOp, SmartComparisonOp)
+                         SmartBinaryOp, SmartUnaryOp, SmartComparisonOp)
 from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
                      INTRINSIC_CONFIGS, VARIABLE_CONFIGS, ARRAY_CONFIGS, COMPLEX_CONFIGS, STACK_CONFIGS)
 
@@ -64,16 +64,20 @@ def create_stack_instruction(name: str, config: StackConfig) -> Type[Instruction
     """Create a stack operation instruction class from configuration."""
     
     if config.is_comparison:
-        base_class = SmartComparisonOp
+        class GeneratedStackOp(SmartComparisonOp):
+            _name = name
+            _config = config
+            __doc__ = config.doc
     elif config.is_unary:
-        base_class = SmartUnaryOp
+        class GeneratedStackOp(SmartUnaryOp):
+            _name = name
+            _config = config
+            __doc__ = config.doc
     else:
-        base_class = SmartBinaryOp
-    
-    class GeneratedStackOp(base_class):
-        _name = name
-        _config = config
-        __doc__ = config.doc
+        class GeneratedStackOp(SmartBinaryOp):
+            _name = name
+            _config = config
+            __doc__ = config.doc
     
     GeneratedStackOp.__name__ = name.title().replace("_", "")
     GeneratedStackOp.__qualname__ = name.title().replace("_", "")

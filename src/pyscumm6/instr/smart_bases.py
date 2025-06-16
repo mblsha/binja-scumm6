@@ -1,10 +1,8 @@
 """Smart base classes for generated instruction types."""
 
-from abc import abstractmethod
-from typing import List, Optional
+from typing import List
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
-from binaryninja.enums import BranchType
 
 from .opcodes import Instruction
 from .configs import IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig
