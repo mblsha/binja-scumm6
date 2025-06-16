@@ -1,7 +1,7 @@
 """Metadata-driven instruction configurations."""
 
-from dataclasses import dataclass
-from typing import Optional, Dict
+from dataclasses import dataclass, field
+from typing import Optional, Dict, List
 
 # ============================================================================
 # CONFIGURATION HELPER FUNCTIONS - For concise config creation
@@ -60,6 +60,31 @@ class StackConfig:
     is_comparison: bool = False
     is_unary: bool = False
     doc: str = ""
+
+@dataclass
+class SemanticIntrinsicConfig(IntrinsicConfig):
+    """Configuration for semantically-rich intrinsics following descumm approach."""
+    semantic_name: str = ""                      # Game-domain name (required)
+    parameter_names: List[str] = field(default_factory=list)  # Meaningful parameter names
+    return_description: str = ""                 # What the operation returns
+    side_effects: List[str] = field(default_factory=list)     # What it affects
+    control_flow_impact: bool = False            # Whether it affects control flow
+    show_data_flow: bool = True                  # Whether to show stack operations
+    variable_args: bool = False                  # Whether it has variable arguments
+
+def semantic_op(name: str, params: List[str] = None, pop: int = 0, push: int = 0, 
+                doc: str = "", control_flow: bool = False, 
+                variable_args: bool = False) -> SemanticIntrinsicConfig:
+    """Helper to create semantic intrinsic configurations following descumm philosophy."""
+    return SemanticIntrinsicConfig(
+        semantic_name=name,
+        parameter_names=params or [],
+        pop_count=pop,
+        push_count=push,
+        doc=doc,
+        control_flow_impact=control_flow,
+        variable_args=variable_args
+    )
 
 # ============================================================================
 # INSTRUCTION METADATA - Replaces 100+ class definitions
@@ -255,4 +280,39 @@ STACK_CONFIGS: Dict[str, StackConfig] = {
     "lt": StackConfig("compare_signed_less_than", "lt", is_comparison=True, doc="Less than"),
     "le": StackConfig("compare_signed_less_equal", "le", is_comparison=True, doc="Less than or equal"),
     "ge": StackConfig("compare_signed_greater_equal", "ge", is_comparison=True, doc="Greater than or equal"),
+}
+
+# ============================================================================
+# SEMANTIC INTRINSIC CONFIGURATIONS - Following Descumm Philosophy
+# ============================================================================
+
+# Script Management Operations (Following descumm's semantic approach)
+SEMANTIC_CONFIGS: Dict[str, SemanticIntrinsicConfig] = {
+    # Script execution operations - high semantic value for reverse engineering
+    "start_script": semantic_op(
+        name="start_script",
+        params=["script_id", "flags", "*args"],
+        doc="Start script execution with flags and arguments",
+        control_flow=True,
+        variable_args=True
+    ),
+    "start_script_quick": semantic_op(
+        name="start_script_quick", 
+        params=["script_id", "*args"],
+        doc="Start script execution without flags",
+        control_flow=True,
+        variable_args=True
+    ),
+    "start_script_quick2": semantic_op(
+        name="start_script_quick2",
+        params=["script_id", "*args"], 
+        doc="Start script execution (variant 2)",
+        control_flow=True,
+        variable_args=True
+    ),
+    
+    # Future semantic operations can be added here following descumm patterns
+    # Examples:
+    # "cutscene": semantic_op("cutscene", ["*args"], doc="Start cutscene sequence"),
+    # "draw_blast_object": semantic_op("draw_blast_object", doc="Draw blast object effect"),
 }

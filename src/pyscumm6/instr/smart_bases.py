@@ -5,7 +5,8 @@ from binja_helpers.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
 
 from .opcodes import Instruction
-from .configs import IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig
+from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
+                     SemanticIntrinsicConfig)
 from ...scumm6_opcodes import Scumm6Opcodes
 
 class SmartIntrinsicOp(Instruction):
@@ -272,3 +273,95 @@ class SmartArrayOp(Instruction):
                     [il.pop(4), il.pop(4)]
                 ))
             il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+
+class SmartSemanticIntrinsicOp(Instruction):
+    """Self-configuring semantic intrinsic following descumm philosophy."""
+    
+    _name: str
+    _config: SemanticIntrinsicConfig
+    
+    def render(self) -> List[Token]:
+        """Render in descumm-style function call format."""
+        return self._render_semantic_call()
+    
+    def _render_semantic_call(self) -> List[Token]:
+        """Render as: semantic_name(param1, param2, ...)"""
+        tokens = [TInstr(self._config.semantic_name), TSep("(")]
+        
+        # For variable args operations, show dynamic parameter count
+        if self._config.variable_args:
+            # Show script_id as first param, then variable args indicator
+            if self._config.parameter_names:
+                first_param = self._config.parameter_names[0]
+                tokens.extend([TInstr(first_param)])
+                if len(self._config.parameter_names) > 1:
+                    tokens.extend([TSep(","), TSep(" "), TInstr("...")])
+            else:
+                tokens.append(TInstr("..."))
+        else:
+            # Show fixed parameters
+            for i, param_name in enumerate(self._config.parameter_names):
+                if i > 0:
+                    tokens.extend([TSep(","), TSep(" ")])
+                tokens.append(TInstr(param_name))
+        
+        tokens.append(TSep(")"))
+        return tokens
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Generate LLIL following descumm semantic approach."""
+        # Handle variable arguments for script operations
+        if self._config.variable_args:
+            self._lift_variable_args_operation(il, addr)
+        else:
+            self._lift_fixed_args_operation(il, addr)
+    
+    def _lift_variable_args_operation(self, il: LowLevelILFunction, addr: int) -> None:
+        """Handle operations with variable arguments (like start_script)."""
+        # Extract variable arguments first (following original scumm6.py pattern)
+        args = self._extract_variable_arguments(il)
+        
+        # Get the main parameters (script_id for script operations)
+        script_id = il.pop(4)
+        params = [script_id] + args
+        
+        # For start_script, also handle flags
+        if self._name == "start_script":
+            flags = il.pop(4)
+            params = [script_id, flags] + args
+        
+        # Generate semantic intrinsic call
+        il.append(il.intrinsic([], self._config.semantic_name, params))
+        
+        # Handle control flow implications if needed
+        if self._config.control_flow_impact:
+            self._handle_script_call_flow(il, script_id)
+    
+    def _lift_fixed_args_operation(self, il: LowLevelILFunction, addr: int) -> None:
+        """Handle operations with fixed arguments."""
+        # Standard intrinsic lift with semantic name
+        params = [il.pop(4) for _ in range(self._config.pop_count)]
+        
+        if self._config.push_count > 0:
+            outputs = [il.reg(4, LLIL_TEMP(i)) for i in range(self._config.push_count)]
+            il.append(il.intrinsic(outputs, self._config.semantic_name, params))
+            for out_reg in outputs:
+                il.append(il.push(4, out_reg))
+        else:
+            il.append(il.intrinsic([], self._config.semantic_name, params))
+    
+    def _extract_variable_arguments(self, il: LowLevelILFunction) -> List:
+        """Extract variable arguments from stack (following original implementation)."""
+        # This is simplified - in real implementation, this would follow
+        # the pattern from scumm6.py for extracting variable argument lists
+        # For now, return empty list as placeholder
+        return []
+    
+    def _handle_script_call_flow(self, il: LowLevelILFunction, script_id) -> None:
+        """Handle control flow implications for script calls."""
+        # In a full implementation, this would:
+        # 1. Try to resolve script_id to actual address
+        # 2. Generate appropriate call or jump instruction for CFG
+        # 3. Handle the script context passing
+        # For now, this is a placeholder
+        pass

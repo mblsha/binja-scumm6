@@ -5,9 +5,10 @@ from binja_helpers.tokens import Token
 
 from .opcodes import Instruction
 from .smart_bases import (SmartIntrinsicOp, SmartVariableOp, SmartArrayOp, SmartComplexOp, 
-                         SmartBinaryOp, SmartUnaryOp, SmartComparisonOp)
+                         SmartBinaryOp, SmartUnaryOp, SmartComparisonOp, SmartSemanticIntrinsicOp)
 from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
-                     INTRINSIC_CONFIGS, VARIABLE_CONFIGS, ARRAY_CONFIGS, COMPLEX_CONFIGS, STACK_CONFIGS)
+                     SemanticIntrinsicConfig, INTRINSIC_CONFIGS, VARIABLE_CONFIGS, ARRAY_CONFIGS, 
+                     COMPLEX_CONFIGS, STACK_CONFIGS, SEMANTIC_CONFIGS)
 
 def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Instruction]:
     """Create an intrinsic instruction class from configuration."""
@@ -88,6 +89,21 @@ def create_stack_instruction(name: str, config: StackConfig) -> Type[Instruction
         GeneratedBinaryOp.__qualname__ = name.title().replace("_", "")
         return GeneratedBinaryOp
 
+def create_semantic_intrinsic_instruction(name: str, config: SemanticIntrinsicConfig) -> Type[Instruction]:
+    """Create a semantic intrinsic instruction class following descumm philosophy."""
+    
+    class GeneratedSemanticIntrinsicOp(SmartSemanticIntrinsicOp):
+        _name = name
+        _config = config
+        __doc__ = config.doc
+        
+        def render(self) -> List[Token]:
+            return super().render()
+    
+    GeneratedSemanticIntrinsicOp.__name__ = name.title().replace("_", "")
+    GeneratedSemanticIntrinsicOp.__qualname__ = name.title().replace("_", "")
+    return GeneratedSemanticIntrinsicOp
+
 def generate_all_instructions() -> Dict[str, Type[Instruction]]:
     """Generate all instruction classes from configurations."""
     registry: Dict[str, Type[Instruction]] = {}
@@ -111,5 +127,9 @@ def generate_all_instructions() -> Dict[str, Type[Instruction]]:
     # Generate stack instructions
     for name, stack_config in STACK_CONFIGS.items():
         registry[name] = create_stack_instruction(name, stack_config)
+    
+    # Generate semantic intrinsic instructions (following descumm philosophy)
+    for name, semantic_config in SEMANTIC_CONFIGS.items():
+        registry[name] = create_semantic_intrinsic_instruction(name, semantic_config)
     
     return registry
