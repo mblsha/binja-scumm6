@@ -1393,3 +1393,71 @@ class FindAllObjects(IntrinsicOp):
     @property
     def intrinsic_name(self) -> str:
         return "find_all_objects"
+
+
+# Simple Script and Object Operations
+class JumpToScript(IntrinsicOp):
+    """Jump to script with no parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "jump_to_script"
+
+
+class StartObject(IntrinsicOp):
+    """Start object with variable parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "start_object"
+
+
+class StartObjectQuick(IntrinsicOp):
+    """Start object quick with variable parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "start_object_quick"
+
+
+# Array Management Operations
+class DimArray(IntrinsicOp):
+    """Dimension array with variable parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "dim_array"
+
+
+class Dim2dimArray(IntrinsicOp):
+    """2D dimension array with variable parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "dim2dim_array"
+
+
+# Kernel Operations
+class KernelGetFunctions(IntrinsicOp):
+    """Kernel get functions with variable parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "kernel_get_functions"
+
+
+class KernelSetFunctions(IntrinsicOp):
+    """Kernel set functions with variable parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "kernel_set_functions"
+
+
+# Additional Utility Operations
+class SaveRestoreVerbs(IntrinsicOp):
+    """Save/restore verbs with parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "save_restore_verbs"

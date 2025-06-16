@@ -176,4 +176,16 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.set_blast_object_window: instructions.SetBlastObjectWindow,
     Scumm6Opcodes.OpType.pseudo_room: instructions.PseudoRoom,
     Scumm6Opcodes.OpType.find_all_objects: instructions.FindAllObjects,
+    # Simple Script and Object Operations
+    Scumm6Opcodes.OpType.jump_to_script: instructions.JumpToScript,
+    Scumm6Opcodes.OpType.start_object: instructions.StartObject,
+    Scumm6Opcodes.OpType.start_object_quick: instructions.StartObjectQuick,
+    # Array Management Operations
+    Scumm6Opcodes.OpType.dim_array: instructions.DimArray,
+    Scumm6Opcodes.OpType.dim2dim_array: instructions.Dim2dimArray,
+    # Kernel Operations
+    Scumm6Opcodes.OpType.kernel_get_functions: instructions.KernelGetFunctions,
+    Scumm6Opcodes.OpType.kernel_set_functions: instructions.KernelSetFunctions,
+    # Additional Utility Operations
+    Scumm6Opcodes.OpType.save_restore_verbs: instructions.SaveRestoreVerbs,
 }

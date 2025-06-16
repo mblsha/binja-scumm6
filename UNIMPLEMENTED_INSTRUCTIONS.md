@@ -139,6 +139,14 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 221 | `find_all_objects` | `FindAllObjects` | ✅ Complete |
 | 228 | `set_box_set` | `SetBoxSet` | ✅ Complete |
 | 100 | `set_blast_object_window` | `SetBlastObjectWindow` | ✅ Complete |
+| 96 | `start_object` | `StartObject` | ✅ Complete |
+| 165 | `save_restore_verbs` | `SaveRestoreVerbs` | ✅ Complete |
+| 188 | `dim_array` | `DimArray` | ✅ Complete |
+| 190 | `start_object_quick` | `StartObjectQuick` | ✅ Complete |
+| 192 | `dim2dim_array` | `Dim2dimArray` | ✅ Complete |
+| 200 | `kernel_get_functions` | `KernelGetFunctions` | ✅ Complete |
+| 201 | `kernel_set_functions` | `KernelSetFunctions` | ✅ Complete |
+| 213 | `jump_to_script` | `JumpToScript` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -200,7 +208,7 @@ These instructions have full LLIL implementations and should be migrated first:
 - [x] `iff` (92) - If true (conditional branch)
 - [x] `if_not` (93) - If false (conditional branch)
 - [x] `jump` (115) - Unconditional jump
-- [ ] `jump_to_script` (213) - Jump to script
+- [x] `jump_to_script` (213) - Jump to script
 
 ### Script Operations
 - [ ] `start_script` (94) - Start script with flags
@@ -211,8 +219,8 @@ These instructions have full LLIL implementations and should be migrated first:
 - [x] `is_room_script_running` (216) - Check if room script is running
 
 ### Object Operations
-- [ ] `start_object` (96) - Start object
-- [ ] `start_object_quick` (190) - Start object quick
+- [x] `start_object` (96) - Start object
+- [x] `start_object_quick` (190) - Start object quick
 - [x] `stop_object_code1` (101) - Stop object code (variant 1)
 - [x] `stop_object_code2` (102) - Stop object code (variant 2)
 - [x] `stop_object_script` (119) - Stop object script
@@ -293,7 +301,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `get_verb_from_xy` (148) - Get verb from coordinates
 - [x] `get_verb_entrypoint` (163) - Get verb entrypoint
 - [ ] `verb_ops` (158) - Verb operations (complex)
-- [ ] `save_restore_verbs` (165) - Save/restore verbs
+- [x] `save_restore_verbs` (165) - Save/restore verbs
 
 ### Text/Dialog Operations
 - [ ] `print_line` (180) - Print line
@@ -328,8 +336,8 @@ These instructions have complex implementations with sub-operations and may be b
 - [ ] `resource_routines` (155) - Resource routines (complex)
 
 ### Array Management
-- [ ] `dim_array` (188) - Dimension array
-- [ ] `dim2dim_array` (192) - 2D dimension array
+- [x] `dim_array` (188) - Dimension array
+- [x] `dim2dim_array` (192) - 2D dimension array
 - [ ] `array_ops` (164) - Array operations (complex)
 
 ### Timing Operations
@@ -357,8 +365,8 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `is_any_of` (173) - Is any of
 - [x] `get_date_time` (208) - Get date/time
 - [x] `get_animate_variable` (210) - Get animate variable
-- [ ] `kernel_get_functions` (200) - Kernel get functions
-- [ ] `kernel_set_functions` (201) - Kernel set functions
+- [x] `kernel_get_functions` (200) - Kernel get functions
+- [x] `kernel_set_functions` (201) - Kernel set functions
 - [x] `dummy` (189) - Dummy/no-op instruction
 
 ## Migration Guidelines
