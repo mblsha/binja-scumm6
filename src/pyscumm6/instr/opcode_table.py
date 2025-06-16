@@ -49,9 +49,9 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.eq: INSTRUCTION_REGISTRY["eq"],
     Scumm6Opcodes.OpType.neq: INSTRUCTION_REGISTRY["neq"],
     Scumm6Opcodes.OpType.gt: INSTRUCTION_REGISTRY["gt"],
-    Scumm6Opcodes.OpType.lt: instructions.Lt,
-    Scumm6Opcodes.OpType.le: instructions.Le,
-    Scumm6Opcodes.OpType.ge: instructions.Ge,
+    Scumm6Opcodes.OpType.lt: INSTRUCTION_REGISTRY["lt"],
+    Scumm6Opcodes.OpType.le: INSTRUCTION_REGISTRY["le"],
+    Scumm6Opcodes.OpType.ge: INSTRUCTION_REGISTRY["ge"],
 
     # --- Keeping Full Implementations for Complex Cases ---
     Scumm6Opcodes.OpType.push_byte_var: instructions.PushByteVar,
