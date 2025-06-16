@@ -198,11 +198,11 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.print_ego: instructions.PrintEgo,
     Scumm6Opcodes.OpType.talk_actor: instructions.TalkActor,
     Scumm6Opcodes.OpType.talk_ego: instructions.TalkEgo,
-    # Complex Operations with Sub-commands
-    Scumm6Opcodes.OpType.actor_ops: instructions.ActorOps,
-    Scumm6Opcodes.OpType.verb_ops: instructions.VerbOps,
-    Scumm6Opcodes.OpType.array_ops: instructions.ArrayOps,
-    Scumm6Opcodes.OpType.room_ops: instructions.RoomOps,
-    Scumm6Opcodes.OpType.system_ops: instructions.SystemOps,
-    Scumm6Opcodes.OpType.resource_routines: instructions.ResourceRoutines,
+    # --- Auto-Generated Complex Operations ---
+    Scumm6Opcodes.OpType.actor_ops: INSTRUCTION_REGISTRY["actor_ops"],
+    Scumm6Opcodes.OpType.verb_ops: INSTRUCTION_REGISTRY["verb_ops"],
+    Scumm6Opcodes.OpType.array_ops: INSTRUCTION_REGISTRY["array_ops"],
+    Scumm6Opcodes.OpType.room_ops: INSTRUCTION_REGISTRY["room_ops"],
+    Scumm6Opcodes.OpType.system_ops: INSTRUCTION_REGISTRY["system_ops"],
+    Scumm6Opcodes.OpType.resource_routines: INSTRUCTION_REGISTRY["resource_routines"],
 }
