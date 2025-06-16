@@ -1,6 +1,6 @@
 """Auto-generated instruction class registry with lazy loading."""
 
-from typing import Dict, Type, Any
+from typing import Dict, Type, Any, ItemsView, KeysView, ValuesView
 
 class _LazyInstructionRegistry:
     """Lazy-loading instruction registry wrapper."""
@@ -23,15 +23,15 @@ class _LazyInstructionRegistry:
         self._ensure_loaded()
         return key in self._registry
     
-    def items(self):
+    def items(self) -> ItemsView[str, Type[Any]]:
         self._ensure_loaded()
         return self._registry.items()
     
-    def keys(self):
+    def keys(self) -> KeysView[str]:
         self._ensure_loaded() 
         return self._registry.keys()
     
-    def values(self):
+    def values(self) -> ValuesView[Type[Any]]:
         self._ensure_loaded()
         return self._registry.values()
 
