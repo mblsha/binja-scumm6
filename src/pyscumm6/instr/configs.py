@@ -3,6 +3,26 @@
 from dataclasses import dataclass
 from typing import Optional, Dict
 
+# ============================================================================
+# CONFIGURATION HELPER FUNCTIONS - For concise config creation
+# ============================================================================
+
+def intrinsic(pop: int = 0, push: int = 0, doc: str = "", special: Optional[str] = None) -> 'IntrinsicConfig':
+    """Helper to create intrinsic configurations concisely."""
+    return IntrinsicConfig(pop_count=pop, push_count=push, doc=doc, special_lift=special)
+
+def query_op(doc: str) -> 'IntrinsicConfig':
+    """Helper for query operations (pop 1, push 1).""" 
+    return intrinsic(pop=1, push=1, doc=doc)
+
+def action_op(pop: int, doc: str) -> 'IntrinsicConfig':
+    """Helper for action operations (pop N, push 0)."""
+    return intrinsic(pop=pop, doc=doc)
+
+def no_param_op(doc: str) -> 'IntrinsicConfig':
+    """Helper for no-parameter operations."""
+    return intrinsic(doc=doc)
+
 @dataclass
 class IntrinsicConfig:
     """Configuration for intrinsic operations."""
@@ -48,38 +68,38 @@ class StackConfig:
 # Intrinsic Operations (100+ classes -> single config table)
 INTRINSIC_CONFIGS: Dict[str, IntrinsicConfig] = {
     # Drawing Operations
-    "draw_object": IntrinsicConfig(pop_count=2, doc="Draw object with ID and state"),
-    "draw_object_at": IntrinsicConfig(pop_count=3, doc="Draw object at position"),
-    "draw_blast_object": IntrinsicConfig(doc="Draw blast object"),
-    "set_blast_object_window": IntrinsicConfig(doc="Set blast object window"),
+    "draw_object": action_op(2, "Draw object with ID and state"),
+    "draw_object_at": action_op(3, "Draw object at position"),
+    "draw_blast_object": no_param_op("Draw blast object"),
+    "set_blast_object_window": no_param_op("Set blast object window"),
     
     # Audio Operations  
-    "start_sound": IntrinsicConfig(pop_count=1, doc="Start sound"),
-    "stop_sound": IntrinsicConfig(pop_count=1, doc="Stop sound"),
-    "start_music": IntrinsicConfig(pop_count=1, doc="Start music"),
-    "stop_music": IntrinsicConfig(doc="Stop music"),
-    "is_sound_running": IntrinsicConfig(pop_count=1, push_count=1, doc="Check if sound running"),
-    "sound_kludge": IntrinsicConfig(pop_count=1, doc="Sound system kludge"),
+    "start_sound": action_op(1, "Start sound"),
+    "stop_sound": action_op(1, "Stop sound"),
+    "start_music": action_op(1, "Start music"),
+    "stop_music": no_param_op("Stop music"),
+    "is_sound_running": query_op("Check if sound running"),
+    "sound_kludge": action_op(1, "Sound system kludge"),
     
     # Actor Query Operations
-    "get_actor_moving": IntrinsicConfig(pop_count=1, push_count=1, doc="Get actor moving state"),
-    "get_actor_room": IntrinsicConfig(pop_count=1, push_count=1, doc="Get actor room"),
-    "get_actor_costume": IntrinsicConfig(pop_count=1, push_count=1, doc="Get actor costume"),
-    "get_actor_walk_box": IntrinsicConfig(pop_count=1, push_count=1, doc="Get actor walk box"),
-    "get_actor_elevation": IntrinsicConfig(pop_count=1, push_count=1, doc="Get actor elevation"),
-    "get_actor_width": IntrinsicConfig(pop_count=1, push_count=1, doc="Get actor width"),
-    "get_actor_scale_x": IntrinsicConfig(pop_count=1, push_count=1, doc="Get actor scale X"),
-    "get_actor_anim_counter": IntrinsicConfig(pop_count=1, push_count=1, doc="Get actor anim counter"),
-    "get_actor_from_xy": IntrinsicConfig(pop_count=1, push_count=1, doc="Get actor from coordinates"),
-    "get_actor_layer": IntrinsicConfig(pop_count=1, push_count=1, doc="Get actor layer"),
+    "get_actor_moving": query_op("Get actor moving state"),
+    "get_actor_room": query_op("Get actor room"),
+    "get_actor_costume": query_op("Get actor costume"),
+    "get_actor_walk_box": query_op("Get actor walk box"),
+    "get_actor_elevation": query_op("Get actor elevation"),
+    "get_actor_width": query_op("Get actor width"),
+    "get_actor_scale_x": query_op("Get actor scale X"),
+    "get_actor_anim_counter": query_op("Get actor anim counter"),
+    "get_actor_from_xy": query_op("Get actor from coordinates"),
+    "get_actor_layer": query_op("Get actor layer"),
     
     # Actor Movement Operations
-    "face_actor": IntrinsicConfig(pop_count=1, doc="Face actor"),
-    "animate_actor": IntrinsicConfig(pop_count=1, doc="Animate actor"),
-    "walk_actor_to_obj": IntrinsicConfig(pop_count=3, doc="Walk actor to object"),
-    "walk_actor_to": IntrinsicConfig(pop_count=3, doc="Walk actor to position"),
-    "put_actor_at_xy": IntrinsicConfig(pop_count=4, doc="Put actor at coordinates"),
-    "put_actor_at_object": IntrinsicConfig(pop_count=3, doc="Put actor at object"),
+    "face_actor": action_op(1, "Face actor"),
+    "animate_actor": action_op(1, "Animate actor"),
+    "walk_actor_to_obj": action_op(3, "Walk actor to object"),
+    "walk_actor_to": action_op(3, "Walk actor to position"),
+    "put_actor_at_xy": action_op(4, "Put actor at coordinates"),
+    "put_actor_at_object": action_op(3, "Put actor at object"),
     
     # Object Operations
     "get_object_x": IntrinsicConfig(pop_count=1, push_count=1, doc="Get object X position"),
