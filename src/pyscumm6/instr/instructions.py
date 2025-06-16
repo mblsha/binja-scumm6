@@ -1526,3 +1526,214 @@ class TalkEgo(IntrinsicOp):
     @property
     def intrinsic_name(self) -> str:
         return "talk_ego"
+
+
+# Complex Operations with Sub-commands
+class ActorOps(Instruction):
+    """Actor operations with various sub-commands."""
+    
+    def render(self) -> List[Token]:
+        subop_name = self.op_details.body.subop.name
+        return [TInstr(f"actor_ops.{subop_name}")]
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        from ...scumm6_opcodes import Scumm6Opcodes
+        
+        # Verify we have the expected body type
+        assert isinstance(self.op_details.body, Scumm6Opcodes.ActorOps), \
+            f"Expected ActorOps body, got {type(self.op_details.body)}"
+        
+        # Access the subop and its body
+        subop = self.op_details.body.subop
+        subop_body = self.op_details.body.body
+        
+        # Construct intrinsic name
+        intrinsic_name = f"actor_ops.{subop.name}"
+        
+        # Handle parameters based on subop_body attributes
+        pop_count = getattr(subop_body, "pop_count", 0)
+        push_count = getattr(subop_body, "push_count", 0)
+        
+        # Pop arguments and call intrinsic
+        params = [il.pop(4) for _ in range(pop_count)]
+        
+        if push_count > 0:
+            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        else:
+            il.append(il.intrinsic([], intrinsic_name, params))
+
+
+class VerbOps(Instruction):
+    """Verb operations with various sub-commands."""
+    
+    def render(self) -> List[Token]:
+        subop_name = self.op_details.body.subop.name
+        return [TInstr(f"verb_ops.{subop_name}")]
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        from ...scumm6_opcodes import Scumm6Opcodes
+        
+        # Verify we have the expected body type
+        assert isinstance(self.op_details.body, Scumm6Opcodes.VerbOps), \
+            f"Expected VerbOps body, got {type(self.op_details.body)}"
+        
+        # Access the subop and its body
+        subop = self.op_details.body.subop
+        subop_body = self.op_details.body.body
+        
+        # Construct intrinsic name
+        intrinsic_name = f"verb_ops.{subop.name}"
+        
+        # Handle parameters based on subop_body attributes
+        pop_count = getattr(subop_body, "pop_count", 0)
+        push_count = getattr(subop_body, "push_count", 0)
+        
+        # Pop arguments and call intrinsic
+        params = [il.pop(4) for _ in range(pop_count)]
+        
+        if push_count > 0:
+            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        else:
+            il.append(il.intrinsic([], intrinsic_name, params))
+
+
+class ArrayOps(Instruction):
+    """Array operations with various sub-commands."""
+    
+    def render(self) -> List[Token]:
+        subop_name = self.op_details.body.subop.name
+        return [TInstr(f"array_ops.{subop_name}")]
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        from ...scumm6_opcodes import Scumm6Opcodes
+        
+        # Verify we have the expected body type
+        assert isinstance(self.op_details.body, Scumm6Opcodes.ArrayOps), \
+            f"Expected ArrayOps body, got {type(self.op_details.body)}"
+        
+        # Access the subop and its body
+        subop = self.op_details.body.subop
+        subop_body = self.op_details.body.body
+        
+        # Construct intrinsic name
+        intrinsic_name = f"array_ops.{subop.name}"
+        
+        # Handle parameters based on subop_body attributes
+        pop_count = getattr(subop_body, "pop_count", 0)
+        push_count = getattr(subop_body, "push_count", 0)
+        
+        # Pop arguments and call intrinsic
+        params = [il.pop(4) for _ in range(pop_count)]
+        
+        if push_count > 0:
+            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        else:
+            il.append(il.intrinsic([], intrinsic_name, params))
+
+
+class RoomOps(Instruction):
+    """Room operations with various sub-commands."""
+    
+    def render(self) -> List[Token]:
+        subop_name = self.op_details.body.subop.name
+        return [TInstr(f"room_ops.{subop_name}")]
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        from ...scumm6_opcodes import Scumm6Opcodes
+        
+        # Verify we have the expected body type
+        assert isinstance(self.op_details.body, Scumm6Opcodes.RoomOps), \
+            f"Expected RoomOps body, got {type(self.op_details.body)}"
+        
+        # Access the subop and its body
+        subop = self.op_details.body.subop
+        subop_body = self.op_details.body.body
+        
+        # Construct intrinsic name
+        intrinsic_name = f"room_ops.{subop.name}"
+        
+        # Handle parameters based on subop_body attributes
+        pop_count = getattr(subop_body, "pop_count", 0)
+        push_count = getattr(subop_body, "push_count", 0)
+        
+        # Pop arguments and call intrinsic
+        params = [il.pop(4) for _ in range(pop_count)]
+        
+        if push_count > 0:
+            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        else:
+            il.append(il.intrinsic([], intrinsic_name, params))
+
+
+class SystemOps(Instruction):
+    """System operations with various sub-commands."""
+    
+    def render(self) -> List[Token]:
+        subop_name = self.op_details.body.subop.name
+        return [TInstr(f"system_ops.{subop_name}")]
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        from ...scumm6_opcodes import Scumm6Opcodes
+        
+        # Verify we have the expected body type
+        assert isinstance(self.op_details.body, Scumm6Opcodes.SystemOps), \
+            f"Expected SystemOps body, got {type(self.op_details.body)}"
+        
+        # Access the subop and its body
+        subop = self.op_details.body.subop
+        subop_body = self.op_details.body.body
+        
+        # Construct intrinsic name
+        intrinsic_name = f"system_ops.{subop.name}"
+        
+        # Handle parameters based on subop_body attributes
+        pop_count = getattr(subop_body, "pop_count", 0)
+        push_count = getattr(subop_body, "push_count", 0)
+        
+        # Pop arguments and call intrinsic
+        params = [il.pop(4) for _ in range(pop_count)]
+        
+        if push_count > 0:
+            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        else:
+            il.append(il.intrinsic([], intrinsic_name, params))
+
+
+class ResourceRoutines(Instruction):
+    """Resource management operations with various sub-commands."""
+    
+    def render(self) -> List[Token]:
+        subop_name = self.op_details.body.subop.name
+        return [TInstr(f"resource_routines.{subop_name}")]
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        from ...scumm6_opcodes import Scumm6Opcodes
+        
+        # Verify we have the expected body type
+        assert isinstance(self.op_details.body, Scumm6Opcodes.ResourceRoutines), \
+            f"Expected ResourceRoutines body, got {type(self.op_details.body)}"
+        
+        # Access the subop and its body
+        subop = self.op_details.body.subop
+        subop_body = self.op_details.body.body
+        
+        # Construct intrinsic name
+        intrinsic_name = f"resource_routines.{subop.name}"
+        
+        # Handle parameters based on subop_body attributes
+        pop_count = getattr(subop_body, "pop_count", 0)
+        push_count = getattr(subop_body, "push_count", 0)
+        
+        # Pop arguments and call intrinsic
+        params = [il.pop(4) for _ in range(pop_count)]
+        
+        if push_count > 0:
+            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        else:
+            il.append(il.intrinsic([], intrinsic_name, params))

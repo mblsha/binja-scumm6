@@ -155,6 +155,12 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 185 | `print_ego` | `PrintEgo` | ✅ Complete |
 | 186 | `talk_actor` | `TalkActor` | ✅ Complete |
 | 187 | `talk_ego` | `TalkEgo` | ✅ Complete |
+| 155 | `resource_routines` | `ResourceRoutines` | ✅ Complete |
+| 156 | `room_ops` | `RoomOps` | ✅ Complete |
+| 157 | `actor_ops` | `ActorOps` | ✅ Complete |
+| 158 | `verb_ops` | `VerbOps` | ✅ Complete |
+| 164 | `array_ops` | `ArrayOps` | ✅ Complete |
+| 174 | `system_ops` | `SystemOps` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -269,7 +275,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `load_room` (123) - Load room
 - [x] `load_room_with_ego` (133) - Load room with ego
 - [x] `pseudo_room` (161) - Pseudo room operation
-- [ ] `room_ops` (156) - Room operations (complex)
+- [x] `room_ops` (156) - Room operations (complex)
 
 ### Actor Operations
 - [x] `walk_actor_to_obj` (125) - Walk actor to object
@@ -289,7 +295,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `get_actor_anim_counter` (171) - Get actor animation counter
 - [x] `is_actor_in_box` (175) - Check if actor in box
 - [x] `get_actor_layer` (236) - Get actor layer
-- [ ] `actor_ops` (157) - Actor operations (complex)
+- [x] `actor_ops` (157) - Actor operations (complex)
 
 ### Object Query Operations
 - [x] `get_object_x` (141) - Get object X position
@@ -308,7 +314,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `do_sentence` (131) - Do sentence
 - [x] `get_verb_from_xy` (148) - Get verb from coordinates
 - [x] `get_verb_entrypoint` (163) - Get verb entrypoint
-- [ ] `verb_ops` (158) - Verb operations (complex)
+- [x] `verb_ops` (158) - Verb operations (complex)
 - [x] `save_restore_verbs` (165) - Save/restore verbs
 
 ### Text/Dialog Operations
@@ -337,16 +343,16 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `set_box_flags` (153) - Set box flags
 - [x] `create_box_matrix` (154) - Create box matrix
 - [x] `draw_box` (166) - Draw box
-- [ ] `system_ops` (174) - System operations (complex)
+- [x] `system_ops` (174) - System operations (complex)
 - [x] `set_box_set` (228) - Set box set
 
 ### Resource Operations
-- [ ] `resource_routines` (155) - Resource routines (complex)
+- [x] `resource_routines` (155) - Resource routines (complex)
 
 ### Array Management
 - [x] `dim_array` (188) - Dimension array
 - [x] `dim2dim_array` (192) - 2D dimension array
-- [ ] `array_ops` (164) - Array operations (complex)
+- [x] `array_ops` (164) - Array operations (complex)
 
 ### Timing Operations
 - [x] `wait` (169) - Wait
