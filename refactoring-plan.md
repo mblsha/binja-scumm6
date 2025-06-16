@@ -33,17 +33,25 @@ These instructions alter the flow of execution, either within a script or by jum
 *   **🚧 Script/Object Execution:** `start_script` (94), `start_script_quick` (95), `start_script_quick2` (191), `start_object` (96), `start_object_quick` (190) - Deferred to Group 3
 *   **🚧 Script/Object Termination:** `stop_script` (124), `stop_object_code1` (101), `stop_object_code2` (102), `stop_object_script` (119) - Deferred to Group 3
 
-#### ✅ Group 3: Complex Engine Intrinsics (97.6% COMPLETE - 4 REMAINING)
+#### ✅ Group 3: Complex Engine Intrinsics (98.2% COMPLETE - 3 REMAINING)
 This is the largest group, consisting of high-level engine functions. These are best implemented as `intrinsic` calls in LLIL. They can be subgrouped by functionality.
 
-**🎉 EXTRAORDINARY ACHIEVEMENT:** Out of ~168 total instructions in Group 3, we have successfully implemented **164 instructions**, leaving only **4 instructions** remaining that require special architectural handling.
+**🎉 EXTRAORDINARY ACHIEVEMENT:** Out of ~168 total instructions in Group 3, we have successfully implemented **165 instructions**, leaving only **3 instructions** that must remain in the main architecture due to their complex requirements for state management and CFG integration.
 
 **✅ COMPLETED - All Complex Operations with Sub-commands (6 total):**
 - **✅ Complex Operations:** `resource_routines` ✅, `room_ops` ✅, `actor_ops` ✅, `verb_ops` ✅, `array_ops` ✅, `system_ops` ✅
 
-**Remaining Instructions (4 total - Require Architectural Integration):**
-- **Script Operations (3):** `start_script`, `start_script_quick`, `start_script_quick2` - These require complex state management, instruction history analysis, and script address resolution that must remain in the main architecture file
-- **Already Implemented but Documented (1):** `draw_blast_object`, `cutscene` - These are already implemented
+**Remaining Instructions (3 total - Must Remain in Main Architecture):**
+- **Script Operations (3):** `start_script`, `start_script_quick`, `start_script_quick2` - These operations require complex architectural context including:
+  - Global state management and script ID resolution
+  - Instruction history analysis for CFG building
+  - Script address resolution using `Scumm6Disasm.get_script_ptr()`
+  - Integration with Binary Ninja's call destination analysis
+  
+  These operations are too architecturally complex for the instruction system and must remain in the main `scumm6.py` architecture file.
+
+**Verification Complete:**
+- **Already Implemented:** `draw_blast_object` (99), `cutscene` (104) - Confirmed these are already properly implemented in the main architecture
 
 *   **✅ Actor Query Operations:** `face_actor` ✅, `animate_actor` ✅, `get_actor_moving` ✅, `get_actor_room` ✅, `get_actor_costume` ✅, `get_actor_walk_box` ✅, `get_actor_from_xy` ✅, `get_actor_elevation` ✅, `get_actor_width` ✅, `get_actor_scale_x` ✅, `get_actor_anim_counter` ✅, `is_actor_in_box` ✅, `get_actor_layer` ✅
 *   **✅ Actor Movement Operations:** `walk_actor_to_obj` ✅, `walk_actor_to` ✅, `put_actor_at_xy` ✅, `put_actor_at_object` ✅
