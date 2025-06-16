@@ -586,12 +586,24 @@ class Iff(ControlFlowOp):
 
     def render(self) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
-        return [
-            TInstr("iff"),
-            TSep("("),
-            TInt(str(jump_offset)),
-            TSep(")"),
-        ]
+        # Follow descumm philosophy: show semantic meaning
+        # Positive offset = forward jump, negative = backward jump
+        if jump_offset > 0:
+            return [
+                TInstr("if"),
+                TSep(" "),
+                TInstr("goto"),
+                TSep(" "),
+                TInstr(f"+{jump_offset}"),
+            ]
+        else:
+            return [
+                TInstr("if"),
+                TSep(" "),
+                TInstr("goto"),
+                TSep(" "),
+                TInstr(f"{jump_offset}"),
+            ]
 
     def is_conditional(self) -> bool:
         return True
@@ -627,12 +639,32 @@ class IfNot(ControlFlowOp):
 
     def render(self) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
-        return [
-            TInstr("if_not"),
-            TSep("("),
-            TInt(str(jump_offset)),
-            TSep(")"),
-        ]
+        # Follow descumm philosophy: show semantic meaning
+        if jump_offset > 0:
+            return [
+                TInstr("unless"),
+                TSep(" "),
+                TInstr("goto"),
+                TSep(" "),
+                TInstr(f"+{jump_offset}"),
+            ]
+        elif jump_offset < 0:
+            return [
+                TInstr("unless"),
+                TSep(" "),
+                TInstr("goto"),
+                TSep(" "),
+                TInstr(f"{jump_offset}"),
+            ]
+        else:
+            # Zero offset = skip next instruction if true
+            return [
+                TInstr("unless"),
+                TSep(" "),
+                TInstr("goto"),
+                TSep(" "),
+                TInstr("self"),
+            ]
 
     def is_conditional(self) -> bool:
         return True
@@ -668,12 +700,26 @@ class Jump(ControlFlowOp):
 
     def render(self) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
-        return [
-            TInstr("jump"),
-            TSep("("),
-            TInt(str(jump_offset)),
-            TSep(")"),
-        ]
+        # Follow descumm philosophy: show semantic meaning
+        if jump_offset > 0:
+            return [
+                TInstr("goto"),
+                TSep(" "),
+                TInstr(f"+{jump_offset}"),
+            ]
+        elif jump_offset < 0:
+            return [
+                TInstr("goto"),
+                TSep(" "),
+                TInstr(f"{jump_offset}"),
+            ]
+        else:
+            # Zero offset = infinite loop
+            return [
+                TInstr("goto"),
+                TSep(" "),
+                TInstr("self"),
+            ]
 
     def is_conditional(self) -> bool:
         return False

@@ -350,14 +350,14 @@ class SmartSemanticIntrinsicOp(Instruction):
         else:
             il.append(il.intrinsic([], self._config.semantic_name, params))
     
-    def _extract_variable_arguments(self, il: LowLevelILFunction) -> List:
+    def _extract_variable_arguments(self, il: LowLevelILFunction) -> List[int]:
         """Extract variable arguments from stack (following original implementation)."""
         # This is simplified - in real implementation, this would follow
         # the pattern from scumm6.py for extracting variable argument lists
         # For now, return empty list as placeholder
         return []
     
-    def _handle_script_call_flow(self, il: LowLevelILFunction, script_id) -> None:
+    def _handle_script_call_flow(self, il: LowLevelILFunction, script_id: int) -> None:
         """Handle control flow implications for script calls."""
         # In a full implementation, this would:
         # 1. Try to resolve script_id to actual address

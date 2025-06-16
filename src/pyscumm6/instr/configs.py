@@ -72,7 +72,7 @@ class SemanticIntrinsicConfig(IntrinsicConfig):
     show_data_flow: bool = True                  # Whether to show stack operations
     variable_args: bool = False                  # Whether it has variable arguments
 
-def semantic_op(name: str, params: List[str] = None, pop: int = 0, push: int = 0, 
+def semantic_op(name: str, params: Optional[List[str]] = None, pop: int = 0, push: int = 0, 
                 doc: str = "", control_flow: bool = False, 
                 variable_args: bool = False) -> SemanticIntrinsicConfig:
     """Helper to create semantic intrinsic configurations following descumm philosophy."""
