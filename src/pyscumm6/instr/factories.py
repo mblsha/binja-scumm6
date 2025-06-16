@@ -90,26 +90,26 @@ def create_stack_instruction(name: str, config: StackConfig) -> Type[Instruction
 
 def generate_all_instructions() -> Dict[str, Type[Instruction]]:
     """Generate all instruction classes from configurations."""
-    registry = {}
+    registry: Dict[str, Type[Instruction]] = {}
     
     # Generate intrinsic instructions
     for name, config in INTRINSIC_CONFIGS.items():
         registry[name] = create_intrinsic_instruction(name, config)
     
     # Generate variable instructions  
-    for name, config in VARIABLE_CONFIGS.items():
-        registry[name] = create_variable_instruction(name, config)
+    for name, var_config in VARIABLE_CONFIGS.items():
+        registry[name] = create_variable_instruction(name, var_config)
     
     # Generate array instructions
-    for name, config in ARRAY_CONFIGS.items():
-        registry[name] = create_array_instruction(name, config)
+    for name, array_config in ARRAY_CONFIGS.items():
+        registry[name] = create_array_instruction(name, array_config)
     
     # Generate complex instructions
-    for name, config in COMPLEX_CONFIGS.items():
-        registry[name] = create_complex_instruction(name, config)
+    for name, complex_config in COMPLEX_CONFIGS.items():
+        registry[name] = create_complex_instruction(name, complex_config)
     
     # Generate stack instructions
-    for name, config in STACK_CONFIGS.items():
-        registry[name] = create_stack_instruction(name, config)
+    for name, stack_config in STACK_CONFIGS.items():
+        registry[name] = create_stack_instruction(name, stack_config)
     
     return registry
