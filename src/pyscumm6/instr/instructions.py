@@ -1295,3 +1295,101 @@ class GetActorLayer(IntrinsicOp):
     @property
     def intrinsic_name(self) -> str:
         return "get_actor_layer"
+
+
+# Final Simple Utility Operations
+class CursorCommand(IntrinsicOp):
+    """Cursor command with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "cursor_command"
+
+
+class SoundKludge(IntrinsicOp):
+    """Sound system kludge with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "sound_kludge"
+
+
+class IfClassOfIs(IntrinsicOp):
+    """Check if class of object is specific class with 2 parameters, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "if_class_of_is"
+
+
+class SetClass(IntrinsicOp):
+    """Set class with 2 parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "set_class"
+
+
+class DrawBox(IntrinsicOp):
+    """Draw box with parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "draw_box"
+
+
+class IsAnyOf(IntrinsicOp):
+    """Check if value is any of a set, returns 1 value."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "is_any_of"
+
+
+# Additional Simple Script Operations  
+class LoadRoomWithEgo(IntrinsicOp):
+    """Load room with ego with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "load_room_with_ego"
+
+
+class SetBoxSet(IntrinsicOp):
+    """Set box set with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "set_box_set"
+
+
+class StampObject(IntrinsicOp):
+    """Stamp object with parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "stamp_object"
+
+
+class SetBlastObjectWindow(IntrinsicOp):
+    """Set blast object window with parameters."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "set_blast_object_window"
+
+
+class PseudoRoom(IntrinsicOp):
+    """Pseudo room operation with 1 parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "pseudo_room"
+
+
+class FindAllObjects(IntrinsicOp):
+    """Find all objects, returns result."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "find_all_objects"

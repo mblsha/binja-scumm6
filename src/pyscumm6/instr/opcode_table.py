@@ -163,4 +163,17 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.get_animate_variable: instructions.GetAnimateVariable,
     Scumm6Opcodes.OpType.pick_var_random: instructions.PickVarRandom,
     Scumm6Opcodes.OpType.get_actor_layer: instructions.GetActorLayer,
+    # Final Simple Utility Operations
+    Scumm6Opcodes.OpType.cursor_command: instructions.CursorCommand,
+    Scumm6Opcodes.OpType.sound_kludge: instructions.SoundKludge,
+    Scumm6Opcodes.OpType.if_class_of_is: instructions.IfClassOfIs,
+    Scumm6Opcodes.OpType.set_class: instructions.SetClass,
+    Scumm6Opcodes.OpType.draw_box: instructions.DrawBox,
+    Scumm6Opcodes.OpType.is_any_of: instructions.IsAnyOf,
+    Scumm6Opcodes.OpType.load_room_with_ego: instructions.LoadRoomWithEgo,
+    Scumm6Opcodes.OpType.set_box_set: instructions.SetBoxSet,
+    Scumm6Opcodes.OpType.stamp_object: instructions.StampObject,
+    Scumm6Opcodes.OpType.set_blast_object_window: instructions.SetBlastObjectWindow,
+    Scumm6Opcodes.OpType.pseudo_room: instructions.PseudoRoom,
+    Scumm6Opcodes.OpType.find_all_objects: instructions.FindAllObjects,
 }

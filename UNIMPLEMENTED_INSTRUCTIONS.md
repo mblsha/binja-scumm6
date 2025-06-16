@@ -127,6 +127,18 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 225 | `get_pixel` | `GetPixel` | ✅ Complete |
 | 227 | `pick_var_random` | `PickVarRandom` | ✅ Complete |
 | 236 | `get_actor_layer` | `GetActorLayer` | ✅ Complete |
+| 107 | `cursor_command` | `CursorCommand` | ✅ Complete |
+| 109 | `if_class_of_is` | `IfClassOfIs` | ✅ Complete |
+| 110 | `set_class` | `SetClass` | ✅ Complete |
+| 133 | `load_room_with_ego` | `LoadRoomWithEgo` | ✅ Complete |
+| 161 | `pseudo_room` | `PseudoRoom` | ✅ Complete |
+| 166 | `draw_box` | `DrawBox` | ✅ Complete |
+| 172 | `sound_kludge` | `SoundKludge` | ✅ Complete |
+| 173 | `is_any_of` | `IsAnyOf` | ✅ Complete |
+| 205 | `stamp_object` | `StampObject` | ✅ Complete |
+| 221 | `find_all_objects` | `FindAllObjects` | ✅ Complete |
+| 228 | `set_box_set` | `SetBoxSet` | ✅ Complete |
+| 100 | `set_blast_object_window` | `SetBlastObjectWindow` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -216,8 +228,8 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `draw_object` (97) - Draw object
 - [x] `draw_object_at` (98) - Draw object at position
 - [ ] `draw_blast_object` (99) - Draw blast object
-- [ ] `set_blast_object_window` (100) - Set blast object window
-- [ ] `stamp_object` (205) - Stamp object
+- [x] `set_blast_object_window` (100) - Set blast object window
+- [x] `stamp_object` (205) - Stamp object
 
 ### Cutscene Operations
 - [ ] `cutscene` (104) - Start cutscene
@@ -229,7 +241,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `start_music` (118) - Start music
 - [x] `stop_music` (105) - Stop music
 - [x] `is_sound_running` (152) - Check if sound is running
-- [ ] `sound_kludge` (172) - Sound system hack
+- [x] `sound_kludge` (172) - Sound system hack
 - [x] `stop_talking` (209) - Stop talking
 
 ### Camera Operations
@@ -239,8 +251,8 @@ These instructions have complex implementations with sub-operations and may be b
 
 ### Room Operations
 - [x] `load_room` (123) - Load room
-- [ ] `load_room_with_ego` (133) - Load room with ego
-- [ ] `pseudo_room` (161) - Pseudo room operation
+- [x] `load_room_with_ego` (133) - Load room with ego
+- [x] `pseudo_room` (161) - Pseudo room operation
 - [ ] `room_ops` (156) - Room operations (complex)
 
 ### Actor Operations
@@ -269,7 +281,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `get_object_old_dir` (143) - Get object old direction
 - [x] `get_object_new_dir` (237) - Get object new direction
 - [x] `find_object` (160) - Find object
-- [ ] `find_all_objects` (221) - Find all objects
+- [x] `find_all_objects` (221) - Find all objects
 
 ### Inventory Operations
 - [x] `pickup_object` (132) - Pick up object
@@ -296,9 +308,9 @@ These instructions have complex implementations with sub-operations and may be b
 
 ### System Operations
 - [x] `freeze_unfreeze` (106) - Freeze/unfreeze
-- [ ] `cursor_command` (107) - Cursor command
-- [ ] `if_class_of_is` (109) - If class of is
-- [ ] `set_class` (110) - Set class
+- [x] `cursor_command` (107) - Cursor command
+- [x] `if_class_of_is` (109) - If class of is
+- [x] `set_class` (110) - Set class
 - [x] `get_state` (111) - Get state
 - [x] `set_state` (112) - Set state
 - [x] `set_owner` (113) - Set owner
@@ -308,9 +320,9 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `set_object_name` (151) - Set object name
 - [x] `set_box_flags` (153) - Set box flags
 - [x] `create_box_matrix` (154) - Create box matrix
-- [ ] `draw_box` (166) - Draw box
+- [x] `draw_box` (166) - Draw box
 - [ ] `system_ops` (174) - System operations (complex)
-- [ ] `set_box_set` (228) - Set box set
+- [x] `set_box_set` (228) - Set box set
 
 ### Resource Operations
 - [ ] `resource_routines` (155) - Resource routines (complex)
@@ -342,7 +354,7 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `get_pixel` (225) - Get pixel
 
 ### Special Operations
-- [ ] `is_any_of` (173) - Is any of
+- [x] `is_any_of` (173) - Is any of
 - [x] `get_date_time` (208) - Get date/time
 - [x] `get_animate_variable` (210) - Get animate variable
 - [ ] `kernel_get_functions` (200) - Kernel get functions
