@@ -270,9 +270,13 @@ class Scumm6(Architecture):
         # Note: This is a compatibility shim and may not have all the data
         data_bytes = bytes(new_instr._length)  # placeholder data
         
+        # Get the opcode name - op_details is the Kaitai Op object
+        # It has an 'id' attribute that is the OpType enum
+        op_id_str = str(new_instr.op_details.id).replace("OpType.", "")
+        
         legacy_instr = Instruction(
             op=new_instr.op_details,
-            id=new_instr.op_details.opcode.name,  
+            id=op_id_str,  
             length=new_instr._length,
             data=data_bytes,
             addr=addr,
