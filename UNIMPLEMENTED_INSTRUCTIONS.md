@@ -147,6 +147,14 @@ This document tracks the migration of SCUMM6 instructions from the monolithic `s
 | 200 | `kernel_get_functions` | `KernelGetFunctions` | ✅ Complete |
 | 201 | `kernel_set_functions` | `KernelSetFunctions` | ✅ Complete |
 | 213 | `jump_to_script` | `JumpToScript` | ✅ Complete |
+| 180 | `print_line` | `PrintLine` | ✅ Complete |
+| 181 | `print_text` | `PrintText` | ✅ Complete |
+| 182 | `print_debug` | `PrintDebug` | ✅ Complete |
+| 183 | `print_system` | `PrintSystem` | ✅ Complete |
+| 184 | `print_actor` | `PrintActor` | ✅ Complete |
+| 185 | `print_ego` | `PrintEgo` | ✅ Complete |
+| 186 | `talk_actor` | `TalkActor` | ✅ Complete |
+| 187 | `talk_ego` | `TalkEgo` | ✅ Complete |
 
 ## 🔄 Priority Instructions for Migration
 
@@ -304,14 +312,14 @@ These instructions have complex implementations with sub-operations and may be b
 - [x] `save_restore_verbs` (165) - Save/restore verbs
 
 ### Text/Dialog Operations
-- [ ] `print_line` (180) - Print line
-- [ ] `print_text` (181) - Print text
-- [ ] `print_debug` (182) - Print debug
-- [ ] `print_system` (183) - Print system message
-- [ ] `print_actor` (184) - Print actor dialog
-- [ ] `print_ego` (185) - Print ego dialog
-- [ ] `talk_actor` (186) - Talk actor
-- [ ] `talk_ego` (187) - Talk ego
+- [x] `print_line` (180) - Print line
+- [x] `print_text` (181) - Print text
+- [x] `print_debug` (182) - Print debug
+- [x] `print_system` (183) - Print system message
+- [x] `print_actor` (184) - Print actor dialog
+- [x] `print_ego` (185) - Print ego dialog
+- [x] `talk_actor` (186) - Talk actor
+- [x] `talk_ego` (187) - Talk ego
 - [x] `stop_sentence` (179) - Stop sentence
 
 ### System Operations

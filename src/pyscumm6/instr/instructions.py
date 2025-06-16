@@ -1461,3 +1461,68 @@ class SaveRestoreVerbs(IntrinsicOp):
     @property
     def intrinsic_name(self) -> str:
         return "save_restore_verbs"
+
+
+# Dialog and Text Operations
+class PrintLine(IntrinsicOp):
+    """Print line with text parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "print_line"
+
+
+class PrintText(IntrinsicOp):
+    """Print text with text parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "print_text"
+
+
+class PrintDebug(IntrinsicOp):
+    """Print debug with text parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "print_debug"
+
+
+class PrintSystem(IntrinsicOp):
+    """Print system message with text parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "print_system"
+
+
+class PrintActor(IntrinsicOp):
+    """Print actor dialog with text parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "print_actor"
+
+
+class PrintEgo(IntrinsicOp):
+    """Print ego dialog with text parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "print_ego"
+
+
+class TalkActor(IntrinsicOp):
+    """Talk actor with text parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "talk_actor"
+
+
+class TalkEgo(IntrinsicOp):
+    """Talk ego with text parameter."""
+    
+    @property
+    def intrinsic_name(self) -> str:
+        return "talk_ego"
