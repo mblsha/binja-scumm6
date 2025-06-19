@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from typing import List, Optional, cast
+from typing import List, Optional
 
 from binja_helpers import binja_api  # noqa: F401
 from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL
-from binaryninja.binaryview import BinaryView
 from .test_mocks import MockScumm6BinaryView
 from binja_helpers.tokens import asm_str
 import pytest
@@ -452,7 +451,7 @@ def get_old_llil(case: InstructionTestCase) -> List[MockLLIL]:
     """Get LLIL from the original monolithic implementation."""
     view = MockScumm6BinaryView()
     view.write_memory(case.addr, case.data)
-    LastBV.set(cast(BinaryView, view))
+    LastBV.set(view)
     arch = OldScumm6Architecture()
     il = MockLowLevelILFunction()
 
@@ -486,7 +485,7 @@ def get_old_disasm(case: InstructionTestCase) -> Optional[str]:
     """Get disassembly from the original monolithic implementation."""
     view = MockScumm6BinaryView()
     view.write_memory(case.addr, case.data)
-    LastBV.set(cast(BinaryView, view))
+    LastBV.set(view)
     arch = OldScumm6Architecture()
     result = arch.get_instruction_text(case.data, case.addr)
     if result is None:

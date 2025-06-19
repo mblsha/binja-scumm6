@@ -18,7 +18,7 @@ Key differences highlighted:
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from typing import List, Any, Union, cast
+from typing import List, Any, Union
 import sys
 import os
 
@@ -26,7 +26,6 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from binja_helpers import binja_api  # noqa: F401
-from binaryninja.binaryview import BinaryView
 from src.scumm6 import Scumm6Legacy, Scumm6New, LastBV
 from src.test_mocks import MockScumm6BinaryView
 
@@ -56,7 +55,7 @@ def get_architecture_output(arch: Union[Scumm6Legacy, Scumm6New], bytecode: byte
     output_lines = []
     view = MockScumm6BinaryView()
     view.write_memory(start_addr, bytecode)
-    LastBV.set(cast(BinaryView, view))
+    LastBV.set(view)
     
     offset = 0
     while offset < len(bytecode):
@@ -218,7 +217,7 @@ def test_specific_instruction_differences() -> None:
         # Get outputs
         view = MockScumm6BinaryView()
         view.write_memory(0x1000, bytecode)
-        LastBV.set(cast(BinaryView, view))
+        LastBV.set(view)
         
         legacy_result = legacy_arch.get_instruction_text(bytecode, 0x1000)
         new_result = new_arch.get_instruction_text(bytecode, 0x1000)
