@@ -54,3 +54,111 @@ When working with this plugin without a valid Binary Ninja license, you'll encou
 - Working in development environments without Binary Ninja license
 
 The mock system provides stub implementations of all Binary Ninja classes and functions needed for development and testing.
+
+## Architecture Overview
+
+### Decoder Selection System
+The plugin now supports two decoders via architecture variants:
+
+- **Scumm6()** - Default (uses new semantic decoder)
+- **Scumm6Legacy()** - Legacy implementation for compatibility
+- **Scumm6New()** - Explicit new semantic decoder
+
+### Key Files and Their Roles
+
+#### Core Architecture
+- **`src/scumm6.py`** - Main Binary Ninja architecture with decoder selection
+- **`src/disasm.py`** - Legacy disassembler and container parsing
+- **`src/view.py`** - Binary Ninja view integration
+
+#### New Semantic Decoder
+- **`src/pyscumm6/disasm.py`** - New object-oriented decoder entry point
+- **`src/pyscumm6/instr/opcodes.py`** - Base instruction classes
+- **`src/pyscumm6/instr/instructions.py`** - Concrete instruction implementations
+- **`src/pyscumm6/instr/configs.py`** - Metadata-driven configurations
+- **`src/pyscumm6/instr/factories.py`** - Dynamic class generation
+- **`src/pyscumm6/instr/smart_bases.py`** - Smart base classes with semantic features
+
+#### Data Formats
+- **`src/scumm6_opcodes.py`** - Generated Kaitai parser for SCUMM6 bytecode
+- **`src/scumm6_container.py`** - Generated Kaitai parser for .bsc6 files
+- **`DOTTDEMO.bsc6`** - Day of the Tentacle demo data for testing
+
+### Testing Strategy
+
+#### Test Categories
+1. **Unit tests** - Individual instruction testing
+2. **Integration tests** - Full decoder pipeline
+3. **Comparison tests** - Legacy vs new decoder validation
+4. **Real data tests** - Using actual game scripts
+
+#### Key Test Files
+- **`src/test_instruction_migration.py`** - Validates equivalence between decoders
+- **`src/test_descumm_comparison.py`** - Compares with descumm tool output
+- **`src/test_disasm.py`** - Container parsing and script extraction
+- **`src/test_scumm6.py`** - Architecture-level testing
+
+### Development Workflow
+
+#### Making Changes to Instructions
+1. **For existing instructions**: Edit in `src/pyscumm6/instr/instructions.py`
+2. **For new instructions**: Add config to `src/pyscumm6/instr/configs.py`, mapping to `opcode_table.py`
+3. **For semantic intrinsics**: Use `semantic_op()` helper in configs
+4. **Always run tests**: `./run-tests.fish --once` to ensure no regressions
+
+#### Adding New Test Data
+- Use `DOTTDEMO.bsc6` for real script data
+- Extract specific scripts with the disasm module
+- Use `room8_scrp18` as a reference example (ellipse collision detection)
+
+#### Debugging Issues
+- **Runtime errors**: Check `FORCE_BINJA_MOCK=1` is set
+- **Type errors**: Run `FORCE_BINJA_MOCK=1 mypy src/`
+- **Test failures**: Use `-v` flag for verbose output
+- **New decoder issues**: Compare with legacy output in migration tests
+
+### Architecture Patterns
+
+#### Instruction Implementation
+```python
+class MyInstruction(Instruction):
+    def render(self) -> List[Token]:
+        # Return display tokens
+        
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        # Generate Binary Ninja LLIL
+```
+
+#### Semantic Intrinsics
+```python
+"my_operation": semantic_op(
+    name="my_operation",
+    params=["param1", "param2"], 
+    doc="Description of operation"
+)
+```
+
+#### Configuration-Driven Generation
+- Most instructions are generated from metadata in `configs.py`
+- Use factories in `factories.py` for dynamic class creation
+- Keeps instruction count manageable (100+ classes → config tables)
+
+### Kaitai Struct Limitations
+
+The project has identified key limitations in Kaitai Struct for SCUMM6:
+1. **No runtime context** - Can't track stack state between instructions
+2. **No semantic understanding** - Sees bytes, not meaning
+3. **Static parsing only** - Each instruction parsed in isolation
+4. **No cross-references** - Can't resolve resource IDs to names
+
+See `KAITAI_*.md` files for detailed analysis and improvement proposals.
+
+### Descumm Compatibility Goals
+
+The project aims to achieve descumm-level semantic output:
+- **Expression building**: `x = (a + b)` instead of separate operations
+- **Control flow**: `while (x < y) { ... }` instead of raw jumps  
+- **Function arguments**: Resolve all arguments from stack operations
+- **Variable names**: Symbolic names instead of numeric IDs
+
+Current gap analysis available in `test_descumm_comparison.py`.
