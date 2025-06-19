@@ -6,8 +6,8 @@ from typing import Any, List, Optional, Tuple, Dict
 import threading
 from collections import defaultdict
 
+from binaryninja.architecture import Architecture
 from binaryninja import (
-    Architecture,
     IntrinsicInfo,
     RegisterName,
     FlagWriteTypeName,

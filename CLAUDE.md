@@ -55,6 +55,76 @@ When working with this plugin without a valid Binary Ninja license, you'll encou
 
 The mock system provides stub implementations of all Binary Ninja classes and functions needed for development and testing.
 
+## MyPy Type Checking
+
+**All mypy errors/warnings must be fixed.** No mypy errors are acceptable in this codebase.
+
+- **Empowerment to Fix Stubs**: If you encounter `[assignment]` or `[override]` errors related to class inheritance from Binary Ninja base classes, it's highly likely our mock stubs (`binja_helpers_tmp/stubs/`) are incorrect. **You are empowered and encouraged to fix the incorrect type definitions in the `.pyi` stub files.** This is preferable to adding `# type: ignore` or changing working code to match a broken stub.
+
+**Only use `# type: ignore[arg-type]` for "Argument ... has incompatible type" errors** where Mock objects don't match real Binary Ninja types. All other errors must be fixed properly:
+
+- Function signature errors: Add proper type annotations
+- Missing attributes: Create proper abstractions/wrapper functions  
+- LLIL-related errors: Fix the actual types, never ignore
+- Import and module path issues: Fix the imports
+- Class inheritance issues: Fix with proper typing, don't ignore
+
+**Never ignore:**
+- `[no-any-return]` - Fix return types properly
+- `[attr-defined]` - Create proper method abstractions
+- `[misc]` for subclassing - Let mypy handle inheritance properly
+- Anything related to LLIL lifting or instruction processing
+
+## Common Error Patterns and Fixes
+
+This section provides specific rules for fixing common `ruff`, `mypy`, and `pytest` errors.
+
+### Pattern 1: Unused Imports (Ruff `F401`)
+
+- **Symptom (ruff)**: `F401 [*] '...' imported but unused`
+- **Analysis**: The code is importing a module or object that is never used in the file. This is unnecessary and should be cleaned up.
+- **Fix**:
+  1. Identify the file and line number from the ruff error message.
+  2. Remove the unused import from the `import` statement.
+  3. **Autonomous Fix**: You can run `ruff check --fix .` to fix these errors automatically.
+
+### Pattern 2: Unused Type Ignore (Mypy `unused-ignore`)
+
+- **Symptom (mypy)**: `Unused "type: ignore" comment [unused-ignore]`
+- **Analysis**: A `# type: ignore` comment exists on a line that mypy no longer considers an error. This can happen after fixing code or updating mypy. The comment is now obsolete.
+- **Fix**:
+  1. Identify the file and line number from the mypy error message.
+  2. Delete the entire `# type: ignore[...]` comment from that line.
+
+### Pattern 3: Incorrect Binary Ninja API Imports
+
+- **Symptoms (pytest & mypy)**:
+  - `pytest`: `ImportError: cannot import name 'BinaryView' from 'binaryninja' ... Did you mean: 'binaryview'?`
+  - `mypy`: `Argument 1 to "set" of "LastBV" has incompatible type "binaryninja.BinaryView"; expected "binaryninja.binaryview.BinaryView" [arg-type]`
+- **Analysis**: This combination of errors indicates that a type (like `BinaryView` or `Architecture`) is being imported from the top-level `binaryninja` package instead of its correct submodule. The mypy error shows two different type paths (`binaryninja.BinaryView` vs. `binaryninja.binaryview.BinaryView`), confirming the issue.
+- **Fix**:
+  1. **Identify the incorrect import**: Look for lines like `from binaryninja import BinaryView` or `from binaryninja import Architecture`.
+  2. **Determine the correct submodule**: The error message often provides a hint (e.g., `Did you mean: 'binaryview'?`). The correct submodule is almost always the lowercase version of the class name.
+     - `BinaryView` is in `binaryninja.binaryview`
+     - `Architecture` is in `binaryninja.architecture`
+     - `LowLevelILFunction` is in `binaryninja.lowlevelil`
+  3. **Correct the import statement**:
+     - Change `from binaryninja import BinaryView` to `from binaryninja.binaryview import BinaryView`.
+     - Change `from binaryninja import Architecture` to `from binaryninja.architecture import Architecture`.
+  4. **Apply globally**: Apply this correction to all files in the project that exhibit this error to ensure consistency.
+  5. **Re-run checkers**: After fixing the imports, re-run `mypy`. The `[arg-type]` errors related to this issue should now be resolved.
+
+### Pattern 4: Incompatible Assignment in Subclass (`[assignment]`)
+
+- **Symptom (mypy)**: `Incompatible types in assignment (expression has type "X", base class "Y" defined the type as "Z") [assignment]`
+- **Analysis**: This error occurs when you define a class attribute (like a dictionary or list) in a subclass, and its type is incompatible with the type defined in the parent class. This is a strong indicator that the type definitions in our **mocked Binary Ninja stubs** (`binja_helpers_tmp/stubs/`) are incorrect or overly broad.
+- **Fix**: The idiomatic fix is to correct the stub file, not to add a `# type: ignore` or change the working code.
+  1. **Locate the Stub**: Find the base class mentioned in the error message within the `binja_helpers_tmp/stubs/` directory. For `Architecture`, this is likely `binja_helpers_tmp/stubs/binaryninja/architecture.pyi`.
+  2. **Analyze the Mismatch**: The error message tells you the exact types. For example, your code might use `dict[RegisterName, ...]` while the stub uses `dict[RegisterName | str, ...]`. The extra `| str` is the cause of the problem due to type invariance.
+  3. **Correct the Stub**: You are **empowered to correct the stub file**. Change the overly broad type in the `.pyi` file to match the more specific, correct type used in the codebase.
+     - **Example**: Change `regs: Dict[Union[RegisterName, str], RegisterInfo]` to `regs: Dict[RegisterName, RegisterInfo]`.
+  4. **Verify**: Re-run mypy. The error should be resolved.
+
 ## Architecture Overview
 
 ### Decoder Selection System

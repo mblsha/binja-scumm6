@@ -1,5 +1,5 @@
 from binaryninja.binaryview import BinaryView
-from binaryninja import Architecture
+from binaryninja.architecture import Architecture
 from binaryninja.types import Symbol
 from binaryninja.enums import SymbolType, SegmentFlag, SectionSemantics, Endianness
 from .scumm6 import LastBV

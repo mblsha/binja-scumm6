@@ -18,15 +18,15 @@ Key differences highlighted:
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from typing import List, Tuple
+from typing import List, Any, Union, cast
 import sys
 import os
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
 from binja_helpers import binja_api  # noqa: F401
+from binaryninja.binaryview import BinaryView
 from src.scumm6 import Scumm6Legacy, Scumm6New, LastBV
 from src.test_mocks import MockScumm6BinaryView
 
@@ -46,17 +46,17 @@ ROOM8_SCRP18_START_ADDR = 0x8D79D
 SCRIPT_BYTECODE = ROOM8_SCRP18_BYTES
 
 
-def format_output_as_text(tokens: List) -> str:
+def format_output_as_text(tokens: List[Any]) -> str:
     """Convert token list to plain text string."""
     return ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
 
 
-def get_architecture_output(arch, bytecode: bytes, start_addr: int = ROOM8_SCRP18_START_ADDR) -> List[str]:
+def get_architecture_output(arch: Union[Scumm6Legacy, Scumm6New], bytecode: bytes, start_addr: int = ROOM8_SCRP18_START_ADDR) -> List[str]:
     """Get disassembly output from given architecture."""
     output_lines = []
     view = MockScumm6BinaryView()
     view.write_memory(start_addr, bytecode)
-    LastBV.set(view)
+    LastBV.set(cast(BinaryView, view))
     
     offset = 0
     while offset < len(bytecode):
@@ -112,7 +112,7 @@ DESCUMM_OUTPUT = """[0000] (03) push_word_var(VAR_0)
 END"""
 
 
-def test_descumm_comparison():
+def test_descumm_comparison() -> None:
     """
     Compare descumm output with Scumm6 architecture outputs using real bytecode.
     
@@ -191,7 +191,7 @@ def test_descumm_comparison():
         print("\n❌ Test failed - no output generated")
 
 
-def test_specific_instruction_differences():
+def test_specific_instruction_differences() -> None:
     """Test specific instruction type differences."""
     
     test_cases = [
@@ -218,7 +218,7 @@ def test_specific_instruction_differences():
         # Get outputs
         view = MockScumm6BinaryView()
         view.write_memory(0x1000, bytecode)
-        LastBV.set(view)
+        LastBV.set(cast(BinaryView, view))
         
         legacy_result = legacy_arch.get_instruction_text(bytecode, 0x1000)
         new_result = new_arch.get_instruction_text(bytecode, 0x1000)
