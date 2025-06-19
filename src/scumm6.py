@@ -214,7 +214,7 @@ class Scumm6(Architecture):
             new_instr = new_decode(data, addr)
             if new_instr is None:
                 return None
-            
+
             # Convert new instruction to legacy format for compatibility
             return self._convert_new_to_legacy(new_instr, addr)
         else:
@@ -242,10 +242,10 @@ class Scumm6(Architecture):
         """Convert new instruction format to legacy format for compatibility."""
         # Create a mock legacy instruction with the same basic properties
         # This is a compatibility shim to allow the new decoder to work with legacy code
-        
+
         info = MockAnalysisInfo()
         info.length = new_instr._length
-        
+
         # Create analysis info for control flow instructions
         if hasattr(new_instr, 'is_conditional') and new_instr.is_conditional():
             # For conditional instructions, add branch info
@@ -264,25 +264,25 @@ class Scumm6(Architecture):
                     BranchType.UnconditionalBranch,
                     addr + info.length + jump_offset,
                 )
-        
+
         # Create a legacy-compatible instruction object
         # Extract first few bytes as data (legacy format expects this)
         # Note: This is a compatibility shim and may not have all the data
         data_bytes = bytes(new_instr._length)  # placeholder data
-        
+
         # Get the opcode name - op_details is the Kaitai Op object
         # It has an 'id' attribute that is the OpType enum
         op_id_str = str(new_instr.op_details.id).replace("OpType.", "")
-        
+
         legacy_instr = Instruction(
             op=new_instr.op_details,
-            id=op_id_str,  
+            id=op_id_str,
             length=new_instr._length,
             data=data_bytes,
             addr=addr,
             analysis_info=info
         )
-        
+
         return legacy_instr
 
     def get_instruction_info(self, data: bytes, addr: int) -> Optional[InstructionInfo]:
@@ -314,10 +314,10 @@ class Scumm6(Architecture):
             new_instr = new_decode(data, addr)
             if new_instr is None:
                 return None
-            
+
             # Get tokens from new instruction rendering
             tokens = new_instr.render()
-            
+
             # Convert to Binary Ninja tokens
             binja_tokens = []
             for token in tokens:
@@ -329,7 +329,7 @@ class Scumm6(Architecture):
                     binja_tokens.append(InstructionTextToken(
                         InstructionTextTokenType.TextToken, str(token)
                     ))
-            
+
             return binja_tokens, new_instr._length
         else:
             # Use legacy decoder
@@ -424,10 +424,10 @@ class Scumm6(Architecture):
             new_instr = new_decode(data, addr)
             if new_instr is None:
                 return None
-            
+
             # Generate LLIL using new instruction's lift method
             new_instr.lift(il, addr)
-            
+
             # Return the instruction length
             return new_instr._length
         else:
@@ -724,7 +724,7 @@ class Scumm6Legacy(Scumm6):
 
 
 class Scumm6New(Scumm6):
-    """SCUMM6 Architecture using new object-oriented decoder with semantic representations.""" 
+    """SCUMM6 Architecture using new object-oriented decoder with semantic representations."""
     name = "SCUMM6-New"
 
     def __init__(self) -> None:
