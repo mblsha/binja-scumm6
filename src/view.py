@@ -83,6 +83,21 @@ class Scumm6View(BinaryView):
             SectionSemantics.ReadWriteDataSectionSemantics,
         )
 
+        # Add ARRAYS segment for array operations
+        self.add_auto_segment(
+            vars.ARRAYS_START,
+            vars.ARRAYS_SIZE,
+            0,
+            0,
+            cast(SegmentFlag, SegmentFlag.SegmentReadable | SegmentFlag.SegmentWritable),
+        )
+        self.add_user_section(
+            "SCUMM Arrays",
+            vars.ARRAYS_START,
+            vars.ARRAYS_SIZE,
+            SectionSemantics.ReadWriteDataSectionSemantics,
+        )
+
         for start, end, name, create_function, segment_flag, section_semantics in self.scripts:
             # print("adding segment:", hex(start), hex(end), name)
             size = end - start

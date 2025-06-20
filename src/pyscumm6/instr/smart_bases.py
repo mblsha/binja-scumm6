@@ -236,9 +236,25 @@ class SmartArrayOp(Instruction):
         
         # Handle UnknownOp case for array inc/dec operations
         if isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp):
-            il.append(il.unimplemented())
-            il.append(il.unimplemented())
-            return
+            # For inc/dec operations, use intrinsic calls like other array operations
+            if self._config.operation in ["inc", "dec"]:
+                from binaryninja import IntrinsicName
+                
+                # Array inc/dec operations pop array index and array ID from stack
+                # Stack layout: [array_id, index] (index on top)
+                # Generate intrinsic call similar to other array operations
+                il.append(il.intrinsic(
+                    [il.reg(4, LLIL_TEMP(0))],
+                    IntrinsicName(self._name),
+                    [il.pop(4), il.pop(4)]  # pop index, then array_id
+                ))
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+                return
+            else:
+                # For other UnknownOp cases, keep the original behavior
+                il.append(il.unimplemented())
+                il.append(il.unimplemented())
+                return
         
         # Generate intrinsic call
         if self._config.operation == "read":
