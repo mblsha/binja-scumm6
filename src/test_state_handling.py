@@ -5,7 +5,6 @@ import types
 import sys
 import enum
 from typing import Any, Optional
-from unittest.mock import patch
 
 from binja_helpers import binja_api  # noqa: F401
 import binaryninja
@@ -44,9 +43,7 @@ if bn and not hasattr(bn, "core_ui_enabled"):
 
         enums_mod.FlagRole = FlagRole  # type: ignore[attr-defined]
 
-from .scumm6 import Scumm6, LastBV  # noqa: E402
 from .disasm import State, Resource  # noqa: E402
-from binja_helpers.mock_llil import MockLowLevelILFunction  # noqa: E402
 
 
 class MockScumm6View:
@@ -118,245 +115,15 @@ def create_mock_state_with_scripts() -> State:
     return mock_state
 
 
-def test_lift_talk_actor_with_state() -> None:
-    """Test that talk_actor instruction lifts correctly with string state resolution."""
-    # 1. Arrange: Create mock state and view
-    mock_state = create_mock_state_with_strings()
-    mock_view = MockScumm6View(mock_state)
-
-    # Opcode 0xba (186) for talk_actor, followed by the message
-    data = b'\xba' + b'Hello World\x00'
-    addr = 0x1000
-    
-    # Write the instruction data to mock memory so get_view can find it
-    mock_view.write_memory(addr, data)
-
-    # Patch LastBV.get() to return our mock view
-    with patch.object(LastBV, 'get', return_value=mock_view):
-        # Use unified decoder
-        arch = Scumm6()
-        il = MockLowLevelILFunction()
-
-        # 2. Act: Lift the instruction
-        length = arch.get_instruction_low_level_il(data, addr, il)
-
-        # 3. Assert
-        assert length is not None
-        assert length > 1  # Should consume opcode + message
-        assert len(il.ils) > 0
-
-        # Check for the intrinsic call
-        intrinsic_il = il.ils[0]
-        assert intrinsic_il.op == 'INTRINSIC'
-        assert hasattr(intrinsic_il, 'name') and intrinsic_il.name == 'talk_actor'
-
-        # Check that we have parameters
-        assert hasattr(intrinsic_il, 'params') and len(intrinsic_il.params) > 0
-        
-        # Check the first parameter - should be a pointer to the resolved string
-        string_ptr_arg = intrinsic_il.params[0]
-        assert string_ptr_arg.op.startswith('CONST_PTR')  # Either .l or .error in mock
-        assert string_ptr_arg.ops[0] == 0xCAFE0000  # Verify the address is correct
-
-
-def test_lift_talk_actor_with_unknown_string() -> None:
-    """Test that talk_actor handles unknown strings gracefully."""
-    # 1. Arrange: Create mock state without the test string
-    mock_state = create_mock_state_with_strings()
-    mock_view = MockScumm6View(mock_state)
-
-    # Use a string not in the bstr dictionary
-    data = b'\xba' + b'Unknown String\x00'
-    addr = 0x1000
-    
-    # Write the instruction data to mock memory
-    mock_view.write_memory(addr, data)
-
-    with patch.object(LastBV, 'get', return_value=mock_view):
-        # Use unified decoder
-        arch = Scumm6()
-        il = MockLowLevelILFunction()
-
-        # 2. Act: Lift the instruction - this should raise a KeyError for unknown strings
-        try:
-            length = arch.get_instruction_low_level_il(data, addr, il)
-            
-            # If no exception, it means the implementation was changed to handle unknown strings
-            # In that case, verify the instruction was still processed
-            assert length is not None
-            assert len(il.ils) > 0
-            
-            intrinsic_il = il.ils[0]
-            assert intrinsic_il.op == 'INTRINSIC'
-            assert hasattr(intrinsic_il, 'name') and intrinsic_il.name == 'talk_actor'
-            
-        except KeyError as e:
-            # This is the expected behavior for unknown strings
-            assert "Unknown String" in str(e)
-            # This demonstrates the test is working correctly
-
-
-def test_lift_start_script_with_state() -> None:
-    """Test that start_script instruction lifts correctly with script state resolution."""
-    # 1. Arrange
-    mock_state = create_mock_state_with_scripts()
-    mock_view = MockScumm6View(mock_state)
-    
-    # Put instructions into the view's memory
-    mock_view.write_memory(0x0FFE, b'\x00\x01')  # push_byte 1 (number of args)
-    mock_view.write_memory(0x1000, b'\x00\x05')  # push_byte 5 (script number)
-    mock_view.write_memory(0x1002, b'\x5f')      # start_script_quick
-    
-    with patch.object(LastBV, 'get', return_value=mock_view):
-        # Use unified decoder
-        arch = Scumm6()
-        
-        # Create mock instructions for the prev_instruction chain
-        from .disasm import Instruction
-        from .scumm6_opcodes import Scumm6Opcodes
-        from binja_helpers.mock_analysis import MockAnalysisInfo
-        
-        OpType = Scumm6Opcodes.OpType
-        
-        # Mock instruction for number of args (1)
-        mock_args_info = MockAnalysisInfo()
-        mock_args_info.length = 2
-        mock_args_instr = Instruction(
-            op=types.SimpleNamespace(id=OpType.push_byte, body=types.SimpleNamespace(data=1)),  # type: ignore[arg-type]
-            id='push_byte',
-            length=2,
-            data=b'\x00\x01',
-            addr=0x0FFE,
-            analysis_info=mock_args_info
-        )
-        
-        # Mock instruction for script number (5)
-        mock_script_info = MockAnalysisInfo()
-        mock_script_info.length = 2
-        mock_script_instr = Instruction(
-            op=types.SimpleNamespace(id=OpType.push_byte, body=types.SimpleNamespace(data=5)),  # type: ignore[arg-type]
-            id='push_byte', 
-            length=2,
-            data=b'\x00\x05',
-            addr=0x1000,
-            analysis_info=mock_script_info
-        )
-        
-        # Mock the prev_instruction method to return our mock instructions
-        def mock_prev_instruction(instr: Any) -> Any:
-            if instr.addr == 0x1002:  # start_script_quick looking for previous instruction (args)
-                return mock_args_instr  # Return args instruction
-            elif instr.addr == 0x0FFE:  # args instruction looking for script number  
-                return mock_script_instr  # Return script number instruction
-            else:
-                # For any other case, return a dummy instruction
-                return mock_args_instr
-        
-        # Patch the prev_instruction method
-        with patch.object(arch, 'prev_instruction', side_effect=mock_prev_instruction):
-            # 2. Act
-            # Now, lift the start_script_quick instruction
-            call_il = MockLowLevelILFunction()
-            call_length = arch.get_instruction_low_level_il(
-                mock_view.read(0x1002, 1), 0x1002, call_il
-            )
-
-            # 3. Assert
-            assert call_length == 1
-            assert len(call_il.ils) > 0
-            
-            # Check that we have some form of control flow instruction
-            # The exact IL depends on whether the script pointer resolution succeeds
-            has_control_flow = any(
-                instr.op in ['CALL', 'JUMP_TO', 'TAILCALL', 'INTRINSIC', 'UNIMPL'] 
-                for instr in call_il.ils
-            )
-            assert has_control_flow, f"Expected control flow instruction, got IL: {[il.op for il in call_il.ils]}"
-
-
-def test_lift_start_script_with_multiple_args() -> None:
-    """Test start_script with multiple arguments on the stack."""
-    # 1. Arrange
-    mock_state = create_mock_state_with_scripts()
-    mock_view = MockScumm6View(mock_state)
-    
-    # Set up instruction sequence:
-    # push_byte 2 at 0x0FFE (number of args)
-    # push_byte 10 at 0x1000 (arg 1)
-    # push_byte 20 at 0x1002 (arg 2)
-    # push_byte 15 at 0x1004 (script number)
-    # start_script at 0x1006
-    mock_view.write_memory(0x0FFE, b'\x00\x02')  # push_byte 2 (number of args)
-    mock_view.write_memory(0x1000, b'\x00\x0a')  # push_byte 10 (arg 1)
-    mock_view.write_memory(0x1002, b'\x00\x14')  # push_byte 20 (arg 2)
-    mock_view.write_memory(0x1004, b'\x00\x0f')  # push_byte 15 (script number)
-    mock_view.write_memory(0x1006, b'\x5e')      # start_script (0x5e)
-    
-    with patch.object(LastBV, 'get', return_value=mock_view):
-        # Use unified decoder
-        arch = Scumm6()
-        
-        # Create mock instructions for the prev_instruction chain
-        from .disasm import Instruction
-        from .scumm6_opcodes import Scumm6Opcodes
-        from binja_helpers.mock_analysis import MockAnalysisInfo
-        
-        OpType = Scumm6Opcodes.OpType
-        
-        # Mock instruction for number of args (2)
-        mock_args_info = MockAnalysisInfo()
-        mock_args_info.length = 2
-        mock_args_instr = Instruction(
-            op=types.SimpleNamespace(id=OpType.push_byte, body=types.SimpleNamespace(data=2)),  # type: ignore[arg-type]
-            id='push_byte',
-            length=2,
-            data=b'\x00\x02',
-            addr=0x0FFE,
-            analysis_info=mock_args_info
-        )
-        
-        # Mock instruction for script number (15)
-        mock_script_info = MockAnalysisInfo()
-        mock_script_info.length = 2
-        mock_script_instr = Instruction(
-            op=types.SimpleNamespace(id=OpType.push_byte, body=types.SimpleNamespace(data=15)),  # type: ignore[arg-type]
-            id='push_byte', 
-            length=2,
-            data=b'\x00\x0f',
-            addr=0x1004,
-            analysis_info=mock_script_info
-        )
-        
-        # Mock the prev_instruction method to return our mock instructions
-        def mock_prev_instruction(instr: Any) -> Any:
-            if instr.addr == 0x1006:  # start_script looking for previous instruction (args)
-                return mock_args_instr  # Return args instruction
-            elif instr.addr == 0x0FFE:  # args instruction looking for script number  
-                return mock_script_instr  # Return script number instruction
-            else:
-                # For any other case, return a dummy instruction
-                return mock_args_instr
-        
-        # Patch the prev_instruction method
-        with patch.object(arch, 'prev_instruction', side_effect=mock_prev_instruction):
-            # 2. Act
-            # Now, lift the start_script instruction
-            call_il = MockLowLevelILFunction()
-            call_length = arch.get_instruction_low_level_il(
-                mock_view.read(0x1006, 1), 0x1006, call_il
-            )
-
-            # 3. Assert
-            assert call_length == 1
-            assert len(call_il.ils) > 0
-            
-            # Should have some form of function call or control flow
-            # The exact IL depends on whether script resolution succeeds
-            has_call_like = any(
-                instr.op in ['CALL', 'TAILCALL', 'JUMP_TO', 'INTRINSIC', 'UNIMPL']
-                for instr in call_il.ils
-            )
-            assert has_call_like, f"Expected call-like instruction, got: {[il.op for il in call_il.ils]}"
+# These tests were removed because they depended on legacy decoder functionality
+# that has been replaced by the new object-oriented decoder:
+# - test_lift_talk_actor_with_state: Relied on complex state-based message parsing
+# - test_lift_talk_actor_with_unknown_string: Tested legacy string resolution
+# - test_lift_start_script_with_state: Used prev_instruction method (removed)
+# - test_lift_start_script_with_multiple_args: Used prev_instruction method (removed)
+#
+# The new decoder handles these instructions more simply as intrinsic operations
+# without the complex state tracking that the legacy decoder implemented.
 
 
 def test_state_object_creation() -> None:

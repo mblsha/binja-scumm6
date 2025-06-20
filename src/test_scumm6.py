@@ -57,7 +57,7 @@ class InfoTestCase:
 
 
 test_cases = [
-    InfoTestCase(test_id="invalid_opcode", data=b"\xff", expected_length=1),
+    InfoTestCase(test_id="invalid_opcode", data=b"\xff", decode_fails=True),
     InfoTestCase(test_id="incomplete_push_byte", data=b"\x00", decode_fails=True),
     InfoTestCase(test_id="incomplete_jump", data=b"\x73\x01", decode_fails=True),
     InfoTestCase(

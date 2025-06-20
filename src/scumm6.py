@@ -1,6 +1,6 @@
 from binja_helpers import binja_api  # noqa: F401
 
-from typing import Any, List, Optional, Tuple, Dict
+from typing import List, Optional, Tuple, Dict
 
 import threading
 from collections import defaultdict
@@ -10,17 +10,11 @@ from binaryninja import (
     IntrinsicInfo,
     RegisterName,
     FlagWriteTypeName,
-    IntrinsicName,
-)
-from binaryninja.lowlevelil import (
-    LowLevelILLabel,
-    LLIL_TEMP,
 )
 from binaryninja import RegisterInfo, InstructionInfo, InstructionTextToken
 from binaryninja.binaryview import BinaryView
 from binaryninja.enums import (
     Endianness,
-    BranchType,
     InstructionTextTokenType,
     FlagRole,
     ImplicitRegisterExtend,
