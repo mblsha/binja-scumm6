@@ -293,11 +293,9 @@ class Scumm6(Architecture):
                 return None
 
             result = InstructionInfo()
-            result.length = new_instr._length
-
-            # Check if this is a control flow instruction with analyze method
-            if hasattr(new_instr, 'analyze'):
-                new_instr.analyze(result, addr)
+            
+            # Always call analyze - base class sets length, subclasses add CFG info
+            new_instr.analyze(result, addr)
 
             return result
         else:
