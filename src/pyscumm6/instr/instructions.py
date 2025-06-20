@@ -4,6 +4,7 @@ from typing import List
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName, InstructionInfo
+from binaryninja.enums import BranchType
 from ...scumm6_opcodes import Scumm6Opcodes
 
 from .opcodes import Instruction
@@ -1369,12 +1370,69 @@ class SoundKludge(IntrinsicOp):
         return "sound_kludge"
 
 
-class IfClassOfIs(IntrinsicOp):
-    """Check if class of object is specific class with 2 parameters, returns 1 value."""
+class IfClassOfIs(ControlFlowOp):
+    """Check if class of object is specific class - conditional jump instruction."""
     
-    @property
-    def intrinsic_name(self) -> str:
-        return "if_class_of_is"
+    def render(self) -> List[Token]:
+        return [
+            TInstr("if_class_of_is"),
+            TSep("("),
+            TInstr("object"),
+            TSep(", "),
+            TInstr("class"),
+            TSep(")")
+        ]
+    
+    def is_conditional(self) -> bool:
+        return True
+    
+    def analyze(self, info: InstructionInfo, addr: int) -> None:
+        """Analyze instruction for Control Flow Graph integration."""
+        # Set instruction length
+        info.length = self._length
+        
+        # if_class_of_is is a conditional instruction that checks object class
+        # and can branch based on the result. Since it doesn't have an explicit
+        # jump_offset in its body structure, we model it as a conditional that 
+        # can either continue to next instruction (both true and false cases)
+        # This allows CFG analysis to understand the conditional nature
+        next_addr = addr + info.length
+        info.add_branch(BranchType.TrueBranch, next_addr)
+        info.add_branch(BranchType.FalseBranch, next_addr)
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        assert isinstance(self.op_details.body, Scumm6Opcodes.IfClassOfIs), \
+            f"Expected IfClassOfIs body, got {type(self.op_details.body)}"
+        
+        # Create labels for true and false branches (even though they go to same place)
+        t = LowLevelILLabel()
+        f = LowLevelILLabel()
+        
+        # Pop class and object from stack
+        class_val = il.pop(4)
+        object_val = il.pop(4)
+        
+        # Call intrinsic to check if object is of specified class
+        result = il.intrinsic([il.reg(4, LLIL_TEMP(0))], "if_class_of_is", [object_val, class_val])
+        il.append(result)
+        
+        # Push result back to stack
+        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        
+        # For CFG purposes, create conditional structure even though both branches continue
+        il.append(
+            il.if_expr(
+                il.compare_not_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0)), t, f
+            )
+        )
+        
+        # True branch - continue
+        il.mark_label(t)
+        # Fall through to next instruction
+        
+        # False branch - continue  
+        il.mark_label(f)
+        # Fall through to next instruction
 
 
 class SetClass(IntrinsicOp):

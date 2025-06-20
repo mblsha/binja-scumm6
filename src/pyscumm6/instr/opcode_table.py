@@ -168,7 +168,7 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.get_actor_layer: INSTRUCTION_REGISTRY["get_actor_layer"],
     Scumm6Opcodes.OpType.cursor_command: INSTRUCTION_REGISTRY["cursor_command"],
     Scumm6Opcodes.OpType.sound_kludge: INSTRUCTION_REGISTRY["sound_kludge"],
-    Scumm6Opcodes.OpType.if_class_of_is: INSTRUCTION_REGISTRY["if_class_of_is"],
+    Scumm6Opcodes.OpType.if_class_of_is: instructions.IfClassOfIs,
     Scumm6Opcodes.OpType.set_class: INSTRUCTION_REGISTRY["set_class"],
     Scumm6Opcodes.OpType.draw_box: INSTRUCTION_REGISTRY["draw_box"],
     Scumm6Opcodes.OpType.is_any_of: INSTRUCTION_REGISTRY["is_any_of"],

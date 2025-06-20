@@ -60,6 +60,15 @@ def test_new_decoder_instruction_info() -> None:
                 (BranchType.TrueBranch, 0x1038),     # 0x102B + 3 + 10
                 (BranchType.FalseBranch, 0x102E),    # 0x102B + 3
             ]
+        },
+        {
+            "name": "if_class_of_is",
+            "bytecode": bytes([0x6D]),  # if_class_of_is (check object class)
+            "addr": 0x1500,
+            "expected_branches": [
+                (BranchType.TrueBranch, 0x1501),     # 0x1500 + 1 (next instruction)
+                (BranchType.FalseBranch, 0x1501),    # 0x1500 + 1 (next instruction)
+            ]
         }
     ]
     
@@ -73,7 +82,10 @@ def test_new_decoder_instruction_info() -> None:
         info = arch.get_instruction_info(case["bytecode"], case["addr"])
         
         assert info is not None, f"Failed to get InstructionInfo for {case['name']}"
-        assert info.length == 3, f"Wrong length for {case['name']}: expected 3, got {info.length}"
+        
+        # Check instruction length (most instructions are 3 bytes, if_class_of_is is 1 byte)
+        expected_length = 1 if case['name'] == 'if_class_of_is' else 3
+        assert info.length == expected_length, f"Wrong length for {case['name']}: expected {expected_length}, got {info.length}"
         
         # Extract branches
         branches = []

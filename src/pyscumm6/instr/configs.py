@@ -197,7 +197,6 @@ INTRINSIC_CONFIGS: Dict[str, IntrinsicConfig] = {
     "get_animate_variable": IntrinsicConfig(pop_count=1, push_count=1, doc="Get animate variable"),
     "pick_var_random": IntrinsicConfig(pop_count=1, push_count=1, doc="Pick variable random"),
     "cursor_command": IntrinsicConfig(pop_count=1, doc="Cursor command"),
-    "if_class_of_is": IntrinsicConfig(pop_count=2, push_count=1, doc="Check object class"),
     "set_class": IntrinsicConfig(pop_count=2, doc="Set class"),
     "draw_box": IntrinsicConfig(doc="Draw box"),
     "is_any_of": IntrinsicConfig(push_count=1, doc="Check if value is any of set"),
