@@ -241,7 +241,7 @@ instruction_test_cases = [
         test_id="write_byte_var_0x42",
         data=b"\x42\x38",
         comment="Write byte to variable 0x38 (56)",
-        expected_disasm="write_byte_var(var_?)"  # Due to Kaitai bug, falls back to UnknownOp
+        expected_disasm="write_byte_var(var_56)"
     ),
     InstructionTestCase(
         test_id="write_word_var_0x43",
@@ -455,18 +455,7 @@ def get_old_llil(case: InstructionTestCase) -> List[MockLLIL]:
     arch = OldScumm6Architecture()
     il = MockLowLevelILFunction()
 
-    # FIXME: Handle known bug in write_byte_var where it crashes due to Kaitai parsing issue
-    if case.test_id == "write_byte_var_0x42":
-        try:
-            arch.get_instruction_low_level_il(case.data, case.addr, il)
-        except AttributeError as e:
-            if "'UnknownOp' object has no attribute 'type'" in str(e):
-                # This is the expected behavior for write_byte_var due to Kaitai bug
-                # The old implementation crashes and returns no LLIL operations
-                return il.ils
-            raise
-    else:
-        arch.get_instruction_low_level_il(case.data, case.addr, il)
+    arch.get_instruction_low_level_il(case.data, case.addr, il)
 
     return il.ils
 
