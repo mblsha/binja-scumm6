@@ -12,7 +12,7 @@ This refactored test framework:
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from typing import List, Any, NamedTuple, Optional
+from typing import List, Any, NamedTuple, Optional, Tuple
 import sys
 import os
 import subprocess
@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 from binja_helpers import binja_api  # noqa: F401
+from binaryninja.enums import BranchType
 from src.scumm6 import Scumm6Legacy, Scumm6New, LastBV
 from src.test_mocks import MockScumm6BinaryView
 from src.disasm import Scumm6Disasm, ScriptAddr, State
@@ -43,6 +44,7 @@ class ScriptComparisonTestCase:
     expected_descumm_output: Optional[str] = None
     expected_legacy_disasm_output: Optional[str] = None
     expected_new_disasm_output: Optional[str] = None
+    expected_branches: Optional[List[Tuple[int, Tuple[BranchType, int]]]] = None  # List of (relative_addr, (branch_type, target_addr))
 
 
 class ComparisonTestEnvironment(NamedTuple):
@@ -296,7 +298,12 @@ script_test_cases = [
             [0015] push_word(200)
             [0018] room_ops.room_screen
             [001A] stop_object_code1
-        """).strip()
+        """).strip(),
+        expected_branches=[
+            # The conditional branch instruction at offset 0x0005 (unless goto +18)
+            (0x0005, (BranchType.TrueBranch, 0xD6F35)),   # Jump to stop_object_code1 (relative +26)
+            (0x0005, (BranchType.FalseBranch, 0xD6F23)),  # Fall through to push_word(93) (relative +8)
+        ]
     ),
     # Example of a test case that only verifies output generation without specific content
     ScriptComparisonTestCase(
@@ -431,7 +438,59 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     legacy_disasm_output = run_legacy_disassembler(bytecode, script_info.start)
     new_disasm_output = run_new_disassembler(bytecode, script_info.start)
     
-    # 3. Print outputs for visibility (useful for generating new test cases)
+    # 3. Check branch information if expected branches are provided
+    if case.expected_branches is not None:
+        print(f"\n=== Branch Analysis for {case.script_name} ===")
+        arch = Scumm6New()
+        view = MockScumm6BinaryView()
+        view.write_memory(script_info.start, bytecode)
+        LastBV.set(view)
+        
+        # Collect actual branches from InstructionInfo
+        actual_branches = []
+        offset = 0
+        while offset < len(bytecode):
+            addr = script_info.start + offset
+            remaining_data = bytecode[offset:]
+            
+            info = arch.get_instruction_info(remaining_data, addr)
+            if info is None:
+                break
+                
+            # Check for branches at this offset
+            branches = []
+            if hasattr(info, 'branches') and info.branches:
+                branches = [(b.type, b.target) for b in info.branches]
+            elif hasattr(info, 'mybranches') and info.mybranches:
+                branches = info.mybranches
+                
+            for branch_type, target in branches:
+                actual_branches.append((offset, (branch_type, target)))
+            
+            offset += info.length
+        
+        print(f"Expected branches: {case.expected_branches}")
+        print(f"Actual branches: {actual_branches}")
+        
+        # Verify expected branches match actual branches
+        assert len(actual_branches) == len(case.expected_branches), \
+            f"Branch count mismatch for '{case.script_name}': expected {len(case.expected_branches)}, got {len(actual_branches)}"
+        
+        for expected_rel_addr, (expected_type, expected_target) in case.expected_branches:
+            found = False
+            for actual_rel_addr, (actual_type, actual_target) in actual_branches:
+                if (expected_rel_addr == actual_rel_addr and 
+                    expected_type == actual_type and 
+                    expected_target == actual_target):
+                    found = True
+                    break
+            
+            assert found, \
+                f"Expected branch not found for '{case.script_name}': " \
+                f"offset {expected_rel_addr}, type {expected_type}, target 0x{expected_target:X}\n" \
+                f"Actual branches: {actual_branches}"
+    
+    # 4. Print outputs for visibility (useful for generating new test cases)
     print(f"\n=== {case.script_name} Comparison ===")
     print("DESCUMM OUTPUT:")
     print(descumm_output)
@@ -440,7 +499,7 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     print("\nNEW DISASM OUTPUT:")
     print(new_disasm_output)
     
-    # 4. Optional assertions based on what's provided
+    # 5. Optional assertions based on what's provided
     if case.expected_descumm_output is not None:
         expected_descumm = dedent(case.expected_descumm_output).strip()
         assert descumm_output.strip() == expected_descumm, \
@@ -459,7 +518,7 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
             f"Scumm6New disassembler output for '{case.script_name}' does not match expected.\n" \
             f"Expected:\n{expected_new_disasm}\n\nActual:\n{new_disasm_output.strip()}"
     
-    # 5. Always verify that outputs were generated
+    # 6. Always verify that outputs were generated
     assert len(descumm_output.strip()) > 0, f"descumm produced no output for '{case.script_name}'"
     assert len(legacy_disasm_output.strip()) > 0, f"Scumm6Legacy produced no output for '{case.script_name}'"
     assert len(new_disasm_output.strip()) > 0, f"Scumm6New produced no output for '{case.script_name}'"
@@ -517,6 +576,68 @@ def test_specific_instruction_differences() -> None:
     except Exception as e:
         print(f"❌ Architecture test failed: {e}")
         raise
+
+
+def test_room11_enter_branch_info(test_environment: ComparisonTestEnvironment) -> None:
+    """Test that room11_enter script branch instructions have correct InstructionInfo."""
+    
+    # Find and extract the room11_enter script bytecode
+    script_info = find_script_by_name("room11_enter", test_environment.scripts)
+    bytecode = test_environment.bsc6_data[script_info.start:script_info.end]
+    
+    # Create architecture instance
+    arch = Scumm6New()
+    view = MockScumm6BinaryView()
+    view.write_memory(script_info.start, bytecode)
+    LastBV.set(view)
+    
+    # Test the branch instruction at offset 0x05
+    # The instruction is: 5D 12 00 (unless goto +18)
+    offset = 0x05
+    addr = script_info.start + offset
+    data = bytecode[offset:]
+    
+    # Get instruction info
+    info = arch.get_instruction_info(data, addr)
+    
+    # Verify the instruction is recognized as a branch
+    assert info is not None, "InstructionInfo should not be None for branch instruction"
+    assert info.length == 3, f"Branch instruction length should be 3, got {info.length}"
+    
+    # The branch at 0x05 is an "unless goto +18" instruction
+    # - Instruction address: script_info.start + 0x05
+    # - Instruction length: 3
+    # - Jump offset: +18 (0x12)
+    # - True branch (when condition is true, jump taken): addr + 3 + 18
+    # - False branch (when condition is false, fall through): addr + 3
+    
+    expected_true_branch = addr + 3 + 18  # Jump to addr + 3 + 18
+    expected_false_branch = addr + 3       # Continue to next instruction
+    
+    # Check branch count
+    assert len(info.branches) == 2, f"Expected 2 branches, got {len(info.branches)}"
+    
+    # Sort branches by target for consistent testing
+    branches = sorted(info.branches, key=lambda b: b.target)
+    
+    # Verify branch targets
+    branch_targets = [b.target for b in branches]
+    assert expected_false_branch in branch_targets, f"Expected false branch {expected_false_branch:04X} not found in {[f'{t:04X}' for t in branch_targets]}"
+    assert expected_true_branch in branch_targets, f"Expected true branch {expected_true_branch:04X} not found in {[f'{t:04X}' for t in branch_targets]}"
+    
+    # Find the specific branches
+    false_branch = next(b for b in branches if b.target == expected_false_branch)
+    true_branch = next(b for b in branches if b.target == expected_true_branch)
+    
+    # Verify branch types (the conditional branch should have both true and false paths)
+    from binaryninja.enums import BranchType
+    assert false_branch.type == BranchType.FalseBranch, f"Expected FalseBranch type, got {false_branch.type}"
+    assert true_branch.type == BranchType.TrueBranch, f"Expected TrueBranch type, got {true_branch.type}"
+    
+    print("\n✅ room11_enter branch info test passed")
+    print(f"   Branch at 0x{offset:04X}: unless goto +18")
+    print(f"   - False branch: 0x{expected_false_branch:04X}")
+    print(f"   - True branch: 0x{expected_true_branch:04X}")
 
 
 if __name__ == "__main__":
