@@ -1,6 +1,6 @@
 """Concrete SCUMM6 instruction implementations."""
 
-from typing import List
+from typing import List, Any
 from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName, InstructionInfo
@@ -8,6 +8,7 @@ from ...scumm6_opcodes import Scumm6Opcodes
 
 from .opcodes import Instruction
 from .generic import VariableWriteOp, ControlFlowOp, IntrinsicOp
+from .smart_bases import SmartConditionalJump
 
 # Import the vars module to use the same LLIL generation logic
 from ... import vars
@@ -700,6 +701,24 @@ class Jump(ControlFlowOp):
         # Unconditional jump to target
         target_addr = addr + 3 + self.op_details.body.jump_offset  # 3 = instruction length
         il.append(il.jump(il.const(4, target_addr)))
+
+
+class SmartIff(SmartConditionalJump):
+    """Fusible 'if true' conditional jump instruction."""
+    
+    def __init__(self, kaitai_op: Any, length: int) -> None:
+        super().__init__(kaitai_op, length)
+        self._name = "iff"
+        self._is_if_not = False  # This is 'if', not 'if_not'
+
+
+class SmartIfNot(SmartConditionalJump):
+    """Fusible 'if false/unless' conditional jump instruction."""
+    
+    def __init__(self, kaitai_op: Any, length: int) -> None:
+        super().__init__(kaitai_op, length)
+        self._name = "if_not"
+        self._is_if_not = True  # This is 'if_not'
 
 
 # =============================================================================

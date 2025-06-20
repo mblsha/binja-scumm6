@@ -1,11 +1,13 @@
 """Smart base classes for generated instruction types."""
 
-from typing import List, Optional
-from binja_helpers.tokens import Token, TInstr, TSep, TInt
-from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
+from typing import List, Optional, Any
+from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
+from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
+from binaryninja import Architecture
 import copy
 
 from .opcodes import Instruction
+from .generic import ControlFlowOp
 from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
                      SemanticIntrinsicConfig)
 from ...scumm6_opcodes import Scumm6Opcodes
@@ -134,8 +136,8 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp):
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             # Variable push - extract var number
             if hasattr(operand.op_details.body, 'data'):
-                var_num = operand.op_details.body.data
-                return [TInt(f"var_{var_num}")]
+                data = operand.op_details.body.data
+                return [TInt(f"var_{data}")]
         else:
             # Constant push - extract value
             if hasattr(operand.op_details.body, 'data'):
@@ -440,37 +442,316 @@ class SmartUnaryOp(Instruction):
             result = il_func(4, il.reg(4, LLIL_TEMP(0)))
             il.append(il.push(4, result))
 
+class SmartConditionalJump(ControlFlowOp):
+    """Smart conditional jump that supports fusion with comparison operations."""
+    
+    _name: str
+    _is_if_not: bool  # True for if_not, False for iff
+    
+    def __init__(self, kaitai_op: Any, length: int) -> None:
+        super().__init__(kaitai_op, length)
+        self.fused_operands: List['Instruction'] = []
+    
+    @property
+    def stack_pop_count(self) -> int:
+        """Number of values this instruction pops from the stack."""
+        if self.fused_operands:
+            return 0  # Fused instructions handle their own operands
+        else:
+            return 1  # Normal conditional jump pops condition from stack
+    
+    def is_conditional(self) -> bool:
+        return True
+    
+    def fuse(self, previous: Instruction) -> Optional['SmartConditionalJump']:
+        """Attempt to fuse with a comparison operation."""
+        # Only fuse if we don't already have operands
+        if self.fused_operands:
+            return None
+            
+        # Check if previous is a comparison operation
+        if not self._is_comparison_op(previous):
+            return None
+            
+        # Create fused instruction
+        fused = copy.deepcopy(self)
+        fused.fused_operands.append(previous)
+        fused._length = self._length + previous.length()
+        return fused
+    
+    def _is_comparison_op(self, instr: Instruction) -> bool:
+        """Check if instruction is a comparison operation that can be fused."""
+        comparison_ops = ['Eq', 'Neq', 'Gt', 'Lt', 'Le', 'Ge']
+        return instr.__class__.__name__ in comparison_ops
+    
+    def _render_condition(self, comparison: Instruction) -> List[Token]:
+        """Render a fused comparison as a readable condition."""
+        if not hasattr(comparison, 'fused_operands') or len(comparison.fused_operands) < 2:
+            # Fallback if comparison isn't properly fused
+            return [TText("condition")]
+        
+        # Get operands (in reverse order due to stack semantics)
+        left_operand = comparison.fused_operands[1]
+        right_operand = comparison.fused_operands[0]
+        
+        tokens = []
+        tokens.append(TText("("))
+        tokens.extend(self._render_operand(left_operand))
+        
+        # Get comparison operator and potentially invert it
+        op_name = comparison.__class__.__name__.lower()
+        if self._is_if_not:
+            # Invert the comparison for readability
+            inverted_ops = {'eq': '!=', 'neq': '==', 'gt': '<=', 'lt': '>=', 'le': '>', 'ge': '<'}
+            op_symbol = inverted_ops.get(op_name, f"!{op_name}")
+        else:
+            # Use normal comparison
+            normal_ops = {'eq': '==', 'neq': '!=', 'gt': '>', 'lt': '<', 'le': '<=', 'ge': '>='}
+            op_symbol = normal_ops.get(op_name, op_name)
+        
+        tokens.append(TText(f" {op_symbol} "))
+        tokens.extend(self._render_operand(right_operand))
+        tokens.append(TText(")"))
+        
+        return tokens
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(f"var_{operand.op_details.body.data}")]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return [TInt(str(operand.op_details.body.data))]
+        else:
+            return [TText("operand")]
+    
+    def render(self) -> List[Token]:
+        if self.fused_operands:
+            # Render as readable conditional
+            tokens = []
+            if self._is_if_not:
+                tokens.append(TInstr("if "))
+            else:
+                tokens.append(TInstr("if "))
+            
+            tokens.extend(self._render_condition(self.fused_operands[0]))
+            
+            # Add jump target
+            jump_offset = self.op_details.body.jump_offset
+            if jump_offset >= 0:
+                tokens.append(TText(f" goto +{jump_offset}"))
+            else:
+                tokens.append(TText(f" goto {jump_offset}"))
+            
+            return tokens
+        else:
+            # Normal rendering
+            jump_offset = self.op_details.body.jump_offset
+            if self._is_if_not:
+                instr_name = "unless"
+            else:
+                instr_name = "if"
+            
+            if jump_offset >= 0:
+                return [TInstr(f"{instr_name} goto +{jump_offset}")]
+            else:
+                return [TInstr(f"{instr_name} goto {jump_offset}")]
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        jump_offset = self.op_details.body.jump_offset
+        target_addr = addr + self.length() + jump_offset
+        
+        if self.fused_operands:
+            # Generate IL for fused comparison
+            comparison = self.fused_operands[0]
+            if hasattr(comparison, 'fused_operands') and len(comparison.fused_operands) >= 2:
+                # Get operands (reverse order for stack semantics)
+                left_operand = comparison.fused_operands[1]
+                right_operand = comparison.fused_operands[0]
+                
+                left_expr = self._lift_operand(il, left_operand)
+                right_expr = self._lift_operand(il, right_operand)
+                
+                # Get comparison operation
+                op_name = comparison.__class__.__name__.lower()
+                comparison_ops = {
+                    'eq': 'compare_equal',
+                    'neq': 'compare_not_equal', 
+                    'gt': 'compare_signed_greater_than',
+                    'lt': 'compare_signed_less_than',
+                    'le': 'compare_signed_less_equal',
+                    'ge': 'compare_signed_greater_equal'
+                }
+                
+                il_op_name = comparison_ops.get(op_name, 'compare_equal')
+                il_func = getattr(il, il_op_name)
+                condition = il_func(4, left_expr, right_expr)
+                
+                # Apply if_not logic if needed
+                if self._is_if_not:
+                    condition = il.compare_equal(4, condition, il.const(4, 0))
+                else:
+                    condition = il.compare_not_equal(4, condition, il.const(4, 0))
+                
+                # Generate conditional jump
+                true_label = il.get_label_for_address(Architecture['SCUMM6'], target_addr)
+                false_label = LowLevelILLabel()
+                
+                il.append(il.if_expr(condition, true_label, false_label))
+                il.mark_label(false_label) 
+            else:
+                # Fallback to normal stack-based lifting
+                self._lift_normal(il, addr)
+        else:
+            # Normal stack-based lifting
+            self._lift_normal(il, addr)
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return il.reg(4, f"var_{operand.op_details.body.data}")
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return il.const(4, operand.op_details.body.data)
+        else:
+            return il.const(4, 0)  # Fallback
+    
+    def _lift_normal(self, il: LowLevelILFunction, addr: int) -> None:
+        """Normal stack-based lifting for unfused conditionals."""
+        jump_offset = self.op_details.body.jump_offset
+        target_addr = addr + self.length() + jump_offset
+        
+        # Pop condition from stack
+        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
+        
+        if self._is_if_not:
+            condition = il.compare_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0))
+        else:
+            condition = il.compare_not_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0))
+        
+        true_label = il.get_label_for_address(Architecture['SCUMM6'], target_addr)
+        false_label = LowLevelILLabel()
+        
+        il.append(il.if_expr(condition, true_label, false_label))
+        il.mark_label(false_label)
+
 class SmartComparisonOp(Instruction):
-    """Self-configuring comparison stack operation."""
+    """Self-configuring comparison stack operation with fusion support."""
     
     _name: str
     _config: StackConfig
 
+    def __init__(self, kaitai_op: Any, length: int) -> None:
+        super().__init__(kaitai_op, length)
+        self.fused_operands: List['Instruction'] = []
+
     @property
     def stack_pop_count(self) -> int:
         """Number of values this instruction pops from the stack."""
-        return 2
+        if self.fused_operands:
+            return 0  # Fused instructions handle their own operands
+        else:
+            return 2  # Normal comparison pops two values
+
+    def fuse(self, previous: Instruction) -> Optional['SmartComparisonOp']:
+        """Attempt to fuse with a push instruction."""
+        # Only fuse if we need more operands (max 2 for binary comparison)
+        if len(self.fused_operands) >= 2:
+            return None
+            
+        # Check if previous is a fusible push
+        if not self._is_fusible_push(previous):
+            return None
+            
+        # Create fused instruction
+        fused = copy.deepcopy(self)
+        fused.fused_operands.append(previous)
+        fused._length = self._length + previous.length()
+        return fused
+
+    def _is_fusible_push(self, instr: Instruction) -> bool:
+        """Check if instruction is a push that can be fused."""
+        return instr.__class__.__name__ in [
+            'PushByte', 'PushWord', 'PushByteVar', 'PushWordVar'
+        ]
+
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(f"var_{operand.op_details.body.data}")]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return [TInt(str(operand.op_details.body.data))]
+        else:
+            return [TText("operand")]
+
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return il.reg(4, f"var_{operand.op_details.body.data}")
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return il.const(4, operand.op_details.body.data)
+        else:
+            return il.const(4, 0)  # Fallback
 
     def render(self) -> List[Token]:
-        display_name = self._config.display_name or self._name
-        return [TInstr(display_name)]
+        if self.fused_operands and len(self.fused_operands) == 2:
+            # Render as comparison with operands: left op right
+            tokens = []
+            
+            # Get operands (in reverse order due to stack semantics)
+            left_operand = self.fused_operands[1]
+            right_operand = self.fused_operands[0]
+            
+            # Get comparison symbol
+            op_symbols = {'eq': '==', 'neq': '!=', 'gt': '>', 'lt': '<', 'le': '<=', 'ge': '>='}
+            op_symbol = op_symbols.get(self._name, self._name)
+            
+            tokens.extend(self._render_operand(left_operand))
+            tokens.append(TText(f" {op_symbol} "))
+            tokens.extend(self._render_operand(right_operand))
+            
+            return tokens
+        elif self.fused_operands and len(self.fused_operands) == 1:
+            # Partially fused - function-call style
+            tokens = []
+            display_name = self._config.display_name or self._name
+            tokens.append(TInstr(f"{display_name}("))
+            tokens.extend(self._render_operand(self.fused_operands[0]))
+            tokens.append(TText(")"))
+            return tokens
+        else:
+            # Normal rendering
+            display_name = self._config.display_name or self._name
+            return [TInstr(display_name)]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
             f"Expected NoData body, got {type(self.op_details.body)}"
         
-        # Pop two values: a (top), b (second)
-        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
-        il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
+        if self.fused_operands and len(self.fused_operands) == 2:
+            # Fused comparison - use direct operands
+            left_operand = self.fused_operands[1]  # Reverse order for stack semantics
+            right_operand = self.fused_operands[0]
+            
+            left_expr = self._lift_operand(il, left_operand)
+            right_expr = self._lift_operand(il, right_operand)
+            
+            # Get the comparison operation from the il object
+            il_func = getattr(il, self._config.il_op_name)
+            comp_res = il_func(4, left_expr, right_expr)
+            il.append(il.push(4, comp_res))
+        else:
+            # Normal stack-based lifting
+            # Pop two values: a (top), b (second)
+            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
+            il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
 
-        # Get the comparison operation from the il object
-        il_func = getattr(il, self._config.il_op_name)
+            # Get the comparison operation from the il object
+            il_func = getattr(il, self._config.il_op_name)
 
-        # Push result: b compare a
-        op1 = il.reg(4, LLIL_TEMP(1))
-        op2 = il.reg(4, LLIL_TEMP(0))
-        comp_res = il_func(4, op1, op2)
-        il.append(il.push(4, comp_res))
+            # Push result: b compare a
+            op1 = il.reg(4, LLIL_TEMP(1))
+            op2 = il.reg(4, LLIL_TEMP(0))
+            comp_res = il_func(4, op1, op2)
+            il.append(il.push(4, comp_res))
 
 class SmartArrayOp(Instruction):
     """Self-configuring array operation."""
@@ -577,8 +858,8 @@ class SmartArrayOp(Instruction):
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             # Variable push - extract var number
             if hasattr(operand.op_details.body, 'data'):
-                var_num = operand.op_details.body.data
-                return [TInt(f"var_{var_num}")]
+                data = operand.op_details.body.data
+                return [TInt(f"var_{data}")]
         else:
             # Constant push - extract value
             if hasattr(operand.op_details.body, 'data'):

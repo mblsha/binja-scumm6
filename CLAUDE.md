@@ -585,3 +585,116 @@ if_not(gt(var_x, 10))  # → if (var_x <= 10)
 - **Pattern matching**: Recognize common idioms (loops, switches)
 - **Semantic variable names**: Integration with symbol resolution
 - **Cross-block fusion**: Handle fusion across basic block boundaries safely
+
+### Critical Implementation Lessons
+
+Based on practical experience implementing fusion for 40+ instruction types, here are the most important lessons learned:
+
+#### Common Pitfalls and Their Solutions
+
+1. **Kaitai Parsing Edge Cases**
+   ```python
+   # Problem: write_byte_var falls through to UnknownOp due to Kaitai parsing bug
+   # Solution: Handle gracefully in render() and tests
+   def render(self) -> List[Token]:
+       if hasattr(self.op_details, 'var_num'):
+           var_id = self.op_details.var_num
+       else:
+           var_id = "?"  # Handle UnknownOp gracefully
+   ```
+
+2. **Operand Order Preservation (Critical for Stack Semantics)**
+   ```python
+   # WRONG: Can break stack semantics
+   fused.fused_operands = [previous] + self.fused_operands
+   
+   # CORRECT: Preserves LIFO order
+   fused.fused_operands.append(previous)
+   ```
+
+3. **Token Import Errors**
+   ```python
+   # WRONG: Direct Binary Ninja imports fail in mock environment
+   from binaryninja import TokenType
+   
+   # CORRECT: Use local token helpers
+   from binja_helpers.tokens import TInt, TText, TSep
+   ```
+
+4. **Bytecode Format Debugging**
+   ```python
+   # Always verify bytecode formats with actual disassembly
+   # Example: word_array_write uses 2-byte array ID, not 1-byte
+   bytecode = bytes([
+       0x00, 0x0A,        # push_byte(10)
+       0xD4, 0x05, 0x00,  # word_array_write(array_5) - note 2-byte array ID
+       0x03               # index (1 byte)
+   ])
+   ```
+
+#### Testing Strategy That Works
+
+1. **Always Test Both Fusion and Non-Fusion Paths**
+   ```python
+   def test_instruction_both_modes(self):
+       bytecode = bytes([0x00, 0x05, 0x42, 0x0A])
+       
+       # Test normal decoding
+       normal = decode(bytecode, 0x1000)
+       assert normal.__class__.__name__ == "PushByte"
+       
+       # Test fusion decoding  
+       fused = decode_with_fusion(bytecode, 0x1000)
+       assert fused.__class__.__name__ == "WriteByteVar"
+       assert len(fused.fused_operands) == 1
+   ```
+
+2. **Verify Semantic Equivalence**
+   ```python
+   def test_fusion_preserves_semantics(self):
+       # Both should produce equivalent LLIL
+       normal_il = generate_il_sequence(decode(bytecode))
+       fused_il = generate_il_sequence(decode_with_fusion(bytecode))
+       # Compare final state, not intermediate operations
+   ```
+
+3. **Test Length Calculations**
+   ```python
+   def test_fused_length_correct(self):
+       fused = decode_with_fusion(bytecode, 0x1000)
+       expected_length = 2 + 2  # push_byte(2) + write_byte_var(2)
+       assert fused.length() == expected_length
+   ```
+
+#### Performance Considerations
+
+1. **Deep Copy Overhead**: Use `copy.deepcopy()` sparingly - only when creating fused instructions
+2. **Iterative Fusion**: The decoder may need multiple passes for complex expressions
+3. **Stack Pop Optimization**: Fused instructions should set `stack_pop_count = 0` to avoid redundant pops
+
+#### Class Name vs Instance Checking
+
+Always use class name checking for instruction type detection:
+```python
+# CORRECT: Works with both real and mock instructions
+def _is_fusible_push(self, instr: Instruction) -> bool:
+    return instr.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar']
+
+# WRONG: isinstance() can fail with mock objects
+def _is_fusible_push(self, instr: Instruction) -> bool:
+    return isinstance(instr, (PushByte, PushWord))  # Breaks in tests
+```
+
+#### Decoder Architecture Insights
+
+1. **Separation of Concerns**: Keep `decode()` and `decode_with_fusion()` separate - never merge
+2. **Buffer Management**: The fusion decoder needs to look ahead/behind, requiring careful buffer management
+3. **Error Propagation**: Fusion failures should gracefully fall back to normal decoding
+
+#### Integration with Binary Ninja
+
+1. **Token Generation**: Use semantic tokens (`VariableNameToken`, `OperatorToken`) for better syntax highlighting
+2. **LLIL Generation**: Fused instructions generate more efficient IL (fewer stack operations)
+3. **Cross-Reference Support**: Fused expressions improve Binary Ninja's analysis capabilities
+
+These lessons capture 3 weeks of intensive fusion implementation work and should prevent common mistakes in future development.
