@@ -1,8 +1,9 @@
 """Smart base classes for generated instruction types."""
 
-from typing import List
+from typing import List, Optional
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
+from binaryninja import InstructionInfo, BranchType
 
 from .opcodes import Instruction
 from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
@@ -308,6 +309,15 @@ class SmartSemanticIntrinsicOp(Instruction):
         tokens.append(TSep(")"))
         return tokens
     
+    def analyze(self, info: InstructionInfo, addr: int) -> None:
+        """Set instruction analysis info, including control flow branches."""
+        # Always call parent to set basic info like length
+        super().analyze(info, addr)
+        
+        # Handle control flow implications if configured
+        if self._config.control_flow_impact:
+            self._handle_control_flow_analysis(info, addr)
+    
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         """Generate LLIL following descumm semantic approach."""
         # Handle variable arguments for script operations
@@ -357,11 +367,81 @@ class SmartSemanticIntrinsicOp(Instruction):
         # For now, return empty list as placeholder
         return []
     
+    def _handle_control_flow_analysis(self, info: InstructionInfo, addr: int) -> None:
+        """Handle control flow analysis for semantic intrinsic operations."""
+        try:
+            # For script operations like start_script, the script ID comes from the stack
+            # and isn't available during the analyze phase. However, we can still mark
+            # this as a call instruction to indicate control flow impact.
+            
+            # Try to extract and resolve script ID if possible
+            script_id = self._extract_script_id()
+            script_addr = None
+            
+            if script_id is not None:
+                script_addr = self._resolve_script_address(script_id, addr)
+            
+            if script_addr is not None:
+                # We successfully resolved the script address
+                info.add_branch(BranchType.CallDestination, script_addr)
+            else:
+                # We couldn't resolve the exact address, but we know this is a call
+                # Mark it as an indirect call to indicate control flow impact
+                # Binary Ninja will handle this appropriately during analysis
+                info.add_branch(BranchType.IndirectBranch, 0)
+            
+            # Always add fall-through branch (execution continues after the call)
+            info.add_branch(BranchType.FalseBranch, addr + info.length)
+            
+        except Exception:
+            # If anything goes wrong, don't crash the analysis
+            # Just skip the control flow analysis for this instruction
+            pass
+    
+    def _extract_script_id(self) -> Optional[int]:
+        """Extract script ID from the instruction operands."""
+        try:
+            # For script operations like start_script, the script ID comes from the stack
+            # and isn't directly embedded in the instruction. During the analyze phase,
+            # we don't have access to the runtime stack state.
+            
+            # Check if the instruction has any embedded data that might be a script ID
+            if hasattr(self.op_details, 'body') and hasattr(self.op_details.body, 'data'):
+                # For simple script operations, script ID might be directly in data
+                return self.op_details.body.data
+            elif hasattr(self.op_details, 'body') and hasattr(self.op_details.body, 'script_id'):
+                # Some instructions might have a dedicated script_id field
+                return self.op_details.body.script_id
+            else:
+                # For stack-based operations like start_script, we can't extract the script ID
+                # during the analyze phase. This is expected and not an error.
+                return None
+        except Exception:
+            return None
+    
+    def _resolve_script_address(self, script_id: int, call_addr: int) -> Optional[int]:
+        """Resolve script ID to actual address using the disasm state."""
+        try:
+            # Import here to avoid circular imports
+            from ...scumm6 import LastBV
+            from ...disasm import Scumm6Disasm
+            
+            # Get the current binary view and its state
+            view = LastBV.get()
+            if view is None or not hasattr(view, 'state'):
+                return None
+            
+            state = view.state
+            
+            # Use the legacy get_script_ptr function to resolve the address
+            return Scumm6Disasm.get_script_ptr(state, script_id, call_addr)
+            
+        except Exception:
+            return None
+    
     def _handle_script_call_flow(self, il: LowLevelILFunction, script_id: int) -> None:
-        """Handle control flow implications for script calls."""
-        # In a full implementation, this would:
-        # 1. Try to resolve script_id to actual address
-        # 2. Generate appropriate call or jump instruction for CFG
-        # 3. Handle the script context passing
-        # For now, this is a placeholder
+        """Handle control flow implications for script calls in LLIL."""
+        # This method is used during LLIL lifting, not analysis
+        # The actual control flow analysis is now handled in _handle_control_flow_analysis
+        # This method could be enhanced to generate call instructions in LLIL if needed
         pass
