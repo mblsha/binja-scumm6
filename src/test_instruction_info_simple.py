@@ -40,8 +40,8 @@ def test_new_decoder_instruction_info() -> None:
             "bytecode": bytes([0x5D, 0x12, 0x00]),  # unless goto +18
             "addr": 0x1005,
             "expected_branches": [
-                (BranchType.TrueBranch, 0x101A),     # 0x1005 + 3 + 18
-                (BranchType.FalseBranch, 0x1008),    # 0x1005 + 3
+                (BranchType.TrueBranch, 0x101A),     # 0x1005 + 3 + 18 (jump taken)
+                # FalseBranch (fall-through) is implicit
             ]
         },
         {
@@ -57,8 +57,8 @@ def test_new_decoder_instruction_info() -> None:
             "bytecode": bytes([0x5C, 0x0A, 0x00]),  # if goto +10
             "addr": 0x102B,
             "expected_branches": [
-                (BranchType.TrueBranch, 0x1038),     # 0x102B + 3 + 10
-                (BranchType.FalseBranch, 0x102E),    # 0x102B + 3
+                (BranchType.TrueBranch, 0x1038),     # 0x102B + 3 + 10 (jump taken)
+                # FalseBranch (fall-through) is implicit
             ]
         },
         {

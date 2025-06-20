@@ -157,44 +157,32 @@ def test_instruction_info_conditional_jumps() -> None:
         else:
             # Conditional jump
             expected_true_branch = cast(int, case["expected_true_branch"])
-            expected_false_branch = cast(int, case["expected_false_branch"])
+            # expected_false_branch = cast(int, case["expected_false_branch"])  # FalseBranch is now implicit
             
-            assert len(legacy_branches) == 2, f"Legacy decoder should have 2 branches for {case_name}, got {len(legacy_branches)}"
-            assert len(new_branches) == 2, f"New decoder should have 2 branches for {case_name}, got {len(new_branches)}"
+            assert len(legacy_branches) == 1, f"Legacy decoder should have 1 branch for {case_name}, got {len(legacy_branches)}"
+            assert len(new_branches) == 1, f"New decoder should have 1 branch for {case_name}, got {len(new_branches)}"
             
-            # Find true and false branches (order may vary)
+            # Only TrueBranch should be present (FalseBranch is implicit)
             legacy_true = None
-            legacy_false = None
             new_true = None
-            new_false = None
             
             for branch_type, branch_target in legacy_branches:
                 if branch_type == BranchType.TrueBranch:
                     legacy_true = (branch_type, branch_target)
-                elif branch_type == BranchType.FalseBranch:
-                    legacy_false = (branch_type, branch_target)
             
             for branch_type, branch_target in new_branches:
                 if branch_type == BranchType.TrueBranch:
                     new_true = (branch_type, branch_target)
-                elif branch_type == BranchType.FalseBranch:
-                    new_false = (branch_type, branch_target)
             
             assert legacy_true is not None, f"Legacy decoder missing TrueBranch for {case_name}"
-            assert legacy_false is not None, f"Legacy decoder missing FalseBranch for {case_name}"
             assert new_true is not None, f"New decoder missing TrueBranch for {case_name}"
-            assert new_false is not None, f"New decoder missing FalseBranch for {case_name}"
             
-            # Check branch targets
+            # Check branch targets (only TrueBranch now)
             assert legacy_true[1] == expected_true_branch, \
                 f"Legacy decoder wrong true branch target for {case_name}: expected {hex(expected_true_branch)}, got {hex(legacy_true[1])}"
-            assert legacy_false[1] == expected_false_branch, \
-                f"Legacy decoder wrong false branch target for {case_name}: expected {hex(expected_false_branch)}, got {hex(legacy_false[1])}"
             
             assert new_true[1] == expected_true_branch, \
                 f"New decoder wrong true branch target for {case_name}: expected {hex(expected_true_branch)}, got {hex(new_true[1])}"
-            assert new_false[1] == expected_false_branch, \
-                f"New decoder wrong false branch target for {case_name}: expected {hex(expected_false_branch)}, got {hex(new_false[1])}"
         
         print(f"✅ {case_name} passed all checks")
 
@@ -253,31 +241,24 @@ def test_instruction_info_real_script_data() -> None:
     elif hasattr(info, 'mybranches') and info.mybranches:
         branches = info.mybranches
     
-    assert len(branches) == 2, f"Wrong number of branches: expected 2, got {len(branches)}"
+    assert len(branches) == 1, f"Wrong number of branches: expected 1, got {len(branches)}"
     
     # Expected branches:
     # - True branch (condition is false): addr + length + offset = 0x1005 + 3 + 18 = 0x101A
-    # - False branch (continue): addr + length = 0x1005 + 3 = 0x1008
+    # - False branch (continue) is implicit for CFG analysis
     
     true_branch = None
-    false_branch = None
     
     for branch_type, branch_target in branches:
         if branch_type == BranchType.TrueBranch:
             true_branch = (branch_type, branch_target)
-        elif branch_type == BranchType.FalseBranch:
-            false_branch = (branch_type, branch_target)
     
     assert true_branch is not None, "Missing TrueBranch"
-    assert false_branch is not None, "Missing FalseBranch"
     
     expected_true_target = 0x1005 + 3 + 18  # 0x101A
-    expected_false_target = 0x1005 + 3      # 0x1008
     
     assert true_branch[1] == expected_true_target, \
         f"Wrong true branch target: expected {hex(expected_true_target)}, got {hex(true_branch[1])}"
-    assert false_branch[1] == expected_false_target, \
-        f"Wrong false branch target: expected {hex(expected_false_target)}, got {hex(false_branch[1])}"
     
     print("✅ Real script data test passed")
 

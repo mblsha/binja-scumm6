@@ -85,7 +85,7 @@ test_cases = [
         expected_length=3,
         expected_mock_branches=[
             (BranchType.TrueBranch, 0x1000 + 3 + 20),
-            (BranchType.FalseBranch, 0x1000 + 3),
+            # FalseBranch (fall-through) is now implicit
         ],
     ),
     InfoTestCase(
@@ -95,7 +95,7 @@ test_cases = [
         expected_length=3,
         expected_mock_branches=[
             (BranchType.TrueBranch, 0x1000 + 3 - 20),
-            (BranchType.FalseBranch, 0x1000 + 3),
+            # FalseBranch (fall-through) is now implicit
         ],
     ),
     InfoTestCase(
@@ -105,7 +105,7 @@ test_cases = [
         expected_length=3,
         expected_mock_branches=[
             (BranchType.TrueBranch, 0x2000 + 3),
-            (BranchType.FalseBranch, 0x2000 + 3),
+            # FalseBranch (fall-through) is now implicit (same address in this zero-offset case)
         ],
     ),
     InfoTestCase(
@@ -114,8 +114,8 @@ test_cases = [
         addr=0x3000,
         expected_length=3,
         expected_mock_branches=[
-            (BranchType.TrueBranch, 0x3000 + 3 + 100),
-            (BranchType.FalseBranch, 0x3000 + 3),
+            (BranchType.UnconditionalBranch, 0x3000 + 3 + 100),
+            # Unconditional jump - no false branch
         ],
     ),
 ]

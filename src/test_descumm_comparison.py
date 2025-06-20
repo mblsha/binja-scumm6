@@ -302,7 +302,7 @@ script_test_cases = [
         expected_branches=[
             # The conditional branch instruction at offset 0x0005 (unless goto +18)
             (0x0005, (BranchType.TrueBranch, 0x001A)),   # Jump to stop_object_code1 (relative +26)
-            (0x0005, (BranchType.FalseBranch, 0x0008)),  # Fall through to push_word(93) (relative +8)
+            # Note: FalseBranch (fall-through) is implicit and not reported
         ]
     ),
     # Example of a test case that only verifies output generation without specific content
@@ -321,12 +321,12 @@ def test_environment() -> ComparisonTestEnvironment:
     descumm_path = build_descumm()
     bsc6_path = ensure_demo_bsc6()
     bsc6_data = bsc6_path.read_bytes()
-    
+
     # Decode the container to get scripts list and state
     result = Scumm6Disasm.decode_container(str(bsc6_path), bsc6_data)
     if result is None:
         raise RuntimeError("Failed to decode container")
-    
+
     scripts, state = result
     return ComparisonTestEnvironment(descumm_path, bsc6_data, scripts, state)
 
@@ -344,7 +344,7 @@ def run_descumm_on_bytecode(descumm_path: Path, bytecode: bytes) -> str:
     with tempfile.NamedTemporaryFile(mode='wb', delete=False) as tmp_file:
         tmp_file.write(bytecode)
         tmp_file_path = tmp_file.name
-    
+
     try:
         result = subprocess.run(
             [str(descumm_path), "-6", "-u", tmp_file_path],
@@ -368,26 +368,26 @@ def run_legacy_disassembler(bytecode: bytes, start_addr: int) -> str:
     view = MockScumm6BinaryView()
     view.write_memory(start_addr, bytecode)
     LastBV.set(view)
-    
+
     output_lines = []
     offset = 0
-    
+
     while offset < len(bytecode):
         addr = start_addr + offset
         remaining_data = bytecode[offset:]
-        
+
         # Get instruction text
         result = arch.get_instruction_text(remaining_data, addr)
         if result is None:
             break
-            
+
         tokens, length = result
         text = format_output_as_text(tokens)
-        
+
         # Format as [offset] disassembly_text
         output_lines.append(f"[{offset:04X}] {text}")
         offset += length
-    
+
     return '\n'.join(output_lines)
 
 
@@ -397,26 +397,26 @@ def run_new_disassembler(bytecode: bytes, start_addr: int) -> str:
     view = MockScumm6BinaryView()
     view.write_memory(start_addr, bytecode)
     LastBV.set(view)
-    
+
     output_lines = []
     offset = 0
-    
+
     while offset < len(bytecode):
         addr = start_addr + offset
         remaining_data = bytecode[offset:]
-        
+
         # Get instruction text
         result = arch.get_instruction_text(remaining_data, addr)
         if result is None:
             break
-            
+
         tokens, length = result
         text = format_output_as_text(tokens)
-        
+
         # Format as [offset] disassembly_text
         output_lines.append(f"[{offset:04X}] {text}")
         offset += length
-    
+
     return '\n'.join(output_lines)
 
 
@@ -428,70 +428,70 @@ def format_output_as_text(tokens: List[Any]) -> str:
 def collect_branches_from_architecture(arch: Any, bytecode: bytes, start_addr: int) -> List[Tuple[int, Tuple[BranchType, int]]]:
     """
     Generic function to collect branch information from any SCUMM6 architecture.
-    
+
     Args:
         arch: The architecture instance (Scumm6Legacy or Scumm6New)
         bytecode: The bytecode to analyze
         start_addr: The starting address of the bytecode
-        
+
     Returns:
         List of (relative_offset, (branch_type, relative_target_address)) tuples
     """
     view = MockScumm6BinaryView()
     view.write_memory(start_addr, bytecode)
     LastBV.set(view)
-    
+
     branches = []
     offset = 0
     while offset < len(bytecode):
         addr = start_addr + offset
         remaining_data = bytecode[offset:]
-        
+
         info = arch.get_instruction_info(remaining_data, addr)
         if info is None:
             break
-            
+
         # Check for branches at this offset
         instruction_branches = []
         if hasattr(info, 'branches') and info.branches:
             instruction_branches = [(b.type, b.target) for b in info.branches]
         elif hasattr(info, 'mybranches') and info.mybranches:
             instruction_branches = info.mybranches
-            
+
         for branch_type, absolute_target in instruction_branches:
             # Convert absolute target to relative target (relative to script start)
             relative_target = absolute_target - start_addr
             branches.append((offset, (branch_type, relative_target)))
-        
+
         offset += info.length
-    
+
     return branches
 
 
-def verify_branches_match_expected(actual_branches: List[Tuple[int, Tuple[BranchType, int]]], 
-                                   expected_branches: List[Tuple[int, Tuple[BranchType, int]]], 
+def verify_branches_match_expected(actual_branches: List[Tuple[int, Tuple[BranchType, int]]],
+                                   expected_branches: List[Tuple[int, Tuple[BranchType, int]]],
                                    script_name: str, arch_name: str) -> None:
     """
     Verify that actual branches match expected branches.
-    
+
     Args:
         actual_branches: List of actual branches found
-        expected_branches: List of expected branches  
+        expected_branches: List of expected branches
         script_name: Name of the script being tested
         arch_name: Name of the architecture being tested
     """
     assert len(actual_branches) == len(expected_branches), \
         f"Branch count mismatch for '{script_name}' in {arch_name}: expected {len(expected_branches)}, got {len(actual_branches)}"
-    
+
     for expected_rel_addr, (expected_type, expected_target) in expected_branches:
         found = False
         for actual_rel_addr, (actual_type, actual_target) in actual_branches:
-            if (expected_rel_addr == actual_rel_addr and 
-                expected_type == actual_type and 
+            if (expected_rel_addr == actual_rel_addr and
+                expected_type == actual_type and
                 expected_target == actual_target):
                 found = True
                 break
-        
+
         assert found, \
             f"Expected branch not found for '{script_name}' in {arch_name}: " \
             f"offset {expected_rel_addr}, type {expected_type}, target 0x{expected_target:X}\n" \
@@ -501,40 +501,40 @@ def verify_branches_match_expected(actual_branches: List[Tuple[int, Tuple[Branch
 @pytest.mark.parametrize("case", script_test_cases, ids=lambda c: c.test_id)
 def test_script_comparison(case: ScriptComparisonTestCase, test_environment: ComparisonTestEnvironment) -> None:
     """Main parametrized test function comparing descumm, Scumm6Legacy, and Scumm6New outputs."""
-    
+
     # 1. Find and extract the script bytecode
     script_info = find_script_by_name(case.script_name, test_environment.scripts)
     bytecode = test_environment.bsc6_data[script_info.start:script_info.end]
-    
+
     # 2. Execute all disassemblers
     descumm_output = run_descumm_on_bytecode(test_environment.descumm_path, bytecode)
     legacy_disasm_output = run_legacy_disassembler(bytecode, script_info.start)
     new_disasm_output = run_new_disassembler(bytecode, script_info.start)
-    
+
     # 3. Check branch information if expected branches are provided
     if case.expected_branches is not None:
         print(f"\n=== Branch Analysis for {case.script_name} ===")
-        
+
         # Test both Legacy and New architectures
         architectures = [
             ("Scumm6Legacy", Scumm6Legacy()),
             ("Scumm6New", Scumm6New())
         ]
-        
+
         for arch_name, arch in architectures:
             print(f"\n--- Testing {arch_name} ---")
-            
+
             # Collect actual branches using the generic helper function
             actual_branches = collect_branches_from_architecture(arch, bytecode, script_info.start)
-            
+
             print(f"Expected branches: {case.expected_branches}")
             print(f"Actual branches ({arch_name}): {actual_branches}")
-            
+
             # Verify branches match expected using the verification helper
             verify_branches_match_expected(actual_branches, case.expected_branches, case.script_name, arch_name)
-            
+
             print(f"✅ {arch_name} branch analysis passed")
-    
+
     # 4. Print outputs for visibility (useful for generating new test cases)
     print(f"\n=== {case.script_name} Comparison ===")
     print("DESCUMM OUTPUT:")
@@ -543,26 +543,26 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     print(legacy_disasm_output)
     print("\nNEW DISASM OUTPUT:")
     print(new_disasm_output)
-    
+
     # 5. Optional assertions based on what's provided
     if case.expected_descumm_output is not None:
         expected_descumm = dedent(case.expected_descumm_output).strip()
         assert descumm_output.strip() == expected_descumm, \
             f"descumm output for '{case.script_name}' does not match expected.\n" \
             f"Expected:\n{expected_descumm}\n\nActual:\n{descumm_output.strip()}"
-    
+
     if case.expected_legacy_disasm_output is not None:
         expected_legacy_disasm = dedent(case.expected_legacy_disasm_output).strip()
         assert legacy_disasm_output.strip() == expected_legacy_disasm, \
             f"Scumm6Legacy disassembler output for '{case.script_name}' does not match expected.\n" \
             f"Expected:\n{expected_legacy_disasm}\n\nActual:\n{legacy_disasm_output.strip()}"
-    
+
     if case.expected_new_disasm_output is not None:
         expected_new_disasm = dedent(case.expected_new_disasm_output).strip()
         assert new_disasm_output.strip() == expected_new_disasm, \
             f"Scumm6New disassembler output for '{case.script_name}' does not match expected.\n" \
             f"Expected:\n{expected_new_disasm}\n\nActual:\n{new_disasm_output.strip()}"
-    
+
     # 6. Always verify that outputs were generated
     assert len(descumm_output.strip()) > 0, f"descumm produced no output for '{case.script_name}'"
     assert len(legacy_disasm_output.strip()) > 0, f"Scumm6Legacy produced no output for '{case.script_name}'"
@@ -580,7 +580,7 @@ def test_descumm_comparison() -> None:
         case = script_test_cases[0]
         print(f"\nRunning legacy compatibility test for {case.test_id}")
         print("Note: Use 'pytest test_descumm_comparison.py::test_script_comparison' for the new framework")
-        
+
         # Just verify the framework components work
         try:
             descumm_path = build_descumm()
@@ -597,27 +597,27 @@ def test_specific_instruction_differences() -> None:
     """Test specific instruction type differences - legacy function for compatibility."""
     print("\n=== SPECIFIC INSTRUCTION COMPARISON (Legacy) ===")
     print("Note: This is a legacy test function. The new framework focuses on full script comparison.")
-    
+
     # Simple validation that the architectures can be instantiated
     try:
         legacy_arch = Scumm6Legacy()
         new_arch = Scumm6New()
         print("✅ Both architectures instantiated successfully")
-        
+
         # Test a simple instruction
         view = MockScumm6BinaryView()
         bytecode = bytes([0x03, 0x00, 0x40])  # push_word_var(var_0)
         view.write_memory(0x1000, bytecode)
         LastBV.set(view)
-        
+
         legacy_result = legacy_arch.get_instruction_text(bytecode, 0x1000)
         new_result = new_arch.get_instruction_text(bytecode, 0x1000)
-        
+
         if legacy_result and new_result:
             print("✅ Both architectures can disassemble instructions")
         else:
             print("⚠️  One or both architectures failed to disassemble")
-            
+
     except Exception as e:
         print(f"❌ Architecture test failed: {e}")
         raise
@@ -625,64 +625,57 @@ def test_specific_instruction_differences() -> None:
 
 def test_room11_enter_branch_info(test_environment: ComparisonTestEnvironment) -> None:
     """Test that room11_enter script branch instructions have correct InstructionInfo."""
-    
+
     # Find and extract the room11_enter script bytecode
     script_info = find_script_by_name("room11_enter", test_environment.scripts)
     bytecode = test_environment.bsc6_data[script_info.start:script_info.end]
-    
+
     # Create architecture instance
     arch = Scumm6New()
     view = MockScumm6BinaryView()
     view.write_memory(script_info.start, bytecode)
     LastBV.set(view)
-    
+
     # Test the branch instruction at offset 0x05
     # The instruction is: 5D 12 00 (unless goto +18)
     offset = 0x05
     addr = script_info.start + offset
     data = bytecode[offset:]
-    
+
     # Get instruction info
     info = arch.get_instruction_info(data, addr)
-    
+
     # Verify the instruction is recognized as a branch
     assert info is not None, "InstructionInfo should not be None for branch instruction"
     assert info.length == 3, f"Branch instruction length should be 3, got {info.length}"
-    
+
     # The branch at 0x05 is an "unless goto +18" instruction
     # - Instruction address: script_info.start + 0x05
     # - Instruction length: 3
     # - Jump offset: +18 (0x12)
     # - True branch (when condition is true, jump taken): addr + 3 + 18
     # - False branch (when condition is false, fall through): addr + 3
-    
+
     expected_true_branch = addr + 3 + 18  # Jump to addr + 3 + 18
     expected_false_branch = addr + 3       # Continue to next instruction
+
+    # Check branch count (only TrueBranch, FalseBranch is implicit)
+    assert len(info.branches) == 1, f"Expected 1 branch, got {len(info.branches)}"
+
+    # Get the single branch
+    branch = info.branches[0]
+
+    # Verify branch target and type
+    assert branch.target == expected_true_branch, f"Expected true branch {expected_true_branch:04X}, got {branch.target:04X}"
     
-    # Check branch count
-    assert len(info.branches) == 2, f"Expected 2 branches, got {len(info.branches)}"
-    
-    # Sort branches by target for consistent testing
-    branches = sorted(info.branches, key=lambda b: b.target)
-    
-    # Verify branch targets
-    branch_targets = [b.target for b in branches]
-    assert expected_false_branch in branch_targets, f"Expected false branch {expected_false_branch:04X} not found in {[f'{t:04X}' for t in branch_targets]}"
-    assert expected_true_branch in branch_targets, f"Expected true branch {expected_true_branch:04X} not found in {[f'{t:04X}' for t in branch_targets]}"
-    
-    # Find the specific branches
-    false_branch = next(b for b in branches if b.target == expected_false_branch)
-    true_branch = next(b for b in branches if b.target == expected_true_branch)
-    
-    # Verify branch types (the conditional branch should have both true and false paths)
+    # Verify branch type (should be TrueBranch only)
     from binaryninja.enums import BranchType
-    assert false_branch.type == BranchType.FalseBranch, f"Expected FalseBranch type, got {false_branch.type}"
-    assert true_branch.type == BranchType.TrueBranch, f"Expected TrueBranch type, got {true_branch.type}"
-    
+    assert branch.type == BranchType.TrueBranch, f"Expected TrueBranch type, got {branch.type}"
+
     print("\n✅ room11_enter branch info test passed")
     print(f"   Branch at 0x{offset:04X}: unless goto +18")
-    print(f"   - False branch: 0x{expected_false_branch:04X}")
-    print(f"   - True branch: 0x{expected_true_branch:04X}")
+    print(f"   - True branch: 0x{expected_true_branch:04X} (jump taken)")
+    print(f"   - False branch: 0x{expected_false_branch:04X} (implicit fall-through)")
 
 
 if __name__ == "__main__":

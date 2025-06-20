@@ -228,11 +228,17 @@ class Scumm6(Architecture):
                 op = dis.op
                 body = getattr(op, "body", None)
                 if body and getattr(body, "jump_offset", None) is not None:
-                    info.add_branch(
-                        BranchType.TrueBranch,
-                        addr + info.length + body.jump_offset,
-                    )
-                    info.add_branch(BranchType.FalseBranch, addr + info.length)
+                    # Calculate target address
+                    target_addr = addr + info.length + body.jump_offset
+
+                    # Check if this is a conditional or unconditional jump
+                    if dis.id in ['iff', 'if_not', 'if_class_of_is']:
+                        # Conditional jump - only add TrueBranch (when jump is taken)
+                        # FalseBranch (fall-through) is implicit for CFG analysis
+                        info.add_branch(BranchType.TrueBranch, target_addr)
+                    else:
+                        # Unconditional jump - add only one branch
+                        info.add_branch(BranchType.UnconditionalBranch, target_addr)
                 dis = dis._replace(analysis_info=info)
             except Exception:
                 pass
@@ -317,9 +323,9 @@ class Scumm6(Architecture):
 
                     # Check if this is a conditional or unconditional jump
                     if dis.id in ['iff', 'if_not', 'if_class_of_is']:
-                        # Conditional jump - add both branches
+                        # Conditional jump - only add TrueBranch (when jump is taken)
+                        # FalseBranch (fall-through) is implicit for CFG analysis
                         result.add_branch(BranchType.TrueBranch, target_addr)
-                        result.add_branch(BranchType.FalseBranch, addr + result.length)
                     else:
                         # Unconditional jump - add only one branch
                         result.add_branch(BranchType.UnconditionalBranch, target_addr)
