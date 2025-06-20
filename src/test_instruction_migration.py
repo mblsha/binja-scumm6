@@ -513,6 +513,30 @@ def test_llil_consistency(case: InstructionTestCase) -> None:
     old_il = get_old_llil(case)
     new_il = get_new_llil(case)
     
+    # Special handling for newly implemented array operations
+    # These were previously UNIMPL but now have proper intrinsic implementations
+    newly_implemented_ops = [
+        "byte_array_inc_0x52", "word_array_inc_0x53", 
+        "byte_array_dec_0x5a", "word_array_dec_0x5b"
+    ]
+    
+    if case.test_id in newly_implemented_ops:
+        # For newly implemented operations, verify the new implementation generates proper intrinsics
+        # while the old implementation was UNIMPL
+        assert len(old_il) >= 1, f"Expected at least one LLIL operation for {case.test_id}"
+        assert len(new_il) >= 1, f"Expected at least one LLIL operation for {case.test_id}"
+        
+        # Old implementation should have UNIMPL operations
+        old_has_unimpl = any(hasattr(op, 'op') and op.op == 'UNIMPL' for op in old_il)
+        assert old_has_unimpl, f"Expected old implementation to have UNIMPL for {case.test_id}"
+        
+        # New implementation should have intrinsic operations
+        new_has_intrinsic = any(hasattr(op, 'op') and op.op == 'INTRINSIC' for op in new_il)
+        assert new_has_intrinsic, f"Expected new implementation to have INTRINSIC for {case.test_id}"
+        
+        # This is expected behavior - we've implemented previously unimplemented functionality
+        return
+    
     # For control flow instructions, use semantic comparison instead of object equality
     if any(cf_name in case.test_id for cf_name in ["iff", "if_not", "jump"]):
         assert len(old_il) == len(new_il), f"LLIL count mismatch for {case.test_id}"
