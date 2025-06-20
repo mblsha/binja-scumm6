@@ -154,17 +154,18 @@ def _apply_loop_detection(instruction: Instruction, addr: int) -> Instruction:
     if isinstance(instruction, SmartConditionalJump):
         # Create enhanced version with loop detection
         if instruction.__class__.__name__ == "SmartIfNot":
-            loop_instruction = SmartLoopIfNot(instruction.op_details, instruction._length)
+            if_not_loop = SmartLoopIfNot(instruction.op_details, instruction._length)
+            # Copy fusion state
+            if_not_loop.fused_operands = instruction.fused_operands.copy()
+            # Attempt loop detection
+            if if_not_loop.detect_and_fuse_loop(addr):
+                return if_not_loop
         elif instruction.__class__.__name__ == "SmartIff":
-            loop_instruction = SmartLoopIff(instruction.op_details, instruction._length)
-        else:
-            return instruction  # Not a recognized conditional jump type
-        
-        # Copy fusion state
-        loop_instruction.fused_operands = instruction.fused_operands.copy()
-        
-        # Attempt loop detection
-        if loop_instruction.detect_and_fuse_loop(addr):
-            return loop_instruction
+            iff_loop = SmartLoopIff(instruction.op_details, instruction._length)
+            # Copy fusion state
+            iff_loop.fused_operands = instruction.fused_operands.copy()
+            # Attempt loop detection
+            if iff_loop.detect_and_fuse_loop(addr):
+                return iff_loop
     
     return instruction

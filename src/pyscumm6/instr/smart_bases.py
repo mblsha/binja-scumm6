@@ -1,6 +1,6 @@
 """Smart base classes for generated instruction types."""
 
-from typing import List, Optional, Any, NamedTuple
+from typing import List, Optional, Any, NamedTuple, cast
 from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName
@@ -548,7 +548,7 @@ class SmartConditionalJump(ControlFlowOp):
         
         # Check if this is a simple push (for simple truthiness test)
         elif condition_instr.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']:
-            tokens: List[Token] = []
+            tokens = []
             if self._is_if_not:
                 tokens.append(TText("!"))
             tokens.extend(self._render_operand(condition_instr))
@@ -639,7 +639,7 @@ class SmartConditionalJump(ControlFlowOp):
                     condition = il.compare_not_equal(4, condition, il.const(4, 0))
                 
                 # Generate conditional jump
-                true_label = il.get_label_for_address(Architecture['SCUMM6'], target_addr)
+                true_label = il.get_label_for_address(il.source_function.arch, target_addr)
                 false_label = LowLevelILLabel()
                 
                 il.append(il.if_expr(condition, true_label, false_label))
@@ -673,7 +673,7 @@ class SmartConditionalJump(ControlFlowOp):
         else:
             condition = il.compare_not_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0))
         
-        true_label = il.get_label_for_address(Architecture['SCUMM6'], target_addr)
+        true_label = il.get_label_for_address(il.source_function.arch, target_addr)
         false_label = LowLevelILLabel()
         
         il.append(il.if_expr(condition, true_label, false_label))
@@ -1218,12 +1218,12 @@ class SmartLoopDetector:
         # Check if left operand is a variable push
         if left_operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             if hasattr(left_operand.op_details.body, 'data'):
-                return left_operand.op_details.body.data
+                return cast(int, left_operand.op_details.body.data)
         
         # Check if right operand is a variable push (reversed order case)
         elif right_operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             if hasattr(right_operand.op_details.body, 'data'):
-                return right_operand.op_details.body.data
+                return cast(int, right_operand.op_details.body.data)
                 
         return None
 

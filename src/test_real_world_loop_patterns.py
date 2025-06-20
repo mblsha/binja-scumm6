@@ -6,6 +6,7 @@ os.environ["FORCE_BINJA_MOCK"] = "1"
 from binja_helpers import binja_api  # noqa: F401
 
 from src.pyscumm6.disasm import decode, decode_with_fusion
+from src.pyscumm6.instr.smart_bases import SmartLoopConditionalJump
 
 
 def test_room8_scrp18_loop_pattern() -> None:
@@ -19,11 +20,13 @@ def test_room8_scrp18_loop_pattern() -> None:
     
     # Test that normal decode just gets the first instruction
     normal = decode(bytecode, 0x2130)  # Simulating the real address
+    assert normal is not None
     assert normal.__class__.__name__ == "PushWordVar"
     
     # Test that fusion with loop detection works
     fused = decode_with_fusion(bytecode, 0x2130)
     assert fused is not None
+    assert isinstance(fused, SmartLoopConditionalJump)
     assert fused.__class__.__name__ == "SmartLoopIfNot"
     
     # Verify loop detection
@@ -54,6 +57,7 @@ def test_room8_local200_scaling_loop() -> None:
     
     fused = decode_with_fusion(bytecode, 0x20A9)  # Simulating real address
     assert fused is not None
+    assert isinstance(fused, SmartLoopConditionalJump)
     assert fused.__class__.__name__ == "SmartLoopIfNot"
     
     # Should detect as while-loop since eq comparison is wait-until pattern, not counter
@@ -79,6 +83,7 @@ def test_multiple_backward_jumps_pattern() -> None:
     
     fused = decode_with_fusion(bytecode, 0x1026)
     assert fused is not None
+    assert isinstance(fused, SmartLoopConditionalJump)
     assert fused.__class__.__name__ == "SmartLoopIfNot"
     
     # Should detect loop
@@ -107,6 +112,7 @@ def test_complex_loop_with_nested_jumps() -> None:
     
     fused = decode_with_fusion(bytecode, 0x234A)
     assert fused is not None
+    assert isinstance(fused, SmartLoopConditionalJump)
     assert fused.__class__.__name__ == "SmartLoopIfNot"
     
     # Should detect as for-loop
@@ -137,6 +143,7 @@ def test_iff_loop_pattern() -> None:
     
     fused = decode_with_fusion(bytecode, 0x1000)
     assert fused is not None
+    assert isinstance(fused, SmartLoopConditionalJump)
     assert fused.__class__.__name__ == "SmartLoopIff"
     
     # Should detect loop
@@ -183,6 +190,7 @@ def test_descumm_style_output_comparison() -> None:
     
     # Our output
     fused = decode_with_fusion(bytecode, 0x1000)
+    assert fused is not None
     tokens = fused.render()
     our_output = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     
@@ -192,6 +200,7 @@ def test_descumm_style_output_comparison() -> None:
     
     # Compared to what raw disassembly would show:
     normal = decode(bytecode, 0x1000)
+    assert normal is not None
     normal_tokens = normal.render()
     raw_output = ''.join(str(t.text if hasattr(t, 'text') else t) for t in normal_tokens)
     

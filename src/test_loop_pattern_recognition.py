@@ -6,6 +6,7 @@ os.environ["FORCE_BINJA_MOCK"] = "1"
 from binja_helpers import binja_api  # noqa: F401
 
 from src.pyscumm6.disasm import decode, decode_with_fusion
+from src.pyscumm6.instr.smart_bases import SmartLoopConditionalJump
 
 
 def test_simple_backward_jump_detection() -> None:
@@ -22,10 +23,10 @@ def test_simple_backward_jump_detection() -> None:
     # Test fusion with loop detection
     fused = decode_with_fusion(bytecode, 0x1000)
     assert fused is not None
+    assert isinstance(fused, SmartLoopConditionalJump)
     assert fused.__class__.__name__ == "SmartLoopIfNot"
     
     # Verify loop detection worked
-    assert hasattr(fused, 'detected_loop')
     assert fused.detected_loop is not None
     assert fused.detected_loop.loop_type == "while"
     
@@ -47,6 +48,7 @@ def test_for_loop_pattern_detection() -> None:
     
     fused = decode_with_fusion(bytecode, 0x1000)
     assert fused is not None
+    assert isinstance(fused, SmartLoopConditionalJump)
     assert fused.__class__.__name__ == "SmartLoopIfNot"
     
     # Should detect as for-loop due to variable < constant pattern
@@ -72,6 +74,7 @@ def test_while_loop_pattern_detection() -> None:
     
     fused = decode_with_fusion(bytecode, 0x1000)
     assert fused is not None
+    assert isinstance(fused, SmartLoopConditionalJump)
     assert fused.__class__.__name__ == "SmartLoopIfNot"
     
     # Should detect as while-loop due to variable == variable pattern
@@ -114,6 +117,7 @@ def test_iff_loop_detection() -> None:
     
     fused = decode_with_fusion(bytecode, 0x1000)
     assert fused is not None
+    assert isinstance(fused, SmartLoopConditionalJump)
     assert fused.__class__.__name__ == "SmartLoopIff"
     
     # Should detect loop
@@ -134,6 +138,7 @@ def test_loop_body_size_calculation() -> None:
     
     fused = decode_with_fusion(bytecode, 0x1005)  # Address 0x1005
     assert fused is not None
+    assert isinstance(fused, SmartLoopConditionalJump)
     assert fused.detected_loop is not None
     
     # Body size should be 97 bytes (jump offset is -102, but instruction is 5 bytes)
@@ -154,6 +159,7 @@ def test_partial_fusion_with_loop() -> None:
     
     fused = decode_with_fusion(bytecode, 0x1000)
     assert fused is not None
+    assert isinstance(fused, SmartLoopConditionalJump)
     assert fused.__class__.__name__ == "SmartLoopIfNot"
     
     # Should still detect as loop even without fused condition
@@ -178,6 +184,7 @@ def test_complex_comparison_loop() -> None:
     
     fused = decode_with_fusion(bytecode, 0x1000)
     assert fused is not None
+    assert isinstance(fused, SmartLoopConditionalJump)
     assert fused.__class__.__name__ == "SmartLoopIfNot"
     
     # Should detect as for-loop (constant >= variable pattern)
