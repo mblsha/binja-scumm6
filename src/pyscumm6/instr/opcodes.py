@@ -21,6 +21,10 @@ class Instruction(ABC):
         self.op_details = kaitai_op
         self._length = length
         self.fused_operands: List['Instruction'] = []
+    
+    def produces_result(self) -> bool:
+        """Returns True if this instruction produces a result that can be consumed by other instructions."""
+        return False  # Default: most instructions don't produce consumable results
 
     @property
     def stack_pop_count(self) -> int:

@@ -282,6 +282,10 @@ class SmartBinaryOp(Instruction):
         """Number of values this instruction pops from the stack."""
         # If we have fused operands, we need fewer stack pops
         return max(0, 2 - len(self.fused_operands))
+    
+    def produces_result(self) -> bool:
+        """Binary operations produce results that can be consumed by other instructions."""
+        return True
 
     def fuse(self, previous: Instruction) -> Optional['SmartBinaryOp']:
         """
@@ -314,7 +318,7 @@ class SmartBinaryOp(Instruction):
         return fused
     
     def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if an instruction is a fusible push operation."""
+        """Check if an instruction is a fusible push operation or produces a consumable result."""
         # Check for factory-generated push constants (they have specific class names)
         class_name = instr.__class__.__name__
         if class_name in ('PushByte', 'PushWord'):
@@ -323,8 +327,45 @@ class SmartBinaryOp(Instruction):
         # Check for manual push variable instructions
         if class_name in ('PushByteVar', 'PushWordVar'):
             return True
+        
+        # Check if instruction produces a result that can be consumed
+        # This enables multi-level expression building
+        if instr.produces_result():
+            return True
             
         return False
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(f"var_{operand.op_details.body.data}")]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return [TInt(str(operand.op_details.body.data))]
+        elif operand.produces_result():
+            # This is a result-producing instruction (like a fused expression)
+            # Render it as a nested expression
+            tokens = []
+            tokens.append(TText("("))
+            tokens.extend(operand.render())
+            tokens.append(TText(")"))
+            return tokens
+        else:
+            return [TText("operand")]
+
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return il.reg(4, f"var_{operand.op_details.body.data}")
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return il.const(4, operand.op_details.body.data)
+        elif operand.produces_result():
+            # This is a result-producing instruction - we need to generate its IL
+            # For now, use a placeholder. In a real implementation, we would
+            # need to execute the instruction's lift method and capture its result
+            # This is complex and might require significant architectural changes
+            return il.const(4, 0)  # Placeholder
+        else:
+            return il.const(4, 0)  # Fallback
 
     def render(self) -> List[Token]:
         display_name = self._config.display_name or self._name
@@ -337,20 +378,8 @@ class SmartBinaryOp(Instruction):
                 if i > 0:
                     tokens.extend([TSep(","), TSep(" ")])
                 
-                # Extract the value/name from the operand
-                if hasattr(operand, 'op_details') and hasattr(operand.op_details, 'body'):
-                    if operand.__class__.__name__ in ('PushByteVar', 'PushWordVar'):
-                        # Variable (push_byte_var, push_word_var) 
-                        var_id = operand.op_details.body.data
-                        tokens.append(TInstr(f"var_{var_id}"))
-                    elif hasattr(operand.op_details.body, 'data'):
-                        # Constant value (push_byte, push_word)
-                        tokens.append(TInt(str(operand.op_details.body.data)))
-                    else:
-                        # Fallback
-                        tokens.append(TInstr("?"))
-                else:
-                    tokens.append(TInstr("?"))
+                # Use the helper method to render the operand
+                tokens.extend(self._render_operand(operand))
             
             # If we still need stack operands, indicate with ellipsis
             remaining_ops = 2 - len(self.fused_operands)
@@ -650,6 +679,10 @@ class SmartComparisonOp(Instruction):
             return 0  # Fused instructions handle their own operands
         else:
             return 2  # Normal comparison pops two values
+    
+    def produces_result(self) -> bool:
+        """Comparison operations produce results that can be consumed by other instructions."""
+        return True
 
     def fuse(self, previous: Instruction) -> Optional['SmartComparisonOp']:
         """Attempt to fuse with a push instruction."""
@@ -668,10 +701,17 @@ class SmartComparisonOp(Instruction):
         return fused
 
     def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if instruction is a push that can be fused."""
-        return instr.__class__.__name__ in [
-            'PushByte', 'PushWord', 'PushByteVar', 'PushWordVar'
-        ]
+        """Check if instruction is a push that can be fused or produces a consumable result."""
+        # Check for basic push instructions
+        if instr.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']:
+            return True
+        
+        # Check if instruction produces a result that can be consumed
+        # This enables multi-level expression building
+        if instr.produces_result():
+            return True
+            
+        return False
 
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
@@ -679,6 +719,14 @@ class SmartComparisonOp(Instruction):
             return [TInt(f"var_{operand.op_details.body.data}")]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
+        elif operand.produces_result():
+            # This is a result-producing instruction (like a fused expression)
+            # Render it as a nested expression
+            tokens = []
+            tokens.append(TText("("))
+            tokens.extend(operand.render())
+            tokens.append(TText(")"))
+            return tokens
         else:
             return [TText("operand")]
 
@@ -688,6 +736,10 @@ class SmartComparisonOp(Instruction):
             return il.reg(4, f"var_{operand.op_details.body.data}")
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return il.const(4, operand.op_details.body.data)
+        elif operand.produces_result():
+            # This is a result-producing instruction - placeholder for now
+            # Proper implementation would require significant architectural changes
+            return il.const(4, 0)  # Placeholder
         else:
             return il.const(4, 0)  # Fallback
 
