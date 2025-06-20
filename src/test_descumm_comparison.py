@@ -256,6 +256,28 @@ script_test_cases = [
             [01CE] stop_object_code2
         """).strip()
     ),
+    ScriptComparisonTestCase(
+        test_id="room11_enter_initialization",
+        script_name="room11_enter",
+        expected_descumm_output=dedent("""
+            ERROR: No items on stack to pop!
+            [0000] (5D) if (!**** INVALID DATA ****) {
+            [0004] (5F)   startScriptQuick(93,[1])
+            [000E] (9C)   roomOps.setScreen(0,200)
+            [0016] (**) }
+            [0016] (65) stopObjectCodeA()
+            END
+        """).strip(),
+        expected_new_disasm_output=dedent("""
+            [0000] push_word(137)
+            [0003] is_script_running
+            [0004] nott
+            [0005] unless goto +18
+            [0008] push_word(93)
+            [000B] push_word(1)
+            [000E] push_word(1)
+        """).strip()
+    ),
     # Add more test cases here as needed
 ]
 

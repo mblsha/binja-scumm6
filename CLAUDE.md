@@ -333,8 +333,14 @@ script_test_cases.append(
 
 All comparison tests use real SCUMM6 bytecode from **Day of the Tentacle Demo**:
 - **Container**: `DOTTDEMO.bsc6` (parsed with Kaitai Struct)
-- **Test Script**: `room8_scrp18` (463 bytes, ellipse collision detection algorithm)
-- **Address**: `0x8D79D` in the original container file
+- **Test Scripts**: Multiple real game scripts including:
+  - `room8_scrp18` (463 bytes, ellipse collision detection algorithm)
+  - `room11_enter` (27 bytes, room initialization script)
 - **Scripts Available**: 66 total scripts from rooms 1-12 plus global scripts
+
+### Current Test Cases
+
+1. **`room8_scrp18_collision_detection`**: Complex collision detection with mathematical operations, conditionals, and error handling
+2. **`room11_enter_initialization`**: Simple room entry script demonstrating script management and screen setup
 
 This real-world data ensures the comparison tests reflect actual game engine semantics rather than synthetic test cases.
