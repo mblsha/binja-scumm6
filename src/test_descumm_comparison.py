@@ -425,6 +425,77 @@ def format_output_as_text(tokens: List[Any]) -> str:
     return ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
 
 
+def collect_branches_from_architecture(arch: Any, bytecode: bytes, start_addr: int) -> List[Tuple[int, Tuple[BranchType, int]]]:
+    """
+    Generic function to collect branch information from any SCUMM6 architecture.
+    
+    Args:
+        arch: The architecture instance (Scumm6Legacy or Scumm6New)
+        bytecode: The bytecode to analyze
+        start_addr: The starting address of the bytecode
+        
+    Returns:
+        List of (relative_offset, (branch_type, target_address)) tuples
+    """
+    view = MockScumm6BinaryView()
+    view.write_memory(start_addr, bytecode)
+    LastBV.set(view)
+    
+    branches = []
+    offset = 0
+    while offset < len(bytecode):
+        addr = start_addr + offset
+        remaining_data = bytecode[offset:]
+        
+        info = arch.get_instruction_info(remaining_data, addr)
+        if info is None:
+            break
+            
+        # Check for branches at this offset
+        instruction_branches = []
+        if hasattr(info, 'branches') and info.branches:
+            instruction_branches = [(b.type, b.target) for b in info.branches]
+        elif hasattr(info, 'mybranches') and info.mybranches:
+            instruction_branches = info.mybranches
+            
+        for branch_type, target in instruction_branches:
+            branches.append((offset, (branch_type, target)))
+        
+        offset += info.length
+    
+    return branches
+
+
+def verify_branches_match_expected(actual_branches: List[Tuple[int, Tuple[BranchType, int]]], 
+                                   expected_branches: List[Tuple[int, Tuple[BranchType, int]]], 
+                                   script_name: str, arch_name: str) -> None:
+    """
+    Verify that actual branches match expected branches.
+    
+    Args:
+        actual_branches: List of actual branches found
+        expected_branches: List of expected branches  
+        script_name: Name of the script being tested
+        arch_name: Name of the architecture being tested
+    """
+    assert len(actual_branches) == len(expected_branches), \
+        f"Branch count mismatch for '{script_name}' in {arch_name}: expected {len(expected_branches)}, got {len(actual_branches)}"
+    
+    for expected_rel_addr, (expected_type, expected_target) in expected_branches:
+        found = False
+        for actual_rel_addr, (actual_type, actual_target) in actual_branches:
+            if (expected_rel_addr == actual_rel_addr and 
+                expected_type == actual_type and 
+                expected_target == actual_target):
+                found = True
+                break
+        
+        assert found, \
+            f"Expected branch not found for '{script_name}' in {arch_name}: " \
+            f"offset {expected_rel_addr}, type {expected_type}, target 0x{expected_target:X}\n" \
+            f"Actual branches: {actual_branches}"
+
+
 @pytest.mark.parametrize("case", script_test_cases, ids=lambda c: c.test_id)
 def test_script_comparison(case: ScriptComparisonTestCase, test_environment: ComparisonTestEnvironment) -> None:
     """Main parametrized test function comparing descumm, Scumm6Legacy, and Scumm6New outputs."""
@@ -441,54 +512,26 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     # 3. Check branch information if expected branches are provided
     if case.expected_branches is not None:
         print(f"\n=== Branch Analysis for {case.script_name} ===")
-        arch = Scumm6New()
-        view = MockScumm6BinaryView()
-        view.write_memory(script_info.start, bytecode)
-        LastBV.set(view)
         
-        # Collect actual branches from InstructionInfo
-        actual_branches = []
-        offset = 0
-        while offset < len(bytecode):
-            addr = script_info.start + offset
-            remaining_data = bytecode[offset:]
+        # Test both Legacy and New architectures
+        architectures = [
+            ("Scumm6Legacy", Scumm6Legacy()),
+            ("Scumm6New", Scumm6New())
+        ]
+        
+        for arch_name, arch in architectures:
+            print(f"\n--- Testing {arch_name} ---")
             
-            info = arch.get_instruction_info(remaining_data, addr)
-            if info is None:
-                break
-                
-            # Check for branches at this offset
-            branches = []
-            if hasattr(info, 'branches') and info.branches:
-                branches = [(b.type, b.target) for b in info.branches]
-            elif hasattr(info, 'mybranches') and info.mybranches:
-                branches = info.mybranches
-                
-            for branch_type, target in branches:
-                actual_branches.append((offset, (branch_type, target)))
+            # Collect actual branches using the generic helper function
+            actual_branches = collect_branches_from_architecture(arch, bytecode, script_info.start)
             
-            offset += info.length
-        
-        print(f"Expected branches: {case.expected_branches}")
-        print(f"Actual branches: {actual_branches}")
-        
-        # Verify expected branches match actual branches
-        assert len(actual_branches) == len(case.expected_branches), \
-            f"Branch count mismatch for '{case.script_name}': expected {len(case.expected_branches)}, got {len(actual_branches)}"
-        
-        for expected_rel_addr, (expected_type, expected_target) in case.expected_branches:
-            found = False
-            for actual_rel_addr, (actual_type, actual_target) in actual_branches:
-                if (expected_rel_addr == actual_rel_addr and 
-                    expected_type == actual_type and 
-                    expected_target == actual_target):
-                    found = True
-                    break
+            print(f"Expected branches: {case.expected_branches}")
+            print(f"Actual branches ({arch_name}): {actual_branches}")
             
-            assert found, \
-                f"Expected branch not found for '{case.script_name}': " \
-                f"offset {expected_rel_addr}, type {expected_type}, target 0x{expected_target:X}\n" \
-                f"Actual branches: {actual_branches}"
+            # Verify branches match expected using the verification helper
+            verify_branches_match_expected(actual_branches, case.expected_branches, case.script_name, arch_name)
+            
+            print(f"✅ {arch_name} branch analysis passed")
     
     # 4. Print outputs for visibility (useful for generating new test cases)
     print(f"\n=== {case.script_name} Comparison ===")
