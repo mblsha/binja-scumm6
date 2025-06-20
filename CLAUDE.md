@@ -373,3 +373,215 @@ All comparison tests use real SCUMM6 bytecode from **Day of the Tentacle Demo**:
 3. **`room2_enter_output_verification`**: Output verification only (no content assertions)
 
 This real-world data ensures the comparison tests reflect actual game engine semantics rather than synthetic test cases.
+
+## Instruction Fusion System
+
+The plugin implements a sophisticated instruction fusion system that combines stack-based operations into higher-level semantic expressions. This improves readability and enables better decompilation.
+
+### Overview
+
+Instruction fusion transforms sequences like:
+```
+push_byte(10)
+push_byte(5)
+add
+```
+Into semantic expressions like:
+```
+add(10, 5)
+```
+
+### Architecture
+
+#### Key Components
+
+1. **Base Infrastructure**: All instructions have a `fused_operands: List['Instruction'] = []` field
+2. **Fusion Method**: Consumer instructions implement `fuse(self, previous: Instruction) -> Optional['Instruction']`
+3. **Decoder Functions**:
+   - `decode()` - Normal instruction decoding (no fusion)
+   - `decode_with_fusion()` - Applies fusion for LLIL generation
+
+#### How Fusion Works
+
+The fusion system uses a **look-behind** approach:
+1. Consumer instructions (like `add`, `sub`, `write_var`) check the previous instruction
+2. If it's a fusible push operation, they create a fused version
+3. The decoder handles iterative fusion for multi-operand cases
+
+Example fusion sequence:
+```python
+# Input bytecode
+[push_byte(10), push_byte(5), add]
+
+# Fusion process
+1. push_byte(10) → decoded normally
+2. push_byte(5) → decoded normally  
+3. add → fuses with push_byte(5) → add(..., 5)
+4. add(..., 5) → fuses with push_byte(10) → add(10, 5)
+
+# Result
+add(10, 5) with stack_pop_count=0
+```
+
+### Implementing Fusion for New Instructions
+
+#### Step 1: Identify Fusible Instructions
+
+Consumer instructions that pop values from stack are candidates:
+- Variable writes: `write_byte_var`, `write_word_var`
+- Array operations: `byte_array_write`, `word_array_write`
+- Function calls: `draw_object`, `start_script`, `walk_actor_to`
+- Control flow: `if_not`, `iff` (can fuse with comparisons)
+
+#### Step 2: Implement the fuse() Method
+
+```python
+class WriteByteVar(SmartWriteVar):
+    def fuse(self, previous: Instruction) -> Optional['WriteByteVar']:
+        # Only fuse if we need an operand
+        if len(self.fused_operands) >= 1:
+            return None
+            
+        # Check if previous is a fusible push
+        if not self._is_fusible_push(previous):
+            return None
+            
+        # Create fused instruction
+        fused = copy.deepcopy(self)
+        fused.fused_operands.append(previous)
+        fused._length = self._length + previous.length()
+        return fused
+```
+
+#### Step 3: Update render() Method
+
+```python
+def render(self) -> List[Token]:
+    if self.fused_operands:
+        # Show as assignment: var_10 = 5
+        tokens = []
+        tokens.append(Token(TokenType.VariableNameToken, f"var_{self.var_num}"))
+        tokens.append(Token(TokenType.OperatorToken, " = "))
+        tokens.extend(self._render_operand(self.fused_operands[0]))
+        return tokens
+    else:
+        # Normal stack-based rendering
+        return super().render()
+```
+
+#### Step 4: Update lift() Method  
+
+```python
+def lift(self, il: LowLevelILFunction, addr: int) -> None:
+    if self.fused_operands:
+        # Direct assignment without stack pop
+        value_expr = self._lift_operand(il, self.fused_operands[0])
+        il.append(il.set_reg(1, f"var_{self.var_num}", value_expr))
+    else:
+        # Normal stack-based lifting
+        super().lift(il, addr)
+```
+
+### Fusion Helpers
+
+The `SmartBinaryOp` base class provides useful fusion helpers:
+
+```python
+def _is_fusible_push(self, instr: Instruction) -> bool:
+    """Check if instruction is a push that can be fused."""
+    return instr.__class__.__name__ in [
+        'PushByte', 'PushWord', 'PushByteVar', 'PushWordVar'
+    ]
+
+def _render_operand(self, operand: Instruction) -> List[Token]:
+    """Render a fused operand appropriately."""
+    if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+        return [Token(TokenType.VariableNameToken, f"var_{operand.var_num}")]
+    else:
+        return [Token(TokenType.IntegerToken, str(operand.value), operand.value)]
+
+def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+    """Lift a fused operand to IL expression."""
+    if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+        return il.reg(1, f"var_{operand.var_num}")
+    else:
+        return il.const(1, operand.value)
+```
+
+### Testing Fusion
+
+Always write comprehensive tests for new fusion implementations:
+
+```python
+def test_write_var_fusion(self):
+    """Test fusion of push_byte + write_byte_var."""
+    bytecode = bytes([
+        0x00, 0x05,  # push_byte(5)
+        0x42, 0x0A   # write_byte_var(var_10)
+    ])
+    
+    instruction = decode_with_fusion(bytecode, 0x1000)
+    
+    # Should be write_var with fused operand
+    assert instruction.__class__.__name__ == "WriteByteVar"
+    assert len(instruction.fused_operands) == 1
+    assert instruction.stack_pop_count == 0
+    
+    # Should render as assignment
+    tokens = instruction.render()
+    text = ''.join(t.text for t in tokens)
+    assert text == "var_10 = 5"
+```
+
+### Advanced Fusion Patterns
+
+#### Multi-Level Fusion
+
+For complex expressions, allow fused instructions to participate in further fusion:
+
+```python
+# Goal: var_x = (a + b) * c
+push_var(a)
+push_var(b) 
+add         # → add(a, b)
+push_var(c)
+mul         # → mul(add(a, b), c)
+write_var(x) # → var_x = mul(add(a, b), c)
+```
+
+#### Control Flow Fusion
+
+Fuse comparisons with conditionals for readable control flow:
+
+```python
+# Current:
+push_var(x)
+push_byte(10)
+gt
+if_not  # → unless goto
+
+# With fusion:
+if_not(gt(var_x, 10))  # → if (var_x <= 10)
+```
+
+### Best Practices
+
+1. **Always preserve semantics**: Fusion should not change program behavior
+2. **Handle edge cases**: Partial fusion, invalid sequences, cross-block boundaries
+3. **Test thoroughly**: Each fusible instruction needs comprehensive test coverage
+4. **Document limitations**: Some patterns may not be fusible due to complexity
+5. **Consider performance**: Fusion adds overhead - use judiciously
+
+### Debugging Fusion Issues
+
+1. **Use decode() vs decode_with_fusion()**: Compare outputs to isolate fusion problems
+2. **Check operand order**: Stack semantics (LIFO) must be preserved
+3. **Verify lengths**: Fused instruction length = sum of component lengths
+4. **Test incrementally**: Start with simple cases, build up to complex patterns
+
+### Future Enhancements
+
+- **Expression tree building**: Full AST construction from bytecode
+- **Pattern matching**: Recognize common idioms (loops, switches)
+- **Semantic variable names**: Integration with symbol resolution
+- **Cross-block fusion**: Handle fusion across basic block boundaries safely
