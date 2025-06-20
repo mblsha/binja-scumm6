@@ -1,6 +1,6 @@
 """Smart factory functions for generating instruction classes."""
 
-from typing import Type, Dict, List
+from typing import Type, Dict, List, Union
 from binja_helpers.tokens import Token
 
 from .opcodes import Instruction
@@ -51,15 +51,18 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
     }
     
     # Choose base class based on whether instruction should support fusion
-    base_class = SmartFusibleIntrinsic if name in FUSIBLE_INSTRUCTIONS else SmartIntrinsicOp
+    if name in FUSIBLE_INSTRUCTIONS:
+        base_class: Type[Union[SmartFusibleIntrinsic, SmartIntrinsicOp]] = SmartFusibleIntrinsic
+    else:
+        base_class = SmartIntrinsicOp
     
-    class GeneratedIntrinsicOp(base_class):
+    class GeneratedIntrinsicOp(base_class):  # type: ignore[misc,valid-type]
         _name = name
         _config = config
         __doc__ = config.doc
         
         def render(self) -> List[Token]:
-            return super().render()
+            return super().render()  # type: ignore[no-any-return]
     
     GeneratedIntrinsicOp.__name__ = name.title().replace("_", "")
     GeneratedIntrinsicOp.__qualname__ = name.title().replace("_", "")

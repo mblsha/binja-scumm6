@@ -698,3 +698,209 @@ def _is_fusible_push(self, instr: Instruction) -> bool:
 3. **Cross-Reference Support**: Fused expressions improve Binary Ninja's analysis capabilities
 
 These lessons capture 3 weeks of intensive fusion implementation work and should prevent common mistakes in future development.
+
+## Multi-Level Expression Building
+
+The instruction fusion system has been extended to support complex expression trees through a **result-producing instruction protocol**. This enables fused instructions to participate in further fusion, creating nested expressions like `mul((add(var_5, var_7)), var_3)`.
+
+### Architecture for Expression Trees
+
+#### Result-Producing Protocol
+```python
+class Instruction:
+    def produces_result(self) -> bool:
+        """Returns True if this instruction produces a result that can be consumed by other instructions."""
+        return False  # Default: most instructions don't produce consumable results
+
+class SmartBinaryOp(Instruction):
+    def produces_result(self) -> bool:
+        """Binary operations produce results that can be consumed by other instructions."""
+        return True
+```
+
+#### Enhanced Fusibility Detection
+```python
+def _is_fusible_push(self, instr: Instruction) -> bool:
+    """Check if instruction is a push that can be fused or produces a consumable result."""
+    # Check for basic push instructions
+    if instr.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']:
+        return True
+    
+    # Check if instruction produces a result that can be consumed
+    # This enables multi-level expression building
+    if instr.produces_result():
+        return True
+        
+    return False
+```
+
+### Expression Tree Rendering Patterns
+
+#### Nested Expression Handling
+```python
+def _render_operand(self, operand: Instruction) -> List[Token]:
+    """Render a fused operand appropriately."""
+    if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+        return [TInt(f"var_{operand.op_details.body.data}")]
+    elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+        return [TInt(str(operand.op_details.body.data))]
+    elif operand.produces_result():
+        # This is a result-producing instruction (like a fused expression)
+        # Render it as a nested expression with parentheses
+        tokens = []
+        tokens.append(TText("("))
+        tokens.extend(operand.render())
+        tokens.append(TText(")"))
+        return tokens
+    else:
+        return [TText("operand")]
+```
+
+### Multi-Level Expression Examples
+
+#### Two-Level Expressions
+```python
+# Bytecode sequence:
+push_byte_var(var_5)    # 0x02, 0x05
+push_byte_var(var_7)    # 0x02, 0x07
+add                     # 0x14
+push_byte_var(var_3)    # 0x02, 0x03  
+mul                     # 0x16
+
+# Fusion result:
+mul((add(var_5, var_7)), var_3)
+```
+
+#### Three-Level Expressions
+```python
+# Bytecode sequence:
+push_byte(10)           # 0x00, 0x0A
+push_byte(5)            # 0x00, 0x05
+add                     # 0x14
+push_byte(3)            # 0x00, 0x03
+mul                     # 0x16
+push_byte(2)            # 0x00, 0x02
+sub                     # 0x15
+
+# Fusion result:
+sub((mul((add(10, 5)), 3)), 2)
+```
+
+### Implementation Best Practices
+
+#### 1. Mark Appropriate Instructions as Result Producers
+Only instructions that push values onto the stack should return `True` from `produces_result()`:
+- **Arithmetic operations**: add, sub, mul, div
+- **Comparison operations**: eq, neq, gt, lt, le, ge
+- **Logical operations**: land, lor, nott
+- **Function calls**: get_object_x, get_actor_x, etc.
+
+#### 2. Preserve Existing Fusion Capabilities
+Multi-level fusion should extend, not replace, existing push-based fusion:
+```python
+# This should still work (basic fusion)
+push_byte(10)
+push_byte(5)
+add
+
+# And this should now work (multi-level fusion)
+push_byte(1)
+push_byte(2)
+add
+push_byte(3)
+mul
+```
+
+#### 3. Handle Recursive Rendering Safely
+When rendering nested expressions, ensure proper parenthetical grouping:
+```python
+# Good: mul((add(a, b)), c)
+# Bad:  mul(add(a, b), c)  # Ambiguous precedence
+```
+
+#### 4. Testing Strategy for Expression Trees
+```python
+def test_multi_level_expression():
+    """Test complex multi-level expression building."""
+    bytecode = bytes([
+        0x02, 0x05,  # push_byte_var(var_5)
+        0x02, 0x07,  # push_byte_var(var_7)  
+        0x14,        # add
+        0x02, 0x03,  # push_byte_var(var_3)
+        0x16         # mul
+    ])
+    
+    fused = decode_with_fusion(bytecode, 0x1000)
+    assert fused.__class__.__name__ == "Mul"
+    assert len(fused.fused_operands) == 2
+    
+    # Verify nested structure
+    add_operand = fused.fused_operands[0]
+    assert add_operand.__class__.__name__ == "Add"
+    assert add_operand.produces_result() == True
+    
+    # Verify rendering
+    tokens = fused.render()
+    text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
+    assert "mul" in text and "add" in text and "var_5" in text
+```
+
+### Common Challenges and Solutions
+
+#### 1. IL Generation for Nested Expressions
+**Problem**: Complex operand lifting for nested expressions requires architectural changes.
+**Solution**: Use placeholder IL for now, plan future architectural improvements.
+
+```python
+def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+    """Lift a fused operand to IL expression."""
+    if operand.produces_result():
+        # Complex case: would need to execute operand's lift method
+        # For now, use placeholder - future enhancement needed
+        return il.const(4, 0)  # Placeholder
+```
+
+#### 2. Stack Semantics Preservation
+**Problem**: Multi-level fusion must preserve LIFO stack ordering.
+**Solution**: Maintain consistent operand ordering throughout fusion chain.
+
+#### 3. Token Text Extraction in Tests
+**Problem**: Different token types have different text access patterns.
+**Solution**: Use robust text extraction pattern:
+
+```python
+def safe_token_text(tokens):
+    return ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
+```
+
+### Performance Considerations
+
+#### 1. Deep Copy Overhead
+Multi-level fusion increases deep copy operations. Monitor performance with complex expressions.
+
+#### 2. Recursive Rendering
+Deeply nested expressions can impact rendering performance. Consider depth limits for pathological cases.
+
+#### 3. Memory Usage
+Expression trees consume more memory than flat instruction sequences. Profile memory usage with real game scripts.
+
+### Validation Against Descumm Output
+
+Multi-level expression building brings the plugin significantly closer to descumm-level semantic understanding:
+
+**Descumm Target:**
+```
+[0000] localvar5 = (getObjectX(localvar0) + 10)
+```
+
+**Plugin Progress:**
+```
+[0000] add((get_object_x(var_0)), 10)
+```
+
+**Remaining Gap:**
+- Variable assignment fusion (write operations)
+- Semantic function name resolution
+- Local variable naming conventions
+
+This implementation provides the foundation for achieving descumm-level decompilation quality through hierarchical expression trees rather than flat bytecode sequences.

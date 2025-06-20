@@ -248,19 +248,15 @@ class VariableWriteOp(Instruction):
                 # For write_byte_var which has a Kaitai mapping bug
                 # Extract the variable ID directly from the raw bytecode
                 var_id = self._extract_var_id_from_unknownop()
-                tokens = []
-                tokens.append(TInt(f"var_{var_id}"))
-                tokens.append(TSep(" = "))
-                tokens.extend(self._render_operand(self.fused_operands[0]))
-                return tokens
             else:
                 var_id = self.op_details.body.data
-                # Show as assignment: var_10 = 5
-                tokens = []
-                tokens.append(TInt(f"var_{var_id}"))
-                tokens.append(TSep(" = "))
-                tokens.extend(self._render_operand(self.fused_operands[0]))
-                return tokens
+            
+            # Show as assignment: var_10 = 5
+            tokens: List[Token] = []
+            tokens.append(TInt(f"var_{var_id}"))
+            tokens.append(TSep(" = "))
+            tokens.extend(self._render_operand(self.fused_operands[0]))
+            return tokens
         
         # Handle potential UnknownOp case for write_byte_var due to Kaitai bug
         if isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp):
@@ -316,7 +312,7 @@ class VariableWriteOp(Instruction):
                 value = il.pop(4)
                 il.append(vars.il_set_var(il, self.op_details.body, value))
     
-    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> any:
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
         from ... import vars
         

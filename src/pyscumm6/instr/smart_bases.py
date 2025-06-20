@@ -3,7 +3,8 @@
 from typing import List, Optional, Any
 from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
-from binaryninja import Architecture
+from binaryninja import IntrinsicName
+from binaryninja.architecture import Architecture
 import copy
 
 from .opcodes import Instruction
@@ -115,7 +116,7 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp):
         """Render the instruction, showing fused operands if available."""
         if self.fused_operands:
             # Function-call style: draw_object(100, 200)
-            tokens = [TInstr(self._name), TSep("(")]
+            tokens: List[Token] = [TInstr(self._name), TSep("(")]
             
             # Add operands in correct order (reverse of fusion order)
             for i, operand in enumerate(self.fused_operands):
@@ -172,7 +173,7 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp):
             # Use parent implementation
             super().lift(il, addr)
     
-    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> any:
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
         from ... import vars
         
@@ -344,7 +345,7 @@ class SmartBinaryOp(Instruction):
         elif operand.produces_result():
             # This is a result-producing instruction (like a fused expression)
             # Render it as a nested expression
-            tokens = []
+            tokens: List[Token] = []
             tokens.append(TText("("))
             tokens.extend(operand.render())
             tokens.append(TText(")"))
@@ -372,7 +373,7 @@ class SmartBinaryOp(Instruction):
         
         # If we have fused operands, render in function call style
         if self.fused_operands:
-            tokens = [TInstr(display_name), TSep("(")]
+            tokens: List[Token] = [TInstr(display_name), TSep("(")]
             
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
@@ -523,7 +524,7 @@ class SmartConditionalJump(ControlFlowOp):
         left_operand = comparison.fused_operands[1]
         right_operand = comparison.fused_operands[0]
         
-        tokens = []
+        tokens: List[Token] = []
         tokens.append(TText("("))
         tokens.extend(self._render_operand(left_operand))
         
@@ -556,7 +557,7 @@ class SmartConditionalJump(ControlFlowOp):
     def render(self) -> List[Token]:
         if self.fused_operands:
             # Render as readable conditional
-            tokens = []
+            tokens: List[Token] = []
             if self._is_if_not:
                 tokens.append(TInstr("if "))
             else:
@@ -580,7 +581,10 @@ class SmartConditionalJump(ControlFlowOp):
             else:
                 instr_name = "if"
             
-            if jump_offset >= 0:
+            if jump_offset == 0:
+                # Handle zero offset as 'self'
+                return [TInstr(instr_name), TText(" "), TInstr("goto"), TText(" "), TInstr("self")]
+            elif jump_offset > 0:
                 return [TInstr(f"{instr_name} goto +{jump_offset}")]
             else:
                 return [TInstr(f"{instr_name} goto {jump_offset}")]
@@ -722,7 +726,7 @@ class SmartComparisonOp(Instruction):
         elif operand.produces_result():
             # This is a result-producing instruction (like a fused expression)
             # Render it as a nested expression
-            tokens = []
+            tokens: List[Token] = []
             tokens.append(TText("("))
             tokens.extend(operand.render())
             tokens.append(TText(")"))
@@ -746,7 +750,7 @@ class SmartComparisonOp(Instruction):
     def render(self) -> List[Token]:
         if self.fused_operands and len(self.fused_operands) == 2:
             # Render as comparison with operands: left op right
-            tokens = []
+            tokens: List[Token] = []
             
             # Get operands (in reverse order due to stack semantics)
             left_operand = self.fused_operands[1]
@@ -763,12 +767,12 @@ class SmartComparisonOp(Instruction):
             return tokens
         elif self.fused_operands and len(self.fused_operands) == 1:
             # Partially fused - function-call style
-            tokens = []
+            tokens_partial: List[Token] = []
             display_name = self._config.display_name or self._name
-            tokens.append(TInstr(f"{display_name}("))
-            tokens.extend(self._render_operand(self.fused_operands[0]))
-            tokens.append(TText(")"))
-            return tokens
+            tokens_partial.append(TInstr(f"{display_name}("))
+            tokens_partial.extend(self._render_operand(self.fused_operands[0]))
+            tokens_partial.append(TText(")"))
+            return tokens_partial
         else:
             # Normal rendering
             display_name = self._config.display_name or self._name
@@ -864,7 +868,7 @@ class SmartArrayOp(Instruction):
             # Check for fusion in write operations
             if self._config.operation == "write" and self.fused_operands:
                 # Render as array assignment: array_5[3] = 10
-                tokens = []
+                tokens: List[Token] = []
                 tokens.append(TInt(f"array_{array_id}"))
                 tokens.append(TSep("["))
                 
@@ -985,7 +989,7 @@ class SmartArrayOp(Instruction):
                     ))
                 il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
     
-    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> any:
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             # Variable push - use il_get_var

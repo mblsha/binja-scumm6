@@ -8,7 +8,7 @@ from binja_helpers import binja_api  # noqa: F401
 from src.pyscumm6.disasm import decode, decode_with_fusion
 
 
-def test_comparison_fusion_with_constants():
+def test_comparison_fusion_with_constants() -> None:
     """Test fusion of push constants with comparison operations."""
     bytecode = bytes([
         0x00, 0x0A,  # push_byte(10)
@@ -22,6 +22,7 @@ def test_comparison_fusion_with_constants():
     
     # Test fusion decoding
     fused = decode_with_fusion(bytecode, 0x1000)
+    assert fused is not None
     assert fused.__class__.__name__ == "Gt"
     assert len(fused.fused_operands) == 2
     assert fused.stack_pop_count == 0
@@ -32,7 +33,7 @@ def test_comparison_fusion_with_constants():
     assert text == "10 > 5"
 
 
-def test_comparison_fusion_with_variables():
+def test_comparison_fusion_with_variables() -> None:
     """Test fusion of variable pushes with comparison operations."""
     bytecode = bytes([
         0x02, 0x0A,  # push_byte_var(var_10)
@@ -41,6 +42,7 @@ def test_comparison_fusion_with_variables():
     ])
     
     fused = decode_with_fusion(bytecode, 0x1000)
+    assert fused is not None
     assert fused.__class__.__name__ == "Lt"
     assert len(fused.fused_operands) == 2
     
@@ -50,7 +52,7 @@ def test_comparison_fusion_with_variables():
     assert text == "var_10 < 20"
 
 
-def test_conditional_jump_fusion_with_if_not():
+def test_conditional_jump_fusion_with_if_not() -> None:
     """Test fusion of comparison with if_not conditional jump."""
     bytecode = bytes([
         0x02, 0x05,  # push_byte_var(var_5)
@@ -60,6 +62,7 @@ def test_conditional_jump_fusion_with_if_not():
     ])
     
     fused = decode_with_fusion(bytecode, 0x1000)
+    assert fused is not None
     assert fused.__class__.__name__ == "SmartIfNot"
     assert len(fused.fused_operands) == 1
     assert fused.stack_pop_count == 0
@@ -70,7 +73,7 @@ def test_conditional_jump_fusion_with_if_not():
     assert "if" in text and "var_5" in text and "<=" in text and "+20" in text
 
 
-def test_conditional_jump_fusion_with_iff():
+def test_conditional_jump_fusion_with_iff() -> None:
     """Test fusion of comparison with iff conditional jump."""
     bytecode = bytes([
         0x00, 0x32,  # push_byte(50)
@@ -80,6 +83,7 @@ def test_conditional_jump_fusion_with_iff():
     ])
     
     fused = decode_with_fusion(bytecode, 0x1000)
+    assert fused is not None
     assert fused.__class__.__name__ == "SmartIff"
     assert len(fused.fused_operands) == 1
     assert fused.stack_pop_count == 0
@@ -90,7 +94,7 @@ def test_conditional_jump_fusion_with_iff():
     assert "if" in text and "50" in text and "var_15" in text and "==" in text
 
 
-def test_partial_fusion_comparison():
+def test_partial_fusion_comparison() -> None:
     """Test comparison with only one operand fused."""
     bytecode = bytes([
         0x00, 0x0F,  # push_byte(15)
@@ -98,6 +102,7 @@ def test_partial_fusion_comparison():
     ])
     
     fused = decode_with_fusion(bytecode, 0x1000)
+    assert fused is not None
     assert fused.__class__.__name__ == "Gt"
     assert len(fused.fused_operands) == 1
     
@@ -107,7 +112,7 @@ def test_partial_fusion_comparison():
     assert text == "gt(15)"
 
 
-def test_complex_conditional_with_neq():
+def test_complex_conditional_with_neq() -> None:
     """Test not-equal comparison with conditional jump."""
     bytecode = bytes([
         0x00, 0x00,  # push_byte(0)
@@ -117,6 +122,7 @@ def test_complex_conditional_with_neq():
     ])
     
     fused = decode_with_fusion(bytecode, 0x1000)
+    assert fused is not None
     assert fused.__class__.__name__ == "SmartIfNot"
     
     # Test rendering - if_not with neq should become ==
@@ -125,7 +131,7 @@ def test_complex_conditional_with_neq():
     assert "if" in text and "0" in text and "var_3" in text and "==" in text
 
 
-def test_le_ge_comparisons():
+def test_le_ge_comparisons() -> None:
     """Test less-equal and greater-equal comparisons."""
     # Test le (less than or equal)
     bytecode_le = bytes([
@@ -135,6 +141,7 @@ def test_le_ge_comparisons():
     ])
     
     fused_le = decode_with_fusion(bytecode_le, 0x1000)
+    assert fused_le is not None
     assert fused_le.__class__.__name__ == "Le"
     tokens_le = fused_le.render()
     text_le = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens_le)
@@ -148,13 +155,14 @@ def test_le_ge_comparisons():
     ])
     
     fused_ge = decode_with_fusion(bytecode_ge, 0x1000)
+    assert fused_ge is not None
     assert fused_ge.__class__.__name__ == "Ge"
     tokens_ge = fused_ge.render()
     text_ge = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens_ge)
     assert text_ge == "50 >= var_7"
 
 
-def test_no_fusion_when_not_comparison():
+def test_no_fusion_when_not_comparison() -> None:
     """Test that conditional jumps don't fuse with non-comparison operations."""
     bytecode = bytes([
         0x00, 0x05,  # push_byte(5)
@@ -165,6 +173,7 @@ def test_no_fusion_when_not_comparison():
     
     # The conditional should not fuse with add operation
     fused = decode_with_fusion(bytecode, 0x1000)
+    assert fused is not None
     assert fused.__class__.__name__ == "SmartIfNot"
     assert len(fused.fused_operands) == 0  # No fusion
     assert fused.stack_pop_count == 1  # Normal stack operation

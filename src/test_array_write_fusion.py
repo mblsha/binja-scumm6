@@ -6,8 +6,6 @@ This module tests fusion of push instructions with array write instructions
 
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
-
-import pytest
 from binja_helpers import binja_api  # noqa: F401
 
 from .pyscumm6.disasm import decode_with_fusion
