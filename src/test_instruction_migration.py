@@ -7,11 +7,10 @@ from .test_mocks import MockScumm6BinaryView
 from binja_helpers.tokens import asm_str
 import pytest
 
-# Path 1: The original, monolithic implementation
-# Import Scumm6Legacy to ensure we're testing against the legacy decoder
-from .scumm6 import Scumm6Legacy as OldScumm6Architecture, LastBV
+# Import the unified Scumm6 architecture which now uses the new decoder by default
+from .scumm6 import Scumm6, LastBV
 
-# Path 2: The new, refactored implementation
+# Import the new decoder for direct testing
 from .pyscumm6.disasm import decode as new_decode
 
 
@@ -447,27 +446,15 @@ instruction_test_cases = [
 ]
 
 
-def get_old_llil(case: InstructionTestCase) -> List[MockLLIL]:
-    """Get LLIL from the original monolithic implementation."""
+def get_architecture_llil(case: InstructionTestCase) -> List[MockLLIL]:
+    """Get LLIL from the unified Scumm6 architecture."""
     view = MockScumm6BinaryView()
     view.write_memory(case.addr, case.data)
     LastBV.set(view)
-    arch = OldScumm6Architecture()
+    arch = Scumm6()
     il = MockLowLevelILFunction()
 
-    # FIXME: Handle known bug in write_byte_var where it crashes due to Kaitai parsing issue
-    if case.test_id == "write_byte_var_0x42":
-        try:
-            arch.get_instruction_low_level_il(case.data, case.addr, il)
-        except AttributeError as e:
-            if "'UnknownOp' object has no attribute 'type'" in str(e):
-                # This is the expected behavior for write_byte_var due to Kaitai bug
-                # The old implementation crashes and returns no LLIL operations
-                return il.ils
-            raise
-    else:
-        arch.get_instruction_low_level_il(case.data, case.addr, il)
-
+    arch.get_instruction_low_level_il(case.data, case.addr, il)
     return il.ils
 
 
@@ -481,12 +468,12 @@ def get_new_llil(case: InstructionTestCase) -> List[MockLLIL]:
     return il.ils
 
 
-def get_old_disasm(case: InstructionTestCase) -> Optional[str]:
-    """Get disassembly from the original monolithic implementation."""
+def get_architecture_disasm(case: InstructionTestCase) -> Optional[str]:
+    """Get disassembly from the unified Scumm6 architecture."""
     view = MockScumm6BinaryView()
     view.write_memory(case.addr, case.data)
     LastBV.set(view)
-    arch = OldScumm6Architecture()
+    arch = Scumm6()
     result = arch.get_instruction_text(case.data, case.addr)
     if result is None:
         return None
@@ -509,40 +496,40 @@ def get_new_disasm(case: InstructionTestCase) -> Optional[str]:
     ids=[c.test_id for c in instruction_test_cases]
 )
 def test_llil_consistency(case: InstructionTestCase) -> None:
-    """Verify that new implementation produces identical LLIL to the original."""
-    old_il = get_old_llil(case)
-    new_il = get_new_llil(case)
+    """Verify that architecture and direct decoder produce consistent LLIL."""
+    arch_il = get_architecture_llil(case)
+    direct_il = get_new_llil(case)
     
     # For control flow instructions, use semantic comparison instead of object equality
     if any(cf_name in case.test_id for cf_name in ["iff", "if_not", "jump"]):
-        assert len(old_il) == len(new_il), f"LLIL count mismatch for {case.test_id}"
+        assert len(arch_il) == len(direct_il), f"LLIL count mismatch for {case.test_id}"
         
         # Compare semantic content of control flow instructions
-        for i, (old_op, new_op) in enumerate(zip(old_il, new_il)):
+        for i, (arch_op, direct_op) in enumerate(zip(arch_il, direct_il)):
             # Compare operation types
-            assert old_op.op == new_op.op, f"Operation mismatch at index {i} for {case.test_id}"
+            assert arch_op.op == direct_op.op, f"Operation mismatch at index {i} for {case.test_id}"
             
             # For control flow ops, compare the structure semantically
-            if hasattr(old_op, 'operation') and hasattr(new_op, 'operation'):
-                assert old_op.operation == new_op.operation, f"Operation type mismatch for {case.test_id}"
+            if hasattr(arch_op, 'operation') and hasattr(direct_op, 'operation'):
+                assert arch_op.operation == direct_op.operation, f"Operation type mismatch for {case.test_id}"
             
             # Compare operand count and types (but not label identities)
-            if hasattr(old_op, 'operands') and hasattr(new_op, 'operands'):
-                assert len(old_op.operands) == len(new_op.operands), f"Operand count mismatch for {case.test_id}"
+            if hasattr(arch_op, 'operands') and hasattr(direct_op, 'operands'):
+                assert len(arch_op.operands) == len(direct_op.operands), f"Operand count mismatch for {case.test_id}"
                 
                 # Compare operand types and values where applicable
-                for j, (old_operand, new_operand) in enumerate(zip(old_op.operands, new_op.operands)):
+                for j, (arch_operand, direct_operand) in enumerate(zip(arch_op.operands, direct_op.operands)):
                     # Skip label identity comparison, just check they're both labels
-                    if str(type(old_operand).__name__) == 'LowLevelILLabel':
-                        assert str(type(new_operand).__name__) == 'LowLevelILLabel', \
+                    if str(type(arch_operand).__name__) == 'LowLevelILLabel':
+                        assert str(type(direct_operand).__name__) == 'LowLevelILLabel', \
                             f"Expected label operand at position {j} for {case.test_id}"
                     else:
                         # For non-label operands, compare values
-                        assert old_operand == new_operand, \
+                        assert arch_operand == direct_operand, \
                             f"Operand mismatch at position {j} for {case.test_id}"
     else:
         # For non-control flow instructions, use direct comparison
-        assert old_il == new_il, f"LLIL mismatch for {case.test_id}: {case.comment}"
+        assert arch_il == direct_il, f"LLIL mismatch for {case.test_id}: {case.comment}"
 
 
 @pytest.mark.parametrize(
@@ -551,47 +538,23 @@ def test_llil_consistency(case: InstructionTestCase) -> None:
     ids=[c.test_id for c in instruction_test_cases]
 )
 def test_disasm_consistency(case: InstructionTestCase) -> None:
-    """Verify that both implementations produce consistent disassembly."""
+    """Verify that architecture and direct decoder produce consistent disassembly."""
     if case.expected_disasm is None:
         pytest.skip("No expected disassembly provided for this test case")
 
-    old_disasm = get_old_disasm(case)
-    new_disasm = get_new_disasm(case)
+    arch_disasm = get_architecture_disasm(case)
+    direct_disasm = get_new_disasm(case)
 
-    # Check that the new implementation matches the expected disassembly exactly
-    assert new_disasm == case.expected_disasm, \
-        f"New implementation disassembly mismatch for {case.test_id}: " \
-        f"expected '{case.expected_disasm}', got '{new_disasm}'"
+    # Check that both implementations match the expected disassembly exactly
+    assert direct_disasm == case.expected_disasm, \
+        f"Direct decoder disassembly mismatch for {case.test_id}: " \
+        f"expected '{case.expected_disasm}', got '{direct_disasm}'"
 
-    # For control flow instructions, handle different semantic representations
-    if any(cf_name in case.test_id for cf_name in ["iff", "if_not", "jump"]):
-        # Just verify that both implementations produced some output
-        assert old_disasm is not None, f"Old implementation returned None for {case.test_id}"
-        assert new_disasm is not None, f"New implementation returned None for {case.test_id}"
-        
-        # For control flow, we allow different formats as long as they're both valid
-        # Old: "iff(20)", New: "if goto +20"
-        # Old: "if_not(0)", New: "unless goto self"  
-        # Old: "jump(100)", New: "goto +100"
-        
-        # Verify the new implementation matches expected exactly
-        assert new_disasm == case.expected_disasm, \
-            f"New implementation disassembly mismatch for {case.test_id}: " \
-            f"expected '{case.expected_disasm}', got '{new_disasm}'"
-    else:
-        # For non-control flow instructions, use the original validation logic
-        if old_disasm is not None:
-            expected_instr_name = case.expected_disasm.split('(')[0]  # Get instruction name part
-            assert old_disasm.startswith(expected_instr_name), \
-                f"Old implementation disassembly doesn't start with expected instruction '{expected_instr_name}' " \
-                f"for {case.test_id}: got '{old_disasm}'"
-        else:
-            pytest.fail(f"Old implementation returned None for {case.test_id}")
+    assert arch_disasm == case.expected_disasm, \
+        f"Architecture disassembly mismatch for {case.test_id}: " \
+        f"expected '{case.expected_disasm}', got '{arch_disasm}'"
 
-        # Verify that both implementations at least agree on the instruction name
-        if old_disasm and new_disasm:
-            old_instr_name = old_disasm.split('(')[0]
-            new_instr_name = new_disasm.split('(')[0]
-            assert old_instr_name == new_instr_name, \
-                f"Instruction name mismatch between implementations for {case.test_id}: " \
-                f"old='{old_instr_name}', new='{new_instr_name}'"
+    # Verify that both implementations produce identical output
+    assert arch_disasm == direct_disasm, \
+        f"Architecture and direct decoder mismatch for {case.test_id}: " \
+        f"arch='{arch_disasm}', direct='{direct_disasm}'"

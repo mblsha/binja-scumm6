@@ -8,7 +8,6 @@ import sys
 import types
 import enum
 from binaryninja.enums import BranchType
-from binja_helpers.mock_analysis import MockAnalysisInfo
 
 bn = sys.modules.get("binaryninja")
 if bn and not hasattr(bn, "core_ui_enabled"):
@@ -41,7 +40,8 @@ if bn and not hasattr(bn, "core_ui_enabled"):
 
         enums_mod.FlagRole = FlagRole  # type: ignore[attr-defined]
 
-from .scumm6 import Scumm6  # noqa: E402
+from .scumm6 import Scumm6, LastBV  # noqa: E402
+from .test_mocks import MockScumm6BinaryView  # noqa: E402
 
 
 @dataclass
@@ -123,17 +123,26 @@ test_cases = [
 
 @pytest.mark.parametrize("case", test_cases, ids=[c.test_id for c in test_cases])
 def test_instruction_analysis(case: InfoTestCase) -> None:
-    # Use legacy decoder for test consistency
-    arch = Scumm6(use_new_decoder=False)
-    dis = arch.decode_instruction(case.data, case.addr)
+    # Use unified decoder
+    arch = Scumm6()
+    view = MockScumm6BinaryView()
+    view.write_memory(case.addr, case.data)
+    LastBV.set(view)
+    
+    info = arch.get_instruction_info(case.data, case.addr)
 
     if case.decode_fails:
-        assert dis is None
+        assert info is None
         return
 
-    assert dis is not None
-
-    info = dis.analysis_info
-    assert isinstance(info, MockAnalysisInfo)
+    assert info is not None
     assert info.length == case.expected_length
-    assert info.mybranches == case.expected_mock_branches
+    
+    # Extract branches from the new architecture's InstructionInfo
+    branches = []
+    if hasattr(info, 'branches') and info.branches:
+        branches = [(b.type, b.target) for b in info.branches]
+    elif hasattr(info, 'mybranches') and info.mybranches:
+        branches = info.mybranches
+    
+    assert branches == case.expected_mock_branches

@@ -1,5 +1,4 @@
 from binja_helpers import binja_api  # noqa: F401
-from binja_helpers.mock_analysis import MockAnalysisInfo
 
 from typing import Any, List, Optional, Tuple, Dict
 
@@ -28,9 +27,7 @@ from binaryninja.enums import (
 )
 from binaryninja import lowlevelil
 
-from .disasm import Scumm6Disasm, Instruction, State
 from .scumm6_opcodes import Scumm6Opcodes
-from .message import parse_message
 
 from .sorted_list import SortedList
 
@@ -38,7 +35,6 @@ from . import vars
 
 # Import new decoder
 from .pyscumm6.disasm import decode as new_decode
-from .pyscumm6.instr.opcodes import Instruction as NewInstruction
 
 OpType = Scumm6Opcodes.OpType
 VarType = Scumm6Opcodes.VarType
@@ -164,10 +160,8 @@ class Scumm6(Architecture):
     # need to make sure it's a BinaryView subclass
     op_addrs: Dict[str, SortedList] = defaultdict(SortedList)
 
-    def __init__(self, use_new_decoder: bool = True) -> None:
+    def __init__(self) -> None:
         Architecture.__init__(self)
-        self.disasm = Scumm6Disasm()
-        self.use_new_decoder = use_new_decoder
 
     def get_view(
         self, data: bytes, addr: int
@@ -186,573 +180,56 @@ class Scumm6(Architecture):
         assert last_bv
         return (None, None)
 
-    def get_state(self, instr: Instruction) -> State:
-        # FIXME: this won't work correctly if we open several files
-        view = LastBV.get()
-        assert view is not None
-        return view.state  # type: ignore[no-any-return,attr-defined,unused-ignore]
 
-    def prev_instruction(self, instr: Instruction) -> Instruction:
-        view, filename = self.get_view(instr.data, instr.addr)
-        if not view:
-            raise Exception(f"prev_instruction: no view at {hex(instr.addr)}")
-        assert filename
-        prev_addr = self.op_addrs[filename].closest_left_match(instr.addr)
-        assert prev_addr
-        # print(f'prev_instruction: addr:{instr.addr:x} -> prev:{prev_addr:x}')
-        data2 = view.read(prev_addr, 256)
-        dis = self.decode_instruction(data2, prev_addr)
-        if not dis:
-            raise Exception(
-                f"prev_instruction: no disasm at {prev_addr:x} len{len(data2)}"
-            )
-        return dis
-
-    def decode_instruction(self, data: bytes, addr: int) -> Optional[Instruction]:
-        if self.use_new_decoder:
-            # Use new object-oriented decoder
-            new_instr = new_decode(data, addr)
-            if new_instr is None:
-                return None
-
-            # Convert new instruction to legacy format for compatibility
-            return self._convert_new_to_legacy(new_instr, addr)
-        else:
-            # Use legacy decoder
-            dis = self.disasm.decode_instruction(data, addr)
-            if dis is None:
-                return None
-            try:
-                info = MockAnalysisInfo()
-                info.length = dis.length
-                op = dis.op
-                body = getattr(op, "body", None)
-                if body and getattr(body, "jump_offset", None) is not None:
-                    # Calculate target address
-                    target_addr = addr + info.length + body.jump_offset
-
-                    # Check if this is a conditional or unconditional jump
-                    if dis.id in ['iff', 'if_not', 'if_class_of_is']:
-                        # Conditional jump - only add TrueBranch (when jump is taken)
-                        # FalseBranch (fall-through) is implicit for CFG analysis
-                        info.add_branch(BranchType.TrueBranch, target_addr)
-                    else:
-                        # Unconditional jump - add only one branch
-                        info.add_branch(BranchType.UnconditionalBranch, target_addr)
-                dis = dis._replace(analysis_info=info)
-            except Exception:
-                pass
-            return dis
-
-    def _convert_new_to_legacy(self, new_instr: NewInstruction, addr: int) -> Instruction:
-        """Convert new instruction format to legacy format for compatibility."""
-        # Create a mock legacy instruction with the same basic properties
-        # This is a compatibility shim to allow the new decoder to work with legacy code
-
-        info = MockAnalysisInfo()
-        info.length = new_instr._length
-
-        # Create analysis info for control flow instructions
-        if hasattr(new_instr, 'is_conditional') and new_instr.is_conditional():
-            # For conditional instructions, add branch info
-            if hasattr(new_instr.op_details.body, 'jump_offset'):
-                jump_offset = new_instr.op_details.body.jump_offset
-                info.add_branch(
-                    BranchType.TrueBranch,
-                    addr + info.length + jump_offset,
-                )
-                info.add_branch(BranchType.FalseBranch, addr + info.length)
-        elif hasattr(new_instr, 'is_conditional') and not new_instr.is_conditional():
-            # For unconditional jumps
-            if hasattr(new_instr.op_details.body, 'jump_offset'):
-                jump_offset = new_instr.op_details.body.jump_offset
-                info.add_branch(
-                    BranchType.UnconditionalBranch,
-                    addr + info.length + jump_offset,
-                )
-
-        # Create a legacy-compatible instruction object
-        # Extract first few bytes as data (legacy format expects this)
-        # Note: This is a compatibility shim and may not have all the data
-        data_bytes = bytes(new_instr._length)  # placeholder data
-
-        # Get the opcode name - op_details is the Kaitai Op object
-        # It has an 'id' attribute that is the OpType enum
-        op_id_str = str(new_instr.op_details.id).replace("OpType.", "")
-
-        legacy_instr = Instruction(
-            op=new_instr.op_details,
-            id=op_id_str,
-            length=new_instr._length,
-            data=data_bytes,
-            addr=addr,
-            analysis_info=info
-        )
-
-        return legacy_instr
 
     def get_instruction_info(self, data: bytes, addr: int) -> Optional[InstructionInfo]:
-        if self.use_new_decoder:
-            # Use new decoder directly for proper InstructionInfo population
-            new_instr = new_decode(data, addr)
-            if new_instr is None:
-                return None
+        # Use new decoder for proper InstructionInfo population
+        new_instr = new_decode(data, addr)
+        if new_instr is None:
+            return None
 
-            result = InstructionInfo()
+        result = InstructionInfo()
 
-            # Always call analyze - base class sets length, subclasses add CFG info
-            new_instr.analyze(result, addr)
+        # Always call analyze - base class sets length, subclasses add CFG info
+        new_instr.analyze(result, addr)
 
-            return result
-        else:
-            # Use legacy decoder path
-            dis = self.decode_instruction(data, addr)
-            if not dis:
-                return None
-
-            result = InstructionInfo()
-            result.length = dis.length
-
-            op = dis.op
-            body = getattr(op, "body", None)
-            # print(op, body, op.id)
-            if body:
-                if getattr(body, "jump_offset", None) is not None:
-                    # Calculate target address
-                    target_addr = addr + result.length + body.jump_offset
-
-                    # Check if this is a conditional or unconditional jump
-                    if dis.id in ['iff', 'if_not', 'if_class_of_is']:
-                        # Conditional jump - only add TrueBranch (when jump is taken)
-                        # FalseBranch (fall-through) is implicit for CFG analysis
-                        result.add_branch(BranchType.TrueBranch, target_addr)
-                    else:
-                        # Unconditional jump - add only one branch
-                        result.add_branch(BranchType.UnconditionalBranch, target_addr)
-                    # raise Exception('Unhandled jump_offset for op %s' % op.id)
-
-            return result
+        return result
 
     def get_instruction_text(
         self, data: bytes, addr: int
     ) -> Optional[Tuple[List[InstructionTextToken], int]]:
-        if self.use_new_decoder:
-            # Use new decoder directly for better performance and semantic output
-            new_instr = new_decode(data, addr)
-            if new_instr is None:
-                return None
+        # Use new decoder for semantic output
+        new_instr = new_decode(data, addr)
+        if new_instr is None:
+            return None
 
-            # Get tokens from new instruction rendering
-            tokens = new_instr.render()
+        # Get tokens from new instruction rendering
+        tokens = new_instr.render()
 
-            # Convert to Binary Ninja tokens
-            binja_tokens = []
-            for token in tokens:
-                # Our tokens have a to_binja() method
-                if hasattr(token, 'to_binja'):
-                    binja_tokens.append(token.to_binja())
-                else:
-                    # Fallback for any other token types
-                    binja_tokens.append(InstructionTextToken(
-                        InstructionTextTokenType.TextToken, str(token)
-                    ))
+        # Convert to Binary Ninja tokens
+        binja_tokens = []
+        for token in tokens:
+            # Our tokens have a to_binja() method
+            if hasattr(token, 'to_binja'):
+                binja_tokens.append(token.to_binja())
+            else:
+                # Fallback for any other token types
+                binja_tokens.append(InstructionTextToken(
+                    InstructionTextTokenType.TextToken, str(token)
+                ))
 
-            return binja_tokens, new_instr._length
-        else:
-            # Use legacy decoder
-            dis = self.decode_instruction(data, addr)
-            if not dis:
-                return None
-
-        def tokenize_params(*params: Any) -> List[InstructionTextToken]:
-            r = [
-                InstructionTextToken(
-                    InstructionTextTokenType.BeginMemoryOperandToken, "("
-                )
-            ]
-            need_comma = False
-            for x in params:
-                if need_comma:
-                    r += [
-                        InstructionTextToken(
-                            InstructionTextTokenType.OperandSeparatorToken, ", "
-                        )
-                    ]
-                r += [
-                    InstructionTextToken(InstructionTextTokenType.IntegerToken, str(x))
-                ]
-                need_comma = True
-            r += [
-                InstructionTextToken(
-                    InstructionTextTokenType.BeginMemoryOperandToken, ")"
-                )
-            ]
-            return r
-
-        op = dis.op
-        body = getattr(op, "body", None)
-
-        intrinsic_name = dis.id
-        subop = getattr(body, "subop", None)
-        if body and subop:
-            intrinsic_name += f".{body.subop.name}"
-        tokens = [
-            InstructionTextToken(InstructionTextTokenType.TextToken, intrinsic_name)
-        ]
-
-        def can_tokenize(param: Any) -> bool:
-            if isinstance(param, int):
-                return True
-            if isinstance(param, str):
-                return not param.startswith("scumm6")
-            return False
-
-        def tokenize_talk_actor(
-            body: Scumm6Opcodes.Message, tokens: List[InstructionTextToken]
-        ) -> None:
-            message = parse_message(body)
-            args = []
-            for i in message:
-                if isinstance(i, str):
-                    args.append(i)
-                else:
-                    type_str = str(i.part_type).replace("PartType.", "")
-                    args.append(type_str)
-            tokens += tokenize_params(*args)
-
-        if isinstance(body, Scumm6Opcodes.Message):
-            assert body
-            tokenize_talk_actor(body, tokens)
-        elif (
-            body
-            and hasattr(body, "body")
-            and isinstance(body.body, Scumm6Opcodes.Message)
-        ):
-            tokenize_talk_actor(body.body, tokens)
-        elif body:
-            args = [
-                getattr(body, x) for x in dir(body) if can_tokenize(getattr(body, x))
-            ]
-            if getattr(body, "body", None):
-                args += [
-                    getattr(body.body, x)
-                    for x in dir(body.body)
-                    if can_tokenize(getattr(body.body, x))
-                ]
-            tokens += tokenize_params(*args)
-
-        return tokens, dis.length
+        return binja_tokens, new_instr._length
 
     def get_instruction_low_level_il(
         self, data: bytes, addr: int, il: lowlevelil.LowLevelILFunction
     ) -> Optional[int]:
-        if self.use_new_decoder:
-            # Use new decoder directly for LLIL generation
-            new_instr = new_decode(data, addr)
-            if new_instr is None:
-                return None
+        # Use new decoder for LLIL generation
+        new_instr = new_decode(data, addr)
+        if new_instr is None:
+            return None
 
-            # Generate LLIL using new instruction's lift method
-            new_instr.lift(il, addr)
+        # Generate LLIL using new instruction's lift method
+        new_instr.lift(il, addr)
 
-            # Return the instruction length
-            return new_instr._length
-        else:
-            # Use legacy decoder
-            dis = self.decode_instruction(data, addr)
-            if not dis:
-                return None
-
-        def get_prev_dis(instr: Instruction) -> Instruction:
-            prev = self.prev_instruction(instr)
-            if not prev:
-                raise Exception(
-                    f"get_prev_dis: no prev for '{instr.id}' at {hex(instr.addr)}"
-                )
-            return prev
-
-        def get_dis_value(instr: Instruction) -> int:
-            op = instr.op
-            if op.id not in [OpType.push_byte, OpType.push_word]:
-                raise Exception(
-                    f"get_dis_value: unsupported op '{instr.id}' at {hex(instr.addr)}"
-                )
-            assert isinstance(op.body.data, int)
-            return op.body.data
-
-        def get_prev_value(instr: Instruction) -> int:
-            prev = get_prev_dis(instr)
-            return get_dis_value(prev)
-
-        def do_pop_list(instr: Instruction) -> List[Any]:
-            # binja doesn't support popping dynamic num of args from stack,
-            # so try to figure out how many do we need to pop.
-            num_args = get_prev_value(instr)
-            # num_args need to be popped separately
-            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
-            args = [il.pop(4) for _ in range(num_args)]
-            return args
-
-        def add_intrinsic(name: str, block: Any) -> None:
-            pop_count = getattr(block, "pop_count", 0)
-            push_count = getattr(block, "push_count", 0)
-            pop_list = getattr(block, "pop_list", False)
-
-            args = []
-            if pop_list and block.pop_list_first:
-                args += do_pop_list(dis)
-
-            args += [il.pop(4) for _ in range(pop_count)]
-
-            if pop_list and not block.pop_list_first:
-                args += do_pop_list(dis)
-
-            if push_count:
-                assert push_count == 1
-                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], IntrinsicName(name), args))
-                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
-            else:
-                il.append(il.intrinsic([], IntrinsicName(name), args))
-
-        implemented = True
-        op = dis.op
-        body = getattr(op, "body", None)
-        if op.id in [OpType.push_byte, OpType.push_word]:
-            assert body
-            il.append(il.push(4, il.const(4, body.data)))
-        elif op.id in [OpType.write_byte_var, OpType.write_word_var]:
-            il.append(vars.il_set_var(il, body, il.pop(4)))
-        elif op.id in [OpType.push_byte_var, OpType.push_word_var]:
-            il.append(il.push(4, vars.il_get_var(il, body)))
-        elif op.id in [
-            OpType.byte_var_inc,
-            OpType.word_var_inc,
-            OpType.byte_var_dec,
-            OpType.word_var_dec,
-        ]:
-            inc = {
-                OpType.byte_var_inc: il.add,
-                OpType.word_var_inc: il.add,
-                OpType.byte_var_dec: il.sub,
-                OpType.word_var_dec: il.sub,
-            }
-            il.append(
-                vars.il_set_var(
-                    il, body, inc[op.id](4, vars.il_get_var(il, body), il.const(4, 1))
-                )
-            )
-        # elif (
-        #     op.id in [OpType.array_ops]
-        #     and body
-        #     and body.subop == SubopType.assign_string
-        # ):
-        #     prefix_len = 1 + 2
-        #     string_start_ptr = dis.addr + prefix_len
-        #     string_len = dis.length - prefix_len
-        #     # ScummEngine_v6::o6_arrayOps()
-        #     # https://github.com/scummvm/scummvm/blob/master/engines/scumm/script_v6.cpp#L2330
-        #     pass
-        # elif op.id in [OpType.byte_array_read, OpType.word_array_read]:
-        #     il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4))) # base
-        #     il.append(il.set_reg(4, LLIL_TEMP(1), body.data)) # ?
-        #     int base = pop();
-        #     # int ScummEngine_v6::readArray(int array, int idx, int base)
-        #     push(readArray(fetchScriptByte(), 0, base));
-        #     pass
-        elif op.id in [
-            OpType.eq,
-            OpType.neq,
-            OpType.gt,
-            OpType.lt,
-            OpType.le,
-            OpType.ge,
-        ]:
-            comp = {
-                OpType.eq: il.compare_equal,
-                OpType.neq: il.compare_not_equal,
-                OpType.gt: il.compare_signed_greater_than,
-                OpType.lt: il.compare_signed_less_than,
-                OpType.le: il.compare_signed_less_equal,
-                OpType.ge: il.compare_signed_greater_equal,
-            }
-            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
-            il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
-            comp_res = comp[op.id](4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0)))
-            il.append(il.push(4, comp_res))
-        elif op.id in [
-            OpType.add,
-            OpType.sub,
-            OpType.mul,
-            OpType.div,
-            OpType.land,
-            OpType.lor,
-        ]:
-            subopt = {
-                OpType.add: il.add,
-                OpType.sub: il.sub,
-                OpType.mul: il.mult,
-                OpType.div: il.div_signed,
-                OpType.land: il.and_expr,
-                OpType.lor: il.or_expr,
-            }
-            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
-            il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
-            il.append(
-                il.push(
-                    4,
-                    subopt[op.id](4, il.reg(4, LLIL_TEMP(1)), il.reg(4, LLIL_TEMP(0))),
-                )
-            )
-        elif op.id in [OpType.dup]:
-            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
-            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
-            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
-        elif op.id in [OpType.nott]:
-            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
-            comp_res = il.compare_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0))
-            il.append(il.push(4, comp_res))
-        elif op.id in [OpType.iff, OpType.if_not]:
-            comp = {
-                OpType.iff: il.compare_not_equal,
-                OpType.if_not: il.compare_equal,
-            }
-            t = LowLevelILLabel()
-            f = LowLevelILLabel()
-            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
-            il.append(
-                il.if_expr(
-                    comp[op.id](4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0)), t, f
-                )
-            )
-            il.mark_label(t)
-            assert body
-            il.append(il.jump(il.const(4, addr + dis.length + body.jump_offset)))
-            il.mark_label(f)
-        elif op.id in [OpType.jump]:
-            assert body
-            il.append(il.jump(il.const(4, addr + dis.length + body.jump_offset)))
-        elif op.id in [OpType.stop_object_code1, OpType.stop_object_code2]:
-            add_intrinsic(op.id.name, body)
-            il.append(il.no_ret())
-        elif op.id in [OpType.start_script, OpType.start_script_quick]:
-            # o6_startScript
-            # https://github.com/scummvm/scummvm/blob/master/engines/scumm/script_v6.cpp#L871
-
-            # args are last in stack
-            args = do_pop_list(dis)  # implicitly pops num_args
-
-            # need to somehow preserve the local state
-            SAVE_ARGS_REG_START = 10
-            for index, a in enumerate(args):
-                il.append(il.set_reg(4, LLIL_TEMP(SAVE_ARGS_REG_START + index), a))
-
-            # go back enough to get the function number,
-            # it's pushed before the args
-            func_num = dis
-            for _ in range(len(args) + 2):
-                func_num = self.prev_instruction(func_num)
-
-            func_num_value = get_dis_value(func_num)
-            try:
-                func_ptr = Scumm6Disasm.get_script_ptr(
-                    self.get_state(dis), func_num_value, dis.addr
-                )
-            except:  # noqa: E722
-                print(f"get_script_ptr failed: {func_num_value} at {hex(dis.addr)}")
-                raise
-
-            # fake pus to "read the func num"
-            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
-
-            if op.id == OpType.start_script:
-                flags = get_prev_value(func_num)
-                # fake push to "read the flags"
-                il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))
-                # ScummEngine::runScript()
-                # https://github.com/scummvm/scummvm/blob/master/engines/scumm/script.cpp#L59
-                # freeze_resistant = (flags & 1) != 0
-                recursive = (flags & 2) != 0
-
-                if not recursive and func_ptr is not None:
-                    il.append(
-                        il.intrinsic([], IntrinsicName("stop_script"), [il.const_pointer(4, func_ptr)])
-                    )
-
-            for index, a in enumerate(args):
-                il.append(il.push(4, il.reg(4, LLIL_TEMP(SAVE_ARGS_REG_START + index))))
-
-            # expect binja to use pushed args as function args
-            if func_ptr is not None:
-                il.append(il.call(il.const_pointer(4, func_ptr)))
-        elif op.id == OpType.stop_script:
-            prev_value = get_prev_value(dis)
-            il.append(il.intrinsic([], IntrinsicName(op.id.name), [il.pop(4)]))
-            if prev_value == 0:
-                # stopObjectCode
-                il.append(il.no_ret())
-        elif not getattr(body, "call_func", True):
-            add_intrinsic(op.id.name, body)
-        elif isinstance(body, Scumm6Opcodes.Message):
-            message = parse_message(body)
-            state = self.get_state(dis)
-            args = []
-            for i in message:
-                if isinstance(i, str):
-                    str_addr = state.bstr[i]
-                    args.append(il.const_pointer(4, str_addr))
-            il.append(il.intrinsic([], IntrinsicName(op.id.name), args))
-        elif (
-            body
-            and hasattr(body, "body")
-            and isinstance(body.body, Scumm6Opcodes.Message)
-        ):
-            message = parse_message(body.body)
-            state = self.get_state(dis)
-            args = []
-            for i in message:
-                if isinstance(i, str):
-                    str_addr = state.bstr[i]
-                    args.append(il.const_pointer(4, str_addr))
-            name = f"{op.id.name}.{body.subop.name}"
-            il.append(il.intrinsic([], IntrinsicName(name), args))
-        elif getattr(body, "subop", None):
-            assert body
-            add_intrinsic(f"{op.id.name}.{body.subop.name}", body.body)
-        elif op.id in [OpType.break_here]:
-            il.append(il.intrinsic([], IntrinsicName(op.id.name), []))
-        else:
-            implemented = False
-            il.append(il.unimplemented())
-
-        if body and isinstance(body, Scumm6Opcodes.UnknownOp):
-            print(f'unknown_op {dis.id} at {hex(addr)}: {getattr(body, "subop", None)}')
-            implemented = False
-            il.append(il.unimplemented())
-
-        if implemented:
-            view, filename = self.get_view(data, addr)
-            if not view:
-                raise Exception(
-                    f"Can't save current addr: No view for data at {hex(addr)}"
-                )
-            assert filename
-            self.op_addrs[filename].insert_sorted(addr)
-            # print(self.op_addrs[filename]._list)
-
-        return dis.length
-
-
-class Scumm6Legacy(Scumm6):
-    """SCUMM6 Architecture using legacy decoder (default behavior)."""
-    name = "SCUMM6-Legacy"
-
-    def __init__(self) -> None:
-        super().__init__(use_new_decoder=False)
-
-
-class Scumm6New(Scumm6):
-    """SCUMM6 Architecture using new object-oriented decoder with semantic representations."""
-    name = "SCUMM6-New"
-
-    def __init__(self) -> None:
-        super().__init__(use_new_decoder=True)
+        # Return the instruction length
+        return new_instr._length

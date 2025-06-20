@@ -133,8 +133,8 @@ def test_lift_talk_actor_with_state() -> None:
 
     # Patch LastBV.get() to return our mock view
     with patch.object(LastBV, 'get', return_value=mock_view):
-        # Use legacy decoder for test consistency
-        arch = Scumm6(use_new_decoder=False)
+        # Use unified decoder
+        arch = Scumm6()
         il = MockLowLevelILFunction()
 
         # 2. Act: Lift the instruction
@@ -173,8 +173,8 @@ def test_lift_talk_actor_with_unknown_string() -> None:
     mock_view.write_memory(addr, data)
 
     with patch.object(LastBV, 'get', return_value=mock_view):
-        # Use legacy decoder for test consistency
-        arch = Scumm6(use_new_decoder=False)
+        # Use unified decoder
+        arch = Scumm6()
         il = MockLowLevelILFunction()
 
         # 2. Act: Lift the instruction - this should raise a KeyError for unknown strings
@@ -208,8 +208,8 @@ def test_lift_start_script_with_state() -> None:
     mock_view.write_memory(0x1002, b'\x5f')      # start_script_quick
     
     with patch.object(LastBV, 'get', return_value=mock_view):
-        # Use legacy decoder for test consistency
-        arch = Scumm6(use_new_decoder=False)
+        # Use unified decoder
+        arch = Scumm6()
         
         # Create mock instructions for the prev_instruction chain
         from .disasm import Instruction
@@ -293,8 +293,8 @@ def test_lift_start_script_with_multiple_args() -> None:
     mock_view.write_memory(0x1006, b'\x5e')      # start_script (0x5e)
     
     with patch.object(LastBV, 'get', return_value=mock_view):
-        # Use legacy decoder for test consistency
-        arch = Scumm6(use_new_decoder=False)
+        # Use unified decoder
+        arch = Scumm6()
         
         # Create mock instructions for the prev_instruction chain
         from .disasm import Instruction

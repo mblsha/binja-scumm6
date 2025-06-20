@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from binja_helpers import binja_api  # noqa: F401
 from binaryninja.enums import BranchType
 
-from src.scumm6 import Scumm6New, LastBV
+from src.scumm6 import Scumm6, LastBV
 from src.test_mocks import MockScumm6BinaryView
 
 
@@ -30,7 +30,7 @@ class InstructionTestCase(TypedDict):
 def test_new_decoder_instruction_info() -> None:
     """Test that the new decoder correctly populates InstructionInfo."""
     
-    arch = Scumm6New()
+    arch = Scumm6()
     view = MockScumm6BinaryView()
     LastBV.set(view)
     

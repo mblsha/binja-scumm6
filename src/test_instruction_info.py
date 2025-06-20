@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from binja_helpers import binja_api  # noqa: F401
 from binaryninja.enums import BranchType
 
-from src.scumm6 import Scumm6Legacy, Scumm6New, LastBV
+from src.scumm6 import Scumm6, LastBV
 from src.test_mocks import MockScumm6BinaryView
 
 
@@ -44,8 +44,7 @@ def test_instruction_info_conditional_jumps() -> None:
     """Test that conditional jump instructions properly populate InstructionInfo."""
     
     # Test both legacy and new decoders
-    legacy_arch = Scumm6Legacy()
-    new_arch = Scumm6New()
+    arch = Scumm6()
     
     view = MockScumm6BinaryView()
     LastBV.set(view)
@@ -99,90 +98,56 @@ def test_instruction_info_conditional_jumps() -> None:
         # Write bytecode to memory
         view.write_memory(case_addr, case_bytecode)
         
-        # Test legacy architecture
-        legacy_info = legacy_arch.get_instruction_info(case_bytecode, case_addr)
-        print(f"Legacy InstructionInfo: {legacy_info}")
+        # Test architecture
+        info = arch.get_instruction_info(case_bytecode, case_addr)
+        print(f"InstructionInfo: {info}")
         
-        # Both should return valid InstructionInfo
-        assert legacy_info is not None, f"Legacy decoder returned None for {case_name}"
+        assert info is not None, f"Decoder returned None for {case_name}"
         
-        # Extract branches from different possible attributes
-        legacy_branches = []
-        if hasattr(legacy_info, 'branches') and legacy_info.branches:
-            legacy_branches = [(b.type, b.target) for b in legacy_info.branches]
-            print(f"Legacy branches: {[(b.type, hex(b.target) if b.target is not None else None) for b in legacy_info.branches]}")
-        elif hasattr(legacy_info, 'mybranches') and legacy_info.mybranches:
-            legacy_branches = legacy_info.mybranches
-            print(f"Legacy mybranches: {[(b[0], hex(b[1]) if b[1] is not None else None) for b in legacy_info.mybranches]}")
-        
-        # Test new architecture  
-        new_info = new_arch.get_instruction_info(case_bytecode, case_addr)
-        print(f"New InstructionInfo: {new_info}")
-        
-        assert new_info is not None, f"New decoder returned None for {case_name}"
-        
-        # Extract branches from different possible attributes
-        new_branches = []
-        if hasattr(new_info, 'branches') and new_info.branches:
-            new_branches = [(b.type, b.target) for b in new_info.branches]
-            print(f"New branches: {[(b.type, hex(b.target) if b.target is not None else None) for b in new_info.branches]}")
-        elif hasattr(new_info, 'mybranches') and new_info.mybranches:
-            new_branches = new_info.mybranches
-            print(f"New mybranches: {[(b[0], hex(b[1]) if b[1] is not None else None) for b in new_info.mybranches]}")
+        # Extract branches
+        branches = []
+        if hasattr(info, 'branches') and info.branches:
+            branches = [(b.type, b.target) for b in info.branches]
+            print(f"Branches: {[(b.type, hex(b.target) if b.target is not None else None) for b in info.branches]}")
+        elif hasattr(info, 'mybranches') and info.mybranches:
+            branches = info.mybranches
+            print(f"Mybranches: {[(b[0], hex(b[1]) if b[1] is not None else None) for b in info.mybranches]}")
         
         # Check instruction length
-        assert legacy_info.length == case_expected_length, \
-            f"Legacy decoder wrong length for {case_name}: expected {case_expected_length}, got {legacy_info.length}"
-        assert new_info.length == case_expected_length, \
-            f"New decoder wrong length for {case_name}: expected {case_expected_length}, got {new_info.length}"
+        assert info.length == case_expected_length, \
+            f"Decoder wrong length for {case_name}: expected {case_expected_length}, got {info.length}"
         
         # Check branch information
         if "expected_unconditional_branch" in case:
             # Unconditional jump
             expected_unconditional_branch = cast(int, case["expected_unconditional_branch"])
             
-            assert len(legacy_branches) == 1, f"Legacy decoder should have 1 branch for {case_name}, got {len(legacy_branches)}"
-            assert len(new_branches) == 1, f"New decoder should have 1 branch for {case_name}, got {len(new_branches)}"
+            assert len(branches) == 1, f"Decoder should have 1 branch for {case_name}, got {len(branches)}"
             
-            legacy_branch_type, legacy_branch_target = legacy_branches[0]
-            new_branch_type, new_branch_target = new_branches[0]
+            branch_type, branch_target = branches[0]
             
-            assert legacy_branch_type == BranchType.UnconditionalBranch, f"Legacy decoder wrong branch type for {case_name}"
-            assert new_branch_type == BranchType.UnconditionalBranch, f"New decoder wrong branch type for {case_name}"
-            
-            assert legacy_branch_target == expected_unconditional_branch, \
-                f"Legacy decoder wrong branch target for {case_name}: expected {hex(expected_unconditional_branch)}, got {hex(legacy_branch_target)}"
-            assert new_branch_target == expected_unconditional_branch, \
-                f"New decoder wrong branch target for {case_name}: expected {hex(expected_unconditional_branch)}, got {hex(new_branch_target)}"
+            assert branch_type == BranchType.UnconditionalBranch, f"Decoder wrong branch type for {case_name}"
+            assert branch_target == expected_unconditional_branch, \
+                f"Decoder wrong branch target for {case_name}: expected {hex(expected_unconditional_branch)}, got {hex(branch_target)}"
         else:
             # Conditional jump
             expected_true_branch = cast(int, case["expected_true_branch"])
             # expected_false_branch = cast(int, case["expected_false_branch"])  # FalseBranch is now implicit
             
-            assert len(legacy_branches) == 1, f"Legacy decoder should have 1 branch for {case_name}, got {len(legacy_branches)}"
-            assert len(new_branches) == 1, f"New decoder should have 1 branch for {case_name}, got {len(new_branches)}"
+            assert len(branches) == 1, f"Decoder should have 1 branch for {case_name}, got {len(branches)}"
             
             # Only TrueBranch should be present (FalseBranch is implicit)
-            legacy_true = None
-            new_true = None
+            true_branch = None
             
-            for branch_type, branch_target in legacy_branches:
+            for branch_type, branch_target in branches:
                 if branch_type == BranchType.TrueBranch:
-                    legacy_true = (branch_type, branch_target)
+                    true_branch = (branch_type, branch_target)
             
-            for branch_type, branch_target in new_branches:
-                if branch_type == BranchType.TrueBranch:
-                    new_true = (branch_type, branch_target)
+            assert true_branch is not None, f"Decoder missing TrueBranch for {case_name}"
             
-            assert legacy_true is not None, f"Legacy decoder missing TrueBranch for {case_name}"
-            assert new_true is not None, f"New decoder missing TrueBranch for {case_name}"
-            
-            # Check branch targets (only TrueBranch now)
-            assert legacy_true[1] == expected_true_branch, \
-                f"Legacy decoder wrong true branch target for {case_name}: expected {hex(expected_true_branch)}, got {hex(legacy_true[1])}"
-            
-            assert new_true[1] == expected_true_branch, \
-                f"New decoder wrong true branch target for {case_name}: expected {hex(expected_true_branch)}, got {hex(new_true[1])}"
+            # Check branch target (only TrueBranch now)
+            assert true_branch[1] == expected_true_branch, \
+                f"Decoder wrong true branch target for {case_name}: expected {hex(expected_true_branch)}, got {hex(true_branch[1])}"
         
         print(f"✅ {case_name} passed all checks")
 
@@ -219,7 +184,7 @@ def test_instruction_info_real_script_data() -> None:
         0x65               # [001A] stop_object_code1
     ])
     
-    new_arch = Scumm6New()
+    new_arch = Scumm6()
     view = MockScumm6BinaryView()
     view.write_memory(0x1000, real_bytecode)
     LastBV.set(view)
