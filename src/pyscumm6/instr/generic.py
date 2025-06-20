@@ -1,7 +1,8 @@
 """Generic lifters via factories and base classes for SCUMM6 instructions."""
 
 from abc import abstractmethod
-from typing import List, Type, Any
+from typing import List, Type, Any, Optional
+import copy
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
 from binaryninja.enums import BranchType
@@ -193,8 +194,38 @@ class ComparisonStackOp(Instruction):
 class VariableWriteOp(Instruction):
     """Base class for instructions that pop a value and write it to a variable."""
     
+    def fuse(self, previous: Instruction) -> Optional['VariableWriteOp']:
+        """Attempt to fuse with the previous instruction."""
+        # Only fuse if we need an operand
+        if len(self.fused_operands) >= 1:
+            return None
+        
+        # Check if previous is a fusible push instruction
+        if not self._is_fusible_push(previous):
+            return None
+        
+        # Create a new fused instruction
+        fused = copy.deepcopy(self)
+        
+        # Add the previous instruction as our operand
+        fused.fused_operands.append(previous)
+        
+        # Update length to include the fused instruction
+        fused._length = self._length + previous.length()
+        
+        return fused
+    
+    def _is_fusible_push(self, instr: Instruction) -> bool:
+        """Check if instruction is a push that can be fused."""
+        return instr.__class__.__name__ in [
+            'PushByte', 'PushWord', 'PushByteVar', 'PushWordVar'
+        ]
+    
     @property
     def stack_pop_count(self) -> int:
+        # If we have a fused operand, we don't pop from stack
+        if hasattr(self, 'fused_operands') and self.fused_operands:
+            return 0
         return 1
     
     @property
@@ -210,18 +241,56 @@ class VariableWriteOp(Instruction):
         pass
     
     def render(self) -> List[Token]:
+        # Check for fusion first, before UnknownOp case
+        if self.fused_operands:
+            # For fused operands, we need to extract the variable ID
+            if isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp):
+                # For write_byte_var which has a Kaitai mapping bug
+                # Extract the variable ID directly from the raw bytecode
+                var_id = self._extract_var_id_from_unknownop()
+                tokens = []
+                tokens.append(TInt(f"var_{var_id}"))
+                tokens.append(TSep(" = "))
+                tokens.extend(self._render_operand(self.fused_operands[0]))
+                return tokens
+            else:
+                var_id = self.op_details.body.data
+                # Show as assignment: var_10 = 5
+                tokens = []
+                tokens.append(TInt(f"var_{var_id}"))
+                tokens.append(TSep(" = "))
+                tokens.extend(self._render_operand(self.fused_operands[0]))
+                return tokens
+        
         # Handle potential UnknownOp case for write_byte_var due to Kaitai bug
         if isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp):
             # For write_byte_var which has a Kaitai mapping bug
             return [TInstr(self.instruction_name), TSep("("), TInstr("var_?"), TSep(")")]
         else:
             var_id = self.op_details.body.data
+            # Normal stack-based rendering
             return [
                 TInstr(self.instruction_name),
                 TSep("("),
                 TInt(f"var_{var_id}"),
                 TSep(")"),
             ]
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            # Variable push - extract var number
+            if hasattr(operand.op_details.body, 'data'):
+                var_num = operand.op_details.body.data
+                return [TInt(f"var_{var_num}")]
+        else:
+            # Constant push - extract value
+            if hasattr(operand.op_details.body, 'data'):
+                value = operand.op_details.body.data
+                return [TInt(str(value))]
+        
+        # Fallback
+        return [TInt("?")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         from ... import vars
@@ -238,9 +307,36 @@ class VariableWriteOp(Instruction):
             assert isinstance(self.op_details.body, self.expected_body_type), \
                 f"Expected {self.expected_body_type.__name__} body, got {type(self.op_details.body)}"
             
-            # Pop value from stack and write to variable
-            value = il.pop(4)
-            il.append(vars.il_set_var(il, self.op_details.body, value))
+            if self.fused_operands:
+                # Direct assignment without stack pop
+                value_expr = self._lift_operand(il, self.fused_operands[0])
+                il.append(vars.il_set_var(il, self.op_details.body, value_expr))
+            else:
+                # Pop value from stack and write to variable
+                value = il.pop(4)
+                il.append(vars.il_set_var(il, self.op_details.body, value))
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> any:
+        """Lift a fused operand to IL expression."""
+        from ... import vars
+        
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            # Variable push - use il_get_var
+            return vars.il_get_var(il, operand.op_details.body)
+        else:
+            # Constant push - use const
+            if hasattr(operand.op_details.body, 'data'):
+                value = operand.op_details.body.data
+                return il.const(4, value)
+        
+        # Fallback to undefined
+        return il.undefined()
+
+    def _extract_var_id_from_unknownop(self) -> str:
+        """Extract variable ID from UnknownOp body (workaround for Kaitai bug)."""
+        # For write_byte_var with UnknownOp, we can't reliably extract the var ID
+        # This is a known Kaitai mapping issue
+        return "?"
 
 
 class ControlFlowOp(Instruction):
