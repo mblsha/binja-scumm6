@@ -63,12 +63,9 @@ def test_new_decoder_instruction_info() -> None:
         },
         {
             "name": "if_class_of_is",
-            "bytecode": bytes([0x6D]),  # if_class_of_is (check object class)
+            "bytecode": bytes([0x6D]),  # if_class_of_is (check object class - no branches)
             "addr": 0x1500,
-            "expected_branches": [
-                (BranchType.TrueBranch, 0x1501),     # 0x1500 + 1 (next instruction)
-                (BranchType.FalseBranch, 0x1501),    # 0x1500 + 1 (next instruction)
-            ]
+            "expected_branches": []  # if_class_of_is is not a control flow instruction - it just pushes a result
         }
     ]
     

@@ -293,7 +293,7 @@ class Scumm6(Architecture):
                 return None
 
             result = InstructionInfo()
-            
+
             # Always call analyze - base class sets length, subclasses add CFG info
             new_instr.analyze(result, addr)
 
@@ -314,7 +314,7 @@ class Scumm6(Architecture):
                 if getattr(body, "jump_offset", None) is not None:
                     # Calculate target address
                     target_addr = addr + result.length + body.jump_offset
-                    
+
                     # Check if this is a conditional or unconditional jump
                     if dis.id in ['iff', 'if_not', 'if_class_of_is']:
                         # Conditional jump - add both branches
