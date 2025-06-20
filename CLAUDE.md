@@ -232,3 +232,109 @@ The project aims to achieve descumm-level semantic output:
 - **Variable names**: Symbolic names instead of numeric IDs
 
 Current gap analysis available in `test_descumm_comparison.py`.
+
+## Comparing Plugin Output Against Descumm
+
+The plugin includes a comprehensive testing framework for comparing its disassembly output against the industry-standard `descumm` tool. This helps measure semantic understanding gaps and track progress toward descumm-level output quality.
+
+### Running Descumm Comparison Tests
+
+#### Method 1: Run all comparison tests
+```bash
+python scripts/run_pytest_direct.py src/test_descumm_comparison.py -v
+```
+
+#### Method 2: Run only the parametrized comparison framework
+```bash
+python scripts/run_pytest_direct.py src/test_descumm_comparison.py::test_script_comparison -v
+```
+
+#### Method 3: Run a specific test case
+```bash
+python scripts/run_pytest_direct.py "src/test_descumm_comparison.py::test_script_comparison[room8_scrp18_collision_detection]" -v
+```
+
+#### Method 4: Pattern matching for descumm-related tests
+```bash
+python scripts/run_pytest_direct.py -k "descumm" -v
+```
+
+### Test Framework Architecture
+
+The comparison framework in `src/test_descumm_comparison.py` provides:
+
+1. **Data-Driven Test Cases**: Use `ScriptComparisonTestCase` dataclass to define test scenarios
+2. **Session-Scoped Fixture**: `test_environment` loads `DOTTDEMO.bsc6` and builds `descumm` once per session
+3. **Dynamic Script Extraction**: Automatically extracts bytecode from real SCUMM6 game files
+4. **Dual Execution**: Runs both `descumm` and `Scumm6New` on identical bytecode
+5. **Golden Master Testing**: Compares outputs against expected strings
+
+### Output Quality Comparison
+
+**Descumm Output (Semantic):**
+```
+[0000] (43) localvar5 = (**** INVALID DATA **** - localvar1)
+[0007] (43) localvar6 = (getObjectY(localvar0) - localvar2) 
+[0012] (43) localvar5 = abs(localvar5)
+[0020] (5D) if (localvar5 > localvar3) {
+[002A] (43)   var137 = 0
+[0030] (7C)   stopScript(0)
+[0034] (**) }
+```
+
+**Scumm6New Output (Assembly-like):**
+```
+[0000] push_word_var(var_0)
+[0003] get_object_x
+[0004] push_word_var(var_1)
+[0007] sub
+[0008] write_word_var(var_5)
+[000B] push_word_var(var_0)
+[000E] get_object_y
+```
+
+### Adding New Test Cases
+
+To add a new script comparison test:
+
+```python
+script_test_cases.append(
+    ScriptComparisonTestCase(
+        test_id="room11_enter_initialization",
+        script_name="room11_enter", 
+        expected_descumm_output=dedent("""
+            [0000] (43) localvar1 = 100
+            [0006] (66) stopObjectCodeB()
+            END
+        """).strip(),
+        expected_new_disasm_output=dedent("""
+            [0000] push_word(100)
+            [0003] write_word_var(var_1)
+            [0006] stop_object_code2
+        """).strip()
+    )
+)
+```
+
+### Key Insights from Comparison Tests
+
+1. **Expression Building**: Descumm reconstructs high-level expressions like `localvar5 = abs(localvar5)` while the plugin shows individual stack operations
+2. **Control Flow**: Descumm shows semantic constructs like `if (condition) { ... }` while the plugin shows raw conditional jumps
+3. **Variable Context**: Descumm understands variable semantics and shows meaningful names, while the plugin uses generic `var_N` notation
+4. **Function Recognition**: Descumm recognizes SCUMM function calls and shows them with parameters, while the plugin shows raw opcodes
+
+### Requirements for Comparison Tests
+
+- **descumm tool**: Automatically built from `scummvm-tools/` directory
+- **DOTTDEMO.bsc6**: Day of the Tentacle demo file (auto-extracted from ZIP if available)
+- **Mock Binary Ninja**: Tests run with `FORCE_BINJA_MOCK=1` for license-free operation
+
+### Test Data Source
+
+All comparison tests use real SCUMM6 bytecode from **Day of the Tentacle Demo**:
+- **Container**: `DOTTDEMO.bsc6` (parsed with Kaitai Struct)
+- **Test Script**: `room8_scrp18` (463 bytes, ellipse collision detection algorithm)
+- **Address**: `0x8D79D` in the original container file
+- **Scripts Available**: 66 total scripts from rooms 1-12 plus global scripts
+
+This real-world data ensures the comparison tests reflect actual game engine semantics rather than synthetic test cases.
