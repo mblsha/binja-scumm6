@@ -291,6 +291,11 @@ script_test_cases = [
             [0008] push_word(93)
             [000B] push_word(1)
             [000E] push_word(1)
+            [0011] start_script_quick(script_id, ...)
+            [0012] push_word(0)
+            [0015] push_word(200)
+            [0018] room_ops.room_screen
+            [001A] stop_object_code1
         """).strip()
     ),
     # Example of a test case that only verifies output generation without specific content

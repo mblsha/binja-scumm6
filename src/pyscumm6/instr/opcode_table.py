@@ -180,6 +180,8 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.find_all_objects: INSTRUCTION_REGISTRY["find_all_objects"],
     # --- Auto-Generated Script and Object Operations ---
     Scumm6Opcodes.OpType.jump_to_script: INSTRUCTION_REGISTRY["jump_to_script"],
+    Scumm6Opcodes.OpType.start_script: INSTRUCTION_REGISTRY["start_script"],
+    Scumm6Opcodes.OpType.start_script_quick: INSTRUCTION_REGISTRY["start_script_quick"],
     Scumm6Opcodes.OpType.start_object: INSTRUCTION_REGISTRY["start_object"],
     Scumm6Opcodes.OpType.start_object_quick: INSTRUCTION_REGISTRY["start_object_quick"],
     # --- Auto-Generated Array Management Operations ---
