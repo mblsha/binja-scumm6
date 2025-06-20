@@ -1,6 +1,6 @@
 """Smart base classes for generated instruction types."""
 
-from typing import List, Optional, Any
+from typing import List, Optional, Any, NamedTuple
 from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName
@@ -494,13 +494,13 @@ class SmartConditionalJump(ControlFlowOp):
         return True
     
     def fuse(self, previous: Instruction) -> Optional['SmartConditionalJump']:
-        """Attempt to fuse with a comparison operation."""
+        """Attempt to fuse with a comparison operation or simple push."""
         # Only fuse if we don't already have operands
         if self.fused_operands:
             return None
             
-        # Check if previous is a comparison operation
-        if not self._is_comparison_op(previous):
+        # Check if previous is a comparison operation or simple push
+        if not (self._is_comparison_op(previous) or self._is_simple_push(previous)):
             return None
             
         # Create fused instruction
@@ -514,36 +514,49 @@ class SmartConditionalJump(ControlFlowOp):
         comparison_ops = ['Eq', 'Neq', 'Gt', 'Lt', 'Le', 'Ge']
         return instr.__class__.__name__ in comparison_ops
     
-    def _render_condition(self, comparison: Instruction) -> List[Token]:
-        """Render a fused comparison as a readable condition."""
-        if not hasattr(comparison, 'fused_operands') or len(comparison.fused_operands) < 2:
-            # Fallback if comparison isn't properly fused
-            return [TText("condition")]
+    def _is_simple_push(self, instr: Instruction) -> bool:
+        """Check if instruction is a simple push that can be fused for loop conditions."""
+        simple_push_ops = ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']
+        return instr.__class__.__name__ in simple_push_ops
+    
+    def _render_condition(self, condition_instr: Instruction) -> List[Token]:
+        """Render a fused condition (comparison or simple push) as readable condition."""
+        # Check if this is a comparison with fused operands
+        if hasattr(condition_instr, 'fused_operands') and len(condition_instr.fused_operands) >= 2:
+            # Get operands (in reverse order due to stack semantics)
+            left_operand = condition_instr.fused_operands[1]
+            right_operand = condition_instr.fused_operands[0]
+            
+            tokens: List[Token] = []
+            tokens.extend(self._render_operand(left_operand))
+            
+            # Get comparison operator and potentially invert it
+            op_name = condition_instr.__class__.__name__.lower()
+            if self._is_if_not:
+                # Invert the comparison for readability
+                inverted_ops = {'eq': '!=', 'neq': '==', 'gt': '<=', 'lt': '>=', 'le': '>', 'ge': '<'}
+                op_symbol = inverted_ops.get(op_name, f"!{op_name}")
+            else:
+                # Use normal comparison
+                normal_ops = {'eq': '==', 'neq': '!=', 'gt': '>', 'lt': '<', 'le': '<=', 'ge': '>='}
+                op_symbol = normal_ops.get(op_name, op_name)
+            
+            tokens.append(TText(f" {op_symbol} "))
+            tokens.extend(self._render_operand(right_operand))
+            
+            return tokens
         
-        # Get operands (in reverse order due to stack semantics)
-        left_operand = comparison.fused_operands[1]
-        right_operand = comparison.fused_operands[0]
+        # Check if this is a simple push (for simple truthiness test)
+        elif condition_instr.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']:
+            tokens: List[Token] = []
+            if self._is_if_not:
+                tokens.append(TText("!"))
+            tokens.extend(self._render_operand(condition_instr))
+            return tokens
         
-        tokens: List[Token] = []
-        tokens.append(TText("("))
-        tokens.extend(self._render_operand(left_operand))
-        
-        # Get comparison operator and potentially invert it
-        op_name = comparison.__class__.__name__.lower()
-        if self._is_if_not:
-            # Invert the comparison for readability
-            inverted_ops = {'eq': '!=', 'neq': '==', 'gt': '<=', 'lt': '>=', 'le': '>', 'ge': '<'}
-            op_symbol = inverted_ops.get(op_name, f"!{op_name}")
+        # Fallback for unknown condition types
         else:
-            # Use normal comparison
-            normal_ops = {'eq': '==', 'neq': '!=', 'gt': '>', 'lt': '<', 'le': '<=', 'ge': '>='}
-            op_symbol = normal_ops.get(op_name, op_name)
-        
-        tokens.append(TText(f" {op_symbol} "))
-        tokens.extend(self._render_operand(right_operand))
-        tokens.append(TText(")"))
-        
-        return tokens
+            return [TText("condition")]
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
@@ -1106,3 +1119,191 @@ class SmartSemanticIntrinsicOp(Instruction):
         # 3. Handle the script context passing
         # For now, this is a placeholder
         pass
+
+
+# ============================================================================
+# Loop Pattern Recognition System
+# ============================================================================
+
+class LoopInfo(NamedTuple):
+    """Information about a detected loop pattern."""
+    loop_type: str          # "while", "for", "do_while"
+    body_start: int         # Start address of loop body
+    body_end: int           # End address of loop body  
+    condition: Optional['Instruction']  # Loop condition instruction
+    iterator_var: Optional[int]         # Variable number if it's a counter loop
+    increment_amount: Optional[int]     # Increment amount for counter loops
+
+
+class SmartLoopDetector:
+    """Advanced loop pattern detection for SCUMM6 bytecode."""
+    
+    @staticmethod
+    def detect_loop_pattern(
+        conditional_jump: 'SmartConditionalJump', 
+        address: int
+    ) -> Optional[LoopInfo]:
+        """
+        Detect if a conditional jump represents a loop pattern.
+        
+        Args:
+            conditional_jump: The conditional jump instruction to analyze
+            address: Current address of the instruction
+            
+        Returns:
+            LoopInfo if a loop pattern is detected, None otherwise
+        """
+        jump_offset = conditional_jump.op_details.body.jump_offset
+        
+        # Check for backward jump (loop indicator)
+        if jump_offset >= 0:
+            return None  # Forward jumps are not loops
+            
+        # Calculate loop boundaries
+        loop_start = address + conditional_jump.length() + jump_offset
+        loop_end = address
+        
+        # Analyze the condition for loop type detection
+        if conditional_jump.fused_operands:
+            condition = conditional_jump.fused_operands[0]
+            loop_type = SmartLoopDetector._analyze_condition_type(condition)
+            iterator_var = SmartLoopDetector._detect_iterator_variable(condition)
+        else:
+            condition = None
+            loop_type = "while"  # Default for unfused conditions
+            iterator_var = None
+            
+        return LoopInfo(
+            loop_type=loop_type,
+            body_start=loop_start,
+            body_end=loop_end,
+            condition=condition,
+            iterator_var=iterator_var,
+            increment_amount=None  # TODO: Detect increment patterns
+        )
+    
+    @staticmethod
+    def _analyze_condition_type(condition: 'Instruction') -> str:
+        """Analyze the condition to determine likely loop type."""
+        if not hasattr(condition, 'fused_operands') or len(condition.fused_operands) < 2:
+            return "while"
+            
+        # Check for counter-style conditions (var < constant)
+        left_operand = condition.fused_operands[1]  # Due to stack order
+        right_operand = condition.fused_operands[0]
+        
+        # If comparing variable to constant (either order), likely a for-loop
+        var_const_comparison = (
+            (left_operand.__class__.__name__ in ['PushByteVar', 'PushWordVar'] and
+             right_operand.__class__.__name__ in ['PushByte', 'PushWord']) or
+            (left_operand.__class__.__name__ in ['PushByte', 'PushWord'] and
+             right_operand.__class__.__name__ in ['PushByteVar', 'PushWordVar'])
+        )
+        
+        if var_const_comparison:
+            if condition.__class__.__name__.lower() in ['lt', 'le', 'gt', 'ge']:
+                return "for"
+                
+        return "while"
+    
+    @staticmethod
+    def _detect_iterator_variable(condition: 'Instruction') -> Optional[int]:
+        """Detect if a variable is being used as a loop iterator."""
+        if not hasattr(condition, 'fused_operands') or len(condition.fused_operands) < 2:
+            return None
+            
+        left_operand = condition.fused_operands[1]
+        right_operand = condition.fused_operands[0]
+        
+        # Check if left operand is a variable push
+        if left_operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            if hasattr(left_operand.op_details.body, 'data'):
+                return left_operand.op_details.body.data
+        
+        # Check if right operand is a variable push (reversed order case)
+        elif right_operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            if hasattr(right_operand.op_details.body, 'data'):
+                return right_operand.op_details.body.data
+                
+        return None
+
+
+class SmartLoopConditionalJump(SmartConditionalJump):
+    """Enhanced conditional jump with loop pattern recognition."""
+    
+    def __init__(self, kaitai_op: Any, length: int) -> None:
+        super().__init__(kaitai_op, length)
+        self.detected_loop: Optional[LoopInfo] = None
+    
+    def detect_and_fuse_loop(self, address: int) -> bool:
+        """
+        Detect if this conditional jump represents a loop pattern.
+        
+        Args:
+            address: Current instruction address
+            
+        Returns:
+            True if a loop pattern was detected and fused
+        """
+        self.detected_loop = SmartLoopDetector.detect_loop_pattern(self, address)
+        return self.detected_loop is not None
+    
+    def render(self) -> List[Token]:
+        """Enhanced rendering that shows loop patterns when detected."""
+        if self.detected_loop:
+            return self._render_loop_pattern()
+        else:
+            return super().render()
+    
+    def _render_loop_pattern(self) -> List[Token]:
+        """Render the instruction as a loop construct."""
+        assert self.detected_loop is not None
+        
+        tokens: List[Token] = []
+        loop_info = self.detected_loop
+        
+        if loop_info.loop_type == "for" and loop_info.iterator_var is not None:
+            # Render as for-loop style
+            tokens.append(TInstr("for"))
+            tokens.append(TText(" (var_"))
+            tokens.append(TInt(str(loop_info.iterator_var)))
+            
+            if loop_info.condition:
+                # Add condition rendering
+                condition_tokens = loop_info.condition.render()
+                if condition_tokens:
+                    tokens.append(TText("; "))
+                    tokens.extend(condition_tokens)
+            
+            tokens.append(TText(") {"))
+            
+        else:
+            # Render as while-loop style
+            tokens.append(TInstr("while"))
+            tokens.append(TText(" ("))
+            
+            if self.fused_operands and self.fused_operands[0]:
+                # Render the fused condition
+                condition_tokens = self._render_condition(self.fused_operands[0])
+                tokens.extend(condition_tokens)
+            else:
+                tokens.append(TText("condition"))
+            
+            tokens.append(TText(") {"))
+        
+        # Add loop body information as comment
+        body_size = loop_info.body_end - loop_info.body_start
+        tokens.append(TText(f" # {body_size} bytes"))
+        
+        return tokens
+
+
+# Enhanced conditional jump classes with loop detection
+class SmartLoopIfNot(SmartLoopConditionalJump):
+    """If-not conditional jump with loop pattern recognition."""
+    _is_if_not = True
+
+
+class SmartLoopIff(SmartLoopConditionalJump):
+    """If conditional jump with loop pattern recognition."""
+    _is_if_not = False

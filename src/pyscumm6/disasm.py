@@ -126,6 +126,45 @@ def decode_with_fusion(data: bytes, addr: int) -> Optional[Instruction]:
     try:
         for instr, _ in fused_iterator:
             last_instruction = instr
+        
+        # Apply loop pattern recognition as final step
+        if last_instruction:
+            last_instruction = _apply_loop_detection(last_instruction, addr)
+            
         return last_instruction
     except StopIteration:
         return None
+
+
+def _apply_loop_detection(instruction: Instruction, addr: int) -> Instruction:
+    """
+    Apply loop pattern recognition to a fused instruction.
+    
+    Args:
+        instruction: The instruction to analyze for loop patterns
+        addr: Address of the instruction
+        
+    Returns:
+        Enhanced instruction with loop detection (may be the same object)
+    """
+    # Import here to avoid circular imports
+    from .instr.smart_bases import SmartLoopIfNot, SmartLoopIff, SmartConditionalJump
+    
+    # Check if this is a conditional jump that could be a loop
+    if isinstance(instruction, SmartConditionalJump):
+        # Create enhanced version with loop detection
+        if instruction.__class__.__name__ == "SmartIfNot":
+            loop_instruction = SmartLoopIfNot(instruction.op_details, instruction._length)
+        elif instruction.__class__.__name__ == "SmartIff":
+            loop_instruction = SmartLoopIff(instruction.op_details, instruction._length)
+        else:
+            return instruction  # Not a recognized conditional jump type
+        
+        # Copy fusion state
+        loop_instruction.fused_operands = instruction.fused_operands.copy()
+        
+        # Attempt loop detection
+        if loop_instruction.detect_and_fuse_loop(addr):
+            return loop_instruction
+    
+    return instruction
