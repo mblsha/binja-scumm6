@@ -314,10 +314,17 @@ class Scumm6(Architecture):
             # print(op, body, op.id)
             if body:
                 if getattr(body, "jump_offset", None) is not None:
-                    result.add_branch(
-                        BranchType.TrueBranch, addr + result.length + body.jump_offset
-                    )
-                    result.add_branch(BranchType.FalseBranch, addr + result.length)
+                    # Calculate target address
+                    target_addr = addr + result.length + body.jump_offset
+                    
+                    # Check if this is a conditional or unconditional jump
+                    if dis.id in ['iff', 'if_not', 'if_class_of_is']:
+                        # Conditional jump - add both branches
+                        result.add_branch(BranchType.TrueBranch, target_addr)
+                        result.add_branch(BranchType.FalseBranch, addr + result.length)
+                    else:
+                        # Unconditional jump - add only one branch
+                        result.add_branch(BranchType.UnconditionalBranch, target_addr)
                     # raise Exception('Unhandled jump_offset for op %s' % op.id)
 
             return result

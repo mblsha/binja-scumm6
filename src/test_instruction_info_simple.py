@@ -8,6 +8,7 @@ os.environ["FORCE_BINJA_MOCK"] = "1"
 
 import sys
 import os
+from typing import List, Tuple, TypedDict
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,14 +20,21 @@ from src.scumm6 import Scumm6New, LastBV
 from src.test_mocks import MockScumm6BinaryView
 
 
-def test_new_decoder_instruction_info():
+class InstructionTestCase(TypedDict):
+    name: str
+    bytecode: bytes
+    addr: int
+    expected_branches: List[Tuple[BranchType, int]]
+
+
+def test_new_decoder_instruction_info() -> None:
     """Test that the new decoder correctly populates InstructionInfo."""
     
     arch = Scumm6New()
     view = MockScumm6BinaryView()
     LastBV.set(view)
     
-    test_cases = [
+    test_cases: List[InstructionTestCase] = [
         {
             "name": "unless_goto_positive",
             "bytecode": bytes([0x5D, 0x12, 0x00]),  # unless goto +18
