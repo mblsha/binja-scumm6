@@ -21,6 +21,16 @@ class Instruction(ABC):
         self.op_details = kaitai_op
         self._length = length
 
+    @property
+    def stack_pop_count(self) -> int:
+        """
+        The number of values this instruction expects to pop from the stack.
+        This can be inspected by other instructions or analysis passes.
+        Returns -1 for instructions with a variable number of stack arguments.
+        """
+        # Default to 0 for instructions that don't pop anything or are not yet implemented.
+        return 0
+
     @abstractmethod
     def render(self) -> List[Token]:
         """

@@ -62,6 +62,10 @@ class PushWordVar(Instruction):
 
 class Dup(Instruction):
 
+    @property
+    def stack_pop_count(self) -> int:
+        return 1
+
     def render(self) -> List[Token]:
         return [TInstr("dup")]
 
@@ -584,6 +588,10 @@ class WordArrayDec(Instruction):
 
 class Iff(ControlFlowOp):
 
+    @property
+    def stack_pop_count(self) -> int:
+        return 1
+
     def render(self) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
         # Follow descumm philosophy: show semantic meaning
@@ -639,6 +647,10 @@ class Iff(ControlFlowOp):
 
 
 class IfNot(ControlFlowOp):
+
+    @property
+    def stack_pop_count(self) -> int:
+        return 1
 
     def render(self) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
@@ -1372,6 +1384,10 @@ class SoundKludge(IntrinsicOp):
 class IfClassOfIs(Instruction):
     """Check if object belongs to a specific class - pushes boolean result to stack."""
     
+    @property
+    def stack_pop_count(self) -> int:
+        return 2
+
     def render(self) -> List[Token]:
         return [TInstr("if_class_of_is")]
     

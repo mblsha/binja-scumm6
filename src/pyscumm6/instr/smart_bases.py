@@ -14,6 +14,15 @@ class SmartIntrinsicOp(Instruction):
     
     _name: str
     _config: IntrinsicConfig
+
+    @property
+    def stack_pop_count(self) -> int:
+        """Number of values this instruction pops from the stack."""
+        if self._config.special_lift == "cutscene_lift":
+            if hasattr(self.op_details.body, 'args') and hasattr(self.op_details.body.args, '__len__'):
+                return len(self.op_details.body.args)
+            return 0
+        return self._config.pop_count
     
     def render(self) -> List[Token]:
         return [TInstr(self._name)]
@@ -65,7 +74,12 @@ class SmartVariableOp(Instruction):
     
     _name: str
     _config: VariableConfig
-    
+
+    @property
+    def stack_pop_count(self) -> int:
+        """Number of values this instruction pops from the stack."""
+        return 0
+
     def render(self) -> List[Token]:
         var_id = self.op_details.body.data
         return [
@@ -98,7 +112,12 @@ class SmartComplexOp(Instruction):
     
     _name: str
     _config: ComplexConfig
-    
+
+    @property
+    def stack_pop_count(self) -> int:
+        """Number of values this instruction pops from the stack."""
+        return getattr(self.op_details.body.body, "pop_count", 0)
+
     def render(self) -> List[Token]:
         subop_name = self.op_details.body.subop.name
         return [TInstr(f"{self._name}.{subop_name}")]
@@ -137,7 +156,12 @@ class SmartBinaryOp(Instruction):
     
     _name: str
     _config: StackConfig
-    
+
+    @property
+    def stack_pop_count(self) -> int:
+        """Number of values this instruction pops from the stack."""
+        return 2
+
     def render(self) -> List[Token]:
         display_name = self._config.display_name or self._name
         return [TInstr(display_name)]
@@ -164,7 +188,12 @@ class SmartUnaryOp(Instruction):
     
     _name: str
     _config: StackConfig
-    
+
+    @property
+    def stack_pop_count(self) -> int:
+        """Number of values this instruction pops from the stack."""
+        return 1
+
     def render(self) -> List[Token]:
         display_name = self._config.display_name or self._name
         return [TInstr(display_name)]
@@ -191,7 +220,12 @@ class SmartComparisonOp(Instruction):
     
     _name: str
     _config: StackConfig
-    
+
+    @property
+    def stack_pop_count(self) -> int:
+        """Number of values this instruction pops from the stack."""
+        return 2
+
     def render(self) -> List[Token]:
         display_name = self._config.display_name or self._name
         return [TInstr(display_name)]
@@ -218,7 +252,16 @@ class SmartArrayOp(Instruction):
     
     _name: str
     _config: ArrayConfig
-    
+
+    @property
+    def stack_pop_count(self) -> int:
+        """Number of values this instruction pops from the stack."""
+        if self._config.operation == "read":
+            return 2 if self._config.indexed else 1
+        elif self._config.operation == "write":
+            return 3 if self._config.indexed else 2
+        return 0
+
     def render(self) -> List[Token]:
         if hasattr(self.op_details.body, 'array'):
             array_id = self.op_details.body.array
@@ -279,6 +322,17 @@ class SmartSemanticIntrinsicOp(Instruction):
     
     _name: str
     _config: SemanticIntrinsicConfig
+
+    @property
+    def stack_pop_count(self) -> int:
+        """
+        The number of values this instruction expects to pop from the stack.
+        For functions with variable arguments, this returns -1 to indicate
+        the pop count is dynamic and depends on a value on the stack.
+        """
+        if self._config.variable_args:
+            return -1
+        return self._config.pop_count
     
     def render(self) -> List[Token]:
         """Render in descumm-style function call format."""

@@ -44,6 +44,10 @@ def make_intrinsic_instruction(
     """Factory to create a class for instructions that map to a simple intrinsic."""
 
     class IntrinsicInstruction(Instruction):
+        @property
+        def stack_pop_count(self) -> int:
+            return pop_count
+
         def render(self) -> List[Token]:
             return [TInstr(name)]
 
@@ -188,6 +192,10 @@ class ComparisonStackOp(Instruction):
 
 class VariableWriteOp(Instruction):
     """Base class for instructions that pop a value and write it to a variable."""
+    
+    @property
+    def stack_pop_count(self) -> int:
+        return 1
     
     @property
     @abstractmethod
