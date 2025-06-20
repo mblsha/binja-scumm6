@@ -12,7 +12,7 @@ This refactored test framework:
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from typing import List, Any, NamedTuple
+from typing import List, Any, NamedTuple, Optional
 import sys
 import os
 import subprocess
@@ -37,11 +37,12 @@ from src.test_descumm_tool import ensure_demo_bsc6
 
 @dataclass
 class ScriptComparisonTestCase:
-    """Test case for comparing descumm and Scumm6New disassembler outputs."""
+    """Test case for comparing descumm, Scumm6Legacy, and Scumm6New disassembler outputs."""
     test_id: str
     script_name: str  # e.g., "room8_scrp18", "room11_enter"
-    expected_descumm_output: str
-    expected_new_disasm_output: str
+    expected_descumm_output: Optional[str] = None
+    expected_legacy_disasm_output: Optional[str] = None
+    expected_new_disasm_output: Optional[str] = None
 
 
 class ComparisonTestEnvironment(NamedTuple):
@@ -268,6 +269,20 @@ script_test_cases = [
             [0016] (65) stopObjectCodeA()
             END
         """).strip(),
+        expected_legacy_disasm_output=dedent("""
+            [0000] push_word(src.scumm6_opcodes, 137)
+            [0003] is_script_running(src.scumm6_opcodes, 1, 1)
+            [0004] nott(src.scumm6_opcodes)
+            [0005] if_not(src.scumm6_opcodes, 18)
+            [0008] push_word(src.scumm6_opcodes, 93)
+            [000B] push_word(src.scumm6_opcodes, 1)
+            [000E] push_word(src.scumm6_opcodes, 1)
+            [0011] start_script_quick(src.scumm6_opcodes, 1, True, True)
+            [0012] push_word(src.scumm6_opcodes, 0)
+            [0015] push_word(src.scumm6_opcodes, 200)
+            [0018] room_ops.room_screen(src.scumm6_opcodes, src.scumm6_opcodes, 2)
+            [001A] stop_object_code1(src.scumm6_opcodes)
+        """).strip(),
         expected_new_disasm_output=dedent("""
             [0000] push_word(137)
             [0003] is_script_running
@@ -277,6 +292,12 @@ script_test_cases = [
             [000B] push_word(1)
             [000E] push_word(1)
         """).strip()
+    ),
+    # Example of a test case that only verifies output generation without specific content
+    ScriptComparisonTestCase(
+        test_id="room2_enter_output_verification",
+        script_name="room2_enter"
+        # No expected outputs - just verifies all disassemblers produce output
     ),
     # Add more test cases here as needed
 ]
@@ -317,11 +338,45 @@ def run_descumm_on_bytecode(descumm_path: Path, bytecode: bytes) -> str:
             [str(descumm_path), "-6", "-u", tmp_file_path],
             capture_output=True,
             text=True,
-            check=True
+            check=False  # Don't raise exception on non-zero exit
         )
-        return result.stdout.strip()
+        # Return stdout even if descumm had errors
+        output = result.stdout.strip()
+        if result.returncode != 0 and result.stderr:
+            # Include stderr information if there was an error
+            output = f"{output}\n<!-- descumm stderr: {result.stderr.strip()} -->"
+        return output
     finally:
         os.unlink(tmp_file_path)
+
+
+def run_legacy_disassembler(bytecode: bytes, start_addr: int) -> str:
+    """Execute Scumm6Legacy disassembler and return formatted output."""
+    arch = Scumm6Legacy()
+    view = MockScumm6BinaryView()
+    view.write_memory(start_addr, bytecode)
+    LastBV.set(view)
+    
+    output_lines = []
+    offset = 0
+    
+    while offset < len(bytecode):
+        addr = start_addr + offset
+        remaining_data = bytecode[offset:]
+        
+        # Get instruction text
+        result = arch.get_instruction_text(remaining_data, addr)
+        if result is None:
+            break
+            
+        tokens, length = result
+        text = format_output_as_text(tokens)
+        
+        # Format as [offset] disassembly_text
+        output_lines.append(f"[{offset:04X}] {text}")
+        offset += length
+    
+    return '\n'.join(output_lines)
 
 
 def run_new_disassembler(bytecode: bytes, start_addr: int) -> str:
@@ -360,28 +415,49 @@ def format_output_as_text(tokens: List[Any]) -> str:
 
 @pytest.mark.parametrize("case", script_test_cases, ids=lambda c: c.test_id)
 def test_script_comparison(case: ScriptComparisonTestCase, test_environment: ComparisonTestEnvironment) -> None:
-    """Main parametrized test function comparing descumm and Scumm6New outputs."""
+    """Main parametrized test function comparing descumm, Scumm6Legacy, and Scumm6New outputs."""
     
     # 1. Find and extract the script bytecode
     script_info = find_script_by_name(case.script_name, test_environment.scripts)
     bytecode = test_environment.bsc6_data[script_info.start:script_info.end]
     
-    # 2. Execute descumm tool
+    # 2. Execute all disassemblers
     descumm_output = run_descumm_on_bytecode(test_environment.descumm_path, bytecode)
-    
-    # 3. Execute the new disassembler
+    legacy_disasm_output = run_legacy_disassembler(bytecode, script_info.start)
     new_disasm_output = run_new_disassembler(bytecode, script_info.start)
     
-    # 4. Assertions
-    expected_descumm = dedent(case.expected_descumm_output).strip()
-    assert descumm_output.strip() == expected_descumm, \
-        f"descumm output for '{case.script_name}' does not match expected.\n" \
-        f"Expected:\n{expected_descumm}\n\nActual:\n{descumm_output.strip()}"
+    # 3. Print outputs for visibility (useful for generating new test cases)
+    print(f"\n=== {case.script_name} Comparison ===")
+    print("DESCUMM OUTPUT:")
+    print(descumm_output)
+    print("\nLEGACY DISASM OUTPUT:")
+    print(legacy_disasm_output)
+    print("\nNEW DISASM OUTPUT:")
+    print(new_disasm_output)
     
-    expected_new_disasm = dedent(case.expected_new_disasm_output).strip()
-    assert new_disasm_output.strip() == expected_new_disasm, \
-        f"Scumm6New disassembler output for '{case.script_name}' does not match expected.\n" \
-        f"Expected:\n{expected_new_disasm}\n\nActual:\n{new_disasm_output.strip()}"
+    # 4. Optional assertions based on what's provided
+    if case.expected_descumm_output is not None:
+        expected_descumm = dedent(case.expected_descumm_output).strip()
+        assert descumm_output.strip() == expected_descumm, \
+            f"descumm output for '{case.script_name}' does not match expected.\n" \
+            f"Expected:\n{expected_descumm}\n\nActual:\n{descumm_output.strip()}"
+    
+    if case.expected_legacy_disasm_output is not None:
+        expected_legacy_disasm = dedent(case.expected_legacy_disasm_output).strip()
+        assert legacy_disasm_output.strip() == expected_legacy_disasm, \
+            f"Scumm6Legacy disassembler output for '{case.script_name}' does not match expected.\n" \
+            f"Expected:\n{expected_legacy_disasm}\n\nActual:\n{legacy_disasm_output.strip()}"
+    
+    if case.expected_new_disasm_output is not None:
+        expected_new_disasm = dedent(case.expected_new_disasm_output).strip()
+        assert new_disasm_output.strip() == expected_new_disasm, \
+            f"Scumm6New disassembler output for '{case.script_name}' does not match expected.\n" \
+            f"Expected:\n{expected_new_disasm}\n\nActual:\n{new_disasm_output.strip()}"
+    
+    # 5. Always verify that outputs were generated
+    assert len(descumm_output.strip()) > 0, f"descumm produced no output for '{case.script_name}'"
+    assert len(legacy_disasm_output.strip()) > 0, f"Scumm6Legacy produced no output for '{case.script_name}'"
+    assert len(new_disasm_output.strip()) > 0, f"Scumm6New produced no output for '{case.script_name}'"
 
 
 # Legacy test functions for backward compatibility

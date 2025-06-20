@@ -266,8 +266,9 @@ The comparison framework in `src/test_descumm_comparison.py` provides:
 1. **Data-Driven Test Cases**: Use `ScriptComparisonTestCase` dataclass to define test scenarios
 2. **Session-Scoped Fixture**: `test_environment` loads `DOTTDEMO.bsc6` and builds `descumm` once per session
 3. **Dynamic Script Extraction**: Automatically extracts bytecode from real SCUMM6 game files
-4. **Dual Execution**: Runs both `descumm` and `Scumm6New` on identical bytecode
-5. **Golden Master Testing**: Compares outputs against expected strings
+4. **Triple Execution**: Runs `descumm`, `Scumm6Legacy`, and `Scumm6New` on identical bytecode
+5. **Optional Golden Master Testing**: Compares outputs against expected strings (optional per disassembler)
+6. **Output Verification**: Always verifies that all disassemblers produce non-empty output
 
 ### Output Quality Comparison
 
@@ -282,36 +283,63 @@ The comparison framework in `src/test_descumm_comparison.py` provides:
 [0034] (**) }
 ```
 
-**Scumm6New Output (Assembly-like):**
+**Scumm6Legacy Output (Raw):**
 ```
-[0000] push_word_var(var_0)
-[0003] get_object_x
-[0004] push_word_var(var_1)
-[0007] sub
-[0008] write_word_var(var_5)
-[000B] push_word_var(var_0)
-[000E] get_object_y
+[0000] push_word(src.scumm6_opcodes, 137)
+[0003] is_script_running(src.scumm6_opcodes, 1, 1)
+[0004] nott(src.scumm6_opcodes)
+[0005] if_not(src.scumm6_opcodes, 18)
+[0008] push_word(src.scumm6_opcodes, 93)
+```
+
+**Scumm6New Output (Clean Assembly-like):**
+```
+[0000] push_word(137)
+[0003] is_script_running
+[0004] nott
+[0005] unless goto +18
+[0008] push_word(93)
 ```
 
 ### Adding New Test Cases
 
-To add a new script comparison test:
-
+#### Full Comparison Test (All Three Disassemblers)
 ```python
 script_test_cases.append(
     ScriptComparisonTestCase(
         test_id="room11_enter_initialization",
-        script_name="room11_enter", 
+        script_name="room11_enter",
         expected_descumm_output=dedent("""
-            [0000] (43) localvar1 = 100
-            [0006] (66) stopObjectCodeB()
+            [0000] (5D) if (!**** INVALID DATA ****) {
+            [0004] (5F)   startScriptQuick(93,[1])
+            [000E] (9C)   roomOps.setScreen(0,200)
+            [0016] (**) }
+            [0016] (65) stopObjectCodeA()
             END
         """).strip(),
+        expected_legacy_disasm_output=dedent("""
+            [0000] push_word(src.scumm6_opcodes, 137)
+            [0003] is_script_running(src.scumm6_opcodes, 1, 1)
+            [0004] nott(src.scumm6_opcodes)
+            [0005] if_not(src.scumm6_opcodes, 18)
+        """).strip(),
         expected_new_disasm_output=dedent("""
-            [0000] push_word(100)
-            [0003] write_word_var(var_1)
-            [0006] stop_object_code2
+            [0000] push_word(137)
+            [0003] is_script_running
+            [0004] nott
+            [0005] unless goto +18
         """).strip()
+    )
+)
+```
+
+#### Output Verification Test (No Expected Content)
+```python
+script_test_cases.append(
+    ScriptComparisonTestCase(
+        test_id="room2_enter_output_verification",
+        script_name="room2_enter"
+        # No expected outputs - just verifies all disassemblers produce output
     )
 )
 ```
@@ -340,7 +368,8 @@ All comparison tests use real SCUMM6 bytecode from **Day of the Tentacle Demo**:
 
 ### Current Test Cases
 
-1. **`room8_scrp18_collision_detection`**: Complex collision detection with mathematical operations, conditionals, and error handling
-2. **`room11_enter_initialization`**: Simple room entry script demonstrating script management and screen setup
+1. **`room8_scrp18_collision_detection`**: Complex collision detection (descumm + new disasm comparison)
+2. **`room11_enter_initialization`**: Room initialization script (all three disassemblers comparison)
+3. **`room2_enter_output_verification`**: Output verification only (no content assertions)
 
 This real-world data ensures the comparison tests reflect actual game engine semantics rather than synthetic test cases.
