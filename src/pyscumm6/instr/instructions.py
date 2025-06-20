@@ -1,7 +1,7 @@
 """Concrete SCUMM6 instruction implementations."""
 
 from typing import List
-from binja_helpers.tokens import Token, TInstr, TSep, TInt
+from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName, InstructionInfo
 from ...scumm6_opcodes import Scumm6Opcodes
@@ -1566,12 +1566,40 @@ class PrintText(IntrinsicOp):
         return "print_text"
 
 
-class PrintDebug(IntrinsicOp):
+class PrintDebug(Instruction):
     """Print debug with text parameter."""
     
-    @property
-    def intrinsic_name(self) -> str:
-        return "print_debug"
+    def render(self) -> List[Token]:
+        # Check if this instruction contains a message
+        from ...message import parse_message
+        from ...scumm6_opcodes import Scumm6Opcodes
+        
+        if hasattr(self.op_details.body, 'subop') and hasattr(self.op_details.body, 'body'):
+            # This is a Print structure with a subop
+            if (self.op_details.body.subop == Scumm6Opcodes.SubopType.textstring and 
+                isinstance(self.op_details.body.body, Scumm6Opcodes.Message)):
+                # Parse the message to extract text
+                message_parts = parse_message(self.op_details.body.body)
+                # Extract just the string parts (ignore special parts for now)
+                text_parts = [part for part in message_parts if isinstance(part, str)]
+                if text_parts:
+                    # Join all text parts and display as parameter
+                    message_text = "".join(text_parts)
+                    return [TInstr("print_debug"), TText(".msg("), TText(f'"{message_text}"'), TText(")")]
+            else:
+                # Handle other subops like begin(), end(), etc.
+                subop_name = self.op_details.body.subop.name
+                # Map baseop to begin to match descumm format
+                if subop_name == "baseop":
+                    subop_name = "begin"
+                return [TInstr("print_debug"), TText(f".{subop_name}()")]
+        
+        # Fallback for simple print_debug without subop
+        return [TInstr("print_debug")]
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        # For LLIL, treat as a simple intrinsic
+        il.append(il.intrinsic([], "print_debug", []))
 
 
 class PrintSystem(IntrinsicOp):

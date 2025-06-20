@@ -132,4 +132,8 @@ def generate_all_instructions() -> Dict[str, Type[Instruction]]:
     for name, semantic_config in SEMANTIC_CONFIGS.items():
         registry[name] = create_semantic_intrinsic_instruction(name, semantic_config)
     
+    # Add custom instruction implementations
+    from . import instructions
+    registry["print_debug"] = instructions.PrintDebug
+    
     return registry

@@ -215,7 +215,7 @@ INTRINSIC_CONFIGS: Dict[str, IntrinsicConfig] = {
     # Dialog and Text Operations
     "print_line": IntrinsicConfig(doc="Print line"),
     "print_text": IntrinsicConfig(doc="Print text"),
-    "print_debug": IntrinsicConfig(doc="Print debug"),
+    # print_debug: Custom implementation in instructions.py
     "print_system": IntrinsicConfig(doc="Print system message"),
     "print_actor": IntrinsicConfig(doc="Print actor dialog"),
     "print_ego": IntrinsicConfig(doc="Print ego dialog"),

@@ -165,14 +165,14 @@ script_test_cases = [
             [0063] push_word(0)
             [0066] lt
             [0067] unless goto +42
-            [006A] print_debug
-            [006C] print_debug
+            [006A] print_debug.begin()
+            [006C] print_debug.msg("x2 value overflowing in ellipse check")
             [0094] push_word_var(var_8)
             [0097] push_word(0)
             [009A] lt
             [009B] unless goto +42
-            [009E] print_debug
-            [00A0] print_debug
+            [009E] print_debug.begin()
+            [00A0] print_debug.msg("y2 value overflowing in ellipse check")
             [00C8] push_word(1)
             [00CB] write_word_var(var_11)
             [00CE] push_word(0)
@@ -221,16 +221,16 @@ script_test_cases = [
             [013D] unless goto +38
             [0140] push_word(1)
             [0143] write_word_var(var_3)
-            [0146] print_debug
-            [0148] print_debug
+            [0146] print_debug.begin()
+            [0148] print_debug.msg("very skinny ellipse warning")
             [0166] push_word_var(var_4)
             [0169] push_word(0)
             [016C] eq
             [016D] unless goto +36
             [0170] push_word(1)
             [0173] write_word_var(var_4)
-            [0176] print_debug
-            [0178] print_debug
+            [0176] print_debug.begin()
+            [0178] print_debug.msg("very flat ellipse warning")
             [0194] push_word_var(var_7)
             [0197] push_word_var(var_3)
             [019A] push_word_var(var_3)
