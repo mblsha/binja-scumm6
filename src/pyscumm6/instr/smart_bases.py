@@ -1,9 +1,43 @@
 """Smart base classes for generated instruction types."""
 
 from typing import List, Optional
-from binja_helpers.tokens import Token, TInstr, TSep, TInt
-from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
-from binaryninja import InstructionInfo, BranchType
+
+try:
+    from binja_helpers.tokens import Token, TInstr, TSep, TInt
+    from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
+    from binaryninja import InstructionInfo, BranchType
+    BINJA_AVAILABLE = True
+except ImportError:
+    # Handle case where Binary Ninja is not available (e.g., in tests)
+    BINJA_AVAILABLE = False
+    # Define minimal stubs for type checking
+    class InstructionInfo:  # type: ignore[no-redef]
+        def __init__(self) -> None:
+            self.length = 0
+            self.add_branch = lambda *args: None
+    
+    class BranchType:  # type: ignore[no-redef]
+        CallDestination = "CallDestination"
+        IndirectBranch = "IndirectBranch"
+        FunctionReturn = "FunctionReturn"
+    
+    class Token:  # type: ignore[no-redef]
+        pass
+    
+    class TInstr(Token):  # type: ignore[no-redef]
+        def __init__(self, name: str) -> None: pass
+    
+    class TSep(Token):  # type: ignore[no-redef]
+        def __init__(self, sep: str) -> None: pass
+    
+    class TInt(Token):  # type: ignore[no-redef]
+        def __init__(self, value: int) -> None: pass
+    
+    class LowLevelILFunction:  # type: ignore[no-redef]
+        pass
+    
+    def LLIL_TEMP(n: int) -> int:
+        return n
 
 from .opcodes import Instruction
 from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
@@ -369,6 +403,10 @@ class SmartSemanticIntrinsicOp(Instruction):
     
     def _handle_control_flow_analysis(self, info: InstructionInfo, addr: int) -> None:
         """Handle control flow analysis for semantic intrinsic operations."""
+        if not BINJA_AVAILABLE:
+            # Skip control flow analysis when Binary Ninja is not available (e.g., in tests)
+            return
+            
         try:
             # For script operations like start_script, the script ID comes from the stack
             # and isn't available during the analyze phase. However, we can still mark
@@ -408,10 +446,12 @@ class SmartSemanticIntrinsicOp(Instruction):
             # Check if the instruction has any embedded data that might be a script ID
             if hasattr(self.op_details, 'body') and hasattr(self.op_details.body, 'data'):
                 # For simple script operations, script ID might be directly in data
-                return self.op_details.body.data
+                data = self.op_details.body.data
+                return int(data) if isinstance(data, (int, float)) else None
             elif hasattr(self.op_details, 'body') and hasattr(self.op_details.body, 'script_id'):
                 # Some instructions might have a dedicated script_id field
-                return self.op_details.body.script_id
+                script_id = self.op_details.body.script_id
+                return int(script_id) if isinstance(script_id, (int, float)) else None
             else:
                 # For stack-based operations like start_script, we can't extract the script ID
                 # during the analyze phase. This is expected and not an error.
