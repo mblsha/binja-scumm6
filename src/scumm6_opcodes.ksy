@@ -354,7 +354,7 @@ types:
             'op_type::land': no_data
             'op_type::lor': no_data
             'op_type::pop1': call_func_pop1
-            # 'op_type::write_byte_var': no_data
+            'op_type::write_byte_var': byte_var_data
             'op_type::write_word_var': word_var_data
             # 'op_type::byte_array_inc': no_data
             # 'op_type::word_array_inc': no_data

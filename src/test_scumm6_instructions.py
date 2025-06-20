@@ -295,7 +295,7 @@ INSTRUCTION_TEST_CASES = [
         b"\x42\x38\x00",
         OpType.write_byte_var,
         "write_byte_var",
-        3,
+        2,
         operand_val=None,
         render_substr="var_",
         llil_count=1,
@@ -384,7 +384,7 @@ def test_instruction_lengths() -> None:
         (b"\x03\x38\x00", 3),  # push_word_var
         (b"\x0c", 1),  # dup
         (b"\x14", 1),  # add
-        (b"\x42\x38\x00", 3),  # write_byte_var
+        (b"\x42\x38\x00", 2),  # write_byte_var
     ]
 
     for data, expected_length in test_cases:
