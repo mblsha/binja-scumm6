@@ -478,18 +478,89 @@ class SmartArrayOp(Instruction):
     _name: str
     _config: ArrayConfig
 
+    def fuse(self, previous: Instruction) -> Optional['SmartArrayOp']:
+        """Attempt to fuse with the previous instruction."""
+        if self._config.operation != "write":
+            return None  # Only support fusion for write operations
+        
+        # Determine how many operands we need
+        expected_operands = 3 if self._config.indexed else 2
+        
+        # Only fuse if we need more operands
+        if len(self.fused_operands) >= expected_operands:
+            return None
+        
+        # Check if previous is a fusible push instruction
+        if not self._is_fusible_push(previous):
+            return None
+        
+        # Create a new fused instruction
+        fused = copy.deepcopy(self)
+        
+        # Add the previous instruction to the front (stack is LIFO)
+        fused.fused_operands.insert(0, previous)
+        
+        # Update length to include the fused instruction
+        fused._length = self._length + previous.length()
+        
+        return fused
+    
+    def _is_fusible_push(self, instr: Instruction) -> bool:
+        """Check if instruction is a push that can be fused."""
+        return instr.__class__.__name__ in [
+            'PushByte', 'PushWord', 'PushByteVar', 'PushWordVar'
+        ]
+
     @property
     def stack_pop_count(self) -> int:
         """Number of values this instruction pops from the stack."""
         if self._config.operation == "read":
             return 2 if self._config.indexed else 1
         elif self._config.operation == "write":
-            return 3 if self._config.indexed else 2
+            base_count = 3 if self._config.indexed else 2
+            # If we have fused operands, we pop fewer from the stack
+            if hasattr(self, 'fused_operands'):
+                return max(0, base_count - len(self.fused_operands))
+            return base_count
         return 0
 
     def render(self) -> List[Token]:
         if hasattr(self.op_details.body, 'array'):
             array_id = self.op_details.body.array
+            
+            # Check for fusion in write operations
+            if self._config.operation == "write" and self.fused_operands:
+                # Render as array assignment: array_5[3] = 10
+                tokens = []
+                tokens.append(TInt(f"array_{array_id}"))
+                tokens.append(TSep("["))
+                
+                # Handle operand order for array operations
+                # For non-indexed: [value, index] → array[index] = value
+                # For indexed: [value, index, base] → array[base + index] = value
+                
+                if len(self.fused_operands) >= 2:
+                    # We have both index and value
+                    if self._config.indexed and len(self.fused_operands) >= 3:
+                        # array[base + index] = value
+                        tokens.extend(self._render_operand(self.fused_operands[2]))  # base
+                        tokens.append(TSep(" + "))
+                        tokens.extend(self._render_operand(self.fused_operands[1]))  # index
+                    else:
+                        # array[index] = value
+                        tokens.extend(self._render_operand(self.fused_operands[1]))  # index
+                    
+                    tokens.append(TSep("] = "))
+                    tokens.extend(self._render_operand(self.fused_operands[0]))  # value
+                    return tokens
+                elif len(self.fused_operands) == 1:
+                    # Partial fusion - might be just the value or just the index
+                    tokens.append(TSep("?, "))
+                    tokens.extend(self._render_operand(self.fused_operands[0]))
+                    tokens.append(TSep("]"))
+                    return tokens
+            
+            # Normal rendering
             return [
                 TInstr(self._name),
                 TSep("("),
@@ -498,6 +569,24 @@ class SmartArrayOp(Instruction):
             ]
         else:
             return [TInstr(self._name)]
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        from binja_helpers.tokens import TInt, TText
+        
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            # Variable push - extract var number
+            if hasattr(operand.op_details.body, 'data'):
+                var_num = operand.op_details.body.data
+                return [TInt(f"var_{var_num}")]
+        else:
+            # Constant push - extract value
+            if hasattr(operand.op_details.body, 'data'):
+                value = operand.op_details.body.data
+                return [TInt(str(value))]
+        
+        # Fallback
+        return [TText("?")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         from binaryninja import IntrinsicName
@@ -526,21 +615,57 @@ class SmartArrayOp(Instruction):
                 ))
             il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
         elif self._config.operation == "write":
-            if self._config.indexed:
-                # Indexed write: pop value, index, base
+            if self.fused_operands:
+                # Build parameters from fused operands
+                params = []
+                for operand in self.fused_operands:
+                    params.append(self._lift_operand(il, operand))
+                
+                # Add any remaining stack pops
+                expected_operands = 3 if self._config.indexed else 2
+                remaining_pops = expected_operands - len(self.fused_operands)
+                for _ in range(remaining_pops):
+                    params.append(il.pop(4))
+                
+                # Generate the intrinsic call
                 il.append(il.intrinsic(
                     [il.reg(4, LLIL_TEMP(0))],
                     IntrinsicName(self._name),
-                    [il.pop(4), il.pop(4), il.pop(4)]
+                    params
                 ))
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
             else:
-                # Simple write: pop value and base
-                il.append(il.intrinsic(
-                    [il.reg(4, LLIL_TEMP(0))],
-                    IntrinsicName(self._name),
-                    [il.pop(4), il.pop(4)]
-                ))
-            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+                # Original behavior
+                if self._config.indexed:
+                    # Indexed write: pop value, index, base
+                    il.append(il.intrinsic(
+                        [il.reg(4, LLIL_TEMP(0))],
+                        IntrinsicName(self._name),
+                        [il.pop(4), il.pop(4), il.pop(4)]
+                    ))
+                else:
+                    # Simple write: pop value and base
+                    il.append(il.intrinsic(
+                        [il.reg(4, LLIL_TEMP(0))],
+                        IntrinsicName(self._name),
+                        [il.pop(4), il.pop(4)]
+                    ))
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> any:
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            # Variable push - use il_get_var
+            from ... import vars
+            return vars.il_get_var(il, operand.op_details.body)
+        else:
+            # Constant push - use const
+            if hasattr(operand.op_details.body, 'data'):
+                value = operand.op_details.body.data
+                return il.const(4, value)
+        
+        # Fallback to undefined
+        return il.undefined()
 
 class SmartSemanticIntrinsicOp(Instruction):
     """Self-configuring semantic intrinsic following descumm philosophy."""
