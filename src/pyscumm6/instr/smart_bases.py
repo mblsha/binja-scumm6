@@ -1,8 +1,9 @@
 """Smart base classes for generated instruction types."""
 
-from typing import List
+from typing import List, Optional
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
+import copy
 
 from .opcodes import Instruction
 from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
@@ -160,26 +161,133 @@ class SmartBinaryOp(Instruction):
     @property
     def stack_pop_count(self) -> int:
         """Number of values this instruction pops from the stack."""
-        return 2
+        # If we have fused operands, we need fewer stack pops
+        return max(0, 2 - len(self.fused_operands))
+
+    def fuse(self, previous: Instruction) -> Optional['SmartBinaryOp']:
+        """
+        Attempt to fuse with a previous push instruction.
+        
+        Args:
+            previous: The previous instruction to potentially fuse with
+            
+        Returns:
+            A new fused instruction if fusion is possible, None otherwise
+        """
+        # Only fuse if we need more operands
+        if len(self.fused_operands) >= 2:
+            return None
+            
+        # Check if previous is a fusible push instruction
+        if not self._is_fusible_push(previous):
+            return None
+            
+        # Create a new fused instruction by copying ourselves
+        fused = copy.deepcopy(self)
+        
+        # Add the previous instruction to the front of fused operands
+        # (since stack is LIFO, the most recent push becomes the first operand)
+        fused.fused_operands.insert(0, previous)
+        
+        # Update length to include the fused instruction
+        fused._length = self._length + previous.length()
+        
+        return fused
+    
+    def _is_fusible_push(self, instr: Instruction) -> bool:
+        """Check if an instruction is a fusible push operation."""
+        # Check for factory-generated push constants (they have specific class names)
+        class_name = instr.__class__.__name__
+        if class_name in ('PushByte', 'PushWord'):
+            return True
+            
+        # Check for manual push variable instructions
+        if class_name in ('PushByteVar', 'PushWordVar'):
+            return True
+            
+        return False
 
     def render(self) -> List[Token]:
         display_name = self._config.display_name or self._name
-        return [TInstr(display_name)]
+        
+        # If we have fused operands, render in function call style
+        if self.fused_operands:
+            tokens = [TInstr(display_name), TSep("(")]
+            
+            for i, operand in enumerate(self.fused_operands):
+                if i > 0:
+                    tokens.extend([TSep(","), TSep(" ")])
+                
+                # Extract the value/name from the operand
+                if hasattr(operand, 'op_details') and hasattr(operand.op_details, 'body'):
+                    if operand.__class__.__name__ in ('PushByteVar', 'PushWordVar'):
+                        # Variable (push_byte_var, push_word_var) 
+                        var_id = operand.op_details.body.data
+                        tokens.append(TInstr(f"var_{var_id}"))
+                    elif hasattr(operand.op_details.body, 'data'):
+                        # Constant value (push_byte, push_word)
+                        tokens.append(TInt(str(operand.op_details.body.data)))
+                    else:
+                        # Fallback
+                        tokens.append(TInstr("?"))
+                else:
+                    tokens.append(TInstr("?"))
+            
+            # If we still need stack operands, indicate with ellipsis
+            remaining_ops = 2 - len(self.fused_operands)
+            if remaining_ops > 0:
+                if self.fused_operands:
+                    tokens.extend([TSep(","), TSep(" ")])
+                tokens.append(TInstr("..."))
+                    
+            tokens.append(TSep(")"))
+            return tokens
+        else:
+            # Standard rendering
+            return [TInstr(display_name)]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
             f"Expected NoData body, got {type(self.op_details.body)}"
         
-        # Pop two values: a (top), b (second)
-        il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
-        il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
+        # Collect operands: use fused operands first, then pop from stack
+        operands = []
+        
+        # Add fused operands (in order - first fused operand is first operand)
+        for operand in self.fused_operands:
+            if hasattr(operand, 'op_details') and hasattr(operand.op_details, 'body'):
+                if hasattr(operand.op_details.body, 'data'):
+                    # Constant value
+                    operands.append(il.const(4, operand.op_details.body.data))
+                elif operand.__class__.__name__ in ('PushByteVar', 'PushWordVar'):
+                    # Variable - use the vars module
+                    from ... import vars
+                    operands.append(vars.il_get_var(il, operand.op_details.body))
+                else:
+                    # Fallback - treat as constant 0
+                    operands.append(il.const(4, 0))
+        
+        # Pop remaining operands from stack
+        remaining_pops = 2 - len(self.fused_operands)
+        for i in range(remaining_pops):
+            operands.append(il.pop(4))
+        
+        # Ensure we have exactly 2 operands
+        if len(operands) != 2:
+            # Fallback - use standard stack operations
+            il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))  # a
+            il.append(il.set_reg(4, LLIL_TEMP(1), il.pop(4)))  # b
+            op1 = il.reg(4, LLIL_TEMP(1))
+            op2 = il.reg(4, LLIL_TEMP(0))
+        else:
+            # Use our collected operands: operand[1] op operand[0] (reverse order for stack semantics)
+            op1 = operands[1] if len(operands) > 1 else operands[0]
+            op2 = operands[0]
 
         # Get the operation from the il object
         il_func = getattr(il, self._config.il_op_name)
 
         # Push result: b op a
-        op1 = il.reg(4, LLIL_TEMP(1))
-        op2 = il.reg(4, LLIL_TEMP(0))
         result = il_func(4, op1, op2)
         il.append(il.push(4, result))
 

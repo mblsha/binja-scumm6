@@ -20,6 +20,7 @@ class Instruction(ABC):
         """
         self.op_details = kaitai_op
         self._length = length
+        self.fused_operands: List['Instruction'] = []
 
     @property
     def stack_pop_count(self) -> int:
