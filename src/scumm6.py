@@ -286,25 +286,41 @@ class Scumm6(Architecture):
         return legacy_instr
 
     def get_instruction_info(self, data: bytes, addr: int) -> Optional[InstructionInfo]:
-        dis = self.decode_instruction(data, addr)
-        if not dis:
-            return None
+        if self.use_new_decoder:
+            # Use new decoder directly for proper InstructionInfo population
+            new_instr = new_decode(data, addr)
+            if new_instr is None:
+                return None
 
-        result = InstructionInfo()
-        result.length = dis.length
+            result = InstructionInfo()
+            result.length = new_instr._length
 
-        op = dis.op
-        body = getattr(op, "body", None)
-        # print(op, body, op.id)
-        if body:
-            if getattr(body, "jump_offset", None) is not None:
-                result.add_branch(
-                    BranchType.TrueBranch, addr + result.length + body.jump_offset
-                )
-                result.add_branch(BranchType.FalseBranch, addr + result.length)
-                # raise Exception('Unhandled jump_offset for op %s' % op.id)
+            # Check if this is a control flow instruction with analyze method
+            if hasattr(new_instr, 'analyze'):
+                new_instr.analyze(result, addr)
 
-        return result
+            return result
+        else:
+            # Use legacy decoder path
+            dis = self.decode_instruction(data, addr)
+            if not dis:
+                return None
+
+            result = InstructionInfo()
+            result.length = dis.length
+
+            op = dis.op
+            body = getattr(op, "body", None)
+            # print(op, body, op.id)
+            if body:
+                if getattr(body, "jump_offset", None) is not None:
+                    result.add_branch(
+                        BranchType.TrueBranch, addr + result.length + body.jump_offset
+                    )
+                    result.add_branch(BranchType.FalseBranch, addr + result.length)
+                    # raise Exception('Unhandled jump_offset for op %s' % op.id)
+
+            return result
 
     def get_instruction_text(
         self, data: bytes, addr: int

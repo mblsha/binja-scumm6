@@ -5,6 +5,7 @@ from typing import List, Type, Any
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
 from binaryninja.enums import BranchType
+from binaryninja import InstructionInfo
 
 from .opcodes import Instruction
 from ...scumm6_opcodes import Scumm6Opcodes
@@ -237,10 +238,13 @@ class VariableWriteOp(Instruction):
 class ControlFlowOp(Instruction):
     """Base class for control flow instructions that need CFG analysis support."""
     
-    def analyze(self, info: Any, addr: int) -> None:
+    def analyze(self, info: InstructionInfo, addr: int) -> None:
         """Analyze instruction for Control Flow Graph integration."""
         assert isinstance(self.op_details.body, Scumm6Opcodes.JumpData), \
             f"Expected JumpData body, got {type(self.op_details.body)}"
+        
+        # Set instruction length
+        info.length = self._length
         
         # Calculate target address (relative to end of instruction)
         target_addr = addr + info.length + self.op_details.body.jump_offset

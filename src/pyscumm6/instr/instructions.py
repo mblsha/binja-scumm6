@@ -3,7 +3,7 @@
 from typing import List
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
-from binaryninja import IntrinsicName
+from binaryninja import IntrinsicName, InstructionInfo
 from ...scumm6_opcodes import Scumm6Opcodes
 
 from .opcodes import Instruction
@@ -608,6 +608,9 @@ class Iff(ControlFlowOp):
     def is_conditional(self) -> bool:
         return True
 
+    def analyze(self, info: InstructionInfo, addr: int) -> None:
+        super().analyze(info, addr)
+
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.JumpData), \
             f"Expected JumpData body, got {type(self.op_details.body)}"
@@ -669,6 +672,9 @@ class IfNot(ControlFlowOp):
     def is_conditional(self) -> bool:
         return True
 
+    def analyze(self, info: InstructionInfo, addr: int) -> None:
+        super().analyze(info, addr)
+
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.JumpData), \
             f"Expected JumpData body, got {type(self.op_details.body)}"
@@ -723,6 +729,9 @@ class Jump(ControlFlowOp):
 
     def is_conditional(self) -> bool:
         return False
+
+    def analyze(self, info: InstructionInfo, addr: int) -> None:
+        super().analyze(info, addr)
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.JumpData), \
