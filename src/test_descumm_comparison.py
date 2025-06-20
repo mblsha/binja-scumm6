@@ -44,7 +44,7 @@ class ScriptComparisonTestCase:
     expected_descumm_output: Optional[str] = None
     expected_legacy_disasm_output: Optional[str] = None
     expected_new_disasm_output: Optional[str] = None
-    expected_branches: Optional[List[Tuple[int, Tuple[BranchType, int]]]] = None  # List of (relative_addr, (branch_type, target_addr))
+    expected_branches: Optional[List[Tuple[int, Tuple[BranchType, int]]]] = None  # List of (relative_addr, (branch_type, relative_target_addr))
 
 
 class ComparisonTestEnvironment(NamedTuple):
@@ -301,8 +301,8 @@ script_test_cases = [
         """).strip(),
         expected_branches=[
             # The conditional branch instruction at offset 0x0005 (unless goto +18)
-            (0x0005, (BranchType.TrueBranch, 0xD6F35)),   # Jump to stop_object_code1 (relative +26)
-            (0x0005, (BranchType.FalseBranch, 0xD6F23)),  # Fall through to push_word(93) (relative +8)
+            (0x0005, (BranchType.TrueBranch, 0x001A)),   # Jump to stop_object_code1 (relative +26)
+            (0x0005, (BranchType.FalseBranch, 0x0008)),  # Fall through to push_word(93) (relative +8)
         ]
     ),
     # Example of a test case that only verifies output generation without specific content
@@ -435,7 +435,7 @@ def collect_branches_from_architecture(arch: Any, bytecode: bytes, start_addr: i
         start_addr: The starting address of the bytecode
         
     Returns:
-        List of (relative_offset, (branch_type, target_address)) tuples
+        List of (relative_offset, (branch_type, relative_target_address)) tuples
     """
     view = MockScumm6BinaryView()
     view.write_memory(start_addr, bytecode)
@@ -458,8 +458,10 @@ def collect_branches_from_architecture(arch: Any, bytecode: bytes, start_addr: i
         elif hasattr(info, 'mybranches') and info.mybranches:
             instruction_branches = info.mybranches
             
-        for branch_type, target in instruction_branches:
-            branches.append((offset, (branch_type, target)))
+        for branch_type, absolute_target in instruction_branches:
+            # Convert absolute target to relative target (relative to script start)
+            relative_target = absolute_target - start_addr
+            branches.append((offset, (branch_type, relative_target)))
         
         offset += info.length
     
