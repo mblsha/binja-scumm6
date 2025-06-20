@@ -5,7 +5,8 @@ from binja_helpers.tokens import Token
 
 from .opcodes import Instruction
 from .smart_bases import (SmartIntrinsicOp, SmartVariableOp, SmartArrayOp, SmartComplexOp, 
-                         SmartBinaryOp, SmartUnaryOp, SmartComparisonOp, SmartSemanticIntrinsicOp)
+                         SmartBinaryOp, SmartUnaryOp, SmartComparisonOp, SmartSemanticIntrinsicOp,
+                         SmartFusibleIntrinsic)
 from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
                      SemanticIntrinsicConfig, INTRINSIC_CONFIGS, VARIABLE_CONFIGS, ARRAY_CONFIGS, 
                      COMPLEX_CONFIGS, STACK_CONFIGS, SEMANTIC_CONFIGS)
@@ -13,7 +14,46 @@ from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfi
 def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Instruction]:
     """Create an intrinsic instruction class from configuration."""
     
-    class GeneratedIntrinsicOp(SmartIntrinsicOp):
+    # List of instructions that should support fusion
+    FUSIBLE_INSTRUCTIONS = {
+        # Drawing operations
+        "draw_object",      # 2 params: object_id, state
+        "draw_object_at",   # 3 params: object_id, x, y
+        # Actor operations
+        "walk_actor_to",    # 3 params: actor_id, x, y
+        "walk_actor_to_obj",# 3 params: actor_id, object_id, ?
+        "put_actor_at_xy",  # 4 params: actor_id, x, y, ?
+        "put_actor_at_object", # 3 params: actor_id, object_id, ?
+        "face_actor",       # 1 param: direction
+        "animate_actor",    # 1 param: animation
+        # Script operations
+        "start_script",     # Variable params
+        "start_script_quick",# Variable params
+        "start_object",     # 2+ params
+        # Sound operations
+        "start_sound",      # 1 param: sound_id
+        "start_music",      # 1 param: music_id
+        "stop_sound",       # 1 param: sound_id
+        # Object operations
+        "set_state",        # 2 params: object, state
+        "set_owner",        # 2 params: object, owner
+        "set_class",        # 2 params: object, class
+        # Room operations
+        "load_room",        # 1 param: room_id
+        "pan_camera_to",    # 1 param: x_position
+        "set_camera_at",    # 1 param: x_position
+        "actor_follow_camera", # 1 param: actor_id
+        # Other operations with parameters
+        "pickup_object",    # 2 params: object, room
+        "do_sentence",      # 4 params: verb, obj1, obj2, ?
+        "stop_script",      # 1 param: script_id
+        "stop_object_script", # 1 param: object_id
+    }
+    
+    # Choose base class based on whether instruction should support fusion
+    base_class = SmartFusibleIntrinsic if name in FUSIBLE_INSTRUCTIONS else SmartIntrinsicOp
+    
+    class GeneratedIntrinsicOp(base_class):
         _name = name
         _config = config
         __doc__ = config.doc

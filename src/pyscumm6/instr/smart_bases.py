@@ -70,6 +70,123 @@ class SmartIntrinsicOp(Instruction):
         params = [il.pop(4) for _ in range(pop_count)]
         il.append(il.intrinsic([], self._name, params))
 
+
+class SmartFusibleIntrinsic(SmartIntrinsicOp):
+    """Intrinsic operation that supports instruction fusion for function-call style rendering."""
+    
+    def fuse(self, previous: Instruction) -> Optional['SmartFusibleIntrinsic']:
+        """Attempt to fuse with the previous instruction."""
+        # Only fuse if we need more operands
+        if len(self.fused_operands) >= self._config.pop_count:
+            return None
+        
+        # Check if previous is a fusible push instruction
+        if not self._is_fusible_push(previous):
+            return None
+        
+        # Create a new fused instruction
+        fused = copy.deepcopy(self)
+        
+        # Add the previous instruction to the front (stack is LIFO)
+        fused.fused_operands.insert(0, previous)
+        
+        # Update length to include the fused instruction
+        fused._length = self._length + previous.length()
+        
+        return fused
+    
+    def _is_fusible_push(self, instr: Instruction) -> bool:
+        """Check if instruction is a push that can be fused."""
+        return instr.__class__.__name__ in [
+            'PushByte', 'PushWord', 'PushByteVar', 'PushWordVar'
+        ]
+    
+    @property
+    def stack_pop_count(self) -> int:
+        """Number of values this instruction pops from the stack."""
+        # If we have fused operands, we pop fewer from the stack
+        if hasattr(self, 'fused_operands'):
+            return max(0, self._config.pop_count - len(self.fused_operands))
+        return super().stack_pop_count
+    
+    def render(self) -> List[Token]:
+        """Render the instruction, showing fused operands if available."""
+        if self.fused_operands:
+            # Function-call style: draw_object(100, 200)
+            tokens = [TInstr(self._name), TSep("(")]
+            
+            # Add operands in correct order (reverse of fusion order)
+            for i, operand in enumerate(self.fused_operands):
+                if i > 0:
+                    tokens.append(TSep(", "))
+                tokens.extend(self._render_operand(operand))
+            
+            tokens.append(TSep(")"))
+            return tokens
+        else:
+            # Normal rendering
+            return super().render()
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        from binja_helpers.tokens import TInt, TText
+        
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            # Variable push - extract var number
+            if hasattr(operand.op_details.body, 'data'):
+                var_num = operand.op_details.body.data
+                return [TInt(f"var_{var_num}")]
+        else:
+            # Constant push - extract value
+            if hasattr(operand.op_details.body, 'data'):
+                value = operand.op_details.body.data
+                return [TInt(str(value))]
+        
+        # Fallback
+        return [TText("?")]
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Lift the instruction, using fused operands if available."""
+        if self.fused_operands:
+            # Build parameters from fused operands
+            params = []
+            for operand in self.fused_operands:
+                params.append(self._lift_operand(il, operand))
+            
+            # Add any remaining stack pops if we don't have all operands fused
+            remaining_pops = self._config.pop_count - len(self.fused_operands)
+            for _ in range(remaining_pops):
+                params.append(il.pop(4))
+            
+            # Generate the intrinsic call
+            if self._config.push_count > 0:
+                outputs = [il.reg(4, LLIL_TEMP(i)) for i in range(self._config.push_count)]
+                il.append(il.intrinsic(outputs, IntrinsicName(self._name), params))
+                for out_reg in outputs:
+                    il.append(il.push(4, out_reg))
+            else:
+                il.append(il.intrinsic([], IntrinsicName(self._name), params))
+        else:
+            # Use parent implementation
+            super().lift(il, addr)
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> any:
+        """Lift a fused operand to IL expression."""
+        from ... import vars
+        
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            # Variable push - use il_get_var
+            return vars.il_get_var(il, operand.op_details.body)
+        else:
+            # Constant push - use const
+            if hasattr(operand.op_details.body, 'data'):
+                value = operand.op_details.body.data
+                return il.const(4, value)
+        
+        # Fallback to undefined
+        return il.undefined()
+
+
 class SmartVariableOp(Instruction):
     """Self-configuring variable operation base class."""
     
