@@ -832,7 +832,7 @@ def test_room11_enter_branch_info(test_environment: ComparisonTestEnvironment) -
     print(f"   - False branch: 0x{expected_false_branch:04X} (implicit fall-through)")
 
 
-def test_room2_enter_fusion_analysis(test_environment):
+def test_room2_enter_fusion_analysis(test_environment: ComparisonTestEnvironment) -> None:
     """
     Debug fusion behavior for room2_enter script.
     
@@ -841,7 +841,7 @@ def test_room2_enter_fusion_analysis(test_environment):
     """
     env = test_environment
   
-    print(f"\n=== Room2 Enter Fusion Analysis ===")
+    print("\n=== Room2 Enter Fusion Analysis ===")
     print("This script demonstrates fusion decoder behavior when no patterns are fusible.")
     print("Expected result: Both decoders produce identical output.")
     
@@ -855,7 +855,7 @@ def test_room2_enter_fusion_analysis(test_environment):
     from src.pyscumm6.disasm import decode, decode_with_fusion_incremental
     
     # Decode without fusion - using the simple approach from run_scumm6_disassembler
-    print(f"\n=== WITHOUT FUSION ===")
+    print("\n=== WITHOUT FUSION ===")
     instructions_no_fusion = []
     offset = 0
     while offset < len(bytecode):
@@ -882,7 +882,7 @@ def test_room2_enter_fusion_analysis(test_environment):
         offset += instr.length()
     
     # Decode with fusion
-    print(f"\n=== WITH FUSION ===")
+    print("\n=== WITH FUSION ===")
     instructions_with_fusion = []
     offset = 0
     while offset < len(bytecode):
@@ -910,7 +910,7 @@ def test_room2_enter_fusion_analysis(test_environment):
         
         offset += instr.length()
     
-    print(f"\n=== COMPARISON ===")
+    print("\n=== COMPARISON ===")
     print(f"Instructions without fusion: {len(instructions_no_fusion)}")
     print(f"Instructions with fusion: {len(instructions_with_fusion)}")
     
@@ -926,7 +926,7 @@ def test_room2_enter_fusion_analysis(test_environment):
             print("✓ No fusion differences found - this script has no fusible patterns")
     
     # Look for potential fusion opportunities (but explain why they don't occur)
-    print(f"\n=== FUSION OPPORTUNITY ANALYSIS ===")
+    print("\n=== FUSION OPPORTUNITY ANALYSIS ===")
     opportunities = 0
     for i in range(len(instructions_no_fusion) - 1):
         curr_off, curr = instructions_no_fusion[i]
@@ -941,16 +941,16 @@ def test_room2_enter_fusion_analysis(test_environment):
                 
                 # Explain why fusion doesn't happen for intrinsics
                 if hasattr(next, 'fuse'):
-                    print(f"    ✗ Fusion not implemented for intrinsic operations (by design)")
-                    print(f"      Intrinsics consume from stack at runtime, fusion would require")
-                    print(f"      semantic understanding of parameter counts and types")
+                    print("    ✗ Fusion not implemented for intrinsic operations (by design)")
+                    print("      Intrinsics consume from stack at runtime, fusion would require")
+                    print("      semantic understanding of parameter counts and types")
                 else:
-                    print(f"    ✗ Consumer lacks fuse() method")
+                    print("    ✗ Consumer lacks fuse() method")
     
     if opportunities == 0:
         print("  No fusion opportunities found - all instructions are non-fusible")
     
-    print(f"\n=== CONCLUSION ===")
+    print("\n=== CONCLUSION ===")
     print("✅ Fusion decoder is working correctly!")
     print("For this script pattern (push + intrinsic), fusion successfully combines:")
     print("  • push_word(201) + push_word(0) + start_script → start_script(201, 0)")
