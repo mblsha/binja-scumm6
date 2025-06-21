@@ -4,7 +4,6 @@ from typing import List, Optional, Any, NamedTuple, cast
 from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName
-from binaryninja.architecture import Architecture
 import copy
 
 from .opcodes import Instruction
@@ -639,7 +638,7 @@ class SmartConditionalJump(ControlFlowOp):
                     condition = il.compare_not_equal(4, condition, il.const(4, 0))
                 
                 # Generate conditional jump
-                true_label = il.get_label_for_address(il.source_function.arch, target_addr)
+                true_label = il.get_label_for_address(il.arch, target_addr)
                 false_label = LowLevelILLabel()
                 
                 il.append(il.if_expr(condition, true_label, false_label))
@@ -673,7 +672,7 @@ class SmartConditionalJump(ControlFlowOp):
         else:
             condition = il.compare_not_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0))
         
-        true_label = il.get_label_for_address(il.source_function.arch, target_addr)
+        true_label = il.get_label_for_address(il.arch, target_addr)
         false_label = LowLevelILLabel()
         
         il.append(il.if_expr(condition, true_label, false_label))
