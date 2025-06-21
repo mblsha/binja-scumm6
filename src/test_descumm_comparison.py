@@ -84,64 +84,63 @@ script_test_cases = [
         test_id="room8_scrp18_collision_detection",
         script_name="room8_scrp18",
         expected_descumm_output=dedent("""
-            ERROR: No items on stack to pop!
-            [0000] (43) localvar5 = (**** INVALID DATA **** - localvar1)
-            [0007] (43) localvar6 = (getObjectY(localvar0) - localvar2)
-            [0012] (43) localvar5 = abs(localvar5)
-            [0019] (43) localvar6 = abs(localvar6)
-            [0020] (5D) if (localvar5 > localvar3) {
-            [002A] (43)   var137 = 0
-            [0030] (7C)   stopScript(0)
-            [0034] (**) }
-            [0034] (5D) if (localvar6 > localvar4) {
-            [003E] (43)   var137 = 0
-            [0044] (7C)   stopScript(0)
-            [0048] (**) }
-            [0048] (43) localvar7 = (localvar5 * localvar5)
-            [0052] (43) localvar8 = (localvar6 * localvar6)
-            [005C] (5D) if (localvar7 < 0) {
-            [0066] (B6)   printDebug.begin()
-            [0068] (B6)   printDebug.msg("x2 value overflowing in ellipse check")
-            [0090] (**) }
-            [0090] (5D) if (localvar8 < 0) {
-            [009A] (B6)   printDebug.begin()
-            [009C] (B6)   printDebug.msg("y2 value overflowing in ellipse check")
-            [00C4] (**) }
-            [00C4] (43) localvar11 = 1
-            [00CA] (43) localvar12 = 0
-            [00D0] (5D) if (localvar7 <= 4000) {
-            [00DA] (43)   localvar7 = (localvar7 * 4)
-            [00E4] (73) } else {
-            [00E7] (43)   localvar3 = (localvar3 / 2)
-            [00F1] (**) }
-            [00F1] (5D) if (localvar8 <= 4000) {
-            [00FB] (43)   localvar8 = (localvar8 * 4)
-            [0105] (73) } else {
-            [0108] (43)   localvar4 = (localvar4 / 2)
-            [0112] (**) }
-            [0112] (43) localvar11 = (localvar11 * 4)
-            [011C] (5D) if (localvar11 >= 64) {
-            [0126] (43)   localvar12 = 1
-            [012C] (**) }
-            [012C] (5D) unless (localvar12) jump d0
-            [0132] (5D) if (localvar3 == 0) {
-            [013C] (43)   localvar3 = 1
-            [0142] (B6)   printDebug.begin()
-            [0144] (B6)   printDebug.msg("very skinny ellipse warning")
-            [0162] (**) }
-            [0162] (5D) if (localvar4 == 0) {
-            [016C] (43)   localvar4 = 1
-            [0172] (B6)   printDebug.begin()
-            [0174] (B6)   printDebug.msg("very flat ellipse warning")
-            [0190] (**) }
-            [0190] (43) var137 = ((localvar7 / (localvar3 * localvar3)) + (localvar8 / (localvar4 * localvar4)))
-            [01AA] (5D) if (var137 == 0) {
-            [01B4] (43)   var137 = 1
-            [01BA] (**) }
-            [01BA] (5D) if (var137 > localvar11) {
-            [01C4] (43)   var137 = 0
-            [01CA] (**) }
-            [01CA] (66) stopObjectCodeB()
+            [0000] (43) localvar5 = (getObjectX(localvar0) - localvar1)
+            [000B] (43) localvar6 = (getObjectY(localvar0) - localvar2)
+            [0016] (43) localvar5 = abs(localvar5)
+            [001D] (43) localvar6 = abs(localvar6)
+            [0024] (5D) if (localvar5 > localvar3) {
+            [002E] (43)   var137 = 0
+            [0034] (7C)   stopScript(0)
+            [0038] (**) }
+            [0038] (5D) if (localvar6 > localvar4) {
+            [0042] (43)   var137 = 0
+            [0048] (7C)   stopScript(0)
+            [004C] (**) }
+            [004C] (43) localvar7 = (localvar5 * localvar5)
+            [0056] (43) localvar8 = (localvar6 * localvar6)
+            [0060] (5D) if (localvar7 < 0) {
+            [006A] (B6)   printDebug.begin()
+            [006C] (B6)   printDebug.msg("x2 value overflowing in ellipse check")
+            [0094] (**) }
+            [0094] (5D) if (localvar8 < 0) {
+            [009E] (B6)   printDebug.begin()
+            [00A0] (B6)   printDebug.msg("y2 value overflowing in ellipse check")
+            [00C8] (**) }
+            [00C8] (43) localvar11 = 1
+            [00CE] (43) localvar12 = 0
+            [00D4] (5D) if (localvar7 <= 4000) {
+            [00DE] (43)   localvar7 = (localvar7 * 4)
+            [00E8] (73) } else {
+            [00EB] (43)   localvar3 = (localvar3 / 2)
+            [00F5] (**) }
+            [00F5] (5D) if (localvar8 <= 4000) {
+            [00FF] (43)   localvar8 = (localvar8 * 4)
+            [0109] (73) } else {
+            [010C] (43)   localvar4 = (localvar4 / 2)
+            [0116] (**) }
+            [0116] (43) localvar11 = (localvar11 * 4)
+            [0120] (5D) if (localvar11 >= 64) {
+            [012A] (43)   localvar12 = 1
+            [0130] (**) }
+            [0130] (5D) unless (localvar12) jump d4
+            [0136] (5D) if (localvar3 == 0) {
+            [0140] (43)   localvar3 = 1
+            [0146] (B6)   printDebug.begin()
+            [0148] (B6)   printDebug.msg("very skinny ellipse warning")
+            [0166] (**) }
+            [0166] (5D) if (localvar4 == 0) {
+            [0170] (43)   localvar4 = 1
+            [0176] (B6)   printDebug.begin()
+            [0178] (B6)   printDebug.msg("very flat ellipse warning")
+            [0194] (**) }
+            [0194] (43) var137 = ((localvar7 / (localvar3 * localvar3)) + (localvar8 / (localvar4 * localvar4)))
+            [01AE] (5D) if (var137 == 0) {
+            [01B8] (43)   var137 = 1
+            [01BE] (**) }
+            [01BE] (5D) if (var137 > localvar11) {
+            [01C8] (43)   var137 = 0
+            [01CE] (**) }
+            [01CE] (66) stopObjectCodeB()
             END
         """).strip(),
         expected_disasm_output=dedent("""
@@ -289,12 +288,11 @@ script_test_cases = [
         test_id="room11_enter_initialization",
         script_name="room11_enter",
         expected_descumm_output=dedent("""
-            ERROR: No items on stack to pop!
-            [0000] (5D) if (!**** INVALID DATA ****) {
-            [0004] (5F)   startScriptQuick(93,[1])
-            [000E] (9C)   roomOps.setScreen(0,200)
-            [0016] (**) }
-            [0016] (65) stopObjectCodeA()
+            [0000] (5D) if (!isScriptRunning(137)) {
+            [0008] (5F)   startScriptQuick(93,[1])
+            [0012] (9C)   roomOps.setScreen(0,200)
+            [001A] (**) }
+            [001A] (65) stopObjectCodeA()
             END
         """).strip(),
         expected_disasm_output=dedent("""
@@ -341,8 +339,10 @@ script_test_cases = [
         test_id="room2_enter_output_verification",
         script_name="room2_enter",
         expected_descumm_output=dedent("""
-            ERROR: No items on stack to pop!
-            <!-- descumm stderr: ERROR: getIntVal call on StackEnt type 6! -->
+            [0000] (5E) startScript(1,201,[])
+            [000A] (5F) startScriptQuick(5,[])
+            [0011] (65) stopObjectCodeA()
+            END
         """).strip(),
         expected_disasm_output=dedent("""
             [0000] push_word(1)
