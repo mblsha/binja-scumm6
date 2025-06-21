@@ -290,14 +290,16 @@ SEMANTIC_CONFIGS: Dict[str, SemanticIntrinsicConfig] = {
     # Script execution operations - high semantic value for reverse engineering
     "start_script": semantic_op(
         name="start_script",
-        params=["script_id", "flags", "*args"],
+        params=["script_id", "arg_count", "*args"],
+        pop=2,  # script_id + arg_count (then variable args from stack)
         doc="Start script execution with flags and arguments",
         control_flow=True,
         variable_args=True
     ),
     "start_script_quick": semantic_op(
         name="start_script_quick", 
-        params=["script_id", "*args"],
+        params=["script_id", "arg_count", "*args"],
+        pop=2,  # script_id + arg_count (then variable args from stack)
         doc="Start script execution without flags",
         control_flow=True,
         variable_args=True

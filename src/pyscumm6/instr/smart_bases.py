@@ -1038,8 +1038,8 @@ class SmartArrayOp(Instruction):
         # Fallback to undefined
         return il.undefined()
 
-class SmartSemanticIntrinsicOp(Instruction):
-    """Self-configuring semantic intrinsic following descumm philosophy."""
+class SmartSemanticIntrinsicOp(SmartFusibleIntrinsic):
+    """Self-configuring semantic intrinsic following descumm philosophy with fusion support."""
     
     _name: str
     _config: SemanticIntrinsicConfig
@@ -1053,11 +1053,19 @@ class SmartSemanticIntrinsicOp(Instruction):
         """
         if self._config.variable_args:
             return -1
+        
+        # If we have fused operands, we pop fewer from the stack
+        if hasattr(self, 'fused_operands') and self.fused_operands:
+            return max(0, self._config.pop_count - len(self.fused_operands))
+        
         return self._config.pop_count
     
     def render(self) -> List[Token]:
         """Render in descumm-style function call format."""
-        return self._render_semantic_call()
+        if self.fused_operands:
+            return self._render_fused_semantic_call()
+        else:
+            return self._render_semantic_call()
     
     def _render_semantic_call(self) -> List[Token]:
         """Render as: semantic_name(param1, param2, ...)"""
@@ -1083,13 +1091,49 @@ class SmartSemanticIntrinsicOp(Instruction):
         tokens.append(TSep(")"))
         return tokens
     
+    def _render_fused_semantic_call(self) -> List[Token]:
+        """Render semantic function call with fused operands."""
+        tokens = [TInstr(self._config.semantic_name), TSep("(")]
+        
+        # Add fused operands as actual parameters
+        for i, operand in enumerate(self.fused_operands):
+            if i > 0:
+                tokens.append(TSep(", "))
+            tokens.extend(self._render_operand(operand))
+        
+        tokens.append(TSep(")"))
+        return tokens
+    
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         """Generate LLIL following descumm semantic approach."""
-        # Handle variable arguments for script operations
-        if self._config.variable_args:
+        if self.fused_operands:
+            self._lift_fused_operation(il, addr)
+        elif self._config.variable_args:
             self._lift_variable_args_operation(il, addr)
         else:
             self._lift_fixed_args_operation(il, addr)
+    
+    def _lift_fused_operation(self, il: LowLevelILFunction, addr: int) -> None:
+        """Handle LLIL generation for fused semantic operations."""
+        # Build parameters from fused operands
+        params = []
+        for operand in self.fused_operands:
+            params.append(self._lift_operand(il, operand))
+        
+        # Add any remaining stack pops if we don't have all operands fused
+        if not self._config.variable_args:
+            remaining_pops = self._config.pop_count - len(self.fused_operands)
+            for _ in range(remaining_pops):
+                params.append(il.pop(4))
+        
+        # Generate the semantic intrinsic call
+        if self._config.push_count > 0:
+            outputs = [il.reg(4, LLIL_TEMP(i)) for i in range(self._config.push_count)]
+            il.append(il.intrinsic(outputs, self._config.semantic_name, params))
+            for out_reg in outputs:
+                il.append(il.push(4, out_reg))
+        else:
+            il.append(il.intrinsic([], self._config.semantic_name, params))
     
     def _lift_variable_args_operation(self, il: LowLevelILFunction, addr: int) -> None:
         """Handle operations with variable arguments (like start_script)."""
