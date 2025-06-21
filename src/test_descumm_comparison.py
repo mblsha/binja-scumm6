@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 from binja_helpers import binja_api  # noqa: F401
-from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL, mllil
+from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL, mllil, MockIntrinsic, MockReg
 from binaryninja.enums import BranchType
 from src.scumm6 import Scumm6, LastBV
 from src.test_mocks import MockScumm6BinaryView
@@ -35,6 +35,20 @@ from scripts.ensure_descumm import build_descumm
 
 # Import ensure_demo_bsc6 from test_descumm_tool
 from src.test_descumm_tool import ensure_demo_bsc6
+
+
+def mintrinsic(name: str, outputs: List[MockLLIL] = None, params: List[MockLLIL] = None) -> MockIntrinsic:
+    """Helper to create MockIntrinsic objects more easily."""
+    if outputs is None:
+        outputs = []
+    if params is None:
+        params = []
+    return MockIntrinsic(name, outputs, params)
+
+
+def mreg(name: str) -> MockReg:
+    """Helper to create MockReg objects more easily."""
+    return MockReg(name)
 
 
 @dataclass
@@ -260,7 +274,10 @@ script_test_cases = [
             [01C8] push_word(0)
             [01CB] write_word_var(var_137)
             [01CE] stop_object_code2
-        """).strip()
+        """).strip(),
+        # Skip full LLIL validation for this complex test case - too many operations (186 total)
+        # The collision detection algorithm includes complex conditionals, labels, and branches
+        # LLIL validation will be applied automatically (no unimplemented operations, non-empty output)
     ),
     ScriptComparisonTestCase(
         test_id="room11_enter_initialization",
@@ -304,13 +321,9 @@ script_test_cases = [
             [0018] room_ops.room_screen
             [001A] stop_object_code1
         """).strip(),
-        # TODO: Add expected LLIL operations when needed for specific validation
-        # Example format:
-        # expected_llil=[
-        #     (0x0000, mllil("PUSH.error", [mllil("CONST.error", [137])])),
-        #     # Note: Complex operations like intrinsics and conditionals require special handling
-        # ],
-        # expected_llil_fusion=[ ... ],
+        # Skip full LLIL validation for this complex test case - too many operations (17 total)
+        # The conditional logic with labels and branches makes expectations complex
+        # LLIL validation will be applied automatically (no unimplemented operations, non-empty output)
         expected_branches=[
             # The conditional branch instruction at offset 0x0005 (unless goto +18)
             (0x0005, (BranchType.TrueBranch, 0x001A)),   # Jump to stop_object_code1 (relative +26)
@@ -322,12 +335,30 @@ script_test_cases = [
         test_id="room2_enter_output_verification",
         script_name="room2_enter",
         # No expected outputs - just verifies all disassemblers produce output
-        # TODO: Add expected LLIL when specific validation is needed:
-        # expected_llil=[
-        #     (0x0000, mllil("PUSH.error", [mllil("CONST.error", [1])])),
-        #     (0x0003, mllil("PUSH.error", [mllil("CONST.error", [201])])),
-        # ],
-        # expected_llil_fusion=[ ... ],
+        # Simple LLIL expectations for basic instruction validation
+        expected_llil=[
+            (0x0000, mllil("PUSH.error", [mllil("CONST.error", [1])])),
+            (0x0003, mllil("PUSH.error", [mllil("CONST.error", [201])])),
+            (0x0006, mllil("PUSH.error", [mllil("CONST.error", [0])])),
+            (0x0009, mintrinsic("start_script", params=[mllil("POP.error", []), mllil("POP.error", [])])),
+            (0x000A, mllil("PUSH.error", [mllil("CONST.error", [5])])),
+            (0x000D, mllil("PUSH.error", [mllil("CONST.error", [0])])),
+            (0x0010, mintrinsic("start_script_quick", params=[mllil("POP.error", [])])),
+            (0x0011, mintrinsic("stop_object_code1")),
+            (0x0011, mllil("NORET", [])),
+        ],
+        # For now, fusion should produce identical LLIL since no fusion is occurring for these operations
+        expected_llil_fusion=[
+            (0x0000, mllil("PUSH.error", [mllil("CONST.error", [1])])),
+            (0x0003, mllil("PUSH.error", [mllil("CONST.error", [201])])),
+            (0x0006, mllil("PUSH.error", [mllil("CONST.error", [0])])),
+            (0x0009, mintrinsic("start_script", params=[mllil("POP.error", []), mllil("POP.error", [])])),
+            (0x000A, mllil("PUSH.error", [mllil("CONST.error", [5])])),
+            (0x000D, mllil("PUSH.error", [mllil("CONST.error", [0])])),
+            (0x0010, mintrinsic("start_script_quick", params=[mllil("POP.error", [])])),
+            (0x0011, mintrinsic("stop_object_code1")),
+            (0x0011, mllil("NORET", [])),
+        ],
     ),
     # Add more test cases here as needed
 ]
