@@ -351,8 +351,7 @@ script_test_cases = [
             [0011] stop_object_code1
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] push_word(1)
-            [0003] start_script(201, 0)
+            [0000] start_script(1, 201, 0)
             [000A] start_script_quick(5, 0)
             [0011] stop_object_code1
         """).strip(),
@@ -360,16 +359,15 @@ script_test_cases = [
             (0x0000, mllil("PUSH.4", [mllil("CONST.4", [1])])),
             (0x0003, mllil("PUSH.4", [mllil("CONST.4", [201])])),
             (0x0006, mllil("PUSH.4", [mllil("CONST.4", [0])])),
-            (0x0009, mintrinsic("start_script", params=[mllil("POP.4", []), mllil("POP.4", [])])),
+            (0x0009, mintrinsic("start_script", params=[mllil("POP.4", []), mllil("POP.4", []), mllil("POP.4", [])])),
             (0x000A, mllil("PUSH.4", [mllil("CONST.4", [5])])),
             (0x000D, mllil("PUSH.4", [mllil("CONST.4", [0])])),
-            (0x0010, mintrinsic("start_script_quick", params=[mllil("POP.4", [])])),
+            (0x0010, mintrinsic("start_script_quick", params=[mllil("POP.4", []), mllil("POP.4", [])])),
             (0x0011, mintrinsic("stop_object_code1")),
             (0x0011, mllil("NORET", [])),
         ],
         expected_llil_fusion=[
-            (0x0000, mllil("PUSH.4", [mllil("CONST.4", [1])])),
-            (0x0003, mintrinsic("start_script", params=[mllil("CONST.4", [201]), mllil("CONST.4", [0])])),
+            (0x0000, mintrinsic("start_script", params=[mllil("CONST.4", [1]), mllil("CONST.4", [201]), mllil("CONST.4", [0])])),
             (0x000A, mintrinsic("start_script_quick", params=[mllil("CONST.4", [5]), mllil("CONST.4", [0])])),
             (0x0011, mintrinsic("stop_object_code1")),
             (0x0011, mllil("NORET", [])),
@@ -953,14 +951,14 @@ def test_room2_enter_fusion_analysis(test_environment: ComparisonTestEnvironment
     print("\n=== CONCLUSION ===")
     print("✅ Fusion decoder is working correctly!")
     print("For this script pattern (push + intrinsic), fusion successfully combines:")
-    print("  • push_word(201) + push_word(0) + start_script → start_script(201, 0)")
+    print("  • push_word(1) + push_word(201) + push_word(0) + start_script → start_script(1, 201, 0)")
     print("  • push_word(5) + push_word(0) + start_script_quick → start_script_quick(5, 0)")
-    print("Instruction count reduced from 8 to 4, creating more readable function calls.")
+    print("Instruction count reduced from 8 to 3, creating much more readable function calls.")
     
     # Basic assertion to make it a proper test
     assert len(instructions_no_fusion) > 0, "Should have decoded some instructions"
     assert len(instructions_with_fusion) < len(instructions_no_fusion), "Fusion should reduce instruction count when fusible patterns exist"
-    assert len(instructions_with_fusion) == 4, "Expected 4 fused instructions: push_word(1), start_script(201,0), start_script_quick(5,0), stop_object_code1"
+    assert len(instructions_with_fusion) == 3, "Expected 3 fused instructions: start_script(1,201,0), start_script_quick(5,0), stop_object_code1"
 
 
 if __name__ == "__main__":
