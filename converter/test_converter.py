@@ -2,8 +2,6 @@ import os
 import pytest
 from . import converter
 
-pytest.skip("Converter functionality disabled - legacy string extraction tool", allow_module_level=True)
-
 lecf_path = os.path.join(
     os.path.dirname(os.path.dirname(__file__)),
     "DOTTDEMO.001"

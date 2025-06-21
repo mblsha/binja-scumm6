@@ -1,9 +1,10 @@
-from src.container import ContainerParser, State, decode_rnam_dscr, get_script_addrs
+from src.container import State, decode_rnam_dscr, get_script_addrs
 from kaitaistruct import KaitaiStream, BytesIO
 from src.scumm6_opcodes import Scumm6Opcodes
 from src.scumm6_container import Scumm6Container
+from src.pyscumm6.disasm import decode
 
-from typing import Any, NamedTuple, List
+from typing import NamedTuple, List
 
 OpType = Scumm6Opcodes.OpType
 SubopType = Scumm6Opcodes.SubopType
@@ -60,32 +61,34 @@ def extract_strings(
     #     # f.write((end - start + 8).to_bytes(4, 'big'))
     #     f.write(portion)
 
-    def add_message_strings(dis: Any, body: Scumm6Opcodes.Message) -> None:
+    def add_message_strings(addr: int, body: Scumm6Opcodes.Message) -> None:
         for i in parse_message(body):
             if isinstance(i, str):
                 r.append(
-                    StringInfo(op_addr=hex(dis.addr), script_name=script_name, string=i)
+                    StringInfo(op_addr=hex(addr), script_name=script_name, string=i)
                 )
 
     pos = start
     while pos < end:
-        data_view = data[pos : pos + 256]  # noqa: E203
-        dis = ContainerParser().decode_instruction(data_view, pos)
+        # Use the new decoder, passing the rest of the data and the absolute address
+        dis = decode(data[pos:], pos)
         if not dis:
             break
-        pos += dis.length
-
-        op = dis.op
+        
+        # Use the new instruction object API
+        op = dis.op_details
         body = getattr(op, "body", None)
 
         if isinstance(body, Scumm6Opcodes.Message):
-            add_message_strings(dis, body)
+            add_message_strings(pos, body)
         elif (
             body
             and hasattr(body, "body")
             and isinstance(body.body, Scumm6Opcodes.Message)
         ):
-            add_message_strings(dis, body.body)
+            add_message_strings(pos, body.body)
+        
+        pos += dis.length()
 
     return r
 
