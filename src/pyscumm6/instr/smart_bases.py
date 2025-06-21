@@ -661,13 +661,7 @@ class SmartConditionalJump(ControlFlowOp):
                 true_label = il.get_label_for_address(il.arch, target_addr)
                 false_label = LowLevelILLabel()
                 
-                # Check if the label is valid before creating the if expression
-                if true_label is None:
-                    # The target address is likely invalid or outside the function.
-                    # Avoid crashing by generating an unimplemented instruction.
-                    il.append(il.unimplemented())  # type: ignore[unreachable] 
-                    return  # type: ignore[unreachable]
-                
+                # Generate conditional jump with the obtained label
                 il.append(il.if_expr(condition, true_label, false_label))
                 il.mark_label(false_label) 
             else:
@@ -702,13 +696,7 @@ class SmartConditionalJump(ControlFlowOp):
         true_label = il.get_label_for_address(il.arch, target_addr)
         false_label = LowLevelILLabel()
         
-        # Check if the label is valid before creating the if expression
-        if true_label is None:
-            # The target address is likely invalid or outside the function.
-            # Avoid crashing by generating an unimplemented instruction.
-            il.append(il.unimplemented())  # type: ignore[unreachable]
-            return  # type: ignore[unreachable]
-        
+        # Generate conditional jump with the obtained label
         il.append(il.if_expr(condition, true_label, false_label))
         il.mark_label(false_label)
 
