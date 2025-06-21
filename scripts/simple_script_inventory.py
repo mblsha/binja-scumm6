@@ -9,7 +9,7 @@ import sys
 import json
 from pathlib import Path
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Optional
+from typing import List
 
 # Add parent directory to Python path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Force mock Binary Ninja for standalone execution
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from src.disasm import Scumm6Disasm, ScriptAddr, State
+from src.disasm import Scumm6Disasm
 
 
 @dataclass
@@ -190,12 +190,12 @@ def main():
     inventory.export_json("script_inventory.json")
     inventory.create_test_suite_suggestions("test_suite_plan.md")
     
-    print(f"Script inventory complete!")
+    print("Script inventory complete!")
     print(f"Found {len(inventory.scripts)} scripts")
-    print(f"Reports generated:")
-    print(f"  - script_inventory.txt")
-    print(f"  - script_inventory.json")
-    print(f"  - test_suite_plan.md")
+    print("Reports generated:")
+    print("  - script_inventory.txt")
+    print("  - script_inventory.json")
+    print("  - test_suite_plan.md")
 
 
 if __name__ == "__main__":

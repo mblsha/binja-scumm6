@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import List, Dict, Tuple, Optional, Any
+from typing import List, Tuple, Optional, Any
 from textwrap import dedent
 
 # Add parent directory to path for imports
@@ -23,8 +23,6 @@ os.environ["FORCE_BINJA_MOCK"] = "1"
 
 from binja_helpers import binja_api  # noqa: F401
 from src.pyscumm6.disasm import decode, decode_with_fusion
-from src.scumm6_container import Scumm6Container
-from kaitaistruct import KaitaiStream
 
 
 @dataclass

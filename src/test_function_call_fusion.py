@@ -34,7 +34,7 @@ class TestFunctionCallFusion:
         # Check render output
         tokens = instruction.render()
         token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "draw_object(100, 2)"
+        assert token_text == "drawObject(100, 2)"
     
     def test_draw_object_partial_fusion(self) -> None:
         """Test partial fusion with draw_object (only one operand fused)."""
@@ -55,7 +55,7 @@ class TestFunctionCallFusion:
         # Check render output
         tokens = instruction.render()
         token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert "draw_object(2)" in token_text
+        assert "drawObject(2)" in token_text
     
     def test_walk_actor_to_fusion(self) -> None:
         """Test fusion with walk_actor_to (3 parameters)."""
@@ -78,7 +78,7 @@ class TestFunctionCallFusion:
         # Check render output
         tokens = instruction.render()
         token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "walk_actor_to(1, 200, 150)"
+        assert token_text == "walkActorTo(1, 200, 150)"
     
     def test_start_sound_fusion(self) -> None:
         """Test fusion with single-parameter function (start_sound)."""
@@ -99,7 +99,7 @@ class TestFunctionCallFusion:
         # Check render output
         tokens = instruction.render()
         token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "start_sound(42)"
+        assert token_text == "startSound(42)"
     
     def test_function_with_var_fusion(self) -> None:
         """Test fusion with variable operands."""
@@ -121,7 +121,7 @@ class TestFunctionCallFusion:
         # Check render output
         tokens = instruction.render()
         token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "draw_object(var_10, 100)"
+        assert token_text == "drawObject(var_10, 100)"
     
     def test_put_actor_at_xy_fusion(self) -> None:
         """Test fusion with 4-parameter function."""
@@ -145,7 +145,7 @@ class TestFunctionCallFusion:
         # Check render output
         tokens = instruction.render()
         token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "put_actor_at_xy(1, 100, 200, 0)"
+        assert token_text == "putActorAtXY(1, 100, 200, 0)"
     
     def test_no_fusion_without_pushes(self) -> None:
         """Test that functions don't fuse with non-push instructions."""
@@ -166,7 +166,7 @@ class TestFunctionCallFusion:
         # Check render output
         tokens = instruction.render()
         token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "draw_object"
+        assert token_text == "drawObject(...)"
     
     def test_mixed_constant_and_var_fusion(self) -> None:
         """Test fusion with mix of constants and variables."""
@@ -189,4 +189,4 @@ class TestFunctionCallFusion:
         # Check render output
         tokens = instruction.render()
         token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "walk_actor_to(var_5, 10, var_7)"
+        assert token_text == "walkActorTo(var_5, 10, var_7)"

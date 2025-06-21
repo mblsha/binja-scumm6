@@ -11,8 +11,8 @@ import sys
 import json
 import subprocess
 from pathlib import Path
-from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Optional, Tuple, Set
+from dataclasses import dataclass, field
+from typing import List, Dict, Optional, Set
 from collections import defaultdict
 
 # Add parent directory to Python path for imports
@@ -22,10 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
 from src.disasm import Scumm6Disasm, ScriptAddr, State
-from src.scumm6_container import Scumm6Container
-from kaitaistruct import KaitaiStream, BytesIO
 from src.pyscumm6.disasm import decode, decode_with_fusion_incremental
-from src.pyscumm6.instr.opcodes import Instruction
 
 
 @dataclass

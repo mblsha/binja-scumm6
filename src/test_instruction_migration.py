@@ -337,13 +337,13 @@ instruction_test_cases = [
         test_id="draw_object_0x61",
         data=b"\x61",
         comment="Draw object intrinsic",
-        expected_disasm="draw_object"
+        expected_disasm="drawObject(...)"
     ),
     InstructionTestCase(
         test_id="draw_object_at_0x62",
         data=b"\x62",
         comment="Draw object at position intrinsic",
-        expected_disasm="draw_object_at"
+        expected_disasm="drawObjectAt(...)"
     ),
     # Note: draw_blast_object (0x63) test skipped - requires complex state handling
     # Note: cutscene (0x68) test skipped - requires complex state handling for call_func_list
@@ -351,97 +351,97 @@ instruction_test_cases = [
         test_id="end_cutscene_0x67",
         data=b"\x67",
         comment="End cutscene intrinsic",
-        expected_disasm="end_cutscene"
+        expected_disasm="end_cutscene()"
     ),
     InstructionTestCase(
         test_id="stop_music_0x69",
         data=b"\x69",
         comment="Stop music intrinsic",
-        expected_disasm="stop_music"
+        expected_disasm="stop_music()"
     ),
     InstructionTestCase(
         test_id="freeze_unfreeze_0x6a",
         data=b"\x6a",
         comment="Freeze/unfreeze intrinsic",
-        expected_disasm="freeze_unfreeze"
+        expected_disasm="freeze_unfreeze(...)"
     ),
     InstructionTestCase(
         test_id="stop_object_code1_0x65",
         data=b"\x65",
         comment="Stop object code (variant 1) intrinsic",
-        expected_disasm="stop_object_code1"
+        expected_disasm="stopObjectCodeA()"
     ),
     InstructionTestCase(
         test_id="stop_object_code2_0x66",
         data=b"\x66",
         comment="Stop object code (variant 2) intrinsic",
-        expected_disasm="stop_object_code2"
+        expected_disasm="stopObjectCodeB()"
     ),
     InstructionTestCase(
         test_id="stop_object_script_0x77",
         data=b"\x77",
         comment="Stop object script intrinsic",
-        expected_disasm="stop_object_script"
+        expected_disasm="stop_object_script(...)"
     ),
     InstructionTestCase(
         test_id="start_sound_0x74",
         data=b"\x74",
         comment="Start sound intrinsic",
-        expected_disasm="start_sound"
+        expected_disasm="startSound(...)"
     ),
     InstructionTestCase(
         test_id="stop_sound_0x75",
         data=b"\x75",
         comment="Stop sound intrinsic",
-        expected_disasm="stop_sound"
+        expected_disasm="stopSound(...)"
     ),
     InstructionTestCase(
         test_id="pan_camera_to_0x78",
         data=b"\x78",
         comment="Pan camera to position intrinsic",
-        expected_disasm="pan_camera_to"
+        expected_disasm="panCameraTo(...)"
     ),
     InstructionTestCase(
         test_id="actor_follow_camera_0x79",
         data=b"\x79",
         comment="Actor follow camera intrinsic",
-        expected_disasm="actor_follow_camera"
+        expected_disasm="actorFollowCamera(...)"
     ),
     InstructionTestCase(
         test_id="set_camera_at_0x7a",
         data=b"\x7a",
         comment="Set camera at position intrinsic",
-        expected_disasm="set_camera_at"
+        expected_disasm="setCameraAt(...)"
     ),
     InstructionTestCase(
         test_id="load_room_0x7b",
         data=b"\x7b",
         comment="Load room intrinsic",
-        expected_disasm="load_room"
+        expected_disasm="loadRoom(...)"
     ),
     InstructionTestCase(
         test_id="get_state_0x6f",
         data=b"\x6f",
         comment="Get state intrinsic",
-        expected_disasm="get_state"
+        expected_disasm="get_state(...)"
     ),
     InstructionTestCase(
         test_id="set_state_0x70",
         data=b"\x70",
         comment="Set state intrinsic",
-        expected_disasm="set_state"
+        expected_disasm="setState(...)"
     ),
     InstructionTestCase(
         test_id="set_owner_0x71",
         data=b"\x71",
         comment="Set owner intrinsic",
-        expected_disasm="set_owner"
+        expected_disasm="setOwner(...)"
     ),
     InstructionTestCase(
         test_id="get_owner_0x72",
         data=b"\x72",
         comment="Get owner intrinsic",
-        expected_disasm="get_owner"
+        expected_disasm="get_owner(...)"
     ),
 ]
 
