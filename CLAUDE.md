@@ -125,6 +125,182 @@ This section provides specific rules for fixing common `ruff`, `mypy`, and `pyte
      - **Example**: Change `regs: Dict[Union[RegisterName, str], RegisterInfo]` to `regs: Dict[RegisterName, RegisterInfo]`.
   4. **Verify**: Re-run mypy. The error should be resolved.
 
+## Binary Ninja Plugin Stability & Best Practices
+
+This section documents critical lessons learned from production Binary Ninja usage and provides essential patterns for maintaining plugin stability.
+
+### Critical Runtime Error Fixes
+
+The plugin addresses the three most common Binary Ninja runtime errors. These patterns apply to any Binary Ninja plugin development:
+
+#### 1. KeyError for 'var_X' Registers
+
+**Problem**: `KeyError: 'var_X'` when LLIL generation references undefined registers.
+
+**Root Cause**: Plugin generates IL with register names (like `var_0`, `var_136`) that aren't declared in the architecture's register dictionary.
+
+**Solution**: Add all plugin-specific registers to the `Architecture.regs` dictionary.
+
+```python
+class Scumm6(Architecture):
+    # Define all registers used by your IL generation
+    regs = {
+        RegisterName("sp"): RegisterInfo(RegisterName("sp"), 4),
+        # Add your plugin's virtual registers
+        **{
+            RegisterName(f"var_{i}"): RegisterInfo(RegisterName(f"var_{i}"), 4)
+            for i in range(800)  # NUM_SCUMM_VARS
+        }
+    }
+```
+
+**Key Insight**: Every register name used in `il.reg()` or `il.set_reg()` must be pre-declared in the architecture.
+
+#### 2. AttributeError for NoneType Labels
+
+**Problem**: `AttributeError: 'NoneType' object has no attribute 'handle'` when creating conditional jumps.
+
+**Root Cause**: `il.get_label_for_address()` returns `None` for invalid/out-of-bounds jump targets, but code assumes it always returns a valid label.
+
+**Solution**: Add defensive checks before using labels in control flow IL.
+
+```python
+def lift_conditional_jump(self, il: LowLevelILFunction, addr: int) -> None:
+    target_addr = addr + self.length() + self.jump_offset
+    true_label = il.get_label_for_address(il.arch, target_addr)
+    
+    # Defensive check for invalid jump targets
+    if true_label is None:
+        # Target is outside function scope or invalid
+        return  # Graceful degradation
+    
+    false_label = LowLevelILLabel()
+    il.append(il.if_expr(condition, true_label, false_label))
+    il.mark_label(false_label)
+```
+
+**Key Insight**: Always validate labels before use in `il.if_expr()` or similar control flow operations.
+
+#### 3. AttributeError for 'int' has no attribute 'name'
+
+**Problem**: `AttributeError: 'int' object has no attribute 'name'` when accessing enum attributes.
+
+**Root Cause**: Kaitai parsers sometimes return raw integers instead of enum objects due to parsing edge cases.
+
+**Solution**: Add type checking and enum conversion with error handling.
+
+```python
+def process_subop(self, subop: Any) -> str:
+    # Handle both enum objects and raw integers
+    if isinstance(subop, int):
+        try:
+            subop = MyEnumType(subop)  # Convert int to enum
+        except ValueError:
+            return f"unknown_{subop}"  # Graceful fallback
+    
+    return subop.name  # Now safe to access .name
+```
+
+**Key Insight**: Never assume Kaitai struct fields are properly typed enums; always handle raw integer cases.
+
+### Enabling Instruction Fusion in Production
+
+Instruction fusion dramatically improves decompiler output by combining stack operations into semantic expressions.
+
+#### Implementation Pattern
+
+```python
+class MyArchitecture(Architecture):
+    def get_instruction_low_level_il(self, data: bytes, addr: int, il: LowLevelILFunction) -> Optional[int]:
+        # Use fusion for LLIL generation (better decompilation)
+        instruction = decode_with_fusion(data, addr)
+        if instruction:
+            instruction.lift(il, addr)
+            return instruction.length()
+        return None
+    
+    def get_instruction_text(self, data: bytes, addr: int) -> Optional[Tuple[List[InstructionTextToken], int]]:
+        # Use normal decode for display (preserves granularity)
+        instruction = decode(data, addr)
+        if instruction:
+            tokens = instruction.render()
+            return [token.to_binja() for token in tokens], instruction.length()
+        return None
+```
+
+**Key Insight**: Use fusion for LLIL (semantic analysis) but not for display text (user clarity).
+
+### MyPy Error Resolution Patterns
+
+#### Idiomatic Fixes for Common MyPy Errors
+
+**Statement is unreachable [unreachable]**
+- **Problem**: Dead code that static analysis proves can never execute
+- **Fix**: Remove the unreachable statements (don't just add type: ignore)
+- **Example**: Delete `il.append(il.unimplemented())` calls after defensive returns
+
+**Unused "type: ignore" comment [unused-ignore]**
+- **Problem**: Type annotations fixed the underlying issue, making ignore obsolete
+- **Fix**: Remove the entire `# type: ignore[...]` comment
+- **Example**: Delete `# type: ignore[misc]` from working class definitions
+
+**Class cannot subclass "Architecture" [misc]**
+- **Problem**: Mock stubs see base classes as Any type during testing
+- **Fix**: Add `# type: ignore[misc]` only when actually needed for mocked types
+- **Example**: `class MyArch(Architecture): # type: ignore[misc]` only for mock compatibility
+
+#### MyPy Development Workflow
+
+```bash
+# Check both real and mock environments
+mypy --explicit-package-bases src/
+FORCE_BINJA_MOCK=1 mypy --explicit-package-bases src/
+
+# Run comprehensive test suite
+./run-tests.fish --once
+```
+
+**Best Practice**: Fix mypy errors by improving code, not by adding type: ignore comments.
+
+### Development Anti-Patterns to Avoid
+
+1. **Register Mismatches**: Never use register names in IL that aren't in `Architecture.regs`
+2. **Unsafe Label Usage**: Never call `il.if_expr()` without validating label existence
+3. **Enum Assumptions**: Never assume Kaitai fields are properly typed enums
+4. **Dead Code Retention**: Never keep unreachable code just to silence mypy
+5. **Ignore Comment Accumulation**: Never leave obsolete `# type: ignore` comments
+
+### Performance and Debugging Tips
+
+#### Binary Ninja Plugin Development
+
+- **IL Debugging**: Use Binary Ninja's IL view to verify your lift() methods generate correct intermediate language
+- **Fusion Testing**: Compare `decode()` vs `decode_with_fusion()` outputs to verify semantic correctness
+- **Mock vs Real**: Always test with both `FORCE_BINJA_MOCK=1` and real Binary Ninja environments
+- **Error Logging**: Use Binary Ninja's log system instead of print() for production plugins
+
+#### Test-Driven Development
+
+```python
+def test_instruction_stability():
+    """Test critical error patterns don't regress."""
+    # Test register existence
+    arch = MyArchitecture()
+    assert RegisterName("var_0") in arch.regs
+    
+    # Test label handling
+    il = MockLowLevelILFunction()
+    instruction = decode_with_fusion(bytecode, addr)
+    instruction.lift(il, addr)  # Should not crash
+    
+    # Test enum handling
+    complex_instruction = decode_complex_op(complex_bytecode)
+    tokens = complex_instruction.render()  # Should not crash
+    assert len(tokens) > 0
+```
+
+This proactive testing approach catches stability issues before they reach production.
+
 ## Architecture Overview
 
 ### Decoder Selection System
