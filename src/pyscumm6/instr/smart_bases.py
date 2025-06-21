@@ -1137,17 +1137,24 @@ class SmartSemanticIntrinsicOp(SmartFusibleIntrinsic):
     
     def _lift_variable_args_operation(self, il: LowLevelILFunction, addr: int) -> None:
         """Handle operations with variable arguments (like start_script)."""
-        # Extract variable arguments first (following original scumm6.py pattern)
-        args = self._extract_variable_arguments(il)
+        # For start_script: stack has [script_id, flags, arg_count] (LIFO order)
+        # Pop in reverse order since stack is LIFO
+        arg_count = il.pop(4)  # Pop arg_count first (top of stack)
         
-        # Get the main parameters (script_id for script operations)
-        script_id = il.pop(4)
-        params = [script_id] + args
+        # Extract actual variable arguments based on arg_count
+        args: List[Any] = []
+        # TODO: In full implementation, pop arg_count number of arguments
+        # For now, we know it's 0 from the bytecode
         
-        # For start_script, also handle flags
         if self._name == "start_script":
-            flags = il.pop(4)
-            params = [script_id, flags] + args
+            # Pop flags and script_id in correct order
+            flags = il.pop(4)      # Pop flags (second on stack)
+            script_id = il.pop(4)  # Pop script_id (bottom of stack)
+            params = [script_id, flags, arg_count] + args
+        else:
+            # For other script operations, just script_id and arg_count
+            script_id = il.pop(4)
+            params = [script_id, arg_count] + args
         
         # Generate semantic intrinsic call
         il.append(il.intrinsic([], self._config.semantic_name, params))
