@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 from binja_helpers import binja_api  # noqa: F401
+from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL, mllil
 from binaryninja.enums import BranchType
 from src.scumm6 import Scumm6, LastBV
 from src.test_mocks import MockScumm6BinaryView
@@ -45,6 +46,8 @@ class ScriptComparisonTestCase:
     expected_disasm_output: Optional[str] = None
     expected_disasm_fusion_output: Optional[str] = None  # Output with instruction fusion enabled
     expected_branches: Optional[List[Tuple[int, Tuple[BranchType, int]]]] = None  # List of (relative_addr, (branch_type, relative_target_addr))
+    expected_llil: Optional[List[Tuple[int, MockLLIL]]] = None  # List of (relative_addr, llil_operation) for regular disassembly
+    expected_llil_fusion: Optional[List[Tuple[int, MockLLIL]]] = None  # List of (relative_addr, llil_operation) for fusion-enabled disassembly
 
 
 class ComparisonTestEnvironment(NamedTuple):
@@ -301,6 +304,13 @@ script_test_cases = [
             [0018] room_ops.room_screen
             [001A] stop_object_code1
         """).strip(),
+        # TODO: Add expected LLIL operations when needed for specific validation
+        # Example format:
+        # expected_llil=[
+        #     (0x0000, mllil("PUSH.error", [mllil("CONST.error", [137])])),
+        #     # Note: Complex operations like intrinsics and conditionals require special handling
+        # ],
+        # expected_llil_fusion=[ ... ],
         expected_branches=[
             # The conditional branch instruction at offset 0x0005 (unless goto +18)
             (0x0005, (BranchType.TrueBranch, 0x001A)),   # Jump to stop_object_code1 (relative +26)
@@ -310,8 +320,14 @@ script_test_cases = [
     # Example of a test case that only verifies output generation without specific content
     ScriptComparisonTestCase(
         test_id="room2_enter_output_verification",
-        script_name="room2_enter"
+        script_name="room2_enter",
         # No expected outputs - just verifies all disassemblers produce output
+        # TODO: Add expected LLIL when specific validation is needed:
+        # expected_llil=[
+        #     (0x0000, mllil("PUSH.error", [mllil("CONST.error", [1])])),
+        #     (0x0003, mllil("PUSH.error", [mllil("CONST.error", [201])])),
+        # ],
+        # expected_llil_fusion=[ ... ],
     ),
     # Add more test cases here as needed
 ]
@@ -425,6 +441,75 @@ def format_output_as_text(tokens: List[Any]) -> str:
     return ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
 
 
+def run_scumm6_llil_generation(bytecode: bytes, start_addr: int, use_fusion: bool = False) -> List[Tuple[int, MockLLIL]]:
+    """Execute SCUMM6 LLIL generation and return list of (offset, llil_operation) tuples."""
+    if use_fusion:
+        from src.pyscumm6.disasm import decode_with_fusion_incremental as decode_func
+    else:
+        from src.pyscumm6.disasm import decode as decode_func
+    
+    llil_operations = []
+    offset = 0
+
+    while offset < len(bytecode):
+        addr = start_addr + offset
+        remaining_data = bytecode[offset:]
+
+        # Decode instruction
+        instruction = decode_func(remaining_data, addr)
+        if instruction is None:
+            break
+
+        # Generate LLIL for this instruction
+        il = MockLowLevelILFunction()
+        instruction.lift(il, addr)
+        
+        # Record each LLIL operation with its offset
+        for llil_op in il.ils:
+            llil_operations.append((offset, llil_op))
+        
+        offset += instruction.length()
+
+    return llil_operations
+
+
+def assert_llil_operations_match(actual_llil: List[Tuple[int, MockLLIL]], 
+                                expected_llil: List[Tuple[int, MockLLIL]], 
+                                script_name: str, 
+                                test_type: str) -> None:
+    """Verify that actual LLIL operations match expected operations."""
+    assert len(actual_llil) == len(expected_llil), \
+        f"LLIL operation count mismatch for '{script_name}' ({test_type}): " \
+        f"expected {len(expected_llil)}, got {len(actual_llil)}"
+
+    for i, ((actual_offset, actual_op), (expected_offset, expected_op)) in enumerate(zip(actual_llil, expected_llil)):
+        assert actual_offset == expected_offset, \
+            f"LLIL operation {i} offset mismatch for '{script_name}' ({test_type}): " \
+            f"expected offset 0x{expected_offset:04X}, got 0x{actual_offset:04X}"
+        
+        assert actual_op == expected_op, \
+            f"LLIL operation {i} mismatch for '{script_name}' ({test_type}) at offset 0x{actual_offset:04X}:\n" \
+            f"Expected: {expected_op}\n" \
+            f"Actual: {actual_op}"
+
+
+def assert_no_unimplemented_llil(llil_operations: List[Tuple[int, MockLLIL]], script_name: str, test_type: str) -> None:
+    """Verify that no LLIL operations are unimplemented."""
+    for offset, llil_op in llil_operations:
+        _check_no_unimplemented_recursive(llil_op, script_name, test_type, offset)
+
+
+def _check_no_unimplemented_recursive(llil_op: MockLLIL, script_name: str, test_type: str, offset: int) -> None:
+    """Recursively check that no LLIL operations are unimplemented."""
+    if llil_op.bare_op() == "UNIMPL":
+        raise AssertionError(f"Found unimplemented LLIL in '{script_name}' ({test_type}) at offset 0x{offset:04X}: {llil_op}")
+    
+    # Recursively check nested operations
+    for nested_op in llil_op.ops:
+        if isinstance(nested_op, MockLLIL):
+            _check_no_unimplemented_recursive(nested_op, script_name, test_type, offset)
+
+
 def collect_branches_from_architecture(arch: Any, bytecode: bytes, start_addr: int) -> List[Tuple[int, Tuple[BranchType, int]]]:
     """
     Generic function to collect branch information from any SCUMM6 architecture.
@@ -506,10 +591,14 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     script_info = find_script_by_name(case.script_name, test_environment.scripts)
     bytecode = test_environment.bsc6_data[script_info.start:script_info.end]
 
-    # 2. Execute all disassemblers
+    # 2. Execute all disassemblers and LLIL generation
     descumm_output = run_descumm_on_bytecode(test_environment.descumm_path, bytecode)
     disasm_output = run_scumm6_disassembler(bytecode, script_info.start)
     disasm_fusion_output = run_scumm6_disassembler_with_fusion(bytecode, script_info.start)
+    
+    # Generate LLIL for both regular and fusion modes
+    llil_operations = run_scumm6_llil_generation(bytecode, script_info.start, use_fusion=False)
+    llil_fusion_operations = run_scumm6_llil_generation(bytecode, script_info.start, use_fusion=True)
 
     # 3. Check branch information if expected branches are provided
     if case.expected_branches is not None:
@@ -540,6 +629,15 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     print(disasm_output)
     print("\nSCUMM6 DISASM WITH FUSION OUTPUT:")
     print(disasm_fusion_output)
+    
+    # Print LLIL operations for visibility
+    print(f"\nSCUMM6 LLIL OPERATIONS ({len(llil_operations)} total):")
+    for offset, llil_op in llil_operations:
+        print(f"  [{offset:04X}] {llil_op}")
+    
+    print(f"\nSCUMM6 LLIL FUSION OPERATIONS ({len(llil_fusion_operations)} total):")
+    for offset, llil_op in llil_fusion_operations:
+        print(f"  [{offset:04X}] {llil_op}")
 
     # 5. Optional assertions based on what's provided
     if case.expected_descumm_output is not None:
@@ -560,10 +658,25 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
             f"SCUMM6 disassembler with fusion output for '{case.script_name}' does not match expected.\n" \
             f"Expected:\n{expected_disasm_fusion}\n\nActual:\n{disasm_fusion_output.strip()}"
 
+    # LLIL validation
+    if case.expected_llil is not None:
+        assert_llil_operations_match(llil_operations, case.expected_llil, case.script_name, "regular LLIL")
+
+    if case.expected_llil_fusion is not None:
+        assert_llil_operations_match(llil_fusion_operations, case.expected_llil_fusion, case.script_name, "fusion LLIL")
+
     # 6. Always verify that outputs were generated
     assert len(descumm_output.strip()) > 0, f"descumm produced no output for '{case.script_name}'"
     assert len(disasm_output.strip()) > 0, f"SCUMM6 produced no output for '{case.script_name}'"
     assert len(disasm_fusion_output.strip()) > 0, f"SCUMM6 with fusion produced no output for '{case.script_name}'"
+    
+    # Always verify no unimplemented LLIL operations
+    assert_no_unimplemented_llil(llil_operations, case.script_name, "regular LLIL")
+    assert_no_unimplemented_llil(llil_fusion_operations, case.script_name, "fusion LLIL")
+    
+    # Verify LLIL operations were generated
+    assert len(llil_operations) > 0, f"No LLIL operations generated for '{case.script_name}'"
+    assert len(llil_fusion_operations) > 0, f"No fusion LLIL operations generated for '{case.script_name}'"
 
 
 # Legacy test functions for backward compatibility
