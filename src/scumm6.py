@@ -68,9 +68,13 @@ class Scumm6(Architecture):
             RegisterName("sp"), 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth
         ),
     } | {
-        # local
+        # local variables (L0-L24)
         RegisterName(f"L{i}"): RegisterInfo(RegisterName(f"L{i}"), 4)
         for i in range(vars.NUM_SCRIPT_LOCAL)
+    } | {
+        # global SCUMM variables (var_0 to var_799)
+        RegisterName(f"var_{i}"): RegisterInfo(RegisterName(f"var_{i}"), 4)
+        for i in range(vars.NUM_SCUMM_VARS)
     }
 
     stack_pointer = "sp"

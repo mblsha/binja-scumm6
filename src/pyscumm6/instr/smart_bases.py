@@ -239,7 +239,18 @@ class SmartComplexOp(Instruction):
         return getattr(self.op_details.body.body, "pop_count", 0)
 
     def render(self) -> List[Token]:
-        subop_name = self.op_details.body.subop.name
+        subop = self.op_details.body.subop
+        
+        # Ensure subop is an enum member, not an int
+        if isinstance(subop, int):
+            from ...scumm6_opcodes import Scumm6Opcodes
+            try:
+                subop = Scumm6Opcodes.SubopType(subop)
+            except ValueError:
+                # Handle cases where the int value is not a valid enum member
+                return [TInstr(f"{self._name}.unknown_{subop}")]
+        
+        subop_name = subop.name
         return [TInstr(f"{self._name}.{subop_name}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -253,6 +264,15 @@ class SmartComplexOp(Instruction):
         # Access the subop and its body
         subop = self.op_details.body.subop
         subop_body = self.op_details.body.body
+        
+        # Ensure subop is an enum member, not an int
+        if isinstance(subop, int):
+            try:
+                subop = Scumm6Opcodes.SubopType(subop)
+            except ValueError:
+                # Handle cases where the int value is not a valid enum member
+                il.append(il.unimplemented())
+                return
         
         # Construct intrinsic name
         intrinsic_name = f"{self._name}.{subop.name}"
@@ -641,6 +661,13 @@ class SmartConditionalJump(ControlFlowOp):
                 true_label = il.get_label_for_address(il.arch, target_addr)
                 false_label = LowLevelILLabel()
                 
+                # Check if the label is valid before creating the if expression
+                if true_label is None:
+                    # The target address is likely invalid or outside the function.
+                    # Avoid crashing by generating an unimplemented instruction.
+                    il.append(il.unimplemented())  # type: ignore[unreachable] 
+                    return  # type: ignore[unreachable]
+                
                 il.append(il.if_expr(condition, true_label, false_label))
                 il.mark_label(false_label) 
             else:
@@ -674,6 +701,13 @@ class SmartConditionalJump(ControlFlowOp):
         
         true_label = il.get_label_for_address(il.arch, target_addr)
         false_label = LowLevelILLabel()
+        
+        # Check if the label is valid before creating the if expression
+        if true_label is None:
+            # The target address is likely invalid or outside the function.
+            # Avoid crashing by generating an unimplemented instruction.
+            il.append(il.unimplemented())  # type: ignore[unreachable]
+            return  # type: ignore[unreachable]
         
         il.append(il.if_expr(condition, true_label, false_label))
         il.mark_label(false_label)
