@@ -43,7 +43,7 @@ class UnconditionalTestCase(TypedDict):
 def test_instruction_info_conditional_jumps() -> None:
     """Test that conditional jump instructions properly populate InstructionInfo."""
     
-    # Test both legacy and new decoders
+    # Test the unified Scumm6 architecture
     arch = Scumm6()
     
     view = MockScumm6BinaryView()

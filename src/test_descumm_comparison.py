@@ -723,58 +723,6 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     assert len(llil_fusion_operations) > 0, f"No fusion LLIL operations generated for '{case.script_name}'"
 
 
-# Legacy test functions for backward compatibility
-def test_descumm_comparison() -> None:
-    """
-    Legacy test function - kept for backward compatibility.
-    The new parametrized test_script_comparison is the preferred approach.
-    """
-    # Run the first test case using the legacy approach
-    if script_test_cases:
-        case = script_test_cases[0]
-        print(f"\nRunning legacy compatibility test for {case.test_id}")
-        print("Note: Use 'pytest test_descumm_comparison.py::test_script_comparison' for the new framework")
-
-        # Just verify the framework components work
-        try:
-            descumm_path = build_descumm()
-            bsc6_path = ensure_demo_bsc6()
-            print(f"✅ descumm built at: {descumm_path}")
-            print(f"✅ bsc6 available at: {bsc6_path}")
-            print("✅ Legacy compatibility test passed")
-        except Exception as e:
-            print(f"❌ Legacy compatibility test failed: {e}")
-            raise
-
-
-def test_specific_instruction_differences() -> None:
-    """Test specific instruction type differences - legacy function for compatibility."""
-    print("\n=== SPECIFIC INSTRUCTION COMPARISON (Legacy) ===")
-    print("Note: This is a legacy test function. The new framework focuses on full script comparison.")
-
-    # Simple validation that the architecture can be instantiated
-    try:
-        arch = Scumm6()
-        print("✅ Architecture instantiated successfully")
-
-        # Test a simple instruction
-        view = MockScumm6BinaryView()
-        bytecode = bytes([0x03, 0x00, 0x40])  # push_word_var(var_0)
-        view.write_memory(0x1000, bytecode)
-        LastBV.set(view)
-
-        result = arch.get_instruction_text(bytecode, 0x1000)
-
-        if result:
-            print("✅ Architecture can disassemble instructions")
-        else:
-            print("⚠️  Architecture failed to disassemble")
-
-    except Exception as e:
-        print(f"❌ Architecture test failed: {e}")
-        raise
-
-
 def test_room11_enter_branch_info(test_environment: ComparisonTestEnvironment) -> None:
     """Test that room11_enter script branch instructions have correct InstructionInfo."""
 
@@ -962,7 +910,6 @@ def test_room2_enter_fusion_analysis(test_environment: ComparisonTestEnvironment
 
 
 if __name__ == "__main__":
-    # Run the comparison test directly
-    test_descumm_comparison()
-    print("\n" + "="*80 + "\n")
-    test_specific_instruction_differences()
+    # Run a basic test to verify the framework works
+    print("Use 'pytest test_descumm_comparison.py' to run the full test suite")
+    print("✅ Test module loaded successfully")

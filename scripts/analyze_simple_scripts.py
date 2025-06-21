@@ -32,7 +32,6 @@ class ScriptAnalysis:
     bytecode: bytes
     hex_bytecode: str
     descumm_output: str
-    legacy_output: str
     new_output: str
     fusion_output: str
     fusion_gaps: List[str] = field(default_factory=list)
@@ -183,7 +182,6 @@ class SimpleScriptAnalyzer:
             bytecode=bytecode,
             hex_bytecode=hex_bytecode,
             descumm_output=descumm_output,
-            legacy_output="",  # Not used anymore
             new_output=new_output,
             fusion_output=fusion_output
         )

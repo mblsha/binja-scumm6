@@ -60,7 +60,6 @@ class ScriptAnalysis:
     bytecode: bytes
     metrics: ScriptMetrics
     descumm_output: Optional[str] = None
-    legacy_output: Optional[str] = None
     new_output: Optional[str] = None
     fusion_output: Optional[str] = None
     
@@ -127,7 +126,6 @@ class DottdemoAnalyzer:
                 analysis.descumm_output = self._get_descumm_output(bytecode)
                 
             # Get plugin outputs
-            analysis.legacy_output = self._get_legacy_output(bytecode)
             analysis.new_output = self._get_new_output(bytecode)
             analysis.fusion_output = self._get_fusion_output(bytecode)
             
@@ -278,11 +276,6 @@ class DottdemoAnalyzer:
             print(f"Error running descumm: {e}")
             return None
             
-    def _get_legacy_output(self, bytecode: bytes) -> str:
-        """Get legacy decoder output."""
-        # Legacy output not available in standalone mode
-        # Would require full Binary Ninja integration
-        return "Legacy decoder output not available in standalone analysis"
         
     def _get_new_output(self, bytecode: bytes) -> str:
         """Get new decoder output without fusion."""
