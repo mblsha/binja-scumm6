@@ -28,7 +28,7 @@ from .sorted_list import SortedList
 from . import vars
 
 # Import new decoder
-from .pyscumm6.disasm import decode as new_decode
+from .pyscumm6.disasm import decode as new_decode, decode_with_fusion
 
 OpType = Scumm6Opcodes.OpType
 VarType = Scumm6Opcodes.VarType
@@ -192,7 +192,8 @@ class Scumm6(Architecture):
     def get_instruction_text(
         self, data: bytes, addr: int
     ) -> Optional[Tuple[List[InstructionTextToken], int]]:
-        # Use new decoder for semantic output
+        # Use new decoder WITHOUT fusion for display
+        # This preserves instruction-level granularity in the UI
         new_instr = new_decode(data, addr)
         if new_instr is None:
             return None
@@ -217,12 +218,14 @@ class Scumm6(Architecture):
     def get_instruction_low_level_il(
         self, data: bytes, addr: int, il: lowlevelil.LowLevelILFunction
     ) -> Optional[int]:
-        # Use new decoder for LLIL generation
-        new_instr = new_decode(data, addr)
+        # Use new decoder with fusion for LLIL generation
+        # This enables instruction fusion for better semantic understanding
+        new_instr = decode_with_fusion(data, addr)
         if new_instr is None:
             return None
 
         # Generate LLIL using new instruction's lift method
+        # Fused instructions will produce cleaner, more semantic LLIL
         new_instr.lift(il, addr)
 
         # Return the instruction length
