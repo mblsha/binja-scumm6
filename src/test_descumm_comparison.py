@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 from binja_helpers import binja_api  # noqa: F401
-from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL, mllil, MockIntrinsic, MockReg
+from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL, mllil, MockIntrinsic, MockReg, set_size_lookup
 from binaryninja.enums import BranchType
 from src.scumm6 import Scumm6, LastBV
 from src.test_mocks import MockScumm6BinaryView
@@ -36,8 +36,14 @@ from scripts.ensure_descumm import build_descumm
 # Import ensure_demo_bsc6 from test_descumm_tool
 from src.test_descumm_tool import ensure_demo_bsc6
 
+# Configure SCUMM6-specific LLIL size suffixes
+set_size_lookup(
+    size_lookup={1: ".b", 2: ".w", 3: ".l", 4: ".4"},  # 4-byte operations use ".4" for SCUMM6
+    suffix_sz={"b": 1, "w": 2, "l": 3, "4": 4}  # Add reverse mapping for ".4"
+)
 
-def mintrinsic(name: str, outputs: List[MockLLIL] = None, params: List[MockLLIL] = None) -> MockIntrinsic:
+
+def mintrinsic(name: str, outputs: Optional[List[MockLLIL]] = None, params: Optional[List[MockLLIL]] = None) -> MockIntrinsic:
     """Helper to create MockIntrinsic objects more easily."""
     if outputs is None:
         outputs = []
@@ -337,25 +343,25 @@ script_test_cases = [
         # No expected outputs - just verifies all disassemblers produce output
         # Simple LLIL expectations for basic instruction validation
         expected_llil=[
-            (0x0000, mllil("PUSH.error", [mllil("CONST.error", [1])])),
-            (0x0003, mllil("PUSH.error", [mllil("CONST.error", [201])])),
-            (0x0006, mllil("PUSH.error", [mllil("CONST.error", [0])])),
-            (0x0009, mintrinsic("start_script", params=[mllil("POP.error", []), mllil("POP.error", [])])),
-            (0x000A, mllil("PUSH.error", [mllil("CONST.error", [5])])),
-            (0x000D, mllil("PUSH.error", [mllil("CONST.error", [0])])),
-            (0x0010, mintrinsic("start_script_quick", params=[mllil("POP.error", [])])),
+            (0x0000, mllil("PUSH.4", [mllil("CONST.4", [1])])),
+            (0x0003, mllil("PUSH.4", [mllil("CONST.4", [201])])),
+            (0x0006, mllil("PUSH.4", [mllil("CONST.4", [0])])),
+            (0x0009, mintrinsic("start_script", params=[mllil("POP.4", []), mllil("POP.4", [])])),
+            (0x000A, mllil("PUSH.4", [mllil("CONST.4", [5])])),
+            (0x000D, mllil("PUSH.4", [mllil("CONST.4", [0])])),
+            (0x0010, mintrinsic("start_script_quick", params=[mllil("POP.4", [])])),
             (0x0011, mintrinsic("stop_object_code1")),
             (0x0011, mllil("NORET", [])),
         ],
         # For now, fusion should produce identical LLIL since no fusion is occurring for these operations
         expected_llil_fusion=[
-            (0x0000, mllil("PUSH.error", [mllil("CONST.error", [1])])),
-            (0x0003, mllil("PUSH.error", [mllil("CONST.error", [201])])),
-            (0x0006, mllil("PUSH.error", [mllil("CONST.error", [0])])),
-            (0x0009, mintrinsic("start_script", params=[mllil("POP.error", []), mllil("POP.error", [])])),
-            (0x000A, mllil("PUSH.error", [mllil("CONST.error", [5])])),
-            (0x000D, mllil("PUSH.error", [mllil("CONST.error", [0])])),
-            (0x0010, mintrinsic("start_script_quick", params=[mllil("POP.error", [])])),
+            (0x0000, mllil("PUSH.4", [mllil("CONST.4", [1])])),
+            (0x0003, mllil("PUSH.4", [mllil("CONST.4", [201])])),
+            (0x0006, mllil("PUSH.4", [mllil("CONST.4", [0])])),
+            (0x0009, mintrinsic("start_script", params=[mllil("POP.4", []), mllil("POP.4", [])])),
+            (0x000A, mllil("PUSH.4", [mllil("CONST.4", [5])])),
+            (0x000D, mllil("PUSH.4", [mllil("CONST.4", [0])])),
+            (0x0010, mintrinsic("start_script_quick", params=[mllil("POP.4", [])])),
             (0x0011, mintrinsic("stop_object_code1")),
             (0x0011, mllil("NORET", [])),
         ],
