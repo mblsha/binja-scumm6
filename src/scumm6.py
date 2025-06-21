@@ -57,7 +57,7 @@ class LastBV:
 
 # FIXME: create a fake memory segment for all the function names,
 # so that cross-references will work
-class Scumm6(Architecture):  # type: ignore[misc]
+class Scumm6(Architecture):
     name = "SCUMM6"
     address_size = 4
     default_int_size = 4
