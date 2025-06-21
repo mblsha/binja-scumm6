@@ -28,3 +28,11 @@ coverage.xml
 *.IMS
 *.SOU
 
+# Generated analysis artifacts
+analysis_output/
+dottdemo_analysis.json
+script_inventory.json
+script_inventory.txt
+simple_script_analysis_report.md
+test_suite_plan.md
+

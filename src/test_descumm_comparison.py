@@ -30,7 +30,7 @@ from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL, mllil, Moc
 from binaryninja.enums import BranchType
 from src.scumm6 import Scumm6, LastBV
 from src.test_mocks import MockScumm6BinaryView
-from src.disasm import Scumm6Disasm, ScriptAddr, State
+from src.container import ContainerParser as Scumm6Disasm, ScriptAddr, State
 from scripts.ensure_descumm import build_descumm
 
 # Import ensure_demo_bsc6 from test_descumm_tool

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from .disasm import Scumm6Disasm
+from .container import ContainerParser as Scumm6Disasm
 
 from scripts.ensure_descumm import build_descumm
 

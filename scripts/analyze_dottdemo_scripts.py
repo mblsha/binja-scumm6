@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Force mock Binary Ninja for standalone execution
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from src.disasm import Scumm6Disasm, ScriptAddr, State
+from src.container import ContainerParser as Scumm6Disasm, ScriptAddr, State
 from src.pyscumm6.disasm import decode, decode_with_fusion_incremental
 
 

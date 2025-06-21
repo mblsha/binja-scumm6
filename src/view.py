@@ -3,7 +3,7 @@ from binaryninja.architecture import Architecture
 from binaryninja.types import Symbol
 from binaryninja.enums import SymbolType, SegmentFlag, SectionSemantics, Endianness
 from .scumm6 import LastBV
-from .disasm import Scumm6Disasm, ScriptAddr, State
+from .container import ContainerParser as Scumm6Disasm, ScriptAddr, State
 
 from typing import List, cast
 

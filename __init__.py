@@ -1,7 +1,7 @@
 from pathlib import Path
 import sys
 
-# FIXME: this might be outdated, and possibly could be removed
+# Add plugin directory to sys.path for relative imports
 _scumm6_dir = Path(__file__).resolve().parent
 if str(_scumm6_dir) not in sys.path:
     sys.path.insert(0, str(_scumm6_dir))

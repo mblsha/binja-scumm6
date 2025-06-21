@@ -60,7 +60,7 @@ class SimpleScriptAnalyzer:
         
     def _load_container(self) -> Tuple[List[Any], Any, bytes]:
         """Load the SCUMM6 container file and decode it."""
-        from src.disasm import Scumm6Disasm
+        from src.container import ContainerParser as Scumm6Disasm
         
         with open(self.container_path, "rb") as f:
             bsc6_data = f.read()

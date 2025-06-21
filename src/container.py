@@ -1,13 +1,18 @@
+"""SCUMM6 container parsing and script extraction utilities.
+
+This module handles parsing .bsc6 container files and extracting script information
+for use with the Binary Ninja view and analysis tools.
+"""
+
 from binja_helpers import binja_api  # noqa: F401
 from binaryninja.enums import SegmentFlag, SectionSemantics
 
 from kaitaistruct import KaitaiStream, BytesIO
-from .scumm6_opcodes import Scumm6Opcodes
 from .scumm6_container import Scumm6Container
+from .sorted_list import SortedList
 
 from typing import Any, Dict, List, Tuple, Optional, NamedTuple
 from dataclasses import dataclass, field
-from .sorted_list import SortedList
 
 SEGMENT_CODE_FLAG = getattr(SegmentFlag, "SegmentContainsCode", SegmentFlag.SegmentExecutable)
 
@@ -17,46 +22,6 @@ BlockType = Scumm6Container.BlockType
 class Resource(NamedTuple):
     room_no: int
     room_offset: int
-
-
-# https://github.com/scummvm/scummvm/blob/74b6c4d35aaeeb6892c358f0c3e41d8be98c79ea/engines/scumm/resource.cpp#L455
-# DSCR: readResTypeList(rtScript): room_no -> room_offset
-def decode_rnam_dscr(r: Scumm6Container) -> List[Resource]:
-    dscr = None
-    for b in r.blocks:
-        if b.block_type == BlockType.dscr:
-            dscr = b.block_data
-            break
-
-    if not dscr:
-        raise ValueError("No DSCR block found at top-level")
-
-    scripts: List[Resource] = []
-    for i in range(dscr.num_entries):
-        index = dscr.index_no[i]
-        room_offset = dscr.room_offset[i]
-        scripts.append(Resource(index, room_offset))
-
-    return scripts
-
-
-def pretty_scumm(block: Any, pos: int = 0, level: int = 0) -> Any:
-    if not getattr(block.block_type, "value", None):
-        return block
-
-    type_str = block.block_type.value.to_bytes(length=4, byteorder="big")
-    r: Dict[str, Tuple[str, Any] | Any] = {}
-
-    if isinstance(block.block_data, Scumm6Container.NestedBlocks):
-        pos += 8
-        arr = []
-        for b in block.block_data.blocks:
-            arr.append(pretty_scumm(b, pos, level + 1))
-            pos += b.block_size
-        r[type_str] = arr
-    else:
-        r[type_str] = (hex(pos), block.block_data)
-    return r
 
 
 @dataclass
@@ -101,7 +66,49 @@ class ScriptAddr(NamedTuple):
     section_semantics: SectionSemantics
 
 
+# https://github.com/scummvm/scummvm/blob/74b6c4d35aaeeb6892c358f0c3e41d8be98c79ea/engines/scumm/resource.cpp#L455
+# DSCR: readResTypeList(rtScript): room_no -> room_offset
+def decode_rnam_dscr(r: Scumm6Container) -> List[Resource]:
+    dscr = None
+    for b in r.blocks:
+        if b.block_type == BlockType.dscr:
+            dscr = b.block_data
+            break
+
+    if not dscr:
+        raise ValueError("No DSCR block found at top-level")
+
+    scripts: List[Resource] = []
+    for i in range(dscr.num_entries):
+        index = dscr.index_no[i]
+        room_offset = dscr.room_offset[i]
+        scripts.append(Resource(index, room_offset))
+
+    return scripts
+
+
+def pretty_scumm(block: Any, pos: int = 0, level: int = 0) -> Any:
+    """Pretty-print SCUMM container block structure."""
+    if not getattr(block.block_type, "value", None):
+        return block
+
+    type_str = block.block_type.value.to_bytes(length=4, byteorder="big")
+    r: Dict[str, Tuple[str, Any] | Any] = {}
+
+    if isinstance(block.block_data, Scumm6Container.NestedBlocks):
+        pos += 8
+        arr = []
+        for b in block.block_data.blocks:
+            arr.append(pretty_scumm(b, pos, level + 1))
+            pos += b.block_size
+        r[type_str] = arr
+    else:
+        r[type_str] = (hex(pos), block.block_data)
+    return r
+
+
 def get_script_addrs(block: Any, state: State, pos: int = 0) -> List[ScriptAddr]:
+    """Extract script addresses and metadata from container blocks."""
     r = []
 
     if block.block_type == BlockType.room:
@@ -189,39 +196,14 @@ def get_script_addrs(block: Any, state: State, pos: int = 0) -> List[ScriptAddr]
     return r
 
 
-class Instruction(NamedTuple):
-    op: Scumm6Opcodes.Op
-    id: str
-    length: int
-    data: bytes
-    addr: int
-    analysis_info: object | None = None
-
-
-class Scumm6Disasm:
-    @staticmethod
-    def decode_instruction(data: bytes, addr: int) -> Optional[Instruction]:
-        if len(data) <= 0:
-            return None
-        try:
-            ks = KaitaiStream(BytesIO(data))
-            r = Scumm6Opcodes(ks)
-            op_i = str(r.op.id).replace("OpType.", "")
-            return Instruction(r.op, id=op_i, length=ks.pos(), data=data, addr=addr)
-        except EOFError:
-            return None
-        except UnicodeDecodeError:
-            print("UnicodeDecodeError at", hex(addr))
-            raise
-        except Exception as e:
-            if "end of stream reached, but no terminator 0 found" in str(e):
-                return None
-            raise
+class ContainerParser:
+    """Parser for SCUMM6 .bsc6 container files."""
 
     @staticmethod
     def decode_container(
         lecf_filename: str, data: bytes
     ) -> Optional[Tuple[List[ScriptAddr], State]]:
+        """Decode a SCUMM6 container file and extract script information."""
         ks = KaitaiStream(BytesIO(data))
         r = Scumm6Container(ks)
         state = State()
@@ -236,6 +218,7 @@ class Scumm6Disasm:
 
     @staticmethod
     def get_script_ptr(state: State, script_num: int, call_addr: int) -> Optional[int]:
+        """Get script pointer from script number and call address."""
         if script_num >= len(state.dscr):
             # local script
             room_addr = state.rooms_addrs.closest_left_match(call_addr)
@@ -254,16 +237,20 @@ class Scumm6Disasm:
         block_addr = room_addr + res.room_offset
         return state.block_to_script[block_addr]
 
-    # script_addr -> script_num
     @staticmethod
     def get_script_nums(state: State) -> Dict[int, int]:
+        """Get mapping from script address to script number."""
         r: Dict[int, int] = {}
 
         for i in range(len(state.dscr)):
             if state.dscr[i].room_no not in state.room_ids:
                 continue
-            ptr = Scumm6Disasm.get_script_ptr(state, i, -1)
+            ptr = ContainerParser.get_script_ptr(state, i, -1)
             assert ptr
             r[ptr] = i
 
         return r
+
+
+# Legacy compatibility alias
+Scumm6Disasm = ContainerParser

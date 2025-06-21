@@ -43,7 +43,7 @@ if bn and not hasattr(bn, "core_ui_enabled"):
 
         enums_mod.FlagRole = FlagRole  # type: ignore[attr-defined]
 
-from .disasm import State, Resource  # noqa: E402
+from .container import State, Resource  # noqa: E402
 
 
 class MockScumm6View:
