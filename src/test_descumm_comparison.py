@@ -340,8 +340,30 @@ script_test_cases = [
     ScriptComparisonTestCase(
         test_id="room2_enter_output_verification",
         script_name="room2_enter",
-        # No expected outputs - just verifies all disassemblers produce output
-        # Simple LLIL expectations for basic instruction validation
+        expected_descumm_output=dedent("""
+            ERROR: No items on stack to pop!
+            <!-- descumm stderr: ERROR: getIntVal call on StackEnt type 6! -->
+        """).strip(),
+        expected_disasm_output=dedent("""
+            [0000] push_word(1)
+            [0003] push_word(201)
+            [0006] push_word(0)
+            [0009] start_script(script_id, ...)
+            [000A] push_word(5)
+            [000D] push_word(0)
+            [0010] start_script_quick(script_id, ...)
+            [0011] stop_object_code1
+        """).strip(),
+        expected_disasm_fusion_output=dedent("""
+            [0000] push_word(1)
+            [0003] push_word(201)
+            [0006] push_word(0)
+            [0009] start_script(script_id, ...)
+            [000A] push_word(5)
+            [000D] push_word(0)
+            [0010] start_script_quick(script_id, ...)
+            [0011] stop_object_code1
+        """).strip(),
         expected_llil=[
             (0x0000, mllil("PUSH.4", [mllil("CONST.4", [1])])),
             (0x0003, mllil("PUSH.4", [mllil("CONST.4", [201])])),
@@ -353,7 +375,6 @@ script_test_cases = [
             (0x0011, mintrinsic("stop_object_code1")),
             (0x0011, mllil("NORET", [])),
         ],
-        # For now, fusion should produce identical LLIL since no fusion is occurring for these operations
         expected_llil_fusion=[
             (0x0000, mllil("PUSH.4", [mllil("CONST.4", [1])])),
             (0x0003, mllil("PUSH.4", [mllil("CONST.4", [201])])),
