@@ -700,7 +700,8 @@ class Jump(ControlFlowOp):
 
         # Unconditional jump to target
         target_addr = addr + 3 + self.op_details.body.jump_offset  # 3 = instruction length
-        il.append(il.jump(il.const(4, target_addr)))
+        # Use const_pointer to ensure proper cross-references for inter-procedural jumps
+        il.append(il.jump(il.const_pointer(il.arch.address_size, target_addr)))
 
 
 class SmartIff(SmartConditionalJump):

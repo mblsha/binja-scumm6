@@ -706,54 +706,10 @@ class SmartConditionalJump(ControlFlowOp):
                 return [TInstr(f"{instr_name} goto {jump_offset}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        jump_offset = self.op_details.body.jump_offset
-        target_addr = addr + self.length() + jump_offset
-        
         if self.fused_operands:
-            # Generate IL for fused comparison
-            comparison = self.fused_operands[0]
-            if hasattr(comparison, 'fused_operands') and len(comparison.fused_operands) >= 2:
-                # Get operands (reverse order for stack semantics)
-                left_operand = comparison.fused_operands[1]
-                right_operand = comparison.fused_operands[0]
-                
-                left_expr = self._lift_operand(il, left_operand)
-                right_expr = self._lift_operand(il, right_operand)
-                
-                # Get comparison operation
-                op_name = comparison.__class__.__name__.lower()
-                comparison_ops = {
-                    'eq': 'compare_equal',
-                    'neq': 'compare_not_equal', 
-                    'gt': 'compare_signed_greater_than',
-                    'lt': 'compare_signed_less_than',
-                    'le': 'compare_signed_less_equal',
-                    'ge': 'compare_signed_greater_equal'
-                }
-                
-                il_op_name = comparison_ops.get(op_name, 'compare_equal')
-                il_func = getattr(il, il_op_name)
-                condition = il_func(4, left_expr, right_expr)
-                
-                # Apply if_not logic if needed
-                if self._is_if_not:
-                    condition = il.compare_equal(4, condition, il.const(4, 0))
-                else:
-                    condition = il.compare_not_equal(4, condition, il.const(4, 0))
-                
-                # Generate conditional jump
-                true_label = il.get_label_for_address(il.arch, target_addr)
-                false_label = LowLevelILLabel()
-                
-                # Generate conditional jump with the obtained label
-                il.append(il.if_expr(condition, true_label, false_label))
-                il.mark_label(false_label) 
-            else:
-                # Fallback to normal stack-based lifting
-                self._lift_normal(il, addr)
+            self._lift_fused_conditional_branch(il, addr)
         else:
-            # Normal stack-based lifting
-            self._lift_normal(il, addr)
+            self._lift_stack_based_conditional_branch(il, addr)
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
@@ -764,25 +720,86 @@ class SmartConditionalJump(ControlFlowOp):
         else:
             return il.const(4, 0)  # Fallback
     
-    def _lift_normal(self, il: LowLevelILFunction, addr: int) -> None:
-        """Normal stack-based lifting for unfused conditionals."""
-        jump_offset = self.op_details.body.jump_offset
-        target_addr = addr + self.length() + jump_offset
-        
+    def _lift_stack_based_conditional_branch(self, il: LowLevelILFunction, addr: int) -> None:
+        """Logic for when the condition is on the stack."""
         # Pop condition from stack
         il.append(il.set_reg(4, LLIL_TEMP(0), il.pop(4)))
+        condition_expr = il.reg(4, LLIL_TEMP(0))
+        self._perform_branch(il, addr, condition_expr)
+
+    def _lift_fused_conditional_branch(self, il: LowLevelILFunction, addr: int) -> None:
+        """Logic for when the condition is a fused expression."""
+        comparison = self.fused_operands[0]
         
-        if self._is_if_not:
-            condition = il.compare_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0))
+        if hasattr(comparison, 'fused_operands') and len(comparison.fused_operands) >= 2:
+            # Get operands (reverse order for stack semantics)
+            left_operand = comparison.fused_operands[1]
+            right_operand = comparison.fused_operands[0]
+            
+            left_expr = self._lift_operand(il, left_operand)
+            right_expr = self._lift_operand(il, right_operand)
+            
+            # Get comparison operation
+            op_name = comparison.__class__.__name__.lower()
+            comparison_ops = {
+                'eq': 'compare_equal',
+                'neq': 'compare_not_equal', 
+                'gt': 'compare_signed_greater_than',
+                'lt': 'compare_signed_less_than',
+                'le': 'compare_signed_less_equal',
+                'ge': 'compare_signed_greater_equal'
+            }
+            
+            il_op_name = comparison_ops.get(op_name, 'compare_equal')
+            il_func = getattr(il, il_op_name)
+            condition_expr = il_func(4, left_expr, right_expr)
         else:
-            condition = il.compare_not_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0))
+            # Simple push condition
+            condition_expr = self._lift_operand(il, comparison)
         
-        true_label = il.get_label_for_address(il.arch, target_addr)
-        false_label = LowLevelILLabel()
-        
-        # Generate conditional jump with the obtained label
-        il.append(il.if_expr(condition, true_label, false_label))
-        il.mark_label(false_label)
+        self._perform_branch(il, addr, condition_expr)
+
+    def _perform_branch(self, il: LowLevelILFunction, addr: int, condition_expr: int) -> None:
+        """Unified branching logic that handles both intra and inter-procedural jumps."""
+        jump_offset = self.op_details.body.jump_offset
+        target_addr = addr + self.length() + jump_offset
+
+        # Determine the final condition based on if_not semantics
+        if self._is_if_not:
+            # For 'if_not' (unless), jump is taken if condition is FALSE (zero)
+            condition = il.compare_equal(4, condition_expr, il.const(4, 0))
+        else:
+            # For 'iff' (if), jump is taken if condition is TRUE (non-zero)
+            condition = il.compare_not_equal(4, condition_expr, il.const(4, 0))
+
+        # Try to get a label for an intra-function jump
+        destination_label = il.get_label_for_address(il.arch, target_addr)
+
+        if destination_label:
+            # --- INTRA-FUNCTION JUMP ---
+            # The target is within the same function. We can use il.if_expr directly.
+            fallthrough_label = LowLevelILLabel()
+            il.append(il.if_expr(condition, destination_label, fallthrough_label))
+            il.mark_label(fallthrough_label)
+        else:
+            # --- INTER-FUNCTION JUMP ---
+            # The target is outside the current function. Create a trampoline.
+            trampoline_label = LowLevelILLabel()
+            fallthrough_label = LowLevelILLabel()
+
+            # Create the conditional branch to our local trampoline or fallthrough
+            il.append(il.if_expr(condition, trampoline_label, fallthrough_label))
+
+            # Define what happens in the "jump" block
+            il.mark_label(trampoline_label)
+            # This is an *unconditional* jump to the absolute address
+            # il.const_pointer is crucial for creating the cross-reference
+            il.append(il.jump(il.const_pointer(il.arch.address_size, target_addr)))
+
+            # Define the "fallthrough" block
+            il.mark_label(fallthrough_label)
+            # Optional nop for clarity - the next instruction will be lifted here
+            il.append(il.nop())
 
 class SmartComparisonOp(Instruction):
     """Self-configuring comparison stack operation with fusion support."""
