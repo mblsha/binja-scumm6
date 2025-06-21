@@ -1,0 +1,25 @@
+Script Analysis: room3_enter
+==================================================
+
+METRICS:
+  Size: 52 bytes
+  Instructions: 18
+  Complexity Score: 36
+  Has Branches: False
+  Has Loops: False
+  Has Function Calls: False
+  Max Stack Depth: 18
+  Fusion Opportunities: 0
+  Semantic Patterns: 
+
+OPCODE DISTRIBUTION:
+  PushWord: 18
+
+NEW DECODER OUTPUT (NO FUSION):
+------------------------------
+
+
+NEW DECODER OUTPUT (WITH FUSION):
+------------------------------
+
+

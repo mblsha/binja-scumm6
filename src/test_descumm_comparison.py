@@ -145,12 +145,12 @@ script_test_cases = [
         """).strip(),
         expected_disasm_output=dedent("""
             [0000] push_word_var(var_0)
-            [0003] get_object_x
+            [0003] getObjectX(...)
             [0004] push_word_var(var_1)
             [0007] sub
             [0008] write_word_var(var_5)
             [000B] push_word_var(var_0)
-            [000E] get_object_y
+            [000E] getObjectY(...)
             [000F] push_word_var(var_2)
             [0012] sub
             [0013] write_word_var(var_6)
@@ -167,7 +167,7 @@ script_test_cases = [
             [002E] push_word(0)
             [0031] write_word_var(var_137)
             [0034] push_word(0)
-            [0037] stop_script
+            [0037] stopScript(...)
             [0038] push_word_var(var_6)
             [003B] push_word_var(var_4)
             [003E] gt
@@ -175,7 +175,7 @@ script_test_cases = [
             [0042] push_word(0)
             [0045] write_word_var(var_137)
             [0048] push_word(0)
-            [004B] stop_script
+            [004B] stopScript(...)
             [004C] push_word_var(var_5)
             [004F] push_word_var(var_5)
             [0052] mul
@@ -188,14 +188,14 @@ script_test_cases = [
             [0063] push_word(0)
             [0066] lt
             [0067] unless goto +42
-            [006A] print_debug.begin()
-            [006C] print_debug.msg("x2 value overflowing in ellipse check")
+            [006A] printDebug.begin()
+            [006C] printDebug.msg(...)
             [0094] push_word_var(var_8)
             [0097] push_word(0)
             [009A] lt
             [009B] unless goto +42
-            [009E] print_debug.begin()
-            [00A0] print_debug.msg("y2 value overflowing in ellipse check")
+            [009E] printDebug.begin()
+            [00A0] printDebug.msg(...)
             [00C8] push_word(1)
             [00CB] write_word_var(var_11)
             [00CE] push_word(0)
@@ -244,16 +244,16 @@ script_test_cases = [
             [013D] unless goto +38
             [0140] push_word(1)
             [0143] write_word_var(var_3)
-            [0146] print_debug.begin()
-            [0148] print_debug.msg("very skinny ellipse warning")
+            [0146] printDebug.begin()
+            [0148] printDebug.msg(...)
             [0166] push_word_var(var_4)
             [0169] push_word(0)
             [016C] eq
             [016D] unless goto +36
             [0170] push_word(1)
             [0173] write_word_var(var_4)
-            [0176] print_debug.begin()
-            [0178] print_debug.msg("very flat ellipse warning")
+            [0176] printDebug.begin()
+            [0178] printDebug.msg(...)
             [0194] push_word_var(var_7)
             [0197] push_word_var(var_3)
             [019A] push_word_var(var_3)
@@ -278,7 +278,7 @@ script_test_cases = [
             [01C5] unless goto +6
             [01C8] push_word(0)
             [01CB] write_word_var(var_137)
-            [01CE] stop_object_code2
+            [01CE] stopObjectCodeB()
         """).strip(),
         # Skip full LLIL validation for this complex test case - too many operations (186 total)
         # The collision detection algorithm includes complex conditionals, labels, and branches
@@ -297,29 +297,29 @@ script_test_cases = [
         """).strip(),
         expected_disasm_output=dedent("""
             [0000] push_word(137)
-            [0003] is_script_running
+            [0003] isScriptRunning(...)
             [0004] nott
             [0005] unless goto +18
             [0008] push_word(93)
             [000B] push_word(1)
             [000E] push_word(1)
-            [0011] start_script_quick(script_id, ...)
+            [0011] startScriptQuick(...)
             [0012] push_word(0)
             [0015] push_word(200)
-            [0018] room_ops.room_screen
-            [001A] stop_object_code1
+            [0018] roomOps.setScreen(...)
+            [001A] stopObjectCodeA()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
             [0000] push_word(137)
-            [0003] is_script_running
+            [0003] isScriptRunning(...)
             [0004] nott
             [0005] unless goto +18
             [0008] push_word(93)
-            [000B] start_script_quick(1, 1)
+            [000B] startScriptQuick(1, 1)
             [0012] push_word(0)
             [0015] push_word(200)
-            [0018] room_ops.room_screen
-            [001A] stop_object_code1
+            [0018] roomOps.setScreen(...)
+            [001A] stopObjectCodeA()
         """).strip(),
         # Skip full LLIL validation for this complex test case - too many operations (17 total)
         # The conditional logic with labels and branches makes expectations complex
@@ -344,16 +344,16 @@ script_test_cases = [
             [0000] push_word(1)
             [0003] push_word(201)
             [0006] push_word(0)
-            [0009] start_script(script_id, ...)
+            [0009] startScript(...)
             [000A] push_word(5)
             [000D] push_word(0)
-            [0010] start_script_quick(script_id, ...)
-            [0011] stop_object_code1
+            [0010] startScriptQuick(...)
+            [0011] stopObjectCodeA()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] start_script(1, 201, 0)
-            [000A] start_script_quick(5, 0)
-            [0011] stop_object_code1
+            [0000] startScript(1, 201, 0)
+            [000A] startScriptQuick(5, 0)
+            [0011] stopObjectCodeA()
         """).strip(),
         expected_llil=[
             (0x0000, mllil("PUSH.4", [mllil("CONST.4", [1])])),
@@ -951,8 +951,8 @@ def test_room2_enter_fusion_analysis(test_environment: ComparisonTestEnvironment
     print("\n=== CONCLUSION ===")
     print("✅ Fusion decoder is working correctly!")
     print("For this script pattern (push + intrinsic), fusion successfully combines:")
-    print("  • push_word(1) + push_word(201) + push_word(0) + start_script → start_script(1, 201, 0)")
-    print("  • push_word(5) + push_word(0) + start_script_quick → start_script_quick(5, 0)")
+    print("  • push_word(1) + push_word(201) + push_word(0) + startScript → startScript(1, 201, 0)")
+    print("  • push_word(5) + push_word(0) + startScriptQuick → startScriptQuick(5, 0)")
     print("Instruction count reduced from 8 to 3, creating much more readable function calls.")
     
     # Basic assertion to make it a proper test

@@ -1,0 +1,25 @@
+Script Analysis: room8_local200
+==================================================
+
+METRICS:
+  Size: 238 bytes
+  Instructions: 80
+  Complexity Score: 160
+  Has Branches: False
+  Has Loops: False
+  Has Function Calls: False
+  Max Stack Depth: 80
+  Fusion Opportunities: 0
+  Semantic Patterns: 
+
+OPCODE DISTRIBUTION:
+  PushWord: 80
+
+NEW DECODER OUTPUT (NO FUSION):
+------------------------------
+
+
+NEW DECODER OUTPUT (WITH FUSION):
+------------------------------
+
+

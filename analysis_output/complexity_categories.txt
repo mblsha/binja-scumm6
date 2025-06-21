@@ -1,0 +1,44 @@
+Scripts Categorized by Complexity
+==================================================
+
+SIMPLE SCRIPTS (21 scripts):
+Good starting points for fusion implementation
+------------------------------
+Strings: 0 instructions, score=0
+room1_exit: 1 instructions, score=1
+room1_enter: 1 instructions, score=1
+room5_exit: 1 instructions, score=1
+room6_exit: 1 instructions, score=1
+room7_exit: 1 instructions, score=1
+room9_exit: 1 instructions, score=1
+room2_exit: 2 instructions, score=4
+room9_enter: 3 instructions, score=6
+room7_enter: 4 instructions, score=8
+
+MODERATE SCRIPTS (10 scripts):
+Good for testing more complex patterns
+------------------------------
+room6_enter: 10 instructions, score=20, branches=False, loops=False
+room8_scrp12: 11 instructions, score=22, branches=False, loops=False
+room8_scrp20: 11 instructions, score=22, branches=False, loops=False
+room8_scrp21: 11 instructions, score=22, branches=False, loops=False
+room4_enter: 12 instructions, score=24, branches=False, loops=False
+room12_enter: 13 instructions, score=26, branches=False, loops=False
+room3_enter: 18 instructions, score=36, branches=False, loops=False
+room11_scrp1: 18 instructions, score=36, branches=False, loops=False
+room8_scrp17: 22 instructions, score=44, branches=False, loops=False
+room3_exit: 24 instructions, score=48, branches=False, loops=False
+
+COMPLEX SCRIPTS (35 scripts):
+Ultimate test cases for semantic understanding
+------------------------------
+room8_scrp19: 25 instructions, score=50, patterns=
+room7_local200: 26 instructions, score=52, patterns=
+room8_scrp13: 29 instructions, score=58, patterns=
+room8_local202: 60 instructions, score=60, patterns=
+room8_scrp9: 31 instructions, score=62, patterns=
+room8_scrp16: 33 instructions, score=66, patterns=
+room2_local201: 34 instructions, score=68, patterns=
+room8_scrp10: 39 instructions, score=78, patterns=
+room8_scrp22: 39 instructions, score=78, patterns=
+room8_local201: 40 instructions, score=80, patterns=

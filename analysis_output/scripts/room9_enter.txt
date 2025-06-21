@@ -1,0 +1,25 @@
+Script Analysis: room9_enter
+==================================================
+
+METRICS:
+  Size: 9 bytes
+  Instructions: 3
+  Complexity Score: 6
+  Has Branches: False
+  Has Loops: False
+  Has Function Calls: False
+  Max Stack Depth: 3
+  Fusion Opportunities: 0
+  Semantic Patterns: 
+
+OPCODE DISTRIBUTION:
+  PushWord: 3
+
+NEW DECODER OUTPUT (NO FUSION):
+------------------------------
+
+
+NEW DECODER OUTPUT (WITH FUSION):
+------------------------------
+
+

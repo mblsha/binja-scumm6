@@ -1,0 +1,25 @@
+Script Analysis: room6_exit
+==================================================
+
+METRICS:
+  Size: 1 bytes
+  Instructions: 1
+  Complexity Score: 1
+  Has Branches: False
+  Has Loops: False
+  Has Function Calls: False
+  Max Stack Depth: 0
+  Fusion Opportunities: 0
+  Semantic Patterns: 
+
+OPCODE DISTRIBUTION:
+  StopObjectCode1: 1
+
+NEW DECODER OUTPUT (NO FUSION):
+------------------------------
+
+
+NEW DECODER OUTPUT (WITH FUSION):
+------------------------------
+
+

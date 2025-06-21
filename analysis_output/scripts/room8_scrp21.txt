@@ -1,0 +1,25 @@
+Script Analysis: room8_scrp21
+==================================================
+
+METRICS:
+  Size: 31 bytes
+  Instructions: 11
+  Complexity Score: 22
+  Has Branches: False
+  Has Loops: False
+  Has Function Calls: False
+  Max Stack Depth: 11
+  Fusion Opportunities: 0
+  Semantic Patterns: 
+
+OPCODE DISTRIBUTION:
+  PushWordVar: 11
+
+NEW DECODER OUTPUT (NO FUSION):
+------------------------------
+
+
+NEW DECODER OUTPUT (WITH FUSION):
+------------------------------
+
+

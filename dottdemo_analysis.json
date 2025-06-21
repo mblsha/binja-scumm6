@@ -1,0 +1,1384 @@
+{
+  "room1_exit": {
+    "metrics": {
+      "size_bytes": 1,
+      "instruction_count": 1,
+      "complexity_score": 1,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 0,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "StopObjectCode1"
+      ],
+      "opcode_histogram": {
+        "StopObjectCode1": 1
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "65"
+  },
+  "room1_enter": {
+    "metrics": {
+      "size_bytes": 1,
+      "instruction_count": 1,
+      "complexity_score": 1,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 0,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "StopObjectCode1"
+      ],
+      "opcode_histogram": {
+        "StopObjectCode1": 1
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "65"
+  },
+  "room2_exit": {
+    "metrics": {
+      "size_bytes": 5,
+      "instruction_count": 2,
+      "complexity_score": 4,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 2,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 2
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0105007c65"
+  },
+  "room2_enter": {
+    "metrics": {
+      "size_bytes": 18,
+      "instruction_count": 6,
+      "complexity_score": 12,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 6,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 6
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "01010001c9000100005e0105000100005f65"
+  },
+  "room2_local200": {
+    "metrics": {
+      "size_bytes": 25,
+      "instruction_count": 9,
+      "complexity_score": 18,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 9,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 9
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "010400ca0101004347816c010000434781010b00ca73e8ff66"
+  },
+  "room2_local201": {
+    "metrics": {
+      "size_bytes": 102,
+      "instruction_count": 34,
+      "complexity_score": 68,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 34,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 34
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "010a009dc59d53010c009d4c9d5f9d5d0114009d54010a0001fa0082010a0001a0000178000102007f010b009dc59d53010d009d4c9d5f9d5d010b0001fa0082010b0001a0000164000102007f010a0001060082010b000106008201010001c8000100005e66"
+  },
+  "room2_scrp1": {
+    "metrics": {
+      "size_bytes": 865,
+      "instruction_count": 289,
+      "complexity_score": 578,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 289,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 289
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "01040074010801010400010000012f00010000010500ac010e01010400010300010300ac010f01010601010400010000010400ac010f0101ffff010200ac01ffff010100ac010000435d800107009dc59d530106009d4c010d009d579d58507572706c652054656e7461636c65000104000102009d4d0104000101009d4d0106009dc59d530105009d4c010a009d579d58477265656e2054656e7461636c65000104000102009d4d0104000101009d4d01070001b9000164000102007f0106000120010153000102007f01070001f8008201060001f80082013c00b0010600baff0a0800ff0a0000ff0a0e00ff0a00004920646f6e2774207468696e6b20796f752073686f756c64206472696e6b20746861745e00a9a96c0347815df9ff01070001fa00820107009dc50107009d4c01070001060082010700ca01070001070082010400ca01070001080082010700ca010a00ca01070001090082010300cab6feb64bff0a3988ff0a0700ff0a0a00ff0a00002000010700ca010500ca01070001fa00820107009dc59d530106009d4c010d009d579d58507572706c652054656e7461636c65000104000102009d4d010700baff0adc47ff0a0000ff0a0e00ff0a00004e6f6e73656e73652100a9a9010700baff0a1785ff0a0000ff0a2600ff0a00004974206d616b6573206d65206665656c20475245415421ff03536d61727465722120204d6f726520616767726573736976652100a9a9011001010100ac01ffff010100ac010601010400017f00010300ac010001010400010700010300ac01ffff010100ac01140003380003380001040017010400161514430140010001010400010800010300ac01ffff010100ac033800430240010701010400010200010000010000010500ac01ffff010100ac010801010400010200030140030240010500ac01ffff010100ac01020001450001000001070001070001f100016c000105005e010400ca01060001f600826c01070007ec000100000e5df2ff01070001f50082a9a901070001f60082010700baff0afc36ff0a0100ff0a1e00ff0a000049206665656c206c696b65204920636f756c645e00a9a9010d01010400012800010500010400ac010601010400010000010300ac010d01010400017f00010500010400ac010601010400017f00010300ac01ffff010100ac010100435d8066"
+  },
+  "room3_exit": {
+    "metrics": {
+      "size_bytes": 72,
+      "instruction_count": 24,
+      "complexity_score": 48,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 24,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 24
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "010d01010400014600017800010400ac0103008b0d5d12000100000190009cae015d000102000101005f010101010400010000010300ac010d01010400010000013c00010400ac65"
+  },
+  "room3_enter": {
+    "metrics": {
+      "size_bytes": 52,
+      "instruction_count": 18,
+      "complexity_score": 36,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 18,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 18
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0103008b5d1a00010c01010400010000010400010400ac01c8000100005f731200015d000101000101005f01000001c8009cae65"
+  },
+  "room3_local200": {
+    "metrics": {
+      "size_bytes": 353,
+      "instruction_count": 118,
+      "complexity_score": 236,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 118,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 118
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "010000435d800107009dc59d53010e009d4c9d5f9d5d01ff009d5c0105009d5701e7ff019eff9d6301070001fa008201070001a0000164000103007f010700010600826c010c006b9c0100000100000100000103006b9d010500ca010700b8fe010500b842b84ab84bff0ae781ff0a0100ff0a1600ff0a000054414b45204f4e20ff0354484520574f524c4421212100010800ca01070001070082011100ca01070001080082010600ca01d60001eb0001ff000191009caf01f20001690001fa0001c2009caf010200ca01ff000191000191009cb301ff0001c20001c2009cb36c01d60001eb0001ff000191009caf01f20001690001fa0001c2009caf010300ca01ff000191000191009cb301ff0001c20001c2009cb3010200ca01d60001eb0001ff000191009caf01f20001690001fa0001c2009caf010200ca01ff000191000191009cb301ff0001c20001c2009cb3011200ca0102006b9c010100435d8066"
+  },
+  "room4_exit": {
+    "metrics": {
+      "size_bytes": 27,
+      "instruction_count": 9,
+      "complexity_score": 18,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 9,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 9
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0103008b0d5d12000100000190009cae015d000102000101005f65"
+  },
+  "room4_enter": {
+    "metrics": {
+      "size_bytes": 36,
+      "instruction_count": 12,
+      "complexity_score": 24,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 12,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 12
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0103008b5d0a0001c8000100005f731200015d000101000101005f01000001c8009cae65"
+  },
+  "room4_local200": {
+    "metrics": {
+      "size_bytes": 622,
+      "instruction_count": 208,
+      "complexity_score": 416,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 208,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 208
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "010000435d80010b006b9c0101009dc50111009d4c9d5f9d5d01ff009d5c01670001cfff9d630103009dc50113009d4c9d5f9d5d01ff009d5c0102009dc50114009d4c9d5f9d5d01ff009d5c0105009dc50112009d4c9d5f9d5d01ff009d5c0100009d540105007401ffff010100ac010e01010500010200010300ac010f01010601010500010000010400ac010f0101ffff010200ac011001010100ac01ffff010100ac010601010500017f00010300ac01010001fa00820101000189000133000105007f0101000106008201050001fa0082010500014d000196000105007f010500010600820101009dc50106000109009d50010100baff0a03e5ff0a0100ff0a1600ff0a0000497427732066726f6d206d79206f6c6420667269656e6420477265656e2054656e7461636c655e00010d00ca6c01030001fa00820103000123010188000105007f0103000106008201020001fa00820102000123010188000105007f01020001060082010700caa9a90101009dc50107000109009d5001010001070082010100baff0abf55ff0a0200ff0a0e00ff0a000048652073617973207468617420507572706c652054656e7461636c652773206d75746174656420696e746f20616e20696e73616e652067656e6975735e00011700ca010300caa9a90101009dc50108000109009d5001010001080082010100baff0a960bff0a0300ff0a0a00ff0a00005e616e6420446f63746f722046726564277320676f696e6720746f206b696c6c207468656d20626f74682100011500ca011b00ca6ca9a9010100435d80010001010500010800010300ac01ffff010100ac010701010500010000016d00033800010500ac66"
+  },
+  "room5_exit": {
+    "metrics": {
+      "size_bytes": 1,
+      "instruction_count": 1,
+      "complexity_score": 1,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 0,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "StopObjectCode1"
+      ],
+      "opcode_histogram": {
+        "StopObjectCode1": 1
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "65"
+  },
+  "room5_enter": {
+    "metrics": {
+      "size_bytes": 25,
+      "instruction_count": 9,
+      "complexity_score": 18,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 9,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 9
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "012f000100006101300001000061010000010b000100005e65"
+  },
+  "room5_scrp1": {
+    "metrics": {
+      "size_bytes": 245,
+      "instruction_count": 82,
+      "complexity_score": 164,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 82,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 82
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "01d7017a013100010000610106009dc59d530121009d4c0108009d519d5f9d5d01ff009d5c01f0009d5701060001a001016e000109007f01060001f90082010600010800820108009dc59d530127009d4c9d5f9d5d01ff009d5c01f6ff9d54010800019f010179000109007f01080001fa0082010800010600820103009dc59d530123009d4c01030001ef01016e000109007f01030001f80082010100b101030001060082010400ca010600010e008201080001070082010200ca01030001080082010300ca0106009dc50102009d4f0103009d510104000105009d5001060001fa00016e007e010600a9a8f9ff010100435d8066"
+  },
+  "room6_exit": {
+    "metrics": {
+      "size_bytes": 1,
+      "instruction_count": 1,
+      "complexity_score": 1,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 0,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "StopObjectCode1"
+      ],
+      "opcode_histogram": {
+        "StopObjectCode1": 1
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "65"
+  },
+  "room6_enter": {
+    "metrics": {
+      "size_bytes": 29,
+      "instruction_count": 10,
+      "complexity_score": 20,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 10,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 10
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0388000145000e5d12000100000190009cae01000001d7000100005e65"
+  },
+  "room6_local200": {
+    "metrics": {
+      "size_bytes": 190,
+      "instruction_count": 64,
+      "complexity_score": 128,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 64,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 64
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0101007901bf00010100700105000100000100000100007f01070001f900820107009dc59d53016b009d4c9d5f9d5d01ff009d5c01d9009d5701bd0001000070010700017300018b00011a007f0101009dc5016c009d4ca9aa01010001060082010800cab6feb64bff0a0d7bff0a0700ff0a0a00ff0a0000200001070001060082010600cab6feb64bff0aa131ff0a0700ff0a0a00ff0a00002000010800ca012600ca01bd00010100700107000100000100000100007f010100435d8066"
+  },
+  "room6_local214": {
+    "metrics": {
+      "size_bytes": 444,
+      "instruction_count": 148,
+      "complexity_score": 296,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 148,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 148
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0102000101001543840003840087010100144384000384000c0101000e5d0c011a010000680101009dc5016d009d4c01010001070082011400ca010100010800826c01050001f50082010500ba4865792c206b69642e202043616e20492068656c7020796f75207769746820736f6d657468696e673f00a9a90101009dc59d5301000001abff9d630131019d4c010f009d579d584265726e61726400010a000102009d4d011e009d5b010100ba4e6f2e20204e6f2e202049207468696e6b2049276c6c206a7573742073656520776861742074686573652063686174746572696e672074656574682061726520757020746f2e00a9a901010001ba000100007d01050001f80082010100a9a8f9ff010100ba576865772c20746861742077617320636c6f73652e0067738f000c0102000e5d86001a010000680101009dc5016d009d4c01010001070082011400ca01010001090082010100ba7369676800010b00ca0101009dc59d5301000001abff9d630131019d4c010f009d579d584265726e61726400010a000102009d4d011e009d5b01010001fa0082010100ba4e6f2c207468617420776f756c642062652077726f6e672e00677301001a66"
+  },
+  "room6_local215": {
+    "metrics": {
+      "size_bytes": 130,
+      "instruction_count": 44,
+      "complexity_score": 88,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 44,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 44
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "01020001010068010500ca01010001de00016900011a007f01010001fa00820101009dc50175009d4c9d5f01010001060082b6feb64bff0ad175ff0a0800ff0a0a00ff0a00002000010200ca010b00ca0101009dc59d5301000001abff9d630131019d4c010f009d579d584265726e61726400010a000102009d4d011e009d5b6766"
+  },
+  "room7_exit": {
+    "metrics": {
+      "size_bytes": 1,
+      "instruction_count": 1,
+      "complexity_score": 1,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 0,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "StopObjectCode1"
+      ],
+      "opcode_histogram": {
+        "StopObjectCode1": 1
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "65"
+  },
+  "room7_enter": {
+    "metrics": {
+      "size_bytes": 11,
+      "instruction_count": 4,
+      "complexity_score": 8,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 4,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 4
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "01000001c8000100005e65"
+  },
+  "room7_local200": {
+    "metrics": {
+      "size_bytes": 78,
+      "instruction_count": 26,
+      "complexity_score": 52,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 26,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 26
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0102009dc50122019d4c010200019500015c000138007f01020001fb0082010500ca01020001060082010a00cab6feb64bff0adad9ff0a0600ff0a0a00ff0a00002000011700ca010100435d8066"
+  },
+  "room8_exit": {
+    "metrics": {
+      "size_bytes": 150,
+      "instruction_count": 50,
+      "complexity_score": 100,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 50,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 50
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "010d01012b00010000015a00010400ac010d01012c00010000015a00010400ac010d01012d00010000015a00010400ac01ffff010100ac010101012b00010000010300ac010101012c00010000010300ac010101012d00010000010300ac010d01012b00010000011e00010400ac010d01012c00010000011e00010400ac010d01012d00010000011e00010400ac01ca020100007065"
+  },
+  "room8_enter": {
+    "metrics": {
+      "size_bytes": 19,
+      "instruction_count": 7,
+      "complexity_score": 14,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 7,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 7
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "01c9000100005f012b007401c8000100005f65"
+  },
+  "room8_local200": {
+    "metrics": {
+      "size_bytes": 238,
+      "instruction_count": 80,
+      "complexity_score": 160,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 80,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 80
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0101009cd50145019b6601ca00432000010b009dc59d530145019d4c9d5f9d5d0101009d5c0101000103009d4d010b0001fa0082010b000100000100000100007f010200b1012c0074016400430140010b0001a000030140013d007f010100430040010b009dc50300409d5c010b00aa0102001643004003004001ff00105d060001ff00430040010b009dc50300409d5c03014001030015430140010b0001a00003014001ff007f6c03004001ff000e5db9ff010100b1010900012b00010200ac012d0074b6feb64bff0a14a4ff0a0600ff0a0a00ff0a0000200001ca0201000061010300b101ca000100005f66"
+  },
+  "room8_local201": {
+    "metrics": {
+      "size_bytes": 120,
+      "instruction_count": 40,
+      "complexity_score": 80,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 40,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 40
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "01ff0001880001af009cb301960001960001ee020110000137009cb66c01ff000110000137009cb301960001960001ee02013800015f009cb66c01ff00013800015f009cb301960001960001ee020160000187009cb66c01ff000160000187009cb301960001960001ee0201880001af009cb66c7389ff66"
+  },
+  "room8_local202": {
+    "metrics": {
+      "size_bytes": 120,
+      "instruction_count": 60,
+      "complexity_score": 60,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 0,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "CursorCommand"
+      ],
+      "opcode_histogram": {
+        "CursorCommand": 60
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "6b9301c8007c01ca0201020061010b008c0304000e5d5900010b00aa430340010b008e430440030340010000105d3000010b00aa01030017430340010b009dc50303409d5c03044001030014430440010b0001a00003044001ff007f6c73c6ff010b000100000100000100007f011e00b0010100435d8066"
+  },
+  "room8_scrp1": {
+    "metrics": {
+      "size_bytes": 858,
+      "instruction_count": 286,
+      "complexity_score": 572,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 286,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 286
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "010600016400010200ac6b916b9301020043060001010043bc00010000431300011b00431800010000432b000102006b9c010000a4cde600446179206f66207468652054656e7461636c652042425320436f6e746573742044454d4f00010000437a00010000a4cd5d0047616d65205061757365642e2020507265737320535041434520746f20436f6e74696e75652e00010000a4cd5a00496e73657274204469736b20256320616e6420507265737320427574746f6e20746f20436f6e74696e75652e00010000a4cd5b00556e61626c6520746f2046696e642025732c2028256325642920507265737320427574746f6e2e00010000a4cd5c004572726f722072656164696e67206469736b2025632c2028256325642920507265737320427574746f6e2e00010000a4cd5e0041726520796f75207375726520796f752077616e7420746f20726573746172743f202028592f4e295900010000a4cd5f0041726520796f75207375726520796f752077616e7420746f20717569743f202028592f4e295900013200bcc76e000179000100005f015e000c9b6c9b64015f000c9b6c9b640162000c9b6c9b640164000c9b6c9b640165000c9b6c9b64015e00432300015f00432400016200431c00016400431d00016500431e0001060043910001090003910015432500010c004308000181819cb5010600431300010f00bcc8f000011900bcc80301010f00bcc80901010f00bcc80a01010200bcc8ed00010300bcc8ee00010200bcc8ef00010d00bcc8ec000100007b0100000190009cae010100430140030140010c00125d13000301400100000100000100007f4f014073e3ff0101004301000163000100005fb7fe010900b742b7ff032800013f01115d38006b916b93013d007b010a00ca6b92b7feb74b4e6f7420656e6f7567682066726565206d656d6f727920746f2072756e2064656d6f2e00aea00101009dc59d5301000001abff9d630131019d4c010f009d579d584265726e61726400010a000102009d4d011e009d5b0102009dc59d5301000001abff9d630132019d4c010e009d579d584c617665726e6500010b000102009d4d011e009d5b0103009dc59d5301000001abff9d630133019d4c01f2009d579d58486f6167696500010b000103009d4d0123009d5b010000435d800100000103000100005e66"
+  },
+  "room8_scrp2": {
+    "metrics": {
+      "size_bytes": 27,
+      "instruction_count": 9,
+      "complexity_score": 18,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 9,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 9
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0300400104000e5d1000030140012c000e5d0600010100435d8066"
+  },
+  "room8_scrp3": {
+    "metrics": {
+      "size_bytes": 279,
+      "instruction_count": 140,
+      "complexity_score": 140,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 0,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "CursorCommand"
+      ],
+      "opcode_histogram": {
+        "CursorCommand": 140
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "6b916b9303130043e8000100007b01000001c8009cae010000435d80013d007b6b926c035d805df9ff032700010100105d0b000102004320006b927302006b930101019cb5010000435d80010000435d800102007b0181009cb56c035d805df9ff03e8004313000102006b9c010000435d800103007b6c035d805df9ff0102006b9c0101019cb5010000435d800105007b6c035d805df9ff010000435d80014d007b6c035d805df9ff0102006b9c03e8004313000106007c018b007c0102006b9c0107000100000100000100007f0106000100000100000100007f0102000100000100000100007f0103000100000100000100007f0101000100000100000100007f0104000100000100000100007f0189000100005f66"
+  },
+  "room8_scrp4": {
+    "metrics": {
+      "size_bytes": 243,
+      "instruction_count": 81,
+      "complexity_score": 162,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 81,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 81
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0102009dc501000001a0009d5601010001a1009d5601020001a2009d5601030001a3009d5601040001a4009d5601050001a5009d5601060001a6009d5601070001a7009d5601080001a8009d5601090001a9009d56010a0001aa009d56010b0001ab009d56010c0001ac009d56010d0001ad009d56010e0001ae009d560103009dc501000001b0009d5601010001b1009d5601020001b2009d5601030001b3009d5601040001b4009d5601050001b5009d5601060001b6009d5601070001b7009d5601080001b8009d5601090001b9009d56010a0001ba009d56010b0001bb009d56010c0001bc009d56010d0001b0009d5666"
+  },
+  "room8_scrp5": {
+    "metrics": {
+      "size_bytes": 430,
+      "instruction_count": 144,
+      "complexity_score": 288,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 144,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 144
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0304400100000e5d2900030340010c00105d11000303408e4304400303408d430340730e000303408e4304400303408d43034003024001010047ec00010c008c0304000e5d0c006c010c008c0304000f5df4ff010c009dc59d530100009d4c0120000108009d4d030240900100000e5d0700010c009dc59d5f010c000303400304400304007f030240010c00c5010100115d030073f900010c000302408d0302408e01ff007f010c0001f8000302408f1482010c000303400304407e6c010c008d430540010c008e43064001f800010c008f14430740010c000100000100000100007f030240030740820300405d0a0003024003004082731d00010300870d5d0e0003024001060082010200ca7307000302400108008203cb800d5d1600b6feb64bff0adad9ff0a0600ff0a0a00ff0a000020006c030240ab5df8ff03024003054003064001ff007f0301405d0e0003024003014082010200ca730b0003024001070082010200ca03cb800d5d1600b6feb64bff0a959dff0a0600ff0a0a00ff0a000020006c030240ab5df8ff73acfe010c000100000100000100007f0302400103008203024001000047ec0066"
+  },
+  "room8_scrp6": {
+    "metrics": {
+      "size_bytes": 429,
+      "instruction_count": 143,
+      "complexity_score": 286,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 143,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 143
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0300400c0102000e5d52001a01ffff439700010100010100010100a58e010200010b00010100a58e016400016400010100a58e01c80001d100010100a58e016700016900010100a58e0156000100005f0100000157000100005e734f010c0101000e5d5d001a01ffff4397000399005d12000399009ec40106009e7e9eff010000439900010200010b00010100a58d010100010100010100a58d016400016400010100a58d01c80001d100010100a58d016700016900010100a58d0157007c73ea000c0105000e5de1001a01ffff4397000399005d12000399009ec40106009e7e9eff0100004399000101006b9c0178009ec49e840106009e7e0103009e7f9eff0179009ec49e840106009e7e0103009e7f9eff017a009ec49e840106009e7e0103009e7f9eff017b009ec49e840106009e7e0103009e7f9eff017c009ec49e840106009e7e0103009e7f9eff017d009ec49e840106009e7e0103009e7f9eff017e009ec49e840106009e7e0103009e7f9eff017f009ec49e840106009e7e0103009e7f9eff0180009ec49e840106009e7e0103009e7f9eff0102006b9c015d000101000101005f7301001a66"
+  },
+  "room8_scrp7": {
+    "metrics": {
+      "size_bytes": 225,
+      "instruction_count": 75,
+      "complexity_score": 150,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 75,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 75
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "03b7000101001443b7006b956b970300400102000f5d0100b30300400101000e5d3700010200010b00010200a58d010100010100010200a58d016400016400010200a58d01c80001d100010200a58d016700016900010200a58d0300400103000e5d3700010200010b00010200a58d010100010100010200a58d016400016400010200a58d01c80001d100010200a58d016700016900010200a58d0300400104000e5d3700010200010b00010200a58d010100010100010200a58d016400016400010200a58d01c80001d100010200a58d016700016900010200a58d017f006a66"
+  },
+  "room8_scrp8": {
+    "metrics": {
+      "size_bytes": 188,
+      "instruction_count": 63,
+      "complexity_score": 126,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 63,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 63
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "03b7000101001543b7006b946b960300400101000e5d3700010100010100010200a58e010200010b00010200a58e016400016400010200a58e01c80001d100010200a58e016700016900010200a58e0300400103000e5d3700010100010100010200a58e010200010b00010200a58e016400016400010200a58e01c80001d100010200a58e016700016900010200a58e0100006a0300400104000e5d04000100007c0300400102000f5d0f00b30300400103000f5d04000301007966"
+  },
+  "room8_scrp9": {
+    "metrics": {
+      "size_bytes": 93,
+      "instruction_count": 31,
+      "complexity_score": 62,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 31,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 31
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0301400101000e5d4700b4feb44b2000017f006a0101000100009cb46c03470001cb000e5d1700013f01433200010100438a000100006a0100007c731000010000433200010000438a000300407b730b006b910102000100009cb46c66"
+  },
+  "room8_scrp10": {
+    "metrics": {
+      "size_bytes": 115,
+      "instruction_count": 39,
+      "complexity_score": 78,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 39,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 39
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "010000439d00010000439e00010000439f0001000043a00001000043a10001000043a20001000043a30001000043a40001000043a50001000043a60001000043a70001000043a80001000043a90001000043aa0001000043ac0001000043ad0001000043ae0001000043af0001000043b00066"
+  },
+  "room8_scrp11": {
+    "metrics": {
+      "size_bytes": 546,
+      "instruction_count": 182,
+      "complexity_score": 364,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 182,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 182
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0331000113000e5dd8010301000c0103000e5d4c001a01470043bf0001000043c00001470043c10001ff0043c20001130043c30001000043c40001130043c50001000043c600010f0043c70001000043c80001670043c90001000043ca00733f010c0101000e5d9d001a03ba805d4b00030400011900011a00011b00011c00011d00011e00011f00012000012100012200012300012400012500012600012700012800012900012a00012b00015900011400ad5d05000101009cd501470043bf0001000043c00001470043c10001ff0043c200018b0043c30001270043c40001130043c50001000043c600010f0043c70001000043c80001470043c900018f0043ca00739a000c0102000e5d91001a0310805d3f00030400012c00012d00012e00012f00013000013100013200013300013400013500013600013700013800013900013a00013b00011000ad5d05000101009cd5015f0043bf0001000043c00001630043c10001ff0043c20001ff0043c30001000043c40001130043c50001000043c600010f0043c70001000043c800016f0043c900017f0043ca007301001a03bf0003c00003c1000102009caf03c20003c30003c4000103009caf03c50003c60003c7000101009caf03c80003c90003ca000106009caf0179000100005f733f000100000100000100000102009caf01fc0001540001fc000103009caf0100000100000100000101009caf01a80001000001a8000106009caf0179000100005f66"
+  },
+  "room8_scrp12": {
+    "metrics": {
+      "size_bytes": 32,
+      "instruction_count": 11,
+      "complexity_score": 22,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 11,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 11
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0163000100005f032600439000b3037e805d0b00010000437e800181819cb566"
+  },
+  "room8_scrp13": {
+    "metrics": {
+      "size_bytes": 85,
+      "instruction_count": 29,
+      "complexity_score": 58,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 29,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 29
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "030400438800b4fe010f00b44201a000010800b441b445b448014001b443b4ff016f007c0145007c010c000100000100000100007f010000438400038400010c00125d0f0003840001000047ec004f840073e7ff66"
+  },
+  "room8_scrp14": {
+    "metrics": {
+      "size_bytes": 613,
+      "instruction_count": 205,
+      "complexity_score": 410,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 205,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 205
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0105006b9c0100000106000102000103006b9d0101009ec49e84017102013c009e8b0100000198009e800100009e8c9e869eff010b009ec49e849e7d57616c6b20746f000177009e879e829eff0104009ec49e849e7d47697665009e880167009e870114000198009e809e819eff0102009ec49e849e7d4f70656e009e88016f009e8701140001a8009e809e819eff0103009ec49e849e7d436c6f7365009e880163009e8701140001b8009e809e819eff0109009ec49e849e7d5069636b207570009e880170009e870148000198009e809e819eff0108009ec49e849e7d4cb06b206174009e88016c009e8701480001a8009e809e819eff010a009ec49e849e7d54616c6b20746f009e880174009e8701480001b8009e809e819eff0107009ec49e849e7d557365009e880175009e87017c000198009e809e819eff0105009ec49e849e7d50757368009e880173009e87017c0001a8009e809e819eff0106009ec49e849e7d5075b8009e880179009e87017c0001b8009e809e819eff010200438400038400010b00125d1c000384009ec40106009e7e0103009e7f0101009e8c9eff4f840073daff0155000100005f0167009ec49e8401b502013c009e8b9e829eff0169009ec49e8401b602013c009e8b0120010198009e809e829eff0168009ec49e8401b702013c009e8b01200101b0009e809e829eff0181009ec49e849e7d696e009e829eff0182009ec49e849e7d77697468009e829eff0183009ec49e849e7d6f6e009e829eff0184009ec49e849e7d746f009e829eff0101006b9c0164009ec49e8401a0000191009e800106009e7e0106009e859e889e829eff0102006b9c66"
+  },
+  "room8_scrp15": {
+    "metrics": {
+      "size_bytes": 233,
+      "instruction_count": 78,
+      "complexity_score": 156,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 78,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 78
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0300400d5d06000307004300400300406f0101000f5dd0000300400106000101006d5d1d00030040010100700301405d070003014001010070b6feb64b200073a6000301000c0103000e5d2e001a010300ba486d6d2e20205468697320646f6f72206170706561727320746f206265206c6f636b65642e00736d000c0101000e5d2e001a010100ba486d6d2e20205468697320646f6f72206170706561727320746f206265206c6f636b65642e007337000c0102000e5d2e001a010200ba486d6d2e20205468697320646f6f72206170706561727320746f206265206c6f636b65642e007301001a66"
+  },
+  "room8_scrp16": {
+    "metrics": {
+      "size_bytes": 97,
+      "instruction_count": 33,
+      "complexity_score": 66,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 33,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 33
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0300400d5d06000307004300400300406f0101000e5d4800030040018b000101006d5d0a0003004001020070730700030040010000700301405d1e00030140018b000101006d5d0a000301400102007073070003014001000070b6feb64b200066"
+  },
+  "room8_scrp17": {
+    "metrics": {
+      "size_bytes": 66,
+      "instruction_count": 22,
+      "complexity_score": 44,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 22,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 22
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0300400d5d06000307004300400300406f0101000e5d1600010000030040010300010000010300010200607313000100000300400102000100000102000102006066"
+  },
+  "room8_scrp18": {
+    "metrics": {
+      "size_bytes": 463,
+      "instruction_count": 155,
+      "complexity_score": 310,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 155,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 155
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0300408d030140154305400300408e03024015430640030540c4430540030640c4430640030540030340105d0a000100004389000100007c030640030440105d0a000100004389000100007c0305400305401643074003064003064016430840030740010000115d2a00b6feb64b78322076616c7565206f766572666c6f77696e6720696e20656c6c6970736520636865636b00030840010000115d2a00b6feb64b79322076616c7565206f766572666c6f77696e6720696e20656c6c6970736520636865636b00010100430b40010000430c4003074001a00f125d0d0003074001040016430740730a000303400102001743034003084001a00f125d0d0003084001040016430840730a0003044001020017430440030b4001040016430b40030b40014000135d0600010100430c40030c405d9eff0303400100000e5d2600010100430340b6feb64b7665727920736b696e6e7920656c6c69707365207761726e696e67000304400100000e5d2400010100430440b6feb64b7665727920666c617420656c6c69707365207761726e696e670003074003034003034016170308400304400304401617144389000389000100000e5d0600010100438900038900030b40105d060001000043890066"
+  },
+  "room8_scrp19": {
+    "metrics": {
+      "size_bytes": 75,
+      "instruction_count": 25,
+      "complexity_score": 50,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 25,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 25
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0304004304400301400d5d06000103004301400301400101001543840003840087010100144303400303400302400f5de1ff030040030340610303404302406c0304000304400f5dc9ff66"
+  },
+  "room8_scrp20": {
+    "metrics": {
+      "size_bytes": 31,
+      "instruction_count": 11,
+      "complexity_score": 22,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 11,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 11
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0301405d0a0003004003014084730700030040010000840300400100007066"
+  },
+  "room8_scrp21": {
+    "metrics": {
+      "size_bytes": 31,
+      "instruction_count": 11,
+      "complexity_score": 22,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 11,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 11
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0302405d0a0003004003024084730700030040010000840300400301407066"
+  },
+  "room8_scrp22": {
+    "metrics": {
+      "size_bytes": 115,
+      "instruction_count": 39,
+      "complexity_score": 78,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 39,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 39
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0300400d5d06000106004300400301400d5d13000302400d5d0c0001ff00430140010000430240030240030140150300401743034003014043044003044001d00001ff009cb3010100430540030540030040125d1c000304400303401443044003044001d00001ff009cb36c4f054073daff66"
+  },
+  "room8_scrp23": {
+    "metrics": {
+      "size_bytes": 388,
+      "instruction_count": 130,
+      "complexity_score": 260,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 130,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 130
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "010000010000476e00010100010200476e00010200010600476e00010300010200476e00010400010100476e00010500010600476e00010600010300476e00010700010100476e00010800010600476e00010900010100476e00010a00010600476e00010b00010300476e00010c00010100476e00010d00010200476e00010e00010200476e00010f00010200476e00011000010200476e00011100010200476e00011200010200476e00011300010200476e00011400010200476e00011500010200476e00011600010200476e00011700010200476e00011800010200476e00011900010600476e00011a00010100476e00011b00010200476e00011c00010200476e00011d00010200476e00011e00010200476e00011f00010600476e00012000010100476e00012100010200476e00012200010200476e00012300010200476e00012400010200476e00012500010600476e00012600010100476e00012700010200476e00012800010200476e00012900010200476e00012a00010200476e0066"
+  },
+  "room8_scrp24": {
+    "metrics": {
+      "size_bytes": 1071,
+      "instruction_count": 357,
+      "complexity_score": 714,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 357,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 357
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "01000043f680010b009dc59d530168019d4c010b0001fa0082010b0001c5000189000149007f0149007b010b0001060082010300ca010b0001070082010400ca010b0001080082010500ca010b0001090082010500ca010b00010a0082010100ca010b00010b0082010100ca0101009dc59d5301000001abff9d630131019d4c010f009d579d584265726e61726400010a000102009d4d011e009d5b01010001f9008201010001c5000189000149007f010b000100000100000100007f01e902010000610107009dc59d530109019d4c010d009d579d58507572706c652054656e7461636c65000104000102009d4d01070001f6000185000149007f01070001f800820106009dc59d530105009d4c010a009d579d58477265656e2054656e7461636c65000104000102009d4d0101000182009d560102000183009d560103000170009d56010600010701018a000149007f01060001f8008201010043cb80010e01011b00010400010300ac010f01010601011b00010000010400ac010f0101ffff010200ac010100baff0ab273ff0a0300ff0a0a00ff0a00004f6b61792c20796f75277265206672656520746f20676f2100a9a9011001010100ac01ffff010100ac010601011b00017f00010300ac010e01011b00010500010300ac010f01010601011b00010000010400ac010f01010d01011b0001000001b400010500ac010f0101ffff010200ac0107009dc50100000100009d50010700b8feb84ab84bff0a1fedff0a0400ff0a0a00ff0a00004e6f7720492063616e2066696e6973682054414b494e47204f5645522054484520574f524c4421ff034861206861206861210001020001450001080001070001070001ca000193000105005e6c01070007ec000100000e5df2ff01010001f6008201020001450001080001070001070001a2000189000105005e01010001f400826c01070007ec000100000e5df2ff01020001450001080001070001070001a200016c000105005e6c010700010200af0d5df4ff01ff00430140010100430040030040010800125d530003014001d90001d9009cb303014001db0001db009cb303014001d30001d3009cb303014001e60001e6009cb303014001e70001e7009cb303014001fe0001fe009cb3030140012000154301406c4f004073a3ff0145007c010c000100000100000100007f01070001000047ec00010700010300820107000100000100000100007fa9a901010001f7008201060001f4008201010001f50082011400b0010100baff0a0cc0ff0a0300ff0a0a00ff0a000057656c6c2c207768617420706f737369626c65206861726d20636f756c64206f6e6520696e73616e652c206d7574616e742074656e7461636c6520646f3f00a9a9b4feb44b20000104000100000100000100007f0101000100000100000100007f01000043cb800100000187000101000101005e6c0187008b0d5df7ff018a000100005f66"
+  },
+  "room8_scrp25": {
+    "metrics": {
+      "size_bytes": 1918,
+      "instruction_count": 640,
+      "complexity_score": 1280,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 640,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 640
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "01000001c8009cae0104009dc59d53017c009d4c01f0009d5701000001abff9d639d5f9d5d01ff009d5c01040001b600014f000145007f01040001fa00820102009dc5015b019d4c9d5f9d5d01ff009d5c01020001fa00820102000130010182000145007f0101009dc50159019d4c9d5f9d5d01ff009d5c01010001fa008201010001ee000189000145007f0103009dc5015a019d4c9d5f9d5d01ff009d5c01030001fa0082010300012c000181000145007f01d9020101007001da020101007001db02010100700101019cb501010079010400010700820181819cb5010200b1010100baff0af77fff0a0400ff0a0a00ff0a00004861766520616e792070656f706c652065766572206265656e206875727420696e2074686973207468696e673f00a9a9010400baff0a75daff0a0500ff0a1200ff0a00004f6620636f75727365206e6f742100011e00b0010300010b0082010200010b0082010100010b0082a9a901040001f40082010400baff0aac14ff0a0600ff0a0a00ff0a000054686973206973207468652066697273742074696d6520492776652065766572207472696564206974206f6e2050454f504c452100017800b001010001060082010200010c0082010300010c0082a9a96c010200010800820103000108008201010001080082010500ca0302004384000384007a0102000100000100000100007f0101000100000100000100007f0103000100000100000100007f01040001fa00820104009dc5015e019d4c01040001060082010700ca01dc020101006101e20201010061010b009dc59d53015f019d4c9d5f9d5d010b0001fa0082010b00017a000127000145007f010b00010600826cb6feb64bff0a3e35ff0a0800ff0a0a00ff0a00002000015d019b66010600ca0104009dc5017c009d4c01040001f800826c010b0001080082010400010700820102009dc5015d019d4c010200013901017a000145007f01020001f9008201e502010100700103009dc5015d019d4c01030001f800820103000125000179000145007f01e302010100700101009dc5015d019d4c01010001eb000186000145007f01010001fa008201e4020101007001d9020100007001db020100007001da020100007001040001f600820104000106008201030001080082010200cab6feb64bff0a05e5ff0a0600ff0a0a00ff0a0000200001020001fa008201020001070082010200cab6feb64bff0a05e5ff0a0600ff0a0a00ff0a00002000010200ca01010001060082010200cab6feb64bff0a05e5ff0a0600ff0a0a00ff0a00002000010c00cab6feb64bff0a3698ff0a0700ff0a0a00ff0a00002000011300cab6feb64bff0a3a85ff0a0800ff0a0a00ff0a00002000010400cab6feb64bff0a3a85ff0a0800ff0a0a00ff0a00002000010400cab6feb64bff0a3a85ff0a0800ff0a0a00ff0a00002000010400cab6feb64bff0a3a85ff0a0800ff0a0a00ff0a00002000010400cab6feb64bff0a3a85ff0a0800ff0a0a00ff0a000020006c01e30201000070010200ca01e502010000706cb6feb64bff0a3a85ff0a0800ff0a0a00ff0a00002000010200ca01e40201000070010200cab6feb64bff0ac954ff0a0800ff0a0a00ff0a0000200001030001090082010200cab6feb64bff0ac954ff0a0800ff0a0a00ff0a0000200001020001090082010300cab6feb64bff0ac954ff0a0800ff0a0a00ff0a0000200001010001090082011300ca0102006b9c0107000100000100000100007f0106000100000100000100007f0102000100000100000100007f0103000100000100000100007f0101000100000100000100007f0104000100000100000100007f0101009dc59d5301000001abff9d630131019d4c010f009d579d584265726e61726400010a000102009d4d011e009d5b010000435d80011a007b010a00ca01010001bd000100007d010100a9a8f9ff010100b1010000435d800109007b6c035d805df9ff011e00b0011a007b015a00b001010001f50082012d00b001010001f40082011e00b001010001f50082011e00b0010000435d800138007b6c035d805df9ff011e00b0010000435d80011a007b013c00b001010001f40082010400ca01000001bd00010500010000606c035d805df9ff01000001100001ff009cb301ff00010000010f009cb3010300ca010c006b9c0100000100000108000103006b9db5fe010a00b542b54501a000012800b541b54b446179206f66207468652054656e7461636c6500010300b1010b006b9cb4fe010d00b442b44501a000016400b441b44b46726f6d204c7563617341727473ff0200010300b1b4feb44b2000b4fe010d00b442b44501a000016400b441b44b49424d206469736b2d626173656420616e642066756c6c20766f6963652074616c6b69652043442d524f4d2076657273696f6e7320617661696c61626c652053756d6d65722031393933ff0200010700b1b4feb44b2000b4fe010d00b442b44501a000016400b441b44b466f72207072652d6f7264657273206f72206d6f726520696e666f726d6174696f6e2c206469616c20312d3830302d5354415257415253ff0200010700b1b4feb44b2000010100438400038400010c00125d13000384000100000100000100007f4f840073e3ffae9e66"
+  },
+  "room9_exit": {
+    "metrics": {
+      "size_bytes": 1,
+      "instruction_count": 1,
+      "complexity_score": 1,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 0,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "StopObjectCode1"
+      ],
+      "opcode_histogram": {
+        "StopObjectCode1": 1
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "65"
+  },
+  "room9_enter": {
+    "metrics": {
+      "size_bytes": 9,
+      "instruction_count": 3,
+      "complexity_score": 6,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 3,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 3
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "01000001c8009cae65"
+  },
+  "room9_scrp1": {
+    "metrics": {
+      "size_bytes": 261,
+      "instruction_count": 87,
+      "complexity_score": 174,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 87,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWordVar"
+      ],
+      "opcode_histogram": {
+        "PushWordVar": 87
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "030040010700105d04000100007c010200010100689573de0001d802010000700144007b01000001100001bf009cb301d802030040616c0109006b9c0300400c0101000e5d5f001ab5fe012300b542b547012e00013700b541b54b54656e7461636c6520416d656e6473fe01436f6e737469747574696f6e00010a006b9cb5fe012300b542b547013800017900b541b54b48756d616e73204e6f7720536c61766573007301001a0102006b9c010a009dc59d530158019d4c9d5f9d5d010a0001aa00015e000144007f010a0001fa0082010a0001060082011200ca010a000100000100000100007f01ff0001100001bf009cb3010300b101000043978001000043f7006766"
+  },
+  "room10_exit": {
+    "metrics": {
+      "size_bytes": 16,
+      "instruction_count": 6,
+      "complexity_score": 12,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 6,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 6
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0107008b5d08000100000190009cae65"
+  },
+  "room10_enter": {
+    "metrics": {
+      "size_bytes": 16,
+      "instruction_count": 6,
+      "complexity_score": 12,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 6,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 6
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0107008b5d080001000001c8009cae65"
+  },
+  "room11_exit": {
+    "metrics": {
+      "size_bytes": 27,
+      "instruction_count": 9,
+      "complexity_score": 18,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 9,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 9
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0189008b0d5d12000100000190009cae015d000102000101005f65"
+  },
+  "room11_enter": {
+    "metrics": {
+      "size_bytes": 27,
+      "instruction_count": 9,
+      "complexity_score": 18,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 9,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 9
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0189008b0d5d1200015d000101000101005f01000001c8009cae65"
+  },
+  "room11_scrp1": {
+    "metrics": {
+      "size_bytes": 53,
+      "instruction_count": 18,
+      "complexity_score": 36,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 18,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 18
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "01dd0201010001020087146101de0201010001020087146101df0201010001020087146101e1020101000102008714616c73ccff66"
+  },
+  "room12_exit": {
+    "metrics": {
+      "size_bytes": 27,
+      "instruction_count": 9,
+      "complexity_score": 18,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 9,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 9
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0103008b0d5d12000100000190009cae015d000102000101005f65"
+  },
+  "room12_enter": {
+    "metrics": {
+      "size_bytes": 39,
+      "instruction_count": 13,
+      "complexity_score": 26,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 13,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 13
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0103008b5d0d00010000018b000100005e731200015d000101000101005f01000001c8009cae65"
+  },
+  "room12_scrp1": {
+    "metrics": {
+      "size_bytes": 470,
+      "instruction_count": 157,
+      "complexity_score": 314,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 157,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [
+        "PushWord"
+      ],
+      "opcode_histogram": {
+        "PushWord": 157
+      }
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "0141000c9b6d9b65010b006b9c0105009dc59d53016c019d4c9d5f0106009dc59d53016d019d4c9d5f01050001a0000164000304007f01050001fa008201060001a0000164000304007f01060001fa00820100000100000102006b9db4feb44501c100b44201a000012800b441b44b4c756361734172747320456e7465727461696e6d656e7420436f6d70616e79ff0150726573656e7473ff0200011e00ca010f00cab4feb44b2000b4feb44b2000010500ca010900ca01ef0201000061b6feb64bff0a05e5ff0a0600ff0a0a00ff0a00002000010700cab6feb64bff0a05e5ff0a0600ff0a0a00ff0a00002000010200ca0106009dc59d53016e019d4c9d5f01060001a0000164000304007f01060001fa0082010100430040030040013200125d07006c4f004073efffb6feb64bff0a05e5ff0a0600ff0a0a00ff0a00002000010100430040030040010900125d07006c4f004073efff010001010500010800010300ac01ffff010100ac0338004300400105007501410074010801014100010000010400030040010500ac01ffff010100acb6feb64bff0a4dfeff0a0600ff0a0a00ff0a00002000010100430040030040010900125d07006c4f004073efff0141009b71015500b00102006b9c010100435d8066"
+  },
+  "Strings": {
+    "metrics": {
+      "size_bytes": 1525,
+      "instruction_count": 0,
+      "complexity_score": 0,
+      "has_branches": false,
+      "has_loops": false,
+      "has_function_calls": false,
+      "max_stack_depth": 0,
+      "fusion_opportunities": 0,
+      "semantic_patterns": [],
+      "unique_opcodes": [],
+      "opcode_histogram": {}
+    },
+    "has_descumm_output": false,
+    "bytecode_hex": "200041726520796f75207375726520796f752077616e7420746f20717569743f202028592f4e29590041726520796f75207375726520796f752077616e7420746f20726573746172743f202028592f4e295900436c6f736500446179206f66207468652054656e7461636c6500446179206f66207468652054656e7461636c652042425320436f6e746573742044454d4f004572726f722072656164696e67206469736b2025632c2028256325642920507265737320427574746f6e2e00466f72207072652d6f7264657273206f72206d6f726520696e666f726d6174696f6e2c206469616c20312d3830302d53544152574152530046726f6d204c75636173417274730047616d65205061757365642e2020507265737320535041434520746f20436f6e74696e75652e004769766500486120686120686121004861766520616e792070656f706c652065766572206265656e206875727420696e2074686973207468696e673f0048652073617973207468617420507572706c652054656e7461636c652773206d75746174656420696e746f20616e20696e73616e652067656e6975735e004865792c206b69642e202043616e20492068656c7020796f75207769746820736f6d657468696e673f00486d6d2e20205468697320646f6f72206170706561727320746f206265206c6f636b65642e0048756d616e73204e6f7720536c61766573004920646f6e2774207468696e6b20796f752073686f756c64206472696e6b20746861745e0049206665656c206c696b65204920636f756c645e0049424d206469736b2d626173656420616e642066756c6c20766f6963652074616c6b69652043442d524f4d2076657273696f6e7320617661696c61626c652053756d6d6572203139393300496e73657274204469736b20256320616e6420507265737320427574746f6e20746f20436f6e74696e75652e004974206d616b6573206d65206665656c2047524541542100497427732066726f6d206d79206f6c6420667269656e6420477265656e2054656e7461636c655e004c756361734172747320456e7465727461696e6d656e7420436f6d70616e79004cb06b206174004e6f2c207468617420776f756c642062652077726f6e672e004e6f2e20204e6f2e202049207468696e6b2049276c6c206a7573742073656520776861742074686573652063686174746572696e672074656574682061726520757020746f2e004e6f6e73656e736521004e6f7420656e6f7567682066726565206d656d6f727920746f2072756e2064656d6f2e004e6f7720492063616e2066696e6973682054414b494e47204f5645522054484520574f524c4421004f6620636f75727365206e6f7421004f6b61792c20796f75277265206672656520746f20676f21004f70656e005069636b2075700050726573656e74730050757368005075b800536d61727465722120204d6f72652061676772657373697665210054414b45204f4e200054484520574f524c442121210054616c6b20746f0054656e7461636c6520416d656e6473fe01436f6e737469747574696f6e0054686973206973207468652066697273742074696d6520492776652065766572207472696564206974206f6e2050454f504c452100556e61626c6520746f2046696e642025732c2028256325642920507265737320427574746f6e2e005573650057616c6b20746f0057656c6c2c207768617420706f737369626c65206861726d20636f756c64206f6e6520696e73616e652c206d7574616e742074656e7461636c6520646f3f00576865772c20746861742077617320636c6f73652e005e616e6420446f63746f722046726564277320676f696e6720746f206b696c6c207468656d20626f74682100696e006f6e007369676800746f007665727920666c617420656c6c69707365207761726e696e67007665727920736b696e6e7920656c6c69707365207761726e696e6700776974680078322076616c7565206f766572666c6f77696e6720696e20656c6c6970736520636865636b0079322076616c7565206f766572666c6f77696e6720696e20656c6c6970736520636865636b00"
+  }
+}

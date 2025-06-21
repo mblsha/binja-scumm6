@@ -12,6 +12,62 @@ from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfi
                      SemanticIntrinsicConfig)
 from ...scumm6_opcodes import Scumm6Opcodes
 
+# Descumm-style function name mapping for improved semantic clarity
+DESCUMM_FUNCTION_NAMES = {
+    "stop_object_code1": "stopObjectCodeA",
+    "stop_object_code2": "stopObjectCodeB", 
+    "stop_script": "stopScript",
+    "start_script": "startScript",
+    "start_script_quick": "startScriptQuick",
+    "start_script_quick2": "startScriptQuick2",
+    "draw_object": "drawObject",
+    "draw_object_at": "drawObjectAt",
+    "animate_actor": "animateActor",
+    "walk_actor_to": "walkActorTo",
+    "put_actor_at_xy": "putActorAtXY",
+    "face_actor": "faceActor",
+    "start_sound": "startSound",
+    "start_music": "startMusic", 
+    "stop_sound": "stopSound",
+    "talk_actor": "talkActor",
+    "talk_ego": "talkEgo",
+    "is_script_running": "isScriptRunning",
+    "kernel_get_functions": "kernelGetFunctions",
+    "kernel_set_functions": "kernelSetFunctions",
+    "room_ops": "roomOps",
+    "actor_ops": "actorOps",
+    "verb_ops": "verbOps",
+    "sound_kludge": "soundKludge",
+    "cutscene": "cutscene",
+    "break_here": "breakHere",
+    "delay": "delay",
+    "delay_frames": "delayFrames",
+    "dim_array": "dimArray",
+    "dim2dim_array": "dim2dimArray",
+    "print_line": "printLine",
+    "print_text": "printText",
+    "print_system": "printSystem",
+    "print_actor": "printActor",
+    "print_ego": "printEgo",
+    "wait": "wait",
+    "pickup_object": "pickupObject",
+    "do_sentence": "doSentence",
+    "load_room": "loadRoom",
+    "pan_camera_to": "panCameraTo",
+    "set_camera_at": "setCameraAt",
+    "actor_follow_camera": "actorFollowCamera",
+    "set_state": "setState",
+    "set_owner": "setOwner",
+    "set_class": "setClass",
+    # Object intrinsics
+    "get_object_x": "getObjectX",
+    "get_object_y": "getObjectY",
+    # Complex operations 
+    "print_debug.begin": "printDebug.begin",
+    "print_debug.msg": "printDebug.msg",
+    "room_ops.room_screen": "roomOps.setScreen",
+}
+
 class SmartIntrinsicOp(Instruction):
     """Self-configuring intrinsic operation base class."""
     
@@ -28,7 +84,16 @@ class SmartIntrinsicOp(Instruction):
         return self._config.pop_count
     
     def render(self) -> List[Token]:
-        return [TInstr(self._name)]
+        # Use descumm-style function names for better semantic clarity
+        display_name = DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
+        
+        # Add parentheses for function call syntax consistency
+        if self._config.pop_count > 0 or self._config.push_count > 0:
+            # Function with parameters/returns - use parentheses
+            return [TInstr(f"{display_name}(...)")]
+        else:
+            # Simple function call - use parentheses 
+            return [TInstr(f"{display_name}()")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         # Handle special lift cases
@@ -113,9 +178,12 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp):
     
     def render(self) -> List[Token]:
         """Render the instruction, showing fused operands if available."""
+        # Use descumm-style function names for better semantic clarity
+        display_name = DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
+        
         if self.fused_operands:
-            # Function-call style: draw_object(100, 200)
-            tokens: List[Token] = [TInstr(self._name), TSep("(")]
+            # Function-call style: drawObject(100, 200)
+            tokens: List[Token] = [TInstr(display_name), TSep("(")]
             
             # Add operands in correct order (reverse of fusion order)
             for i, operand in enumerate(self.fused_operands):
@@ -126,8 +194,11 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp):
             tokens.append(TSep(")"))
             return tokens
         else:
-            # Normal rendering
-            return super().render()
+            # Normal rendering with parentheses
+            if self._config.pop_count > 0 or self._config.push_count > 0:
+                return [TInstr(f"{display_name}(...)")]
+            else:
+                return [TInstr(f"{display_name}()")]
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
@@ -251,7 +322,16 @@ class SmartComplexOp(Instruction):
                 return [TInstr(f"{self._name}.unknown_{subop}")]
         
         subop_name = subop.name
-        return [TInstr(f"{self._name}.{subop_name}")]
+        full_name = f"{self._name}.{subop_name}"
+        
+        # Apply descumm-style function name mapping
+        display_name = DESCUMM_FUNCTION_NAMES.get(full_name, full_name)
+        
+        # Add parentheses for function call syntax consistency
+        if hasattr(self.op_details.body.body, "pop_count") and self.op_details.body.body.pop_count > 0:
+            return [TInstr(f"{display_name}(...)")]
+        else:
+            return [TInstr(f"{display_name}()")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         from ...scumm6_opcodes import Scumm6Opcodes
@@ -389,10 +469,12 @@ class SmartBinaryOp(Instruction):
 
     def render(self) -> List[Token]:
         display_name = self._config.display_name or self._name
+        # Apply descumm-style function name mapping
+        mapped_name = DESCUMM_FUNCTION_NAMES.get(display_name, display_name)
         
         # If we have fused operands, render in function call style
         if self.fused_operands:
-            tokens: List[Token] = [TInstr(display_name), TSep("(")]
+            tokens: List[Token] = [TInstr(mapped_name), TSep("(")]
             
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
@@ -412,7 +494,7 @@ class SmartBinaryOp(Instruction):
             return tokens
         else:
             # Standard rendering
-            return [TInstr(display_name)]
+            return [TInstr(mapped_name)]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
@@ -472,7 +554,9 @@ class SmartUnaryOp(Instruction):
 
     def render(self) -> List[Token]:
         display_name = self._config.display_name or self._name
-        return [TInstr(display_name)]
+        # Apply descumm-style function name mapping
+        mapped_name = DESCUMM_FUNCTION_NAMES.get(display_name, display_name)
+        return [TInstr(mapped_name)]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
@@ -1068,32 +1152,21 @@ class SmartSemanticIntrinsicOp(SmartFusibleIntrinsic):
             return self._render_semantic_call()
     
     def _render_semantic_call(self) -> List[Token]:
-        """Render as: semantic_name(param1, param2, ...)"""
-        tokens = [TInstr(self._config.semantic_name), TSep("(")]
+        """Render as: semantic_name(...) for consistency with other intrinsics."""
+        # Use descumm-style naming for semantic operations too
+        display_name = DESCUMM_FUNCTION_NAMES.get(self._config.semantic_name, self._config.semantic_name)
         
-        # For variable args operations, show dynamic parameter count
-        if self._config.variable_args:
-            # Show script_id as first param, then variable args indicator
-            if self._config.parameter_names:
-                first_param = self._config.parameter_names[0]
-                tokens.extend([TInstr(first_param)])
-                if len(self._config.parameter_names) > 1:
-                    tokens.extend([TSep(","), TSep(" "), TInstr("...")])
-            else:
-                tokens.append(TInstr("..."))
+        # Use consistent ellipsis notation for all operations with parameters
+        if self._config.pop_count > 0 or self._config.push_count > 0:
+            return [TInstr(f"{display_name}(...)")]
         else:
-            # Show fixed parameters
-            for i, param_name in enumerate(self._config.parameter_names):
-                if i > 0:
-                    tokens.extend([TSep(","), TSep(" ")])
-                tokens.append(TInstr(param_name))
-        
-        tokens.append(TSep(")"))
-        return tokens
+            return [TInstr(f"{display_name}()")]
     
     def _render_fused_semantic_call(self) -> List[Token]:
         """Render semantic function call with fused operands."""
-        tokens = [TInstr(self._config.semantic_name), TSep("(")]
+        # Use descumm-style naming for fused semantic operations too
+        display_name = DESCUMM_FUNCTION_NAMES.get(self._config.semantic_name, self._config.semantic_name)
+        tokens = [TInstr(display_name), TSep("(")]
         
         # Add fused operands as actual parameters
         for i, operand in enumerate(self.fused_operands):
