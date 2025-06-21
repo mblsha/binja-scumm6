@@ -43,6 +43,7 @@ class ScriptComparisonTestCase:
     script_name: str  # e.g., "room8_scrp18", "room11_enter"
     expected_descumm_output: Optional[str] = None
     expected_disasm_output: Optional[str] = None
+    expected_disasm_fusion_output: Optional[str] = None  # Output with instruction fusion enabled
     expected_branches: Optional[List[Tuple[int, Tuple[BranchType, int]]]] = None  # List of (relative_addr, (branch_type, relative_target_addr))
 
 
@@ -284,6 +285,22 @@ script_test_cases = [
             [0018] room_ops.room_screen
             [001A] stop_object_code1
         """).strip(),
+        # TODO: Update when fusion is implemented for these instruction types
+        # Expected fusion: unless nott(is_script_running(137)) goto +18, start_script_quick(93, 1, 1), etc.
+        expected_disasm_fusion_output=dedent("""
+            [0000] push_word(137)
+            [0003] is_script_running
+            [0004] nott
+            [0005] unless goto +18
+            [0008] push_word(93)
+            [000B] push_word(1)
+            [000E] push_word(1)
+            [0011] start_script_quick(script_id, ...)
+            [0012] push_word(0)
+            [0015] push_word(200)
+            [0018] room_ops.room_screen
+            [001A] stop_object_code1
+        """).strip(),
         expected_branches=[
             # The conditional branch instruction at offset 0x0005 (unless goto +18)
             (0x0005, (BranchType.TrueBranch, 0x001A)),   # Jump to stop_object_code1 (relative +26)
@@ -376,6 +393,32 @@ def run_scumm6_disassembler(bytecode: bytes, start_addr: int) -> str:
     return '\n'.join(output_lines)
 
 
+def run_scumm6_disassembler_with_fusion(bytecode: bytes, start_addr: int) -> str:
+    """Execute SCUMM6 disassembler with instruction fusion and return formatted output."""
+    from src.pyscumm6.disasm import decode_with_fusion_incremental
+    
+    output_lines = []
+    offset = 0
+
+    while offset < len(bytecode):
+        addr = start_addr + offset
+        remaining_data = bytecode[offset:]
+
+        # Use fusion-enabled decoder
+        instruction = decode_with_fusion_incremental(remaining_data, addr)
+        if instruction is None:
+            break
+
+        # Get tokens from fused instruction rendering
+        tokens = instruction.render()
+        text = format_output_as_text(tokens)
+
+        # Format as [offset] disassembly_text
+        output_lines.append(f"[{offset:04X}] {text}")
+        offset += instruction.length()
+
+    return '\n'.join(output_lines)
+
 
 def format_output_as_text(tokens: List[Any]) -> str:
     """Convert token list to plain text string."""
@@ -466,6 +509,7 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     # 2. Execute all disassemblers
     descumm_output = run_descumm_on_bytecode(test_environment.descumm_path, bytecode)
     disasm_output = run_scumm6_disassembler(bytecode, script_info.start)
+    disasm_fusion_output = run_scumm6_disassembler_with_fusion(bytecode, script_info.start)
 
     # 3. Check branch information if expected branches are provided
     if case.expected_branches is not None:
@@ -494,6 +538,8 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     print(descumm_output)
     print("\nSCUMM6 DISASM OUTPUT:")
     print(disasm_output)
+    print("\nSCUMM6 DISASM WITH FUSION OUTPUT:")
+    print(disasm_fusion_output)
 
     # 5. Optional assertions based on what's provided
     if case.expected_descumm_output is not None:
@@ -508,9 +554,16 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
             f"SCUMM6 disassembler output for '{case.script_name}' does not match expected.\n" \
             f"Expected:\n{expected_disasm}\n\nActual:\n{disasm_output.strip()}"
 
+    if case.expected_disasm_fusion_output is not None:
+        expected_disasm_fusion = dedent(case.expected_disasm_fusion_output).strip()
+        assert disasm_fusion_output.strip() == expected_disasm_fusion, \
+            f"SCUMM6 disassembler with fusion output for '{case.script_name}' does not match expected.\n" \
+            f"Expected:\n{expected_disasm_fusion}\n\nActual:\n{disasm_fusion_output.strip()}"
+
     # 6. Always verify that outputs were generated
     assert len(descumm_output.strip()) > 0, f"descumm produced no output for '{case.script_name}'"
     assert len(disasm_output.strip()) > 0, f"SCUMM6 produced no output for '{case.script_name}'"
+    assert len(disasm_fusion_output.strip()) > 0, f"SCUMM6 with fusion produced no output for '{case.script_name}'"
 
 
 # Legacy test functions for backward compatibility

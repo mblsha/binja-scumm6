@@ -120,8 +120,8 @@ def decode_with_fusion(data: bytes, addr: int) -> Optional[Instruction]:
     """
     fused_iterator = _fusion(_iter_decode(data, addr))
     
-    # For fusion, we want the last (most complete) result
-    # This handles cases where multiple instructions get fused together
+    # For fusion, we want the most complete result (handles multi-instruction fusion)
+    # This is different from regular decode() which returns the first instruction
     last_instruction = None
     try:
         for instr, _ in fused_iterator:
@@ -132,6 +132,32 @@ def decode_with_fusion(data: bytes, addr: int) -> Optional[Instruction]:
             last_instruction = _apply_loop_detection(last_instruction, addr)
             
         return last_instruction
+    except StopIteration:
+        return None
+
+
+def decode_with_fusion_incremental(data: bytes, addr: int) -> Optional[Instruction]:
+    """
+    Decodes a single instruction with fusion, suitable for incremental parsing.
+    Returns the first (complete) instruction for step-by-step disassembly.
+    
+    Args:
+        data: Raw instruction bytes
+        addr: Address of the instruction
+        
+    Returns:
+        First instruction object (potentially fused) or None if decoding failed
+    """
+    fused_iterator = _fusion(_iter_decode(data, addr))
+    
+    # For incremental parsing, we want the first complete result
+    try:
+        for instr, _ in fused_iterator:
+            # Apply loop pattern recognition as final step
+            enhanced_instr = _apply_loop_detection(instr, addr)
+            return enhanced_instr
+        
+        return None
     except StopIteration:
         return None
 
