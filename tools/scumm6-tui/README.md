@@ -13,8 +13,11 @@ A terminal user interface (TUI) and command-line tool for comparing disassembly 
 ## Installation
 
 ```bash
+cd tools/scumm6-tui
 pip install -r requirements.txt
 ```
+
+Note: The TUI requires the Textual library. If you get import errors, make sure to install the requirements.
 
 ## Usage
 
