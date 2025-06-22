@@ -7,7 +7,7 @@ across test files and provide consistent testing infrastructure.
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from typing import List, Any, Tuple
+from typing import List, Any, Tuple, Dict
 import subprocess
 import tempfile
 from pathlib import Path
@@ -215,7 +215,7 @@ def run_scumm6_disassembler_with_fusion(bytecode: bytes, start_addr: int) -> str
     return '\n'.join(output_lines)
 
 
-def run_scumm6_disassembler_with_fusion_details(bytecode: bytes, start_addr: int) -> Tuple[str, List[dict]]:
+def run_scumm6_disassembler_with_fusion_details(bytecode: bytes, start_addr: int) -> Tuple[str, List[Dict[str, Any]]]:
     """Execute new SCUMM6 disassembler with fusion and return disassembly text with fusion details.
     
     Args:
