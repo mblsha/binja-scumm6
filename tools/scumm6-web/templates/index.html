@@ -261,6 +261,12 @@
             text-decoration: underline;
             text-decoration-style: dotted;
         }
+        
+        .fusion-span-highlight {
+            background-color: rgba(156, 39, 176, 0.2) !important;
+            border-left: 3px solid #9c27b0;
+            padding-left: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -508,6 +514,9 @@
         
         // Display outputs with line matching highlighting
         function displayWithLineMatches(data) {
+            // Store fusion spans globally for hover handling
+            window.currentFusionSpans = data.fusion_spans || [];
+            
             // Parse lines
             const descummLines = data.descumm_output.split('\n');
             const fusedLines = data.fused_output.split('\n');
@@ -590,10 +599,11 @@
         
         // Parse and wrap addresses in spans for hover functionality
         function wrapAddresses(html) {
-            // Match addresses in format [0000] or (0000)
-            return html.replace(/(\[([0-9A-Fa-f]+)\]|\(([0-9A-Fa-f]+)\))/g, (match, full, addr1, addr2) => {
+            // Match addresses in format [0000] or (0000) - must be 4 hex digits
+            // Look for addresses that are either at start, after whitespace, or after > (from HTML tags)
+            return html.replace(/(^|\s|>)(\[([0-9A-Fa-f]{4})\]|\(([0-9A-Fa-f]{4})\))/g, (match, prefix, full, addr1, addr2) => {
                 const addr = addr1 || addr2;
-                return `<span class="address-hover" data-address="${addr}">${match}</span>`;
+                return `${prefix}<span class="address-hover" data-address="${addr}">${full}</span>`;
             });
         }
         
@@ -647,6 +657,11 @@
                     closestElem.classList.add('address-highlight');
                 }
             });
+            
+            // If hovering in fused or descumm panel, highlight fusion span in raw panel
+            if ((e.target.closest('#fusedPanel') || e.target.closest('#descummPanel')) && window.currentFusionSpans) {
+                highlightFusionSpan(address);
+            }
         }
         
         // Handle address unhover
@@ -657,6 +672,33 @@
             document.querySelectorAll('.address-highlight').forEach(elem => {
                 elem.classList.remove('address-highlight');
             });
+            
+            // Remove fusion span highlights
+            document.querySelectorAll('.fusion-span-highlight').forEach(elem => {
+                elem.classList.remove('fusion-span-highlight');
+            });
+        }
+        
+        // Highlight fusion span in raw panel
+        function highlightFusionSpan(address) {
+            const addr = parseInt(address, 16);
+            
+            // Find the fusion span that contains this address
+            const fusionSpan = window.currentFusionSpans.find(span => 
+                addr >= span.start_offset && addr < span.end_offset
+            );
+            
+            if (fusionSpan && fusionSpan.raw_instruction_offsets) {
+                // Highlight only the specific raw instructions that were fused
+                const rawAddresses = rawPanel.querySelectorAll('[data-address]');
+                rawAddresses.forEach(elem => {
+                    const elemAddr = parseInt(elem.dataset.address, 16);
+                    // Check if this address is in the list of raw instruction offsets
+                    if (fusionSpan.raw_instruction_offsets.includes(elemAddr)) {
+                        elem.closest('div').classList.add('fusion-span-highlight');
+                    }
+                });
+            }
         }
         
         // Synchronize scrolling between panels

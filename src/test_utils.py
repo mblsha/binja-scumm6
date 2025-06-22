@@ -215,6 +215,69 @@ def run_scumm6_disassembler_with_fusion(bytecode: bytes, start_addr: int) -> str
     return '\n'.join(output_lines)
 
 
+def run_scumm6_disassembler_with_fusion_details(bytecode: bytes, start_addr: int) -> Tuple[str, List[dict]]:
+    """Execute new SCUMM6 disassembler with fusion and return disassembly text with fusion details.
+    
+    Args:
+        bytecode: SCUMM6 bytecode to disassemble
+        start_addr: Starting address for disassembly
+        
+    Returns:
+        Tuple of (disassembly_text, fusion_spans) where fusion_spans is a list of dicts
+        containing fusion span information
+    """
+    from .pyscumm6.disasm import decode_with_fusion_incremental, decode
+    
+    output_lines = []
+    fusion_spans = []
+    offset = 0
+
+    while offset < len(bytecode):
+        addr = start_addr + offset
+        remaining_data = bytecode[offset:]
+
+        # Use fusion-enabled decoder
+        instruction = decode_with_fusion_incremental(remaining_data, addr)
+        if instruction is None:
+            break
+
+        # Get tokens from fused instruction rendering
+        tokens = instruction.render()
+        text = safe_token_text(tokens)
+
+        # Format as [offset] disassembly_text
+        output_lines.append(f"[{offset:04X}] {text}")
+        
+        # Track fusion spans with exact instruction offsets
+        if instruction.fused_operands:
+            # Calculate the exact offsets of raw instructions that were fused
+            raw_offsets = []
+            current_offset = offset
+            
+            # Decode the same bytecode without fusion to find raw instruction boundaries
+            temp_offset = 0
+            while temp_offset < instruction.length():
+                raw_data = bytecode[offset + temp_offset:]
+                raw_instr = decode(raw_data, addr + temp_offset)
+                if raw_instr:
+                    raw_offsets.append(offset + temp_offset)
+                    temp_offset += raw_instr.length()
+                else:
+                    break
+            
+            fusion_span = {
+                'start_offset': offset,
+                'end_offset': offset + instruction.length(),
+                'fused_count': len(instruction.fused_operands),
+                'raw_instruction_offsets': raw_offsets
+            }
+            fusion_spans.append(fusion_span)
+        
+        offset += instruction.length()
+
+    return '\n'.join(output_lines), fusion_spans
+
+
 def run_scumm6_llil_generation(bytecode: bytes, start_addr: int, use_fusion: bool = False) -> List[Tuple[int, MockLLIL]]:
     """Execute SCUMM6 LLIL generation and return list of (offset, llil_operation) tuples.
     

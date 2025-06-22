@@ -27,7 +27,7 @@ os.environ["FORCE_BINJA_MOCK"] = "1"
 
 import src.container as container_module
 from src.container import ScriptAddr, State
-from src.test_utils import run_descumm_on_bytecode, run_scumm6_disassembler, run_scumm6_disassembler_with_fusion
+from src.test_utils import run_descumm_on_bytecode, run_scumm6_disassembler, run_scumm6_disassembler_with_fusion, run_scumm6_disassembler_with_fusion_details
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -49,6 +49,7 @@ class ScriptComparison:
     match_score: float
     unmatched_lines: List[str]
     line_matches: List[Dict[str, any]]  # Line-by-line match information
+    fusion_spans: List[Dict[str, int]]  # Fusion span information
 
 
 class DataProvider:
@@ -139,9 +140,10 @@ class DataProvider:
         bytecode = self.bsc6_data[script.start:script.end]
 
         # Generate all three outputs
+        fusion_spans = []
         try:
             descumm_output = run_descumm_on_bytecode(self.descumm_path, bytecode)
-            fused_output = run_scumm6_disassembler_with_fusion(bytecode, script.start)
+            fused_output, fusion_spans = run_scumm6_disassembler_with_fusion_details(bytecode, script.start)
             raw_output = run_scumm6_disassembler(bytecode, script.start)
         except Exception as e:
             # Handle errors gracefully
@@ -163,7 +165,8 @@ class DataProvider:
             is_match=is_match,
             match_score=match_score,
             unmatched_lines=unmatched_lines,
-            line_matches=line_matches
+            line_matches=line_matches,
+            fusion_spans=fusion_spans
         )
         self.comparisons[script.name] = comparison
         return comparison
