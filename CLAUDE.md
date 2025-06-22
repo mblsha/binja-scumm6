@@ -1382,3 +1382,155 @@ Fusion improves both readability and performance:
 - **Cleaner output**: `isScriptRunning(137)` is clearer than separate operations
 
 This simple configuration change enables significant improvements in IL quality for intrinsic operations.
+
+## Variable Argument Instructions
+
+Some SCUMM6 instructions like `startScriptQuick` have a variable number of arguments. These require special fusion handling.
+
+### The Challenge
+
+`startScriptQuick` has this stack structure:
+```
+push_word(script_id)    # Script to start
+push_word(arg1)         # First argument
+push_word(arg2)         # Second argument  
+push_word(arg3)         # Third argument
+push_word(arg_count)    # Number of arguments (3 in this case)
+startScriptQuick        # Consumes all the above
+```
+
+### Custom Fusion Implementation
+
+For variable argument instructions, create a custom class instead of relying on auto-generated classes:
+
+```python
+class StartScriptQuick(SmartSemanticIntrinsicOp):
+    """StartScriptQuick with proper variable argument handling."""
+    
+    def fuse(self, previous: Instruction) -> Optional['StartScriptQuick']:
+        """
+        Custom fusion that handles:
+        1. Script ID
+        2. Arg count 
+        3. Variable number of arguments based on arg count
+        """
+        # First fusion: arg_count
+        if not self.fused_operands:
+            if self._is_fusible_push(previous):
+                fused = copy.deepcopy(self)
+                fused.fused_operands = [previous]
+                # Extract arg_count value
+                if previous.__class__.__name__ in ['PushByte', 'PushWord']:
+                    fused._arg_count = previous.op_details.body.data
+                return fused
+                
+        # Subsequent fusions: collect arguments, then script_id
+        # ... (see script_ops.py for full implementation)
+```
+
+### Key Implementation Points
+
+1. **Track metadata**: Store `_arg_count` to know how many arguments to collect
+2. **Correct ordering**: Stack is LIFO - the order is: script_id, arg1, arg2, ..., argN, arg_count
+3. **Render properly**: Show as `startScriptQuick(script_id, [arg1, arg2, ...])`
+4. **LLIL generation**: Don't include arg_count in LLIL params - it's implicit
+
+### Testing Variable Argument Fusion
+
+```python
+ScriptComparisonTestCase(
+    test_id="start_script_quick_multi_args",
+    bytecode=bytes([
+        0x01, 0x5D, 0x00,  # push_word(93) - script_id
+        0x01, 0x0B, 0x00,  # push_word(11) - arg1
+        0x01, 0x16, 0x00,  # push_word(22) - arg2  
+        0x01, 0x21, 0x00,  # push_word(33) - arg3
+        0x01, 0x03, 0x00,  # push_word(3)  - arg_count
+        0x5F,              # startScriptQuick
+    ]),
+    expected_disasm_fusion_output="[0000] startScriptQuick(93, [11, 22, 33])"
+)
+```
+
+## Complex Operation Fusion
+
+Instructions with sub-operations (like `room_ops.room_screen`) also benefit from fusion but require special handling.
+
+### Enabling Fusion for Complex Operations
+
+Complex operations use the `SmartComplexOp` base class. To enable fusion:
+
+1. **Add FusibleMultiOperandMixin** to the base class
+2. **Implement fusion support** in the base class methods
+3. **Fix parameter ordering** - stack operations reverse the order
+
+### Parameter Order Preservation
+
+**Critical**: When fusing stack operations, parameters appear in reverse order due to LIFO semantics:
+
+```python
+# Stack operations (LIFO):
+push_word(0)    # First pushed
+push_word(200)  # Second pushed  
+room_ops.room_screen  # Pops 200 first, then 0
+
+# Result: roomOps.setScreen(0, 200) - NOT (200, 0)
+```
+
+### Testing Complex Operation Fusion
+
+Always verify parameter order matches descumm output:
+
+```python
+# Correct (matches descumm):
+[0012] roomOps.setScreen(0, 200)
+
+# Wrong (reversed parameters):
+[0012] roomOps.setScreen(200, 0)
+```
+
+## LLIL Size Suffixes
+
+The SCUMM6 architecture uses custom size suffixes for LLIL operations:
+
+```python
+# Configure in test files:
+set_size_lookup(
+    size_lookup={1: ".b", 2: ".w", 3: ".l", 4: ".4"},  # 4-byte ops use ".4"
+    suffix_sz={"b": 1, "w": 2, "l": 3, "4": 4}
+)
+```
+
+This prevents `.error` suffixes in LLIL output and ensures correct semantic representation.
+
+## Testing Best Practices
+
+### Hard-Coded Bytecode in Tests
+
+For testing specific instruction sequences, use hard-coded bytecode:
+
+```python
+ScriptComparisonTestCase(
+    test_id="specific_sequence_test",
+    bytecode=bytes([...]),  # Explicit bytecode
+    # script_name is optional when bytecode is provided
+)
+```
+
+### Flaky Test Debugging
+
+If tests fail intermittently:
+1. **Check for dynamic addresses** in LLIL (control flow targets)
+2. **Isolate the root cause** - don't just disable the test
+3. **Use session fixtures** for expensive operations (building descumm)
+
+### MyPy with Mock Binary Ninja
+
+Always run mypy in both environments:
+```bash
+# Real Binary Ninja (if available)
+mypy --explicit-package-bases src/
+
+# Mock Binary Ninja (for CI/testing)
+FORCE_BINJA_MOCK=1 mypy --explicit-package-bases src/
+```
