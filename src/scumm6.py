@@ -3,6 +3,7 @@ from binja_helpers import binja_api  # noqa: F401
 from typing import List, Optional, Tuple, Dict
 
 import threading
+import logging
 from collections import defaultdict
 
 from binaryninja.architecture import Architecture
@@ -36,6 +37,9 @@ SubopType = Scumm6Opcodes.SubopType
 
 
 # called by Scumm6View
+logger = logging.getLogger(__name__)
+
+
 class LastBV:
     _last_bv: Optional[BinaryView] = None
     _lock = threading.Lock()
@@ -43,7 +47,7 @@ class LastBV:
     @staticmethod
     def set(bv: BinaryView) -> None:
         with LastBV._lock:
-            print("set_last_bv", bv, threading.current_thread().name)
+            logger.debug("set_last_bv %s %s", bv, threading.current_thread().name)
             LastBV._last_bv = bv
 
     @staticmethod
@@ -51,7 +55,10 @@ class LastBV:
         with LastBV._lock:
             result = LastBV._last_bv
             if not result:
-                print("get_last_bv: no last_bv", threading.current_thread().name)
+                logger.debug(
+                    "get_last_bv: no last_bv %s",
+                    threading.current_thread().name,
+                )
             return result
 
 
@@ -172,8 +179,11 @@ class Scumm6(Architecture):
                 return (last_bv, last_bv.file.filename)
             else:
                 # FIXME: could be because of the .synthetic_builtins section
-                print(
-                    f"get_view({hex(addr)}) data mismatch:\nwant: {data!r},\n got: {data2!r}"
+                logger.warning(
+                    "get_view(%s) data mismatch:\nwant: %r,\n got: %r",
+                    hex(addr),
+                    data,
+                    data2,
                 )
         assert last_bv
         return (None, None)
