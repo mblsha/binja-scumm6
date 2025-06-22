@@ -10,7 +10,7 @@ from typing import List, cast
 from . import vars
 
 
-class Scumm6View(BinaryView):
+class Scumm6View(BinaryView):  # type: ignore
     name = "SCUMM6 View"
     long_name = "SCUMM6 Resources"
 

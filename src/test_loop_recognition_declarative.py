@@ -11,11 +11,11 @@ import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 import pytest
 from binja_helpers import binja_api  # noqa: F401
 
-from src.pyscumm6.disasm import decode, decode_with_fusion
+from src.pyscumm6.disasm import decode_with_fusion
 from src.pyscumm6.instr.smart_bases import SmartLoopConditionalJump
 
 
@@ -109,8 +109,9 @@ def run_loop_body_test(case: LoopBodyTestCase) -> None:
     
     # Check body size
     if hasattr(loop_info, 'body_size'):
-        assert loop_info.body_size == case.expected_body_size, \
-            f"Expected body size {case.expected_body_size}, got {loop_info.body_size} for {case.test_id}"
+        body_size = getattr(loop_info, 'body_size')
+        assert body_size == case.expected_body_size, \
+            f"Expected body size {case.expected_body_size}, got {body_size} for {case.test_id}"
     
     # Check body instructions
     tokens = fused.render()
@@ -329,4 +330,3 @@ def test_loop_recognition_coverage() -> None:
 
 if __name__ == "__main__":
     pytest.main([__file__])
-

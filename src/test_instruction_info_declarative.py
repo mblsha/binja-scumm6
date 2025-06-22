@@ -10,13 +10,13 @@ approach aligned with the project's declarative testing standards.
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Tuple, Optional
 import pytest
 from binja_helpers import binja_api  # noqa: F401
 from binaryninja.enums import BranchType
 
-from .test_utils import setup_mock_scumm6_environment
+from src.test_utils import setup_mock_scumm6_environment
 
 
 @dataclass
@@ -32,19 +32,15 @@ class InstructionInfoTestCase:
 
 
 @dataclass
-class BranchAnalysisTestCase:
+class BranchAnalysisTestCase(InstructionInfoTestCase):
     """Specialized test case for branch analysis."""
-    test_id: str
-    bytecode: bytes
-    addr: int
-    expected_length: int
+    expected_branches: List[Tuple[BranchType, int]] = field(default_factory=list)
     expected_true_branch: Optional[int] = None
     expected_false_branch: Optional[int] = None
     expected_unconditional_branch: Optional[int] = None
     is_conditional: bool = True
-    description: Optional[str] = None
     
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Convert specialized fields to standard branch format."""
         self.expected_branches = []
         
@@ -383,4 +379,3 @@ def test_branch_calculation_accuracy() -> None:
 
 if __name__ == "__main__":
     pytest.main([__file__])
-
