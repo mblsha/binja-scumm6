@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCUMM6 Disassembly Comparison</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background: #2d2d2d;
+            padding: 1rem;
+            border-bottom: 2px solid #0178d4;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+        }
+        
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: #252525;
+            border-right: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .search-box {
+            padding: 1rem;
+            border-bottom: 1px solid #444;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 0.5rem;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            border-radius: 4px;
+        }
+        
+        .stats {
+            padding: 1rem;
+            background: #2d2d2d;
+            border-bottom: 1px solid #444;
+            font-size: 0.9rem;
+        }
+        
+        .script-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+        
+        .script-item {
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            background: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .script-item:hover {
+            background: #363636;
+        }
+        
+        .script-item.selected {
+            background: #0178d4;
+            border-color: #0178d4;
+        }
+        
+        .script-name {
+            flex: 1;
+        }
+        
+        .script-status {
+            margin-left: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .script-status.match {
+            color: #4caf50;
+        }
+        
+        .script-status.no-match {
+            color: #f44336;
+        }
+        
+        .script-score {
+            margin-left: 0.5rem;
+            font-size: 0.8rem;
+            color: #999;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .diff-header {
+            padding: 1rem;
+            background: #2d2d2d;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .diff-panels {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .diff-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #444;
+        }
+        
+        .diff-panel:last-child {
+            border-right: none;
+        }
+        
+        .panel-header {
+            padding: 0.5rem 1rem;
+            background: #363636;
+            border-bottom: 1px solid #444;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .panel-header.reference {
+            background: #2e7d32;
+        }
+        
+        .panel-header.fused {
+            background: #0178d4;
+        }
+        
+        .panel-header.raw {
+            background: #5e35b1;
+        }
+        
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            background: #1a1a1a;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            font-size: 1.2rem;
+            color: #666;
+        }
+        
+        .error {
+            color: #f44336;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #0178d4;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+        
+        .highlight-add {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+        
+        .highlight-remove {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+        
+        .highlight-change {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <header>
+        <h1>SCUMM6 Disassembly Comparison</h1>
+    </header>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search scripts..." />
+            </div>
+            
+            <div class="stats" id="stats">
+                Loading...
+            </div>
+            
+            <div class="script-list" id="scriptList">
+                <div class="loading">Loading scripts...</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="diff-header" id="diffHeader" style="display: none;">
+                <h2 id="currentScript">Select a script</h2>
+                <div>
+                    <span id="matchStatus"></span>
+                    <button id="refreshBtn">Refresh</button>
+                </div>
+            </div>
+            
+            <div class="diff-panels" id="diffPanels">
+                <div class="diff-panel">
+                    <div class="panel-header reference">descumm (reference)</div>
+                    <div class="panel-content" id="descummPanel">
+                        <div class="loading">Select a script to compare</div>
+                    </div>
+                </div>
+                
+                <div class="diff-panel">
+                    <div class="panel-header fused">pyscumm6 (fused)</div>
+                    <div class="panel-content" id="fusedPanel">
+                        <div class="loading">Select a script to compare</div>
+                    </div>
+                </div>
+                
+                <div class="diff-panel">
+                    <div class="panel-header raw">pyscumm6 (raw)</div>
+                    <div class="panel-content" id="rawPanel">
+                        <div class="loading">Select a script to compare</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let scripts = [];
+        let currentScript = null;
+        let processedCount = 0;
+        
+        // Elements
+        const searchInput = document.getElementById('searchInput');
+        const scriptList = document.getElementById('scriptList');
+        const stats = document.getElementById('stats');
+        const diffHeader = document.getElementById('diffHeader');
+        const currentScriptEl = document.getElementById('currentScript');
+        const matchStatus = document.getElementById('matchStatus');
+        const descummPanel = document.getElementById('descummPanel');
+        const fusedPanel = document.getElementById('fusedPanel');
+        const rawPanel = document.getElementById('rawPanel');
+        const progressBar = document.getElementById('progressBar');
+        const refreshBtn = document.getElementById('refreshBtn');
+        
+        // Load scripts on startup
+        async function loadScripts() {
+            try {
+                const response = await fetch('/api/scripts');
+                const data = await response.json();
+                
+                if (data.error) {
+                    scriptList.innerHTML = `<div class="error">${data.error}</div>`;
+                    return;
+                }
+                
+                scripts = data.scripts;
+                renderScriptList();
+                updateStats();
+                
+                // Process all scripts in background
+                processAllScripts();
+            } catch (error) {
+                scriptList.innerHTML = `<div class="error">Failed to load scripts: ${error.message}</div>`;
+            }
+        }
+        
+        // Render script list
+        function renderScriptList(filter = '') {
+            const filtered = scripts.filter(s => 
+                s.name.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            scriptList.innerHTML = filtered.map(script => {
+                const statusIcon = script.processed ? 
+                    (script.is_match ? '✓' : '✗') : '○';
+                const statusClass = script.processed ?
+                    (script.is_match ? 'match' : 'no-match') : '';
+                const score = script.processed && script.match_score !== null ?
+                    `${Math.round(script.match_score * 100)}%` : '';
+                
+                return `
+                    <div class="script-item" data-name="${script.name}">
+                        <span class="script-name">${script.name}</span>
+                        <span class="script-score">${score}</span>
+                        <span class="script-status ${statusClass}">${statusIcon}</span>
+                    </div>
+                `;
+            }).join('');
+            
+            // Add click handlers
+            document.querySelectorAll('.script-item').forEach(item => {
+                item.addEventListener('click', () => selectScript(item.dataset.name));
+            });
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const processed = scripts.filter(s => s.processed).length;
+            const matched = scripts.filter(s => s.processed && s.is_match).length;
+            const percentage = processed > 0 ? Math.round(matched / processed * 100) : 0;
+            
+            stats.innerHTML = `
+                Matched: ${matched}/${scripts.length} scripts<br>
+                Processed: ${processed}/${scripts.length} (${percentage}% match rate)
+            `;
+        }
+        
+        // Select a script
+        async function selectScript(scriptName) {
+            // Update UI
+            document.querySelectorAll('.script-item').forEach(item => {
+                item.classList.toggle('selected', item.dataset.name === scriptName);
+            });
+            
+            currentScript = scriptName;
+            currentScriptEl.textContent = scriptName;
+            diffHeader.style.display = 'flex';
+            
+            // Show loading state
+            descummPanel.innerHTML = '<div class="loading">Loading...</div>';
+            fusedPanel.innerHTML = '<div class="loading">Loading...</div>';
+            rawPanel.innerHTML = '<div class="loading">Loading...</div>';
+            
+            try {
+                const response = await fetch(`/api/scripts/${scriptName}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                
+                // Update match status
+                const percentage = Math.round(data.match_score * 100);
+                matchStatus.innerHTML = data.is_match ?
+                    `<span style="color: #4caf50;">✓ Match (${percentage}%)</span>` :
+                    `<span style="color: #f44336;">✗ Mismatch (${percentage}%)</span>`;
+                
+                // Display outputs
+                descummPanel.textContent = data.descumm_output;
+                fusedPanel.textContent = data.fused_output;
+                rawPanel.textContent = data.raw_output;
+                
+                // Update script in list if it wasn't processed before
+                const script = scripts.find(s => s.name === scriptName);
+                if (script && !script.processed) {
+                    script.processed = true;
+                    script.is_match = data.is_match;
+                    script.match_score = data.match_score;
+                    renderScriptList(searchInput.value);
+                    updateStats();
+                }
+                
+                // Synchronize scrolling
+                synchronizeScrolling();
+                
+            } catch (error) {
+                showError(`Failed to load comparison: ${error.message}`);
+            }
+        }
+        
+        // Show error
+        function showError(message) {
+            const errorHtml = `<div class="error">${message}</div>`;
+            descummPanel.innerHTML = errorHtml;
+            fusedPanel.innerHTML = errorHtml;
+            rawPanel.innerHTML = errorHtml;
+        }
+        
+        // Synchronize scrolling between panels
+        function synchronizeScrolling() {
+            const panels = [descummPanel, fusedPanel, rawPanel];
+            let syncing = false;
+            
+            panels.forEach(panel => {
+                panel.addEventListener('scroll', () => {
+                    if (syncing) return;
+                    syncing = true;
+                    
+                    const scrollTop = panel.scrollTop;
+                    const scrollLeft = panel.scrollLeft;
+                    
+                    panels.forEach(otherPanel => {
+                        if (otherPanel !== panel) {
+                            otherPanel.scrollTop = scrollTop;
+                            otherPanel.scrollLeft = scrollLeft;
+                        }
+                    });
+                    
+                    setTimeout(() => syncing = false, 10);
+                });
+            });
+        }
+        
+        // Process all scripts in background
+        async function processAllScripts() {
+            progressBar.style.transform = 'scaleX(0)';
+            
+            for (let i = 0; i < scripts.length; i++) {
+                const script = scripts[i];
+                if (!script.processed) {
+                    try {
+                        const response = await fetch(`/api/scripts/${script.name}`);
+                        const data = await response.json();
+                        
+                        if (!data.error) {
+                            script.processed = true;
+                            script.is_match = data.is_match;
+                            script.match_score = data.match_score;
+                            processedCount++;
+                            
+                            // Update progress
+                            const progress = (i + 1) / scripts.length;
+                            progressBar.style.transform = `scaleX(${progress})`;
+                            
+                            // Update UI every 5 scripts
+                            if (processedCount % 5 === 0) {
+                                renderScriptList(searchInput.value);
+                                updateStats();
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Failed to process ${script.name}:`, error);
+                    }
+                }
+            }
+            
+            // Final update
+            renderScriptList(searchInput.value);
+            updateStats();
+            progressBar.style.transform = 'scaleX(1)';
+            setTimeout(() => progressBar.style.display = 'none', 1000);
+        }
+        
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            renderScriptList(e.target.value);
+        });
+        
+        // Refresh button
+        refreshBtn.addEventListener('click', () => {
+            if (currentScript) {
+                selectScript(currentScript);
+            }
+        });
+        
+        // Initialize
+        loadScripts();
+    </script>
+</body>
+</html>
