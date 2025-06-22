@@ -89,9 +89,10 @@ Create a terminal user interface (TUI) application to visualize and analyze sema
 - [x] Implement script list view
 - [x] Implement detailed diff screen
 - [x] Add navigation bindings
-- [ ] Add search functionality
-- [ ] Add progress indicators
+- [x] Add search functionality
+- [x] Add progress indicators
 - [ ] Polish UI styling
+- [ ] Add synchronized scrolling
 
 #### Phase 4: Enhancement Features
 - [ ] Add caching for comparison results

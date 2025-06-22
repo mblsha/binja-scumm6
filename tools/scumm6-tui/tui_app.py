@@ -11,12 +11,13 @@ from dataclasses import dataclass
 
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical, Container
-from textual.widgets import Header, Footer, ListView, ListItem, Label, Static
+from textual.widgets import Header, Footer, ListView, ListItem, Label, Static, Input, LoadingIndicator
 from textual.screen import Screen
 from textual.reactive import reactive
 from textual.binding import Binding
 from textual import events
 from textual.widget import Widget
+from textual.message import Message
 
 
 class DiffScreen(Screen):
@@ -119,6 +120,23 @@ class Scumm6ComparisonApp(App):
         padding: 0 1;
     }
     
+    #search-container {
+        display: none;
+        height: 3;
+        background: $surface;
+        border: solid $warning;
+        padding: 0 1;
+    }
+    
+    #search-container.visible {
+        display: block;
+    }
+    
+    #search-input {
+        width: 100%;
+        background: transparent;
+    }
+    
     #diff-container {
         height: 100%;
     }
@@ -159,12 +177,16 @@ class Scumm6ComparisonApp(App):
     BINDINGS = [
         Binding("q", "quit", "Quit"),
         Binding("r", "refresh", "Refresh"),
+        Binding("/", "search", "Search"),
+        Binding("escape", "cancel_search", "Cancel", show=False),
     ]
     
     def __init__(self, data_provider):
         super().__init__()
         self.data_provider = data_provider
         self.title = "SCUMM6 Disassembly Comparison"
+        self.search_active = False
+        self.filtered_comparisons = []
         
     def on_mount(self) -> None:
         """Initialize data when app mounts."""
@@ -172,13 +194,19 @@ class Scumm6ComparisonApp(App):
         
     def load_data(self) -> None:
         """Load and process all script data."""
+        # Show loading state
+        list_view = self.query_one("#script-list", ListView)
+        list_view.loading = True
         self.notify("Loading scripts...", title="Please wait")
+        
         try:
             self.data_provider.process_all_scripts()
+            list_view.loading = False
             self.refresh_list()
             self.notify(f"Loaded {len(self.data_provider.scripts)} scripts", 
                        title="Success", severity="information")
         except Exception as e:
+            list_view.loading = False
             self.notify(f"Error loading data: {str(e)}", 
                        title="Error", severity="error")
     
@@ -187,33 +215,52 @@ class Scumm6ComparisonApp(App):
         yield Header()
         yield Container(
             Label("", id="summary"),
+            Container(
+                Input(placeholder="Search scripts...", id="search-input"),
+                id="search-container"
+            ),
             ListView(id="script-list"),
             id="main-container",
         )
         yield Footer()
     
-    def refresh_list(self) -> None:
+    def refresh_list(self, filter_text: str = "") -> None:
         """Refresh the script list view."""
         list_view = self.query_one("#script-list", ListView)
         list_view.clear()
         
         # Sort scripts by name
-        sorted_comparisons = sorted(
+        all_comparisons = sorted(
             self.data_provider.comparisons.values(),
             key=lambda c: c.name
         )
         
+        # Filter if search is active
+        if filter_text:
+            self.filtered_comparisons = [
+                c for c in all_comparisons 
+                if filter_text.lower() in c.name.lower()
+            ]
+        else:
+            self.filtered_comparisons = all_comparisons
+        
         # Add items to list
         matched = 0
-        for comparison in sorted_comparisons:
+        for comparison in self.filtered_comparisons:
             if comparison.is_match:
                 matched += 1
             list_view.append(ScriptListItem(comparison))
         
         # Update summary
         summary = self.query_one("#summary", Label)
-        total = len(sorted_comparisons)
-        summary.update(f"Matched: {matched}/{total} scripts ({matched/total:.0%})")
+        total = len(self.filtered_comparisons)
+        if total > 0:
+            if filter_text:
+                summary.update(f"Filtered: {matched}/{total} scripts match ({matched/total:.0%})")
+            else:
+                summary.update(f"Matched: {matched}/{total} scripts ({matched/total:.0%})")
+        else:
+            summary.update("No scripts found")
     
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle list item selection."""
@@ -223,3 +270,32 @@ class Scumm6ComparisonApp(App):
     def action_refresh(self) -> None:
         """Refresh all data."""
         self.load_data()
+    
+    def action_search(self) -> None:
+        """Activate search mode."""
+        self.search_active = True
+        search_container = self.query_one("#search-container")
+        search_container.add_class("visible")
+        search_input = self.query_one("#search-input", Input)
+        search_input.value = ""
+        search_input.focus()
+    
+    def action_cancel_search(self) -> None:
+        """Cancel search mode."""
+        if self.search_active:
+            self.search_active = False
+            search_container = self.query_one("#search-container")
+            search_container.remove_class("visible")
+            self.refresh_list()  # Reset to show all scripts
+            list_view = self.query_one("#script-list", ListView)
+            list_view.focus()
+    
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """Handle search input changes."""
+        if event.input.id == "search-input":
+            self.refresh_list(event.value)
+    
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Handle search input submission."""
+        if event.input.id == "search-input":
+            self.action_cancel_search()  # Close search after submission
