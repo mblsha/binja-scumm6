@@ -275,7 +275,7 @@ def get_scripts():
         })
 
     return jsonify({
-        'scripts': sorted(scripts, key=lambda s: s['name']),
+        'scripts': scripts,
         'total': len(scripts)
     })
 

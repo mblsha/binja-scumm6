@@ -325,6 +325,50 @@
         const progressBar = document.getElementById('progressBar');
         const refreshBtn = document.getElementById('refreshBtn');
         
+        // Natural sort function for script names
+        function naturalSort(a, b) {
+            // Extract parts of the string (text and numbers)
+            const extractParts = (str) => {
+                const parts = [];
+                let match;
+                const regex = /(\d+|\D+)/g;
+                while ((match = regex.exec(str)) !== null) {
+                    if (/\d+/.test(match[0])) {
+                        parts.push({ type: 'number', value: parseInt(match[0], 10) });
+                    } else {
+                        parts.push({ type: 'text', value: match[0] });
+                    }
+                }
+                return parts;
+            };
+            
+            const aParts = extractParts(a.name);
+            const bParts = extractParts(b.name);
+            
+            // Compare parts
+            for (let i = 0; i < Math.min(aParts.length, bParts.length); i++) {
+                const aPart = aParts[i];
+                const bPart = bParts[i];
+                
+                if (aPart.type === 'number' && bPart.type === 'number') {
+                    if (aPart.value !== bPart.value) {
+                        return aPart.value - bPart.value;
+                    }
+                } else if (aPart.type === 'text' && bPart.type === 'text') {
+                    const cmp = aPart.value.localeCompare(bPart.value);
+                    if (cmp !== 0) {
+                        return cmp;
+                    }
+                } else {
+                    // If types don't match, text comes before numbers
+                    return aPart.type === 'text' ? -1 : 1;
+                }
+            }
+            
+            // If all parts match, shorter name comes first
+            return aParts.length - bParts.length;
+        }
+        
         // Load scripts on startup
         async function loadScripts() {
             try {
@@ -337,6 +381,8 @@
                 }
                 
                 scripts = data.scripts;
+                // Apply natural sort to ensure room1, room2, ..., room10, room11 ordering
+                scripts.sort(naturalSort);
                 renderScriptList();
                 updateStats();
                 
