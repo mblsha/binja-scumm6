@@ -905,6 +905,11 @@
             if ((e.target.closest('#fusedPanel') || e.target.closest('#descummPanel')) && window.currentFusionSpans) {
                 highlightFusionSpan(address);
             }
+            
+            // If hovering in raw panel, highlight corresponding fused instructions
+            if (e.target.closest('#rawPanel') && window.currentFusionSpans) {
+                highlightFusedInstructions(address);
+            }
         }
         
         // Handle address unhover
@@ -938,6 +943,28 @@
                     const elemAddr = parseInt(elem.dataset.address, 16);
                     // Check if this address is in the list of raw instruction offsets
                     if (fusionSpan.raw_instruction_offsets.includes(elemAddr)) {
+                        elem.closest('div').classList.add('fusion-span-highlight');
+                    }
+                });
+            }
+        }
+        
+        // Highlight fused instructions corresponding to a raw instruction
+        function highlightFusedInstructions(rawAddress) {
+            const addr = parseInt(rawAddress, 16);
+            
+            // Find all fusion spans that contain this raw instruction
+            const relatedSpans = window.currentFusionSpans.filter(span => 
+                span.raw_instruction_offsets && span.raw_instruction_offsets.includes(addr)
+            );
+            
+            if (relatedSpans.length > 0) {
+                // Highlight all fused instructions that correspond to these spans
+                const fusedAddresses = fusedPanel.querySelectorAll('[data-address]');
+                fusedAddresses.forEach(elem => {
+                    const elemAddr = parseInt(elem.dataset.address, 16);
+                    // Check if this fused address is the start of any related span
+                    if (relatedSpans.some(span => span.start_offset === elemAddr)) {
                         elem.closest('div').classList.add('fusion-span-highlight');
                     }
                 });
