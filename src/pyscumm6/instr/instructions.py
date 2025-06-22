@@ -1,6 +1,6 @@
 """Concrete SCUMM6 instruction implementations."""
 
-from typing import List, Any, Optional
+from typing import List, Any, Optional, Tuple
 import copy
 from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
@@ -913,7 +913,7 @@ class PrintDebug(Instruction):
     
     def _extract_message_text(self, message: Any) -> str:
         """Extract text from a SCUMM6 Message object."""
-        text_chars = []
+        text_chars: List[str] = []
         for part in message.parts:
             if hasattr(part, 'data') and part.data != 0:  # Skip terminator
                 if hasattr(part, 'content'):
@@ -978,19 +978,37 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
         """Return 0 when fused, 1 when not fused."""
         return 0 if self.fused_operands else self._stack_pop_count
     
-    def _extract_message_text(self, message: Any) -> str:
-        """Extract text from a SCUMM6 Message object."""
-        text_chars = []
+    def _extract_message_text(self, message: Any) -> Tuple[List[str], str]:
+        """Extract text from a SCUMM6 Message object, including sound commands.
+        
+        Returns:
+            A tuple of (sound_commands, text_string)
+        """
+        sound_commands: List[str] = []
+        text_chars: List[str] = []
+        
         for part in message.parts:
-            if hasattr(part, 'data') and part.data != 0:  # Skip terminator
-                if hasattr(part, 'content'):
-                    # Check if it's a RegularChar
-                    if hasattr(part.content, 'value'):
-                        # Convert byte value to character
-                        char_value = part.content.value
-                        if isinstance(char_value, int) and 32 <= char_value <= 126:  # Printable ASCII
-                            text_chars.append(chr(char_value))
-        return ''.join(text_chars)
+            if hasattr(part, 'data'):
+                if part.data == 0xFF:
+                    # This might be a special sequence
+                    if hasattr(part, 'content') and hasattr(part.content, 'payload'):
+                        # Check if it's a Sound special sequence
+                        payload = part.content.payload
+                        if payload.__class__.__name__ == 'Sound':
+                            # Extract sound parameters (v1 and v3, skip v2)
+                            if hasattr(payload, 'v1') and hasattr(payload, 'v3'):
+                                sound_commands.append(f"sound({hex(payload.v1).upper().replace('X', 'x')}, {hex(payload.v3).upper().replace('X', 'x')})")
+                elif part.data != 0:  # Skip terminator
+                    if hasattr(part, 'content'):
+                        # Check if it's a RegularChar
+                        if hasattr(part.content, 'value'):
+                            # Convert byte value to character
+                            char_value = part.content.value
+                            if isinstance(char_value, int) and 32 <= char_value <= 126:  # Printable ASCII
+                                text_chars.append(chr(char_value))
+        
+        # Return sound commands and text separately
+        return sound_commands, ''.join(text_chars)
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
@@ -1016,22 +1034,33 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
         # Extract the message text from the bytecode
         from ...scumm6_opcodes import Scumm6Opcodes
         
-        message_text = ""
+        sound_commands: List[str] = []
+        text: str = ""
         # Check if the body is a Message
         if isinstance(self.op_details.body, Scumm6Opcodes.Message):
-            message_text = self._extract_message_text(self.op_details.body)
+            sound_commands, text = self._extract_message_text(self.op_details.body)
         
         if self.fused_operands and len(self.fused_operands) >= 1:
             # We have the actor parameter fused
             tokens = [TInstr("talkActor"), TText("(")]
             
-            # Add the message text
-            if message_text:
-                tokens.extend([TText(f'"{message_text}"'), TSep(", ")])
+            # Add sound commands and text
+            if sound_commands:
+                # Add sound commands
+                for i, sound_cmd in enumerate(sound_commands):
+                    if i > 0:
+                        tokens.extend([TText(" + ")])
+                    tokens.append(TInstr(sound_cmd))
+                
+                if text:
+                    tokens.extend([TText(" + "), TText(f'"{text}"')])
+            elif text:
+                tokens.append(TText(f'"{text}"'))
             else:
-                tokens.extend([TText("..."), TSep(", ")])
+                tokens.append(TText("..."))
             
             # Add the actor parameter
+            tokens.extend([TSep(", ")])
             tokens.extend(self._render_operand(self.fused_operands[0]))
             tokens.append(TText(")"))
             return tokens
