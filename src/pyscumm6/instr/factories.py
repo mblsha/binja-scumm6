@@ -30,6 +30,7 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
         "start_script",     # Variable params
         "start_script_quick",# Variable params
         "start_object",     # 2+ params
+        "is_script_running", # 1 param: script_id
         # Sound operations
         "start_sound",      # 1 param: sound_id
         "start_music",      # 1 param: music_id

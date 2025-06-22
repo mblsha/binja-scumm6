@@ -51,7 +51,7 @@ set_size_lookup(
 )
 
 
-def mintrinsic(name: str, outputs: Optional[List[MockLLIL]] = None, params: Optional[List[MockLLIL]] = None) -> MockIntrinsic:
+def mintrinsic(name: str, outputs: Optional[List[MockReg]] = None, params: Optional[List[MockLLIL]] = None) -> MockIntrinsic:
     """Helper to create MockIntrinsic objects more easily."""
     if outputs is None:
         outputs = []
@@ -178,8 +178,7 @@ script_test_cases = [
             [001A] stopObjectCodeA()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] push_word(137)
-            [0003] isScriptRunning(...)
+            [0000] isScriptRunning(137)
             [0004] nott
             [0005] unless goto +18
             [0008] push_word(93)
@@ -208,9 +207,8 @@ script_test_cases = [
             (0x001A, MockLLIL(op='NORET', ops=[])),
         ],
         expected_llil_fusion=[
-            (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[137])])),
-            (0x0003, mintrinsic('is_script_running', outputs=[mreg('TEMP0')], params=[MockLLIL(op='POP.4', ops=[])])),
-            (0x0003, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')])])),
+            (0x0000, mintrinsic('is_script_running', outputs=[mreg('TEMP0')], params=[MockLLIL(op='CONST.4', ops=[137])])),
+            (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')])])),
             (0x0004, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
             (0x0004, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CMP_E.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')]), MockLLIL(op='CONST.4', ops=[0])])])),
             (0x0005, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
@@ -362,7 +360,7 @@ script_test_cases = [
             (0x0007, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='LOAD.4', ops=[MockLLIL(op='CONST_PTR.4', ops=[1073741852])])])),
             (0x000A, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='L0'), MockLLIL(op='POP.4', ops=[])])),
             (0x000D, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')])])),
-            (0x0010, mintrinsic('get_state', outputs=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])], params=[MockLLIL(op='POP.4', ops=[])])),
+            (0x0010, mintrinsic('get_state', outputs=[MockReg(name='TEMP0')], params=[MockLLIL(op='POP.4', ops=[])])),
             (0x0010, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
             (0x0011, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[1])])),
             (0x0014, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
@@ -372,7 +370,7 @@ script_test_cases = [
             (0x0018, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')])])),
             (0x001B, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[6])])),
             (0x001E, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[1])])),
-            (0x0021, mintrinsic('if_class_of_is', outputs=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
+            (0x0021, mintrinsic('if_class_of_is', outputs=[MockReg(name='TEMP0')], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
             (0x0021, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
             (0x0022, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
             (0x0025, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')])])),
@@ -434,12 +432,12 @@ script_test_cases = [
             (0x0004, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
             (0x0007, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='L0'), MockLLIL(op='LOAD.4', ops=[MockLLIL(op='CONST_PTR.4', ops=[1073741852])])])),
             (0x000D, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')])])),
-            (0x0010, mintrinsic('get_state', outputs=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])], params=[MockLLIL(op='POP.4', ops=[])])),
+            (0x0010, mintrinsic('get_state', outputs=[MockReg(name='TEMP0')], params=[MockLLIL(op='POP.4', ops=[])])),
             (0x0010, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
             (0x0018, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')])])),
             (0x001B, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[6])])),
             (0x001E, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[1])])),
-            (0x0021, mintrinsic('if_class_of_is', outputs=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
+            (0x0021, mintrinsic('if_class_of_is', outputs=[MockReg(name='TEMP0')], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
             (0x0021, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
             (0x0022, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
             (0x0025, mintrinsic('set_state', outputs=[], params=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')]), MockLLIL(op='CONST.4', ops=[1])])),
