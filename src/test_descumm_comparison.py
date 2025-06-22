@@ -825,6 +825,15 @@ script_test_cases = [
         bytecode=bytes([0x14]),
         expected_branches=[],
     ),
+    ScriptComparisonTestCase(
+        test_id="delay_frames_simple",
+        bytecode=bytes([0x01, 0x04, 0x00, 0xCA]),
+        expected_descumm_output=dedent("""
+            [0000] (CA) delayFrames(4)
+            END
+        """).strip(),
+        expected_disasm_fusion_output="[0000] delayFrames(4)",
+    ),
 ]
 
 

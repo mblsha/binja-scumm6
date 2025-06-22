@@ -55,6 +55,11 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
         "do_sentence",      # 4 params: verb, obj1, obj2, ?
         "stop_script",      # 1 param: script_id
         "stop_object_script", # 1 param: object_id
+        # Timing operations
+        "delay",            # 1 param: delay amount
+        "delay_seconds",    # 1 param: seconds
+        "delay_minutes",    # 1 param: minutes
+        "delay_frames",     # 1 param: frames
     }
     
     # Choose base class based on whether instruction should support fusion
