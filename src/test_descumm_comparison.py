@@ -193,6 +193,102 @@ script_test_cases = [
             [00E8] (66) stopObjectCodeB()
             END
         """).strip(),
+        expected_disasm_output=dedent("""
+            [0000] push_word_var(var_0)
+            [0003] nott
+            [0004] unless goto +6
+            [0007] push_word_var(var_7)
+            [000A] write_word_var(var_0)
+            [000D] push_word_var(var_0)
+            [0010] get_state(...)
+            [0011] push_word(1)
+            [0014] neq
+            [0015] unless goto +208
+            [0018] push_word_var(var_0)
+            [001B] push_word(6)
+            [001E] push_word(1)
+            [0021] if_class_of_is
+            [0022] unless goto +29
+            [0025] push_word_var(var_0)
+            [0028] push_word(1)
+            [002B] setState(...)
+            [002C] push_word_var(var_1)
+            [002F] unless goto +7
+            [0032] push_word_var(var_1)
+            [0035] push_word(1)
+            [0038] setState(...)
+            [0039] printDebug.begin()
+            [003B] printDebug.msg(...)
+            [003F] goto +166
+            [0042] push_word_var(var_1)
+            [0045] dup
+            [0046] push_word(3)
+            [0049] eq
+            [004A] unless goto +46
+            [004D] pop1
+            [004E] push_word(3)
+            [0051] talkActor()
+            [0078] goto +109
+            [007B] dup
+            [007C] push_word(1)
+            [007F] eq
+            [0080] unless goto +46
+            [0083] pop1
+            [0084] push_word(1)
+            [0087] talkActor()
+            [00AE] goto +55
+            [00B1] dup
+            [00B2] push_word(2)
+            [00B5] eq
+            [00B6] unless goto +46
+            [00B9] pop1
+            [00BA] push_word(2)
+            [00BD] talkActor()
+            [00E4] goto +1
+            [00E7] pop1
+            [00E8] stopObjectCodeB()
+        """).strip(),
+        expected_disasm_fusion_output=dedent("""
+            [0000] push_word_var(var_0)
+            [0003] nott
+            [0004] unless goto +6
+            [0007] var_0 = var_7
+            [000D] push_word_var(var_0)
+            [0010] get_state(...)
+            [0011] if condition goto +208
+            [0018] push_word_var(var_0)
+            [001B] push_word(6)
+            [001E] push_word(1)
+            [0021] if_class_of_is
+            [0022] unless goto +29
+            [0025] setState(var_0, 1)
+            [002C] if !var_1 goto +7
+            [0032] setState(var_1, 1)
+            [0039] printDebug.begin()
+            [003B] printDebug.msg(...)
+            [003F] goto +166
+            [0042] push_word_var(var_1)
+            [0045] dup
+            [0046] if condition goto +46
+            [004D] pop1
+            [004E] push_word(3)
+            [0051] talkActor()
+            [0078] goto +109
+            [007B] dup
+            [007C] if condition goto +46
+            [0083] pop1
+            [0084] push_word(1)
+            [0087] talkActor()
+            [00AE] goto +55
+            [00B1] dup
+            [00B2] if condition goto +46
+            [00B9] pop1
+            [00BA] push_word(2)
+            [00BD] talkActor()
+            [00E4] goto +1
+            [00E7] pop1
+            [00E8] stopObjectCodeB()
+        """).strip(),
     ),
 ]
 
