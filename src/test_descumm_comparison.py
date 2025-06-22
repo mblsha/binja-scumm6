@@ -46,8 +46,8 @@ from src.test_utils import (
 
 # Configure SCUMM6-specific LLIL size suffixes
 set_size_lookup(
-    size_lookup={1: ".b", 2: ".w", 3: ".l", 4: ".4"},  # 4-byte operations use ".4" for SCUMM6
-    suffix_sz={"b": 1, "w": 2, "l": 3, "4": 4}  # Add reverse mapping for ".4"
+    size_lookup={1: ".1", 2: ".2", 3: ".3", 4: ".4"},  # 4-byte operations use ".4" for SCUMM6
+    suffix_sz={"1": 1, "2": 2, "3": 3, "4": 4}  # Add reverse mapping for ".4"
 )
 
 
