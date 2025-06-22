@@ -241,6 +241,16 @@ class Scumm6CompareApp(cli.Application):
         cli.ExistingFile,
         help="Path to descumm executable"
     )
+    output_file = cli.SwitchAttr(
+        ["o", "output"],
+        str,
+        help="Save comparison results to file (JSON format)"
+    )
+    filter_pattern = cli.SwitchAttr(
+        ["f", "filter"],
+        str,
+        help="Filter scripts by name pattern (case-insensitive)"
+    )
     
     def main(self):
         """Main entry point."""
@@ -271,7 +281,17 @@ class Scumm6CompareApp(cli.Application):
     
     def _list_scripts(self):
         """List all available scripts."""
-        for script in sorted(self.data_provider.scripts, key=lambda s: s.name):
+        scripts = self.data_provider.scripts
+        
+        # Apply filter if provided
+        if self.filter_pattern:
+            pattern = self.filter_pattern.lower()
+            scripts = [s for s in scripts if pattern in s.name.lower()]
+            if not scripts:
+                print(f"No scripts matching '{self.filter_pattern}'", file=sys.stderr)
+                return
+        
+        for script in sorted(scripts, key=lambda s: s.name):
             print(f"{script.name:<30} {script.end - script.start:>6} bytes")
     
     def _compare_script(self, script_name: str):
@@ -293,7 +313,14 @@ class Scumm6CompareApp(cli.Application):
                     "fused_output": comparison.fused_output,
                     "raw_output": comparison.raw_output
                 }
-                print(json.dumps(result, indent=2))
+                
+                # Save to file if requested
+                if self.output_file:
+                    with open(self.output_file, 'w') as f:
+                        json.dump(result, f, indent=2)
+                    print(f"Results saved to {self.output_file}", file=sys.stderr)
+                else:
+                    print(json.dumps(result, indent=2))
         
         except ValueError as e:
             print(f"Error: {e}", file=sys.stderr)
