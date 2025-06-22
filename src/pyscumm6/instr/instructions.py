@@ -910,7 +910,7 @@ class IfClassOfIs(Instruction):
 class PrintDebug(Instruction):
     """Print debug with text parameter."""
     
-    def _extract_message_text(self, message) -> str:
+    def _extract_message_text(self, message: Any) -> str:
         """Extract text from a SCUMM6 Message object."""
         text_chars = []
         for part in message.parts:
