@@ -152,6 +152,72 @@ script_test_cases = [
             [01CE] (66) stopObjectCodeB()
             END
         """).strip(),
+        expected_disasm_fusion_output=dedent("""
+            [0000] push_word_var(var_0)
+            [0003] getObjectX(...)
+            [0004] sub(var_1, ...)
+            [0008] write_word_var(var_5)
+            [000B] push_word_var(var_0)
+            [000E] getObjectY(...)
+            [000F] sub(var_2, ...)
+            [0013] write_word_var(var_6)
+            [0016] push_word_var(var_5)
+            [0019] abs
+            [001A] write_word_var(var_5)
+            [001D] push_word_var(var_6)
+            [0020] abs
+            [0021] write_word_var(var_6)
+            [0024] if var_5 <= var_3 goto +10
+            [002E] var_137 = 0
+            [0034] stopScript(0)
+            [0038] if var_6 <= var_4 goto +10
+            [0042] var_137 = 0
+            [0048] stopScript(0)
+            [004C] mul(var_5, var_5)
+            [0053] write_word_var(var_7)
+            [0056] mul(var_6, var_6)
+            [005D] write_word_var(var_8)
+            [0060] if var_7 >= 0 goto +42
+            [006A] printDebug.begin()
+            [006C] printDebug.msg("x2 value overflowing in ellipse check")
+            [0094] if var_8 >= 0 goto +42
+            [009E] printDebug.begin()
+            [00A0] printDebug.msg("y2 value overflowing in ellipse check")
+            [00C8] var_11 = 1
+            [00CE] var_12 = 0
+            [00D4] if var_7 > 4000 goto +13
+            [00DE] mul(var_7, 4)
+            [00E5] write_word_var(var_7)
+            [00E8] goto +10
+            [00EB] div(var_3, 2)
+            [00F2] write_word_var(var_3)
+            [00F5] if var_8 > 4000 goto +13
+            [00FF] mul(var_8, 4)
+            [0106] write_word_var(var_8)
+            [0109] goto +10
+            [010C] div(var_4, 2)
+            [0113] write_word_var(var_4)
+            [0116] mul(var_11, 4)
+            [011D] write_word_var(var_11)
+            [0120] if var_11 < 64 goto +6
+            [012A] var_12 = 1
+            [0130] while (!var_12) { # 92 bytes
+            [0136] if var_3 != 0 goto +38
+            [0140] var_3 = 1
+            [0146] printDebug.begin()
+            [0148] printDebug.msg("very skinny ellipse warning")
+            [0166] if var_4 != 0 goto +36
+            [0170] var_4 = 1
+            [0176] printDebug.begin()
+            [0178] printDebug.msg("very flat ellipse warning")
+            [0194] add((div(var_7, (mul(var_3, var_3)))), (div(var_8, (mul(var_4, var_4)))))
+            [01AB] write_word_var(var_137)
+            [01AE] if var_137 != 0 goto +6
+            [01B8] var_137 = 1
+            [01BE] if var_137 <= var_11 goto +6
+            [01C8] var_137 = 0
+            [01CE] stopObjectCodeB()
+        """).strip(),
     ),
     ScriptComparisonTestCase(
         test_id="room11_enter_initialization",
