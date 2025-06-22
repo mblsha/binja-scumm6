@@ -164,5 +164,3 @@ def test_mock_view_functionality() -> None:
     assert oob_data == b'\x00' * 10
 
 
-if __name__ == "__main__":
-    pytest.main([__file__])

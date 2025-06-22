@@ -228,6 +228,3 @@ class TestInstructionFusion:
         token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
         assert "add(10, 5)" in token_text
 
-
-if __name__ == "__main__":
-    pytest.main([__file__])

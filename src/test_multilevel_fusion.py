@@ -172,12 +172,3 @@ def test_partial_fusion_with_multilevel() -> None:
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     assert text == "add(7, ...)"
 
-
-if __name__ == "__main__":
-    test_simple_binary_expression_fusion()
-    test_multi_level_arithmetic_expression()
-    test_three_level_expression()  
-    test_comparison_in_expression()
-    test_mixed_variable_and_constant_fusion()
-    test_partial_fusion_with_multilevel()
-    print("All multi-level fusion tests passed!")

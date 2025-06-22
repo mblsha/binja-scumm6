@@ -176,8 +176,3 @@ def test_branch_collection_utility() -> None:
     
     print("✓ Branch collection utility test passed")
 
-
-if __name__ == "__main__":
-    test_instruction_info_comprehensive()
-    test_branch_collection_utility()
-    print("\n✓ All instruction info tests passed!")
