@@ -155,8 +155,73 @@ script_test_cases = [
     ScriptComparisonTestCase(
         test_id="room11_enter_initialization",
         script_name="room11_enter",
-        # Simplified - just verify output generation, branch analysis works
-        # Skip exact string comparisons since function names and offsets can vary
+        expected_descumm_output=dedent("""
+            [0000] (5D) if (!isScriptRunning(137)) {
+            [0008] (5F)   startScriptQuick(93,[1])
+            [0012] (9C)   roomOps.setScreen(0,200)
+            [001A] (**) }
+            [001A] (65) stopObjectCodeA()
+            END
+        """).strip(),
+        expected_disasm_output=dedent("""
+            [0000] push_word(137)
+            [0003] isScriptRunning(...)
+            [0004] nott
+            [0005] unless goto +18
+            [0008] push_word(93)
+            [000B] push_word(1)
+            [000E] push_word(1)
+            [0011] startScriptQuick(...)
+            [0012] push_word(0)
+            [0015] push_word(200)
+            [0018] roomOps.setScreen(...)
+            [001A] stopObjectCodeA()
+        """).strip(),
+        expected_disasm_fusion_output=dedent("""
+            [0000] push_word(137)
+            [0003] isScriptRunning(...)
+            [0004] nott
+            [0005] unless goto +18
+            [0008] push_word(93)
+            [000B] startScriptQuick(1, 1)
+            [0012] push_word(0)
+            [0015] push_word(200)
+            [0018] roomOps.setScreen(...)
+            [001A] stopObjectCodeA()
+        """).strip(),
+        expected_branches=[(0x05, (BranchType.TrueBranch, 0x1A))],
+        expected_llil=[
+            (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[137])])),
+            (0x0003, mintrinsic('is_script_running', outputs=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')])], params=[MockLLIL(op='POP.4', ops=[])])),
+            (0x0003, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')])])),
+            (0x0004, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
+            (0x0004, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CMP_E.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')]), MockLLIL(op='CONST.4', ops=[0])])])),
+            (0x0005, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
+            (0x0008, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[93])])),
+            (0x000B, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[1])])),
+            (0x000E, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[1])])),
+            (0x0011, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
+            (0x0012, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[0])])),
+            (0x0015, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[200])])),
+            (0x0018, mintrinsic('room_ops.room_screen', outputs=[], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
+            (0x001A, mintrinsic('stop_object_code1', outputs=[], params=[])),
+            (0x001A, MockLLIL(op='NORET', ops=[])),
+        ],
+        expected_llil_fusion=[
+            (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[137])])),
+            (0x0003, mintrinsic('is_script_running', outputs=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')])], params=[MockLLIL(op='POP.4', ops=[])])),
+            (0x0003, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')])])),
+            (0x0004, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
+            (0x0004, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CMP_E.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')]), MockLLIL(op='CONST.4', ops=[0])])])),
+            (0x0005, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
+            (0x0008, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[93])])),
+            (0x000B, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='CONST.4', ops=[1]), MockLLIL(op='CONST.4', ops=[1])])),
+            (0x0012, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[0])])),
+            (0x0015, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[200])])),
+            (0x0018, mintrinsic('room_ops.room_screen', outputs=[], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
+            (0x001A, mintrinsic('stop_object_code1', outputs=[], params=[])),
+            (0x001A, MockLLIL(op='NORET', ops=[])),
+        ],
     ),
     ScriptComparisonTestCase(
         test_id="room2_enter_output_verification",

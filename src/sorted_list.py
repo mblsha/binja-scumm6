@@ -29,5 +29,5 @@ class SortedList:
         pos = bisect.bisect_left(self._list, value)
         if pos == 0:
             return None
-        else:
-            return self._list[pos - 1]
+
+        return self._list[pos - 1]
