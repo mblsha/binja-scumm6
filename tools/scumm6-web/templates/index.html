@@ -249,6 +249,18 @@
             margin-right: 0.5rem;
             font-weight: bold;
         }
+        
+        .address-highlight {
+            background-color: rgba(255, 235, 59, 0.3) !important;
+            outline: 2px solid #ffeb3b;
+            outline-offset: -1px;
+        }
+        
+        .address-hover {
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+        }
     </style>
 </head>
 <body>
@@ -499,7 +511,6 @@
             // Parse lines
             const descummLines = data.descumm_output.split('\n');
             const fusedLines = data.fused_output.split('\n');
-            const rawLines = data.raw_output.split('\n');
             
             // Create a map of fused line indices to match info
             const fusedLineMatches = {};
@@ -523,7 +534,8 @@
                                         (match.match_score > 0.5 ? '≈' : '✗');
                         const scoreText = match.match_score > 0 ? ` (${Math.round(match.match_score * 100)}%)` : '';
                         
-                        descummHtml += `<div class="${matchClass}"><span class="match-indicator" title="Match score: ${Math.round(match.match_score * 100)}%">${indicator}</span>${escapeHtml(line)}</div>`;
+                        const lineHtml = `<span class="match-indicator" title="Match score: ${Math.round(match.match_score * 100)}%">${indicator}</span>${escapeHtml(line)}`;
+                        descummHtml += `<div class="${matchClass}">${wrapAddresses(lineHtml)}</div>`;
                     }
                 });
             } else {
@@ -539,21 +551,34 @@
                                      (match.match_score > 0.5 ? 'line-partial-match' : 'line-no-match');
                     const indicator = match.is_match ? '✓' : 
                                     (match.match_score > 0.5 ? '≈' : '✗');
-                    fusedHtml += `<div class="${matchClass}"><span class="match-indicator" title="Matches descumm line ${match.descumm_idx + 1}">${indicator}</span>${escapeHtml(line)}</div>`;
+                    const lineHtml = `<span class="match-indicator" title="Matches descumm line ${match.descumm_idx + 1}">${indicator}</span>${escapeHtml(line)}`;
+                    fusedHtml += `<div class="${matchClass}">${wrapAddresses(lineHtml)}</div>`;
                 } else if (line.trim()) {
-                    fusedHtml += `<div class="line-no-match"><span class="match-indicator">-</span>${escapeHtml(line)}</div>`;
+                    const lineHtml = `<span class="match-indicator">-</span>${escapeHtml(line)}`;
+                    fusedHtml += `<div class="line-no-match">${wrapAddresses(lineHtml)}</div>`;
                 } else {
                     fusedHtml += `<div>${escapeHtml(line)}</div>`;
                 }
             });
             
-            // Display raw output as-is
-            const rawHtml = escapeHtml(data.raw_output);
+            // Display raw output with addresses wrapped
+            const rawLines = data.raw_output.split('\n');
+            let rawHtml = '';
+            rawLines.forEach(line => {
+                if (line.trim()) {
+                    rawHtml += `<div>${wrapAddresses(escapeHtml(line))}</div>`;
+                } else {
+                    rawHtml += `<div>${escapeHtml(line)}</div>`;
+                }
+            });
             
             // Update panels
-            descummPanel.innerHTML = descummHtml || escapeHtml(data.descumm_output);
-            fusedPanel.innerHTML = fusedHtml || escapeHtml(data.fused_output);
-            rawPanel.innerHTML = rawHtml;
+            descummPanel.innerHTML = descummHtml || wrapAddresses(escapeHtml(data.descumm_output));
+            fusedPanel.innerHTML = fusedHtml || wrapAddresses(escapeHtml(data.fused_output));
+            rawPanel.innerHTML = rawHtml || wrapAddresses(escapeHtml(data.raw_output));
+            
+            // Setup address highlighting
+            setupAddressHighlighting();
         }
         
         // Escape HTML
@@ -561,6 +586,77 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+        
+        // Parse and wrap addresses in spans for hover functionality
+        function wrapAddresses(html) {
+            // Match addresses in format [0000] or (0000)
+            return html.replace(/(\[([0-9A-Fa-f]+)\]|\(([0-9A-Fa-f]+)\))/g, (match, full, addr1, addr2) => {
+                const addr = addr1 || addr2;
+                return `<span class="address-hover" data-address="${addr}">${match}</span>`;
+            });
+        }
+        
+        // Find the closest address that is less than or equal to the target
+        function findClosestAddress(targetAddr, panel) {
+            const addresses = panel.querySelectorAll('[data-address]');
+            let closestElement = null;
+            let closestAddr = -1;
+            
+            const target = parseInt(targetAddr, 16);
+            
+            addresses.forEach(elem => {
+                const addr = parseInt(elem.dataset.address, 16);
+                if (addr <= target && addr > closestAddr) {
+                    closestAddr = addr;
+                    closestElement = elem;
+                }
+            });
+            
+            return closestElement;
+        }
+        
+        // Setup address hover highlighting
+        function setupAddressHighlighting() {
+            const panels = [descummPanel, fusedPanel, rawPanel];
+            
+            // Remove any existing listeners
+            panels.forEach(panel => {
+                panel.removeEventListener('mouseover', handleAddressHover);
+                panel.removeEventListener('mouseout', handleAddressUnhover);
+            });
+            
+            // Add new listeners
+            panels.forEach(panel => {
+                panel.addEventListener('mouseover', handleAddressHover);
+                panel.addEventListener('mouseout', handleAddressUnhover);
+            });
+        }
+        
+        // Handle address hover
+        function handleAddressHover(e) {
+            if (!e.target.classList.contains('address-hover')) return;
+            
+            const address = e.target.dataset.address;
+            const panels = [descummPanel, fusedPanel, rawPanel];
+            
+            // Highlight corresponding addresses in all panels
+            panels.forEach(panel => {
+                const closestElem = findClosestAddress(address, panel);
+                if (closestElem) {
+                    closestElem.classList.add('address-highlight');
+                }
+            });
+        }
+        
+        // Handle address unhover
+        function handleAddressUnhover(e) {
+            if (!e.target.classList.contains('address-hover')) return;
+            
+            // Remove all address highlights
+            document.querySelectorAll('.address-highlight').forEach(elem => {
+                elem.classList.remove('address-highlight');
+            });
         }
         
         // Synchronize scrolling between panels
