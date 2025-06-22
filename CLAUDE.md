@@ -1,5 +1,74 @@
 # SCUMM6 Binary Ninja Plugin - Development Guide
 
+## Comparison Tools Overview
+
+The plugin provides a web-based tool for comparing disassembly output between descumm and pyscumm6:
+
+### Web Application (`tools/scumm6-web/`)
+- Flask-based web interface accessible via browser
+- RESTful API for programmatic access
+- Three-panel synchronized view with dark theme
+- Run with: `cd tools/scumm6-web && pip install -r requirements.txt && python app.py`
+- Default port: 6001 (configured in app.py)
+
+
+## Web Application Features
+
+The Flask web application (`tools/scumm6-web/`) provides advanced visualization features:
+
+### Line Matching Visualization
+- Visual indicators for match quality between descumm and pyscumm6 outputs:
+  - ✓ (green) - Lines that match with 85%+ similarity
+  - ≈ (yellow) - Partial matches with 50-85% similarity
+  - ✗ (red) - Lines with less than 50% match
+  - − (dash) - Lines in fused output with no corresponding descumm line
+- Color-coded borders and backgrounds for easy scanning
+- Hover tooltips showing exact match percentages
+
+### Address Highlighting
+- Hover over any address (e.g., `[0004]`) to highlight:
+  - The exact address in all three panels (yellow highlight)
+  - The closest lower-bound address in other panels
+- Addresses are detected in formats `[xxxx]` or `(xxxx)` with exactly 4 hex digits
+- Avoids false matches with function arguments like `delayFrames(4)`
+
+### Fusion Span Visualization
+- When hovering over addresses in descumm or fused panels:
+  - Highlights all raw instructions that contributed to the fused instruction
+  - Purple background with left border for fusion spans
+  - Shows exactly which raw instructions were combined
+- Tracks precise instruction boundaries, not just address ranges
+
+### Natural Script Ordering
+- Scripts are sorted with proper numerical ordering
+- `room1`, `room2`, ..., `room10`, `room11` (not alphabetical)
+- Ensures logical progression through game content
+
+### API Endpoints
+- `/api/scripts` - List all available scripts
+- `/api/scripts/<name>` - Get detailed comparison for a specific script
+- `/api/status` - Check initialization status
+- `/api/process_all` - Process all scripts in batch
+
+### Common Web App Issues
+
+#### Port Already in Use
+If you see "Port 6001 is in use", kill existing Flask processes:
+```bash
+pkill -f "python.*app.py"
+```
+
+#### White Screen / Loading Scripts Forever
+- Check browser console (F12) for JavaScript errors
+- Common issue: `SyntaxError: Cannot declare a const variable twice`
+- Solution: Hard refresh with Ctrl+Shift+R (Cmd+Shift+R on Mac)
+
+#### Flask Not Installed
+```bash
+cd tools/scumm6-web
+python3 -m pip install -r requirements.txt
+```
+
 ## Running Tests
 
 To run tests correctly, use one of these methods:

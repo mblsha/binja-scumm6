@@ -1,1 +1,0 @@
-"""SCUMM6 disassembly comparison tools."""
