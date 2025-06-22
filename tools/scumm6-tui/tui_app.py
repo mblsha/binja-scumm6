@@ -12,7 +12,8 @@ from textual.containers import Horizontal, Vertical, Container, Center, Middle
 from textual.widgets import Header, Footer, ListView, ListItem, Label, Input, ProgressBar, Static
 from textual.screen import Screen, ModalScreen
 from textual.binding import Binding
-from textual.worker import Worker, get_current_worker
+from textual.worker import Worker
+from textual.message import Message
 
 # Import our enhanced diff widgets
 try:
@@ -196,6 +197,25 @@ class ScriptListItem(ListItem):
 class Scumm6ComparisonApp(App):
     """Main TUI application for comparing SCUMM6 disassembly."""
     
+    # Custom messages for worker communication
+    class ProgressUpdate(Message):
+        """Message to update progress."""
+        def __init__(self, current: int, total: int, script_name: str):
+            super().__init__()
+            self.current = current
+            self.total = total
+            self.script_name = script_name
+    
+    class ProcessingComplete(Message):
+        """Message when processing is complete."""
+        pass
+    
+    class ProcessingError(Message):
+        """Message when processing encounters an error."""
+        def __init__(self, error: str):
+            super().__init__()
+            self.error = error
+    
     CSS = """
     #script-list {
         height: 100%;
@@ -332,25 +352,37 @@ class Scumm6ComparisonApp(App):
         
     async def process_scripts_worker(self) -> None:
         """Process scripts in a background worker."""
-        worker = get_current_worker()
+        import asyncio
+        from concurrent.futures import ThreadPoolExecutor
         
-        def progress_callback(current, total, script_name):
-            # Update progress in the main thread
-            if not worker.is_cancelled:
-                self.call_from_thread(
-                    self.loading_screen.update_progress,
-                    current, total, script_name
+        # Create a thread pool for the blocking operation
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            # Track if cancelled
+            cancelled = False
+            
+            def progress_callback(current, total, script_name):
+                # Update progress using post_message from worker thread
+                if not cancelled:
+                    self.post_message(
+                        self.ProgressUpdate(current, total, script_name)
+                    )
+            
+            try:
+                # Run the blocking operation in a thread
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(
+                    executor,
+                    self.data_provider.process_all_scripts,
+                    progress_callback
                 )
-        
-        try:
-            # Process all scripts with progress updates
-            self.data_provider.process_all_scripts(progress_callback)
-            
-            # Update UI in main thread
-            self.call_from_thread(self.on_scripts_loaded)
-            
-        except Exception as e:
-            self.call_from_thread(self.on_scripts_error, str(e))
+                
+                # Signal completion
+                if not cancelled:
+                    self.post_message(self.ProcessingComplete())
+                
+            except Exception as e:
+                if not cancelled:
+                    self.post_message(self.ProcessingError(str(e)))
     
     def on_scripts_loaded(self) -> None:
         """Called when all scripts have been processed."""
@@ -468,3 +500,18 @@ class Scumm6ComparisonApp(App):
         """Handle search input submission."""
         if event.input.id == "search-input":
             self.action_cancel_search()  # Close search after submission
+    
+    def on_progress_update(self, message: ProgressUpdate) -> None:
+        """Handle progress update messages."""
+        if hasattr(self, 'loading_screen') and self.loading_screen:
+            self.loading_screen.update_progress(
+                message.current, message.total, message.script_name
+            )
+    
+    def on_processing_complete(self, message: ProcessingComplete) -> None:
+        """Handle processing complete message."""
+        self.on_scripts_loaded()
+    
+    def on_processing_error(self, message: ProcessingError) -> None:
+        """Handle processing error message."""
+        self.on_scripts_error(message.error)
