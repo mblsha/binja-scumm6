@@ -63,6 +63,8 @@ class DataProvider:
         self.bsc6_path = bsc6_path
         self.comparisons: Dict[str, ScriptComparison] = {}
         self.initialization_error = None
+        self.notes_file = Path(__file__).parent / "analysis_notes.json"
+        self.notes: Dict[str, dict] = self._load_notes()
 
     def initialize(self) -> bool:
         """Load all data and process all scripts."""
@@ -249,6 +251,45 @@ class DataProvider:
 
         return is_match, avg_score, unmatched, line_matches
 
+    def _load_notes(self) -> Dict[str, dict]:
+        """Load notes from JSON file."""
+        if self.notes_file.exists():
+            try:
+                with open(self.notes_file, 'r') as f:
+                    return json.load(f)
+            except Exception:
+                return {}
+        return {}
+    
+    def _save_notes(self) -> None:
+        """Save notes to JSON file."""
+        with open(self.notes_file, 'w') as f:
+            json.dump(self.notes, f, indent=2)
+    
+    def get_note(self, note_id: str) -> Optional[dict]:
+        """Get a specific note by ID."""
+        return self.notes.get(note_id)
+    
+    def save_note(self, note_data: dict) -> str:
+        """Save or update a note."""
+        note_id = f"{note_data['script_name']}:{note_data['address']}"
+        note_data['id'] = note_id
+        self.notes[note_id] = note_data
+        self._save_notes()
+        return note_id
+    
+    def delete_note(self, note_id: str) -> bool:
+        """Delete a note."""
+        if note_id in self.notes:
+            del self.notes[note_id]
+            self._save_notes()
+            return True
+        return False
+    
+    def get_notes_for_script(self, script_name: str) -> List[dict]:
+        """Get all notes for a specific script."""
+        return [note for note in self.notes.values() if note.get('script_name') == script_name]
+
 
 # Routes
 @app.route('/')
@@ -268,13 +309,17 @@ def get_scripts():
     for script in data_provider.scripts:
         # Check if we have comparison data
         comparison = data_provider.comparisons.get(script.name)
+        
+        # Count notes for this script
+        notes_count = len(data_provider.get_notes_for_script(script.name))
 
         scripts.append({
             'name': script.name,
             'size': script.end - script.start,
             'processed': comparison is not None,
             'is_match': comparison.is_match if comparison else None,
-            'match_score': comparison.match_score if comparison else None
+            'match_score': comparison.match_score if comparison else None,
+            'notes_count': notes_count
         })
 
     return jsonify({
@@ -337,6 +382,127 @@ def get_status():
     })
 
 
+@app.route('/api/disassemble', methods=['POST'])
+def disassemble_bytecode():
+    """Disassemble arbitrary bytecode for dynamic analysis."""
+    try:
+        data = request.get_json()
+        if not data or 'bytecode_hex' not in data:
+            return jsonify({'error': 'Missing bytecode_hex parameter'}), 400
+        
+        # Parse hex string to bytes
+        hex_string = data['bytecode_hex'].strip()
+        # Remove spaces if present
+        hex_string = hex_string.replace(' ', '')
+        
+        # Convert hex string to bytes
+        try:
+            bytecode = bytes.fromhex(hex_string)
+        except ValueError as e:
+            return jsonify({'error': f'Invalid hex string: {str(e)}'}), 400
+        
+        if not bytecode:
+            return jsonify({'error': 'Empty bytecode'}), 400
+        
+        # Run disassemblers
+        try:
+            descumm_output = run_descumm_on_bytecode(data_provider.descumm_path, bytecode)
+            fused_output, _ = run_scumm6_disassembler_with_fusion_details(bytecode, 0)
+        except Exception as e:
+            return jsonify({'error': f'Disassembly failed: {str(e)}'}), 500
+        
+        return jsonify({
+            'descumm_output': descumm_output,
+            'fused_output': fused_output
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Internal error: {str(e)}'}), 500
+
+
+@app.route('/api/notes', methods=['GET', 'POST'])
+def handle_notes():
+    """Handle notes CRUD operations."""
+    if data_provider is None:
+        return jsonify({'error': 'Data provider not initialized'}), 500
+    
+    if request.method == 'GET':
+        # Get notes for a specific script
+        script_name = request.args.get('script_name')
+        if script_name:
+            notes = data_provider.get_notes_for_script(script_name)
+        else:
+            notes = list(data_provider.notes.values())
+        return jsonify({'notes': notes})
+    
+    elif request.method == 'POST':
+        # Create or update a note
+        try:
+            note_data = request.get_json()
+            if not note_data:
+                return jsonify({'error': 'No data provided'}), 400
+            
+            # Validate required fields
+            required_fields = ['script_name', 'address']
+            for field in required_fields:
+                if field not in note_data:
+                    return jsonify({'error': f'Missing required field: {field}'}), 400
+            
+            # Save the note
+            note_id = data_provider.save_note(note_data)
+            return jsonify({'id': note_id, 'message': 'Note saved successfully'})
+            
+        except Exception as e:
+            return jsonify({'error': f'Failed to save note: {str(e)}'}), 500
+
+
+@app.route('/api/notes/<note_id>', methods=['GET', 'DELETE'])
+def handle_note(note_id):
+    """Handle individual note operations."""
+    if data_provider is None:
+        return jsonify({'error': 'Data provider not initialized'}), 500
+    
+    if request.method == 'GET':
+        note = data_provider.get_note(note_id)
+        if note:
+            return jsonify(note)
+        return jsonify({'error': 'Note not found'}), 404
+    
+    elif request.method == 'DELETE':
+        if data_provider.delete_note(note_id):
+            return jsonify({'message': 'Note deleted successfully'})
+        return jsonify({'error': 'Note not found'}), 404
+
+
+@app.route('/api/generate_test', methods=['POST'])
+def generate_test_case():
+    """Generate a pytest test case from analysis data."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Extract data
+        script_name = data.get('script_name', 'unknown')
+        address = data.get('address', '0x0000')
+        bytecode_hex = data.get('bytecode_hex', '')
+        expected_fused = data.get('expected_fused_output', '')
+        descumm_output = data.get('descumm_output', '')
+        
+        # Generate test case
+        test_case = f'''ScriptComparisonTestCase(
+    test_id="user_analysis_{script_name}_{address}",
+    bytecode=bytes.fromhex("{bytecode_hex.replace(' ', '')}"),
+    expected_descumm_output="""{descumm_output}""",
+    expected_disasm_fusion_output="""{expected_fused}"""
+)'''
+        
+        return jsonify({'test_case': test_case})
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to generate test: {str(e)}'}), 500
+
+
 # Initialize data provider on startup
 def init_app():
     """Initialize the application."""
@@ -350,4 +516,4 @@ def init_app():
 
 if __name__ == '__main__':
     init_app()
-    app.run(debug=True, host='0.0.0.0', port=6002)
+    app.run(debug=True, host='0.0.0.0', port=6001)
