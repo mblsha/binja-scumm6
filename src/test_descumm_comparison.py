@@ -486,8 +486,8 @@ script_test_cases = [
             [000F] startScriptQuick(...)
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] startScriptQuick(93, [22, 33, 3])
-        """).strip(),  # TODO: Should be startScriptQuick(93, [11, 22, 33]) - fix fusion algorithm
+            [0000] startScriptQuick(93, [11, 22, 33])
+        """).strip(),
         expected_llil=[
             (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[93])])),
             (0x0003, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[11])])),
@@ -497,7 +497,7 @@ script_test_cases = [
             (0x000F, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
         ],
         expected_llil_fusion=[
-            (0x0000, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='CONST.4', ops=[93]), MockLLIL(op='CONST.4', ops=[3]), MockLLIL(op='CONST.4', ops=[11]), MockLLIL(op='CONST.4', ops=[22]), MockLLIL(op='CONST.4', ops=[33])])),
+            (0x0000, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='CONST.4', ops=[93]), MockLLIL(op='CONST.4', ops=[11]), MockLLIL(op='CONST.4', ops=[22]), MockLLIL(op='CONST.4', ops=[33])])),
         ],
     ),
 ]
