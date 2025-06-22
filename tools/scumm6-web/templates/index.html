@@ -175,9 +175,10 @@
             overflow-y: auto;
             padding: 1rem;
             font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             white-space: pre-wrap;
             background: #1a1a1a;
+            line-height: 1.4;
         }
         
         .loading {
@@ -221,6 +222,32 @@
         .highlight-change {
             background: rgba(255, 193, 7, 0.2);
             color: #ffc107;
+        }
+        
+        .line-match {
+            background: rgba(76, 175, 80, 0.15);
+            border-left: 3px solid #4caf50;
+            padding-left: 0.5rem;
+        }
+        
+        .line-no-match {
+            background: rgba(244, 67, 54, 0.1);
+            border-left: 3px solid #f44336;
+            padding-left: 0.5rem;
+        }
+        
+        .line-partial-match {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 3px solid #ffc107;
+            padding-left: 0.5rem;
+        }
+        
+        .match-indicator {
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+            margin-right: 0.5rem;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -392,10 +419,8 @@
                     `<span style="color: #4caf50;">✓ Match (${percentage}%)</span>` :
                     `<span style="color: #f44336;">✗ Mismatch (${percentage}%)</span>`;
                 
-                // Display outputs
-                descummPanel.textContent = data.descumm_output;
-                fusedPanel.textContent = data.fused_output;
-                rawPanel.textContent = data.raw_output;
+                // Display outputs with line matching
+                displayWithLineMatches(data);
                 
                 // Update script in list if it wasn't processed before
                 const script = scripts.find(s => s.name === scriptName);
@@ -421,6 +446,75 @@
             descummPanel.innerHTML = errorHtml;
             fusedPanel.innerHTML = errorHtml;
             rawPanel.innerHTML = errorHtml;
+        }
+        
+        // Display outputs with line matching highlighting
+        function displayWithLineMatches(data) {
+            // Parse lines
+            const descummLines = data.descumm_output.split('\n');
+            const fusedLines = data.fused_output.split('\n');
+            const rawLines = data.raw_output.split('\n');
+            
+            // Create a map of fused line indices to match info
+            const fusedLineMatches = {};
+            if (data.line_matches) {
+                data.line_matches.forEach(match => {
+                    if (match.fused_idx !== null && match.fused_idx !== undefined) {
+                        fusedLineMatches[match.fused_idx] = match;
+                    }
+                });
+            }
+            
+            // Display descumm with match indicators
+            let descummHtml = '';
+            if (data.line_matches) {
+                data.line_matches.forEach((match, idx) => {
+                    if (match.descumm_idx < descummLines.length) {
+                        const line = descummLines[match.descumm_idx];
+                        const matchClass = match.is_match ? 'line-match' : 
+                                         (match.match_score > 0.5 ? 'line-partial-match' : 'line-no-match');
+                        const indicator = match.is_match ? '✓' : 
+                                        (match.match_score > 0.5 ? '≈' : '✗');
+                        const scoreText = match.match_score > 0 ? ` (${Math.round(match.match_score * 100)}%)` : '';
+                        
+                        descummHtml += `<div class="${matchClass}"><span class="match-indicator" title="Match score: ${Math.round(match.match_score * 100)}%">${indicator}</span>${escapeHtml(line)}</div>`;
+                    }
+                });
+            } else {
+                descummHtml = escapeHtml(data.descumm_output);
+            }
+            
+            // Display fused with match indicators
+            let fusedHtml = '';
+            fusedLines.forEach((line, idx) => {
+                const match = fusedLineMatches[idx];
+                if (match) {
+                    const matchClass = match.is_match ? 'line-match' : 
+                                     (match.match_score > 0.5 ? 'line-partial-match' : 'line-no-match');
+                    const indicator = match.is_match ? '✓' : 
+                                    (match.match_score > 0.5 ? '≈' : '✗');
+                    fusedHtml += `<div class="${matchClass}"><span class="match-indicator" title="Matches descumm line ${match.descumm_idx + 1}">${indicator}</span>${escapeHtml(line)}</div>`;
+                } else if (line.trim()) {
+                    fusedHtml += `<div class="line-no-match"><span class="match-indicator">-</span>${escapeHtml(line)}</div>`;
+                } else {
+                    fusedHtml += `<div>${escapeHtml(line)}</div>`;
+                }
+            });
+            
+            // Display raw output as-is
+            const rawHtml = escapeHtml(data.raw_output);
+            
+            // Update panels
+            descummPanel.innerHTML = descummHtml || escapeHtml(data.descumm_output);
+            fusedPanel.innerHTML = fusedHtml || escapeHtml(data.fused_output);
+            rawPanel.innerHTML = rawHtml;
+        }
+        
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
         
         // Synchronize scrolling between panels
