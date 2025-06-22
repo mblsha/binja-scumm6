@@ -4,6 +4,7 @@ _scripts
 .mypy_cache
 *.egg-info
 .claude
+tools/scumm6-web/analysis_notes.json
 
 *.code-workspace
 Session.vim
