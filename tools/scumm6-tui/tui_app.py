@@ -71,28 +71,40 @@ class LoadingScreen(ModalScreen):
         with Container(id="loading-container"):
             yield Label("Loading SCUMM6 Scripts", id="loading-title")
             yield Label("Initializing...", id="loading-status")
-            self.progress_bar = ProgressBar(total=100, show_eta=False)
-            yield self.progress_bar
+            yield ProgressBar(total=100, show_eta=False, id="loading-progress")
             yield Label("", id="loading-current")
     
     def on_mount(self) -> None:
         """Store references when mounted."""
-        self.progress_bar = self.query_one(ProgressBar)
+        self.progress_bar = self.query_one("#loading-progress", ProgressBar)
         self.status_label = self.query_one("#loading-status", Label)
         self.current_label = self.query_one("#loading-current", Label)
     
     def update_progress(self, current: int, total: int, script_name: str) -> None:
         """Update the progress display."""
-        if total > 0:
-            self.progress_bar.total = total
-            self.progress_bar.progress = current
-            percentage = (current / total) * 100
-            self.status_label.update(f"Processing scripts: {current}/{total} ({percentage:.0f}%)")
+        if not self.is_mounted:
+            return
             
-            if script_name == "Complete":
-                self.current_label.update("✓ Analysis complete!")
-            else:
-                self.current_label.update(f"Analyzing: {script_name}")
+        if total > 0:
+            # Update progress bar
+            if self.progress_bar:
+                self.progress_bar.total = total
+                self.progress_bar.progress = current
+            
+            # Update status text
+            percentage = (current / total) * 100
+            if self.status_label:
+                self.status_label.update(f"Processing scripts: {current}/{total} ({percentage:.0f}%)")
+            
+            # Update current script
+            if self.current_label:
+                if script_name == "Complete":
+                    self.current_label.update("✓ Analysis complete!")
+                else:
+                    self.current_label.update(f"Analyzing: {script_name}")
+            
+            # Force a refresh to ensure UI updates
+            self.refresh()
 
 
 class DiffScreen(Screen):
@@ -353,41 +365,41 @@ class Scumm6ComparisonApp(App):
     async def process_scripts_worker(self) -> None:
         """Process scripts in a background worker."""
         import asyncio
+        import time
         from concurrent.futures import ThreadPoolExecutor
         
-        # Create a thread pool for the blocking operation
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            # Track if cancelled
-            cancelled = False
-            
+        # Store reference to app for posting messages
+        app = self.app
+        
+        def process_with_progress():
+            """Run processing in thread with progress updates."""
             def progress_callback(current, total, script_name):
-                # Update progress using post_message from worker thread
-                if not cancelled:
-                    self.post_message(
-                        self.ProgressUpdate(current, total, script_name)
-                    )
+                # Post message to app
+                app.post_message(
+                    Scumm6ComparisonApp.ProgressUpdate(current, total, script_name)
+                )
+                # Small delay to allow UI updates
+                time.sleep(0.01)
             
             try:
-                # Run the blocking operation in a thread
-                loop = asyncio.get_event_loop()
-                await loop.run_in_executor(
-                    executor,
-                    self.data_provider.process_all_scripts,
-                    progress_callback
-                )
-                
-                # Signal completion
-                if not cancelled:
-                    self.post_message(self.ProcessingComplete())
-                
+                self.data_provider.process_all_scripts(progress_callback)
+                app.post_message(Scumm6ComparisonApp.ProcessingComplete())
             except Exception as e:
-                if not cancelled:
-                    self.post_message(self.ProcessingError(str(e)))
+                app.post_message(Scumm6ComparisonApp.ProcessingError(str(e)))
+        
+        # Run in thread executor
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(executor, process_with_progress)
     
     def on_scripts_loaded(self) -> None:
         """Called when all scripts have been processed."""
-        # Dismiss loading screen
-        self.pop_screen()
+        # Dismiss loading screen if it exists
+        if hasattr(self, 'loading_screen') and self.loading_screen:
+            try:
+                self.pop_screen()
+            except Exception:
+                pass  # Screen might already be dismissed
         
         # Refresh the list
         self.refresh_list()
@@ -398,8 +410,12 @@ class Scumm6ComparisonApp(App):
     
     def on_scripts_error(self, error_msg: str) -> None:
         """Called when there's an error processing scripts."""
-        # Dismiss loading screen
-        self.pop_screen()
+        # Dismiss loading screen if it exists
+        if hasattr(self, 'loading_screen') and self.loading_screen:
+            try:
+                self.pop_screen()
+            except Exception:
+                pass  # Screen might already be dismissed
         
         # Show error
         self.notify(f"Error loading data: {error_msg}", 
