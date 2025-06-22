@@ -500,6 +500,42 @@ script_test_cases = [
             (0x0000, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='CONST.4', ops=[93]), MockLLIL(op='CONST.4', ops=[11]), MockLLIL(op='CONST.4', ops=[22]), MockLLIL(op='CONST.4', ops=[33])])),
         ],
     ),
+    # ===== Migrated InstructionInfo test cases =====
+    ScriptComparisonTestCase(
+        test_id="instruction_info_unless_positive",
+        bytecode=bytes([0x5D, 0x12, 0x00]),
+        expected_branches=[(0x0, (BranchType.TrueBranch, 0x15))],
+    ),
+    ScriptComparisonTestCase(
+        test_id="instruction_info_unless_negative",
+        bytecode=bytes([0x5D, 0x9E, 0xFF]),
+        expected_branches=[(0x0, (BranchType.TrueBranch, -95))],
+    ),
+    ScriptComparisonTestCase(
+        test_id="instruction_info_if_positive",
+        bytecode=bytes([0x5C, 0x0A, 0x00]),
+        expected_branches=[(0x0, (BranchType.TrueBranch, 0x0D))],
+    ),
+    ScriptComparisonTestCase(
+        test_id="instruction_info_unconditional",
+        bytecode=bytes([0x73, 0x0A, 0x00]),
+        expected_branches=[(0x0, (BranchType.UnconditionalBranch, 0x0D))],
+    ),
+    ScriptComparisonTestCase(
+        test_id="instruction_info_if_class_of_is",
+        bytecode=bytes([0x6D]),
+        expected_branches=[],
+    ),
+    ScriptComparisonTestCase(
+        test_id="instruction_info_push_byte",
+        bytecode=bytes([0x00, 0x05]),
+        expected_branches=[],
+    ),
+    ScriptComparisonTestCase(
+        test_id="instruction_info_add_operation",
+        bytecode=bytes([0x14]),
+        expected_branches=[],
+    ),
 ]
 
 
