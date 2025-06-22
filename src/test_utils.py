@@ -289,15 +289,8 @@ def assert_llil_operations_match(
             f"LLIL operation {i} offset mismatch for '{script_name}' ({test_type}): " \
             f"expected offset 0x{expected_offset:04X}, got 0x{actual_offset:04X}"
         
-        # Compare operation types and key properties, normalizing size suffixes
-        def normalize_op(op_str: str) -> str:
-            """Normalize operation strings by replacing size suffixes with .error for comparison."""
-            return op_str.replace('.4', '.error').replace('.w', '.error').replace('.b', '.error').replace('.l', '.error')
-        
-        actual_op_normalized = normalize_op(actual_op.op)
-        expected_op_normalized = normalize_op(expected_op.op)
-        
-        assert actual_op_normalized == expected_op_normalized, \
+        # Compare operation types and key properties directly
+        assert actual_op.op == expected_op.op, \
             f"LLIL operation {i} type mismatch for '{script_name}' ({test_type}) at offset 0x{actual_offset:04X}:\n" \
             f"Expected: {expected_op.op}\n" \
             f"Actual: {actual_op.op}"
