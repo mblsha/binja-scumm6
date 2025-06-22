@@ -2,12 +2,12 @@
 
 from typing import List, Optional, Any
 import copy
-from binja_helpers.tokens import Token, TInstr, TSep
+from binja_helpers.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction
 
 from .opcodes import Instruction
-from .smart_bases import SmartSemanticIntrinsicOp
-from .configs import SemanticIntrinsicConfig
+from .smart_bases import SmartSemanticIntrinsicOp, SmartIntrinsicOp
+from .configs import SemanticIntrinsicConfig, IntrinsicConfig
 
 
 class StartScriptQuick(SmartSemanticIntrinsicOp):
@@ -215,5 +215,128 @@ class StartScript(SmartSemanticIntrinsicOp):
                 self._lift_operand(il, self.fused_operands[1]),  # flags
             ]
             il.append(il.intrinsic([], "start_script", params))
+        else:
+            super().lift(il, addr)
+
+
+class SoundKludge(SmartIntrinsicOp):
+    """SoundKludge with variable argument handling."""
+    
+    # Set class attributes that parent expects
+    _name = "sound_kludge"
+    _config: IntrinsicConfig  # Will be set by factory
+    
+    def __init__(self, kaitai_op: Any, length: int) -> None:
+        super().__init__(kaitai_op, length)
+        self._arg_count: Optional[int] = None
+        
+    def _is_fusible_push(self, instr: Instruction) -> bool:
+        """Check if instruction is a push that can be fused."""
+        return instr.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            if hasattr(operand.op_details.body, 'data'):
+                return [TInt(f"var_{operand.op_details.body.data}")]
+            else:
+                return [TInt("var_?")]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            if hasattr(operand.op_details.body, 'data'):
+                value = operand.op_details.body.data
+                return [TInt(str(value))]
+            else:
+                return [TInt("?")]
+        else:
+            return [TInt("operand")]
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        from ... import vars
+        
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            # Variable push - use il_get_var
+            return vars.il_get_var(il, operand.op_details.body)
+        else:
+            # Constant push - use const
+            if hasattr(operand.op_details.body, 'data'):
+                value = operand.op_details.body.data
+                return il.const(4, value)
+        
+        # Fallback to undefined
+        return il.undefined()
+        
+    def fuse(self, previous: Instruction) -> Optional['SoundKludge']:
+        """
+        Custom fusion for soundKludge that handles variable arguments.
+        
+        Stack order (LIFO): arg1, arg2, ..., argN, arg_count
+        Expected output: soundKludge([arg1, arg2, ..., argN])
+        """
+        # If we don't have fused operands yet, we're looking for arg_count
+        if not self.fused_operands:
+            # First fusion should be arg_count
+            if not self._is_fusible_push(previous):
+                return None
+                
+            # Create initial fusion with arg_count
+            fused = copy.deepcopy(self)
+            fused.fused_operands = [previous]
+            fused._length = self._length + previous.length()
+            
+            # Extract arg_count
+            if previous.__class__.__name__ in ['PushByte', 'PushWord']:
+                fused._arg_count = previous.op_details.body.data
+            
+            return fused
+            
+        # We have arg_count, now collect the arguments
+        if self._arg_count is not None and len(self.fused_operands) <= self._arg_count:
+            if not self._is_fusible_push(previous):
+                return None
+                
+            fused = copy.deepcopy(self)
+            fused.fused_operands.append(previous)
+            fused._length = self._length + previous.length()
+            fused._arg_count = self._arg_count
+            return fused
+            
+        # All fusions complete
+        return None
+        
+    def render(self) -> List[Token]:
+        """Render as: soundKludge([arg1, arg2, ...])"""
+        if self.fused_operands and self._arg_count is not None and len(self.fused_operands) > self._arg_count:
+            tokens = [TInstr("soundKludge"), TSep("("), TSep("[")]
+            
+            # Arguments are in reverse order (stack is LIFO), skip the first one (arg_count)
+            args = self.fused_operands[1:]
+            for i, arg in enumerate(reversed(args)):
+                if i > 0:
+                    tokens.append(TSep(", "))
+                tokens.extend(self._render_operand(arg))
+            
+            tokens.append(TSep("]"))
+            tokens.append(TSep(")"))
+            return tokens
+        else:
+            return super().render()
+    
+    @property 
+    def stack_pop_count(self) -> int:
+        """Calculate stack pops based on fusion state."""
+        if self.fused_operands and self._arg_count is not None:
+            # We've fused everything
+            return 0
+        return self._config.pop_count if self._config else 1
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Generate LLIL for soundKludge."""
+        if self.fused_operands and self._arg_count is not None and len(self.fused_operands) > self._arg_count:
+            # Create array of arguments (skip arg_count, reverse order)
+            args = self.fused_operands[1:]
+            params = [self._lift_operand(il, arg) for arg in reversed(args)]
+            
+            il.append(il.intrinsic([], "sound_kludge", params))
         else:
             super().lift(il, addr)

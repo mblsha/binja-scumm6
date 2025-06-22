@@ -202,4 +202,8 @@ def generate_all_instructions() -> Dict[str, Type[Instruction]]:
     script_ops.StartScript._config = SEMANTIC_CONFIGS["start_script"]
     registry["start_script"] = script_ops.StartScript
     
+    # Override sound_kludge with custom implementation
+    script_ops.SoundKludge._config = INTRINSIC_CONFIGS["sound_kludge"]
+    registry["sound_kludge"] = script_ops.SoundKludge
+    
     return registry

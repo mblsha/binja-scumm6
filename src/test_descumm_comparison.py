@@ -843,6 +843,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output="[0000] animateActor(10, 250)",
     ),
+    ScriptComparisonTestCase(
+        test_id="sound_kludge_array",
+        bytecode=bytes([0x01, 0x08, 0x01, 0x01, 0x04, 0x00, 0x01, 0x00, 0x00, 0x01, 0x2F, 0x00, 0x01, 0x00, 0x00, 0x01, 0x05, 0x00, 0xAC]),
+        expected_descumm_output=dedent("""
+            [0000] (AC) soundKludge([264,4,0,47,0])
+            END
+        """).strip(),
+        expected_disasm_fusion_output="[0000] soundKludge([264, 4, 0, 47, 0])",
+    ),
 ]
 
 
