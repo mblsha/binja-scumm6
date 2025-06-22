@@ -178,14 +178,3 @@ def test_no_fusion_when_not_comparison() -> None:
     assert len(fused.fused_operands) == 0  # No fusion
     assert fused.stack_pop_count == 1  # Normal stack operation
 
-
-if __name__ == "__main__":
-    test_comparison_fusion_with_constants()
-    test_comparison_fusion_with_variables()
-    test_conditional_jump_fusion_with_if_not()
-    test_conditional_jump_fusion_with_iff()
-    test_partial_fusion_comparison()
-    test_complex_conditional_with_neq()
-    test_le_ge_comparisons()
-    test_no_fusion_when_not_comparison()
-    print("All conditional fusion tests passed!")

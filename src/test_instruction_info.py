@@ -227,8 +227,3 @@ def test_instruction_info_real_script_data() -> None:
     
     print("✅ Real script data test passed")
 
-
-if __name__ == "__main__":
-    test_instruction_info_conditional_jumps()
-    test_instruction_info_real_script_data()
-    print("\n🎉 All InstructionInfo tests passed!")

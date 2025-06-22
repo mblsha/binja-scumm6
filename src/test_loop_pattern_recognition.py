@@ -212,15 +212,3 @@ def test_no_fusion_preserves_normal_behavior() -> None:
     assert normal.__class__.__name__ == fused.__class__.__name__
     assert normal.__class__.__name__ == "PushByte"
 
-
-if __name__ == "__main__":
-    test_simple_backward_jump_detection()
-    test_for_loop_pattern_detection()
-    test_while_loop_pattern_detection()
-    test_forward_jump_no_loop_detection()
-    test_iff_loop_detection()
-    test_loop_body_size_calculation()
-    test_partial_fusion_with_loop()
-    test_complex_comparison_loop()
-    test_no_fusion_preserves_normal_behavior()
-    print("All loop pattern recognition tests passed!")

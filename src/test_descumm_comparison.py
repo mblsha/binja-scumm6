@@ -555,9 +555,3 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     assert len(descumm_output.strip()) > 0, f"descumm produced no output for '{case.script_name}'"
     assert len(disasm_output.strip()) > 0, f"SCUMM6 produced no output for '{case.script_name}'"
     assert len(disasm_fusion_output.strip()) > 0, f"SCUMM6 with fusion produced no output for '{case.script_name}'"
-
-
-if __name__ == "__main__":
-    # Run a basic test to verify the framework works
-    print("Use 'pytest test_descumm_comparison.py' to run the full test suite")
-    print("✅ Simplified test module loaded successfully")

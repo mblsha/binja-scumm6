@@ -209,13 +209,3 @@ def test_descumm_style_output_comparison() -> None:
     print(f"Raw output: {raw_output}")
     print(f"Loop output: {our_output}")
 
-
-if __name__ == "__main__":
-    test_room8_scrp18_loop_pattern()
-    test_room8_local200_scaling_loop()
-    test_multiple_backward_jumps_pattern()
-    test_complex_loop_with_nested_jumps()
-    test_iff_loop_pattern()
-    test_no_loop_detection_for_regular_conditionals()
-    test_descumm_style_output_comparison()
-    print("All real-world loop pattern tests passed!")
