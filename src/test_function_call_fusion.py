@@ -4,11 +4,7 @@ This module tests fusion of push instructions with function call instructions
 like draw_object, start_script, walk_actor_to, etc.
 """
 
-import os
-os.environ["FORCE_BINJA_MOCK"] = "1"
-from binja_helpers import binja_api  # noqa: F401
-
-from .pyscumm6.disasm import decode_with_fusion
+from .test_utils import assert_fusion_result, assert_partial_fusion, assert_no_fusion
 
 
 class TestFunctionCallFusion:
@@ -23,18 +19,7 @@ class TestFunctionCallFusion:
             0x61               # draw_object
         ])
         
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be draw_object with two fused operands
-        assert instruction.__class__.__name__ == "DrawObject"
-        assert len(instruction.fused_operands) == 2
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "drawObject(100, 2)"
+        assert_fusion_result(bytecode, "DrawObject", 2, "drawObject(100, 2)")
     
     def test_draw_object_partial_fusion(self) -> None:
         """Test partial fusion with draw_object (only one operand fused)."""
@@ -44,18 +29,7 @@ class TestFunctionCallFusion:
             0x61         # draw_object
         ])
         
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be draw_object with one fused operand
-        assert instruction.__class__.__name__ == "DrawObject"
-        assert len(instruction.fused_operands) == 1
-        assert instruction.stack_pop_count == 1  # Still needs one from stack
-        
-        # Check render output
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert "drawObject(2)" in token_text
+        assert_partial_fusion(bytecode, "DrawObject", 1, 1)
     
     def test_walk_actor_to_fusion(self) -> None:
         """Test fusion with walk_actor_to (3 parameters)."""
@@ -67,18 +41,7 @@ class TestFunctionCallFusion:
             0x7E               # walk_actor_to
         ])
         
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be walk_actor_to with three fused operands
-        assert instruction.__class__.__name__ == "WalkActorTo"
-        assert len(instruction.fused_operands) == 3
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "walkActorTo(1, 200, 150)"
+        assert_fusion_result(bytecode, "WalkActorTo", 3, "walkActorTo(1, 200, 150)")
     
     def test_start_sound_fusion(self) -> None:
         """Test fusion with single-parameter function (start_sound)."""
@@ -88,18 +51,7 @@ class TestFunctionCallFusion:
             0x74               # start_sound
         ])
         
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be start_sound with one fused operand
-        assert instruction.__class__.__name__ == "StartSound"
-        assert len(instruction.fused_operands) == 1
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "startSound(42)"
+        assert_fusion_result(bytecode, "StartSound", 1, "startSound(42)")
     
     def test_function_with_var_fusion(self) -> None:
         """Test fusion with variable operands."""
@@ -110,18 +62,7 @@ class TestFunctionCallFusion:
             0x61               # draw_object
         ])
         
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be draw_object with two fused operands
-        assert instruction.__class__.__name__ == "DrawObject"
-        assert len(instruction.fused_operands) == 2
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "drawObject(var_10, 100)"
+        assert_fusion_result(bytecode, "DrawObject", 2, "drawObject(var_10, 100)")
     
     def test_put_actor_at_xy_fusion(self) -> None:
         """Test fusion with 4-parameter function."""
@@ -134,18 +75,7 @@ class TestFunctionCallFusion:
             0x7F               # put_actor_at_xy
         ])
         
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be put_actor_at_xy with four fused operands
-        assert instruction.__class__.__name__ == "PutActorAtXy"
-        assert len(instruction.fused_operands) == 4
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "putActorAtXY(1, 100, 200, 0)"
+        assert_fusion_result(bytecode, "PutActorAtXy", 4, "putActorAtXY(1, 100, 200, 0)")
     
     def test_no_fusion_without_pushes(self) -> None:
         """Test that functions don't fuse with non-push instructions."""
@@ -155,18 +85,7 @@ class TestFunctionCallFusion:
             0x61   # draw_object
         ])
         
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be draw_object with no fused operands
-        assert instruction.__class__.__name__ == "DrawObject"
-        assert len(instruction.fused_operands) == 0
-        assert instruction.stack_pop_count == 2  # Normal stack pops
-        
-        # Check render output
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "drawObject(...)"
+        assert_no_fusion(bytecode, "DrawObject")
     
     def test_mixed_constant_and_var_fusion(self) -> None:
         """Test fusion with mix of constants and variables."""
@@ -178,15 +97,4 @@ class TestFunctionCallFusion:
             0x7E               # walk_actor_to
         ])
         
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be walk_actor_to with three fused operands
-        assert instruction.__class__.__name__ == "WalkActorTo"
-        assert len(instruction.fused_operands) == 3
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "walkActorTo(var_5, 10, var_7)"
+        assert_fusion_result(bytecode, "WalkActorTo", 3, "walkActorTo(var_5, 10, var_7)")

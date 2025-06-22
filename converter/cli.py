@@ -5,21 +5,15 @@ from pathlib import Path
 import importlib
 import importlib.util
 import sys
-import os
 
 # Add binja_helpers to path for standalone execution
 if __package__ is None or __package__ == "":
-    # Force use of mock
-    os.environ["FORCE_BINJA_MOCK"] = "1"
-    
-    # Get repository root (go up one level from converter dir)
+    # Use centralized environment setup
     repo_root = Path(__file__).resolve().parent.parent
     sys.path.insert(0, str(repo_root))
     
-    # Add binja_helpers to path FIRST
-    helper_dir = repo_root / "binja_helpers_tmp"
-    if helper_dir.is_dir():
-        sys.path.insert(0, str(helper_dir))
+    from scripts.setup import setup_test_environment
+    setup_test_environment()
     
     module_path = Path(__file__).resolve().parent / "converter.py"
     spec = importlib.util.spec_from_file_location("converter", module_path)

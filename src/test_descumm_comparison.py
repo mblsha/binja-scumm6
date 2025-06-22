@@ -12,11 +12,9 @@ This refactored test framework:
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from typing import List, Any, NamedTuple, Optional, Tuple
+from typing import List, NamedTuple, Optional, Tuple
 import sys
 import os
-import subprocess
-import tempfile
 from dataclasses import dataclass
 from textwrap import dedent
 from pathlib import Path
@@ -26,7 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 from binja_helpers import binja_api  # noqa: F401
-from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL, mllil, MockIntrinsic, MockReg, set_size_lookup
+from binja_helpers.mock_llil import MockLLIL, mllil, MockIntrinsic, MockReg, set_size_lookup
 from binaryninja.enums import BranchType
 from src.scumm6 import Scumm6, LastBV
 from src.test_mocks import MockScumm6BinaryView
@@ -35,6 +33,18 @@ from scripts.ensure_descumm import build_descumm
 
 # Import ensure_demo_bsc6 from test_descumm_tool
 from src.test_descumm_tool import ensure_demo_bsc6
+
+# Import utilities from centralized test utils
+from src.test_utils import (
+    run_descumm_on_bytecode,
+    run_scumm6_disassembler,
+    run_scumm6_disassembler_with_fusion,
+    run_scumm6_llil_generation,
+    assert_llil_operations_match,
+    assert_no_unimplemented_llil,
+    collect_branches_from_architecture,
+    safe_token_text
+)
 
 # Configure SCUMM6-specific LLIL size suffixes
 set_size_lookup(
@@ -401,200 +411,7 @@ def find_script_by_name(name: str, scripts_list: List[ScriptAddr]) -> ScriptAddr
     raise ValueError(f"Script '{name}' not found in scripts list")
 
 
-def run_descumm_on_bytecode(descumm_path: Path, bytecode: bytes) -> str:
-    """Execute descumm on bytecode and return cleaned output."""
-    with tempfile.NamedTemporaryFile(mode='wb', delete=False) as tmp_file:
-        tmp_file.write(bytecode)
-        tmp_file_path = tmp_file.name
-
-    try:
-        result = subprocess.run(
-            [str(descumm_path), "-6", "-u", tmp_file_path],
-            capture_output=True,
-            text=True,
-            check=False  # Don't raise exception on non-zero exit
-        )
-        # Return stdout even if descumm had errors
-        output = result.stdout.strip()
-        if result.returncode != 0 and result.stderr:
-            # Include stderr information if there was an error
-            output = f"{output}\n<!-- descumm stderr: {result.stderr.strip()} -->"
-        return output
-    finally:
-        os.unlink(tmp_file_path)
-
-
-def run_scumm6_disassembler(bytecode: bytes, start_addr: int) -> str:
-    """Execute SCUMM6 disassembler and return formatted output."""
-    arch = Scumm6()
-    view = MockScumm6BinaryView()
-    view.write_memory(start_addr, bytecode)
-    LastBV.set(view)
-
-    output_lines = []
-    offset = 0
-
-    while offset < len(bytecode):
-        addr = start_addr + offset
-        remaining_data = bytecode[offset:]
-
-        # Get instruction text
-        result = arch.get_instruction_text(remaining_data, addr)
-        if result is None:
-            break
-
-        tokens, length = result
-        text = format_output_as_text(tokens)
-
-        # Format as [offset] disassembly_text
-        output_lines.append(f"[{offset:04X}] {text}")
-        offset += length
-
-    return '\n'.join(output_lines)
-
-
-def run_scumm6_disassembler_with_fusion(bytecode: bytes, start_addr: int) -> str:
-    """Execute SCUMM6 disassembler with instruction fusion and return formatted output."""
-    from src.pyscumm6.disasm import decode_with_fusion_incremental
-    
-    output_lines = []
-    offset = 0
-
-    while offset < len(bytecode):
-        addr = start_addr + offset
-        remaining_data = bytecode[offset:]
-
-        # Use fusion-enabled decoder
-        instruction = decode_with_fusion_incremental(remaining_data, addr)
-        if instruction is None:
-            break
-
-        # Get tokens from fused instruction rendering
-        tokens = instruction.render()
-        text = format_output_as_text(tokens)
-
-        # Format as [offset] disassembly_text
-        output_lines.append(f"[{offset:04X}] {text}")
-        offset += instruction.length()
-
-    return '\n'.join(output_lines)
-
-
-def format_output_as_text(tokens: List[Any]) -> str:
-    """Convert token list to plain text string."""
-    return ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-
-
-def run_scumm6_llil_generation(bytecode: bytes, start_addr: int, use_fusion: bool = False) -> List[Tuple[int, MockLLIL]]:
-    """Execute SCUMM6 LLIL generation and return list of (offset, llil_operation) tuples."""
-    if use_fusion:
-        from src.pyscumm6.disasm import decode_with_fusion_incremental as decode_func
-    else:
-        from src.pyscumm6.disasm import decode as decode_func
-    
-    llil_operations = []
-    offset = 0
-
-    while offset < len(bytecode):
-        addr = start_addr + offset
-        remaining_data = bytecode[offset:]
-
-        # Decode instruction
-        instruction = decode_func(remaining_data, addr)
-        if instruction is None:
-            break
-
-        # Generate LLIL for this instruction
-        il = MockLowLevelILFunction()
-        instruction.lift(il, addr)
-        
-        # Record each LLIL operation with its offset
-        for llil_op in il.ils:
-            llil_operations.append((offset, llil_op))
-        
-        offset += instruction.length()
-
-    return llil_operations
-
-
-def assert_llil_operations_match(actual_llil: List[Tuple[int, MockLLIL]], 
-                                expected_llil: List[Tuple[int, MockLLIL]], 
-                                script_name: str, 
-                                test_type: str) -> None:
-    """Verify that actual LLIL operations match expected operations."""
-    assert len(actual_llil) == len(expected_llil), \
-        f"LLIL operation count mismatch for '{script_name}' ({test_type}): " \
-        f"expected {len(expected_llil)}, got {len(actual_llil)}"
-
-    for i, ((actual_offset, actual_op), (expected_offset, expected_op)) in enumerate(zip(actual_llil, expected_llil)):
-        assert actual_offset == expected_offset, \
-            f"LLIL operation {i} offset mismatch for '{script_name}' ({test_type}): " \
-            f"expected offset 0x{expected_offset:04X}, got 0x{actual_offset:04X}"
-        
-        assert actual_op == expected_op, \
-            f"LLIL operation {i} mismatch for '{script_name}' ({test_type}) at offset 0x{actual_offset:04X}:\n" \
-            f"Expected: {expected_op}\n" \
-            f"Actual: {actual_op}"
-
-
-def assert_no_unimplemented_llil(llil_operations: List[Tuple[int, MockLLIL]], script_name: str, test_type: str) -> None:
-    """Verify that no LLIL operations are unimplemented."""
-    for offset, llil_op in llil_operations:
-        _check_no_unimplemented_recursive(llil_op, script_name, test_type, offset)
-
-
-def _check_no_unimplemented_recursive(llil_op: MockLLIL, script_name: str, test_type: str, offset: int) -> None:
-    """Recursively check that no LLIL operations are unimplemented."""
-    if llil_op.bare_op() == "UNIMPL":
-        raise AssertionError(f"Found unimplemented LLIL in '{script_name}' ({test_type}) at offset 0x{offset:04X}: {llil_op}")
-    
-    # Recursively check nested operations
-    for nested_op in llil_op.ops:
-        if isinstance(nested_op, MockLLIL):
-            _check_no_unimplemented_recursive(nested_op, script_name, test_type, offset)
-
-
-def collect_branches_from_architecture(arch: Any, bytecode: bytes, start_addr: int) -> List[Tuple[int, Tuple[BranchType, int]]]:
-    """
-    Generic function to collect branch information from any SCUMM6 architecture.
-
-    Args:
-        arch: The architecture instance (Scumm6)
-        bytecode: The bytecode to analyze
-        start_addr: The starting address of the bytecode
-
-    Returns:
-        List of (relative_offset, (branch_type, relative_target_address)) tuples
-    """
-    view = MockScumm6BinaryView()
-    view.write_memory(start_addr, bytecode)
-    LastBV.set(view)
-
-    branches = []
-    offset = 0
-    while offset < len(bytecode):
-        addr = start_addr + offset
-        remaining_data = bytecode[offset:]
-
-        info = arch.get_instruction_info(remaining_data, addr)
-        if info is None:
-            break
-
-        # Check for branches at this offset
-        instruction_branches = []
-        if hasattr(info, 'branches') and info.branches:
-            instruction_branches = [(b.type, b.target) for b in info.branches]
-        elif hasattr(info, 'mybranches') and info.mybranches:
-            instruction_branches = info.mybranches
-
-        for branch_type, absolute_target in instruction_branches:
-            # Convert absolute target to relative target (relative to script start)
-            relative_target = absolute_target - start_addr
-            branches.append((offset, (branch_type, relative_target)))
-
-        offset += info.length
-
-    return branches
+# Helper functions have been moved to src/test_utils.py for centralized usage
 
 
 def verify_branches_match_expected(actual_branches: List[Tuple[int, Tuple[BranchType, int]]],
@@ -815,7 +632,7 @@ def test_room2_enter_fusion_analysis(test_environment: ComparisonTestEnvironment
         instructions_no_fusion.append((offset, instr))
         
         tokens = instr.render()
-        render_text = format_output_as_text(tokens)
+        render_text = safe_token_text(tokens)
         print(f"[{offset:04X}] {instr.__class__.__name__}: {render_text}")
         
         if hasattr(instr, 'value'):
@@ -842,7 +659,7 @@ def test_room2_enter_fusion_analysis(test_environment: ComparisonTestEnvironment
         instructions_with_fusion.append((offset, instr))
         
         tokens = instr.render()
-        render_text = format_output_as_text(tokens)
+        render_text = safe_token_text(tokens)
         print(f"[{offset:04X}] {instr.__class__.__name__}: {render_text}")
         
         # Show fusion details

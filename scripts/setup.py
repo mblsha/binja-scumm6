@@ -28,7 +28,7 @@ def setup_test_environment() -> None:
     from binja_helpers import binja_api  # noqa: F401
 
 
-def setup_mypy_environment(force_mock: bool = False) -> None:
+def setup_mypy_environment(force_mock: bool = False) -> bool:
     """Sets up environment for mypy with optional mock forcing."""
     repo_root = Path(__file__).resolve().parent.parent
     
