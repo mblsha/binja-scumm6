@@ -183,9 +183,7 @@ script_test_cases = [
             [0005] unless goto +18
             [0008] push_word(93)
             [000B] startScriptQuick(1, 1)
-            [0012] push_word(0)
-            [0015] push_word(200)
-            [0018] roomOps.setScreen(...)
+            [0012] roomOps.setScreen(200, 0)
             [001A] stopObjectCodeA()
         """).strip(),
         expected_branches=[(0x05, (BranchType.TrueBranch, 0x1A))],
@@ -214,9 +212,7 @@ script_test_cases = [
             (0x0005, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
             (0x0008, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[93])])),
             (0x000B, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='CONST.4', ops=[1]), MockLLIL(op='CONST.4', ops=[1])])),
-            (0x0012, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[0])])),
-            (0x0015, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[200])])),
-            (0x0018, mintrinsic('room_ops.room_screen', outputs=[], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
+            (0x0012, mintrinsic('room_ops.room_screen', outputs=[], params=[MockLLIL(op='CONST.4', ops=[200]), MockLLIL(op='CONST.4', ops=[0])])),
             (0x001A, mintrinsic('stop_object_code1', outputs=[], params=[])),
             (0x001A, MockLLIL(op='NORET', ops=[])),
         ],

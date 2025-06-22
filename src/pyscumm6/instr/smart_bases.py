@@ -361,16 +361,61 @@ class SmartVariableOp(Instruction):
             decremented_value = il.sub(4, current_value, il.const(4, 1))
             il.append(vars.il_set_var(il, self.op_details.body, decremented_value))
 
-class SmartComplexOp(Instruction):
+class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
     """Unified complex operation handler."""
     
     _name: str
     _config: ComplexConfig
+    
+    def __init__(self, kaitai_op: Any, length: int) -> None:
+        super().__init__(kaitai_op, length)
+        self.fused_operands: List['Instruction'] = []
 
     @property
     def stack_pop_count(self) -> int:
         """Number of values this instruction pops from the stack."""
+        if self.fused_operands:
+            return 0  # Fused instructions handle their own operands
         return getattr(self.op_details.body.body, "pop_count", 0)
+    
+    def _get_max_operands(self) -> int:
+        """Return the maximum number of operands this instruction can fuse."""
+        return getattr(self.op_details.body.body, "pop_count", 0)
+    
+    def fuse(self, previous: Instruction) -> Optional['SmartComplexOp']:
+        """Attempt to fuse with previous instruction."""
+        # Use the mixin's standard fusion logic
+        return cast(Optional['SmartComplexOp'], self._standard_fuse(previous))
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(f"var_{operand.op_details.body.data}")]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return [TInt(str(operand.op_details.body.data))]
+        elif operand.produces_result():
+            # This is a result-producing instruction (like a fused expression)
+            # Render it as a nested expression with parentheses
+            tokens: List[Token] = []
+            tokens.append(TText("("))
+            tokens.extend(operand.render())
+            tokens.append(TText(")"))
+            return tokens
+        else:
+            return [TText("operand")]
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return il.reg(4, f"var_{operand.op_details.body.data}")
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return il.const(4, operand.op_details.body.data)
+        elif operand.produces_result():
+            # Complex case: would need to execute operand's lift method
+            # For now, use placeholder - future enhancement needed
+            return il.const(4, 0)  # Placeholder
+        else:
+            return il.const(4, 0)  # Placeholder
 
     def render(self) -> List[Token]:
         subop = self.op_details.body.subop
@@ -389,6 +434,17 @@ class SmartComplexOp(Instruction):
         
         # Apply descumm-style function name mapping
         display_name = DESCUMM_FUNCTION_NAMES.get(full_name, full_name)
+        
+        # Handle fused operands
+        if self.fused_operands:
+            tokens = [TInstr(display_name), TSep("(")]
+            # Render operands in reverse order (stack semantics)
+            for i, operand in enumerate(reversed(self.fused_operands)):
+                if i > 0:
+                    tokens.append(TSep(", "))
+                tokens.extend(self._render_operand(operand))
+            tokens.append(TSep(")"))
+            return tokens
         
         # Add parentheses for function call syntax consistency
         if hasattr(self.op_details.body.body, "pop_count") and self.op_details.body.body.pop_count > 0:
@@ -425,7 +481,13 @@ class SmartComplexOp(Instruction):
         push_count = getattr(subop_body, "push_count", 0)
         
         # Pop arguments and call intrinsic
-        params = [il.pop(4) for _ in range(pop_count)]
+        if self.fused_operands:
+            # Use fused operands in reverse order (stack semantics)
+            params = []
+            for operand in reversed(self.fused_operands):
+                params.append(self._lift_operand(il, operand))
+        else:
+            params = [il.pop(4) for _ in range(pop_count)]
         
         if push_count > 0:
             il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
