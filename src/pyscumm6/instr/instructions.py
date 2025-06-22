@@ -910,6 +910,20 @@ class IfClassOfIs(Instruction):
 class PrintDebug(Instruction):
     """Print debug with text parameter."""
     
+    def _extract_message_text(self, message: Any) -> str:
+        """Extract text from a SCUMM6 Message object."""
+        text_chars = []
+        for part in message.parts:
+            if hasattr(part, 'data') and part.data != 0:  # Skip terminator
+                if hasattr(part, 'content'):
+                    # Check if it's a RegularChar
+                    if hasattr(part.content, 'value'):
+                        # Convert byte value to character
+                        char_value = part.content.value
+                        if isinstance(char_value, int) and 32 <= char_value <= 126:  # Printable ASCII
+                            text_chars.append(chr(char_value))
+        return ''.join(text_chars)
+    
     def render(self) -> List[Token]:
         # Check if this instruction contains a message
         from ...scumm6_opcodes import Scumm6Opcodes
@@ -918,8 +932,13 @@ class PrintDebug(Instruction):
             # This is a Print structure with a subop
             if (self.op_details.body.subop == Scumm6Opcodes.SubopType.textstring and 
                 isinstance(self.op_details.body.body, Scumm6Opcodes.Message)):
-                # Parse the message to extract text - but show ellipsis for descumm compatibility
-                return [TInstr("printDebug"), TText(".msg("), TText("..."), TText(")")]
+                # Extract the actual message text
+                message_text = self._extract_message_text(self.op_details.body.body)
+                if message_text:
+                    return [TInstr("printDebug"), TText(".msg("), TText(f'"{message_text}"'), TText(")")]
+                else:
+                    # Fallback to ellipsis if text extraction fails
+                    return [TInstr("printDebug"), TText(".msg("), TText("..."), TText(")")]
             else:
                 # Handle other subops like begin(), end(), etc.
                 subop_name = self.op_details.body.subop.name

@@ -281,7 +281,7 @@ script_test_cases = [
             [0035] push_word(1)
             [0038] setState(...)
             [0039] printDebug.begin()
-            [003B] printDebug.msg(...)
+            [003B] printDebug.msg(" ")
             [003F] goto +166
             [0042] push_word_var(var_1)
             [0045] dup
@@ -328,7 +328,7 @@ script_test_cases = [
             [002C] if !var_1 goto +7
             [0032] setState(var_1, 1)
             [0039] printDebug.begin()
-            [003B] printDebug.msg(...)
+            [003B] printDebug.msg(" ")
             [003F] goto +166
             [0042] push_word_var(var_1)
             [0045] dup
@@ -559,4 +559,3 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     assert len(descumm_output.strip()) > 0, f"descumm produced no output for '{case.script_name}'"
     assert len(disasm_output.strip()) > 0, f"SCUMM6 produced no output for '{case.script_name}'"
     assert len(disasm_fusion_output.strip()) > 0, f"SCUMM6 with fusion produced no output for '{case.script_name}'"
-
