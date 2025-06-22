@@ -21,9 +21,9 @@ Create a terminal user interface (TUI) application to visualize and analyze sema
   - Left: descumm output
   - Middle: pyscumm6 with fusion
   - Right: pyscumm6 without fusion
-- [ ] Synchronized scrolling between panels
-- [ ] Highlight differences between descumm and fused output
-- [ ] Show line-by-line alignment where possible
+- [x] Synchronized scrolling between panels
+- [x] Highlight differences between descumm and fused output
+- [x] Show line-by-line alignment where possible
 
 #### 3. Navigation
 - [x] Arrow keys to navigate script list
@@ -103,9 +103,7 @@ Create a terminal user interface (TUI) application to visualize and analyze sema
 
 ### Known Issues
 - [ ] Large scripts may be slow to process
-- [ ] Some string formatting differences not yet normalized (stopObjectCodeA vs stop_object_code1)
-- [ ] Scrolling synchronization between panels not implemented
-- [ ] Diff highlighting not implemented
+- [ ] Some string formatting differences not yet normalized (stopObjectCodeA vs stop_object_code1) - partially addressed in diff normalization
 
 ### Future Enhancements
 - [ ] Support for other SCUMM games/versions

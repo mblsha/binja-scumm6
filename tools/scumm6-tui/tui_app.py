@@ -19,39 +19,72 @@ from textual import events
 from textual.widget import Widget
 from textual.message import Message
 
+# Import our enhanced diff widgets
+try:
+    from .diff_widgets import DiffPanelContainer, SynchronizedScrollView
+except ImportError:
+    from diff_widgets import DiffPanelContainer, SynchronizedScrollView
+
 
 class DiffScreen(Screen):
     """Detailed diff view showing three panels of disassembly."""
     
     BINDINGS = [
         Binding("escape", "pop_screen", "Back to list"),
+        Binding("h", "toggle_highlight", "Toggle highlighting"),
+        Binding("s", "toggle_sync", "Toggle sync scrolling"),
     ]
     
     def __init__(self, comparison):
         super().__init__()
         self.comparison = comparison
+        self.sync_enabled = True
+        self.highlight_enabled = True
         
     def compose(self) -> ComposeResult:
         """Create the UI layout."""
         yield Header()
         yield Container(
             Vertical(
-                Label(f"Script: {self.comparison.name}", id="script-name"),
+                Label(f"Script: {self.comparison.name} | Match: {self.comparison.match_score:.0%}", id="script-name"),
                 Horizontal(
                     Vertical(
-                        Label("descumm", classes="panel-header"),
-                        Static(self.comparison.descumm_output, id="descumm-panel", classes="diff-panel"),
-                        classes="panel-container",
+                        Label("descumm (reference)", classes="panel-header reference-header"),
+                        DiffPanelContainer(
+                            "descumm",
+                            self.comparison.descumm_output,
+                            panel_type="reference",
+                            sync_group="diff" if self.sync_enabled else None,
+                            classes="panel-container",
+                            id="descumm-panel"
+                        ),
+                        classes="panel-wrapper",
                     ),
                     Vertical(
-                        Label("pyscumm6 (fused)", classes="panel-header"),
-                        Static(self.comparison.fused_output, id="fused-panel", classes="diff-panel"),
-                        classes="panel-container",
+                        Label("pyscumm6 (fused)", classes="panel-header fused-header"),
+                        DiffPanelContainer(
+                            "fused",
+                            self.comparison.fused_output,
+                            reference_content=self.comparison.descumm_output if self.highlight_enabled else None,
+                            panel_type="comparison",
+                            sync_group="diff" if self.sync_enabled else None,
+                            classes="panel-container",
+                            id="fused-panel"
+                        ),
+                        classes="panel-wrapper",
                     ),
                     Vertical(
-                        Label("pyscumm6 (raw)", classes="panel-header"),
-                        Static(self.comparison.raw_output, id="raw-panel", classes="diff-panel"),
-                        classes="panel-container",
+                        Label("pyscumm6 (raw)", classes="panel-header raw-header"),
+                        DiffPanelContainer(
+                            "raw",
+                            self.comparison.raw_output,
+                            reference_content=self.comparison.descumm_output if self.highlight_enabled else None,
+                            panel_type="comparison",
+                            sync_group="diff" if self.sync_enabled else None,
+                            classes="panel-container",
+                            id="raw-panel"
+                        ),
+                        classes="panel-wrapper",
                     ),
                     id="panels",
                 ),
@@ -59,6 +92,18 @@ class DiffScreen(Screen):
             )
         )
         yield Footer()
+    
+    def action_toggle_highlight(self) -> None:
+        """Toggle difference highlighting."""
+        self.highlight_enabled = not self.highlight_enabled
+        self.refresh()
+        self.notify(f"Highlighting {'enabled' if self.highlight_enabled else 'disabled'}")
+    
+    def action_toggle_sync(self) -> None:
+        """Toggle synchronized scrolling."""
+        self.sync_enabled = not self.sync_enabled
+        self.refresh()
+        self.notify(f"Synchronized scrolling {'enabled' if self.sync_enabled else 'disabled'}")
 
 
 class ScriptListItem(ListItem):
@@ -146,31 +191,53 @@ class Scumm6ComparisonApp(App):
         text-align: center;
         text-style: bold;
         background: $surface;
+        padding: 0 1;
     }
     
     #panels {
         height: 100%;
     }
     
-    .panel-container {
+    .panel-wrapper {
         width: 1fr;
         height: 100%;
-        border: solid $primary;
         margin: 0 1;
     }
     
+    .panel-container {
+        height: 100%;
+        border: solid $primary;
+    }
+    
     .panel-header {
-        height: 1;
+        height: 2;
         text-align: center;
         text-style: bold;
+        padding: 0 1;
+    }
+    
+    .reference-header {
+        background: $success;
+        color: $text;
+    }
+    
+    .fused-header {
         background: $primary;
         color: $text;
     }
     
-    .diff-panel {
+    .raw-header {
+        background: $secondary;
+        color: $text;
+    }
+    
+    SynchronizedScrollView {
         height: 100%;
-        overflow-y: scroll;
-        padding: 0 1;
+        scrollbar-size: 1 1;
+    }
+    
+    HighlightedDiffPanel {
+        padding: 1;
     }
     """
     

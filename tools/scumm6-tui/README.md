@@ -51,12 +51,34 @@ python tools/scumm6-tui/scumm6_compare.py
 
 ## TUI Navigation
 
+### Main Screen
 - **Arrow keys**: Navigate script list
 - **Enter**: Open detailed comparison view
-- **ESC**: Go back / Cancel search
+- **ESC**: Cancel search
 - **/**: Search scripts by name
 - **q**: Quit application
 - **r**: Refresh all comparisons
+
+### Diff View
+- **ESC**: Return to script list
+- **h**: Toggle difference highlighting
+- **s**: Toggle synchronized scrolling
+- **Arrow keys / Page Up/Down**: Scroll through diff
+
+## Advanced Diff Features
+
+### Synchronized Scrolling
+All three panels scroll together, making it easy to compare the same section across different disassemblers.
+
+### Difference Highlighting
+- **Green**: Lines added in pyscumm6
+- **Red**: Lines with major differences
+- **Yellow**: Lines with moderate differences
+- **Cyan**: Lines with minor differences
+- **White**: Matching lines
+
+### Line Alignment
+The diff view automatically aligns corresponding lines across panels, inserting blank lines where needed to maintain visual correspondence.
 
 ## Understanding the Results
 
