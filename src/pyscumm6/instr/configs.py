@@ -120,7 +120,7 @@ INTRINSIC_CONFIGS: Dict[str, IntrinsicConfig] = {
     
     # Actor Movement Operations
     "face_actor": action_op(1, "Face actor"),
-    "animate_actor": action_op(1, "Animate actor"),
+    "animate_actor": action_op(2, "Animate actor"),
     "walk_actor_to_obj": action_op(3, "Walk actor to object"),
     "walk_actor_to": action_op(3, "Walk actor to position"),
     "put_actor_at_xy": action_op(4, "Put actor at coordinates"),

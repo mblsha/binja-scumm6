@@ -834,6 +834,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output="[0000] delayFrames(4)",
     ),
+    ScriptComparisonTestCase(
+        test_id="animate_actor_simple",
+        bytecode=bytes([0x01, 0x0A, 0x00, 0x01, 0xFA, 0x00, 0x82]),
+        expected_descumm_output=dedent("""
+            [0000] (82) animateActor(10,250)
+            END
+        """).strip(),
+        expected_disasm_fusion_output="[0000] animateActor(10, 250)",
+    ),
 ]
 
 
