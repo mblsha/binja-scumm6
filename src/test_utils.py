@@ -252,7 +252,6 @@ def run_scumm6_disassembler_with_fusion_details(bytecode: bytes, start_addr: int
         if instruction.fused_operands:
             # Calculate the exact offsets of raw instructions that were fused
             raw_offsets = []
-            current_offset = offset
             
             # Decode the same bytecode without fusion to find raw instruction boundaries
             temp_offset = 0

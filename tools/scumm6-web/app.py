@@ -15,7 +15,7 @@ import difflib
 import re
 from dataclasses import dataclass, asdict
 
-from flask import Flask, render_template, jsonify, request, session
+from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 
 # Add parent directory to path for imports
@@ -25,9 +25,9 @@ sys.path.insert(0, plugin_root)
 # Set mock environment before any Binary Ninja imports
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-import src.container as container_module
-from src.container import ScriptAddr, State
-from src.test_utils import run_descumm_on_bytecode, run_scumm6_disassembler, run_scumm6_disassembler_with_fusion, run_scumm6_disassembler_with_fusion_details
+import src.container as container_module  # noqa: E402
+from src.container import ScriptAddr, State  # noqa: E402
+from src.test_utils import run_descumm_on_bytecode, run_scumm6_disassembler, run_scumm6_disassembler_with_fusion_details  # noqa: E402
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -487,8 +487,6 @@ def generate_test_case():
             return jsonify({'error': 'No data provided'}), 400
         
         # Extract data
-        script_name = data.get('script_name', 'unknown')
-        address = data.get('address', '0x0000')
         bytecode_hex = data.get('bytecode_hex', '')
         expected_fused = data.get('expected_fused_output', '')
         descumm_output = data.get('descumm_output', '')

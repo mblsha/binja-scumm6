@@ -3,7 +3,6 @@
 Verify the Flask app setup without requiring Flask to be installed.
 """
 
-import os
 import sys
 from pathlib import Path
 

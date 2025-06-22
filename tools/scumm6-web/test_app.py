@@ -8,7 +8,6 @@ import sys
 import json
 import unittest
 from pathlib import Path
-import tempfile
 import time
 
 # Add current directory to path for app import
@@ -216,7 +215,6 @@ def run_integration_test():
     
     import subprocess
     import requests
-    import time
     
     # Start the Flask server in a subprocess
     print("Starting Flask server...")
@@ -273,7 +271,7 @@ if __name__ == '__main__':
     
     # Run integration test if requests is available
     try:
-        import requests
+        import requests  # noqa: F401
         run_integration_test()
     except ImportError:
         print("\nSkipping integration test (requests module not available)")
