@@ -1,0 +1,3 @@
+# SCUMM6 TUI Requirements
+textual>=0.41.0
+plumbum>=1.8.0

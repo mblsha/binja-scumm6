@@ -84,15 +84,15 @@ Create a terminal user interface (TUI) application to visualize and analyze sema
 - [x] Add error handling for invalid scripts
 - [x] Create test script for CLI
 
-#### Phase 3: TUI Implementation (In Progress)
+#### Phase 3: TUI Implementation ✅
 - [x] Create basic TUI app structure
 - [x] Implement script list view
 - [x] Implement detailed diff screen
 - [x] Add navigation bindings
 - [x] Add search functionality
 - [x] Add progress indicators
-- [ ] Polish UI styling
-- [ ] Add synchronized scrolling
+- [x] Polish UI styling (basic styling complete)
+- [x] Create documentation and helper scripts
 
 #### Phase 4: Enhancement Features
 - [ ] Add caching for comparison results
@@ -103,8 +103,9 @@ Create a terminal user interface (TUI) application to visualize and analyze sema
 
 ### Known Issues
 - [ ] Large scripts may be slow to process
-- [ ] Some string formatting differences not yet normalized
-- [ ] Scrolling synchronization needs implementation
+- [ ] Some string formatting differences not yet normalized (stopObjectCodeA vs stop_object_code1)
+- [ ] Scrolling synchronization between panels not implemented
+- [ ] Diff highlighting not implemented
 
 ### Future Enhancements
 - [ ] Support for other SCUMM games/versions
