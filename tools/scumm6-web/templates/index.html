@@ -269,8 +269,8 @@
         
         .fusion-span-highlight {
             background-color: rgba(156, 39, 176, 0.2) !important;
-            border-left: 3px solid #9c27b0;
-            padding-left: 0.5rem;
+            border-left: 3px solid #9c27b0 !important;
+            padding-left: 0.5rem !important;
         }
         
         /* Analysis Panel Styles */
@@ -901,9 +901,14 @@
                 }
             });
             
-            // If hovering in fused or descumm panel, highlight fusion span in raw panel
-            if ((e.target.closest('#fusedPanel') || e.target.closest('#descummPanel')) && window.currentFusionSpans) {
+            // If hovering in fused panel, highlight fusion span in raw panel
+            if (e.target.closest('#fusedPanel') && window.currentFusionSpans) {
                 highlightFusionSpan(address);
+            }
+            
+            // If hovering in descumm panel, highlight corresponding fused instructions
+            if (e.target.closest('#descummPanel')) {
+                highlightCorrespondingFusedInstructions(address);
             }
             
             // If hovering in raw panel, highlight corresponding fused instructions
@@ -965,6 +970,58 @@
                     const elemAddr = parseInt(elem.dataset.address, 16);
                     // Check if this fused address is the start of any related span
                     if (relatedSpans.some(span => span.start_offset === elemAddr)) {
+                        elem.closest('div').classList.add('fusion-span-highlight');
+                    }
+                });
+            }
+        }
+        
+        // Highlight fused instructions corresponding to a descumm instruction
+        function highlightCorrespondingFusedInstructions(descummAddress) {
+            const addr = parseInt(descummAddress, 16);
+            
+            // For descumm, we need to find all fused instructions that together
+            // correspond to this single descumm instruction
+            // This includes both fused and non-fused instructions in a range
+            
+            const fusedAddresses = fusedPanel.querySelectorAll('[data-address]');
+            let nextDescummAddr = null;
+            
+            // Find the next descumm address after the current one
+            const descummAddresses = descummPanel.querySelectorAll('[data-address]');
+            let foundCurrent = false;
+            descummAddresses.forEach(elem => {
+                const elemAddr = parseInt(elem.dataset.address, 16);
+                if (foundCurrent && nextDescummAddr === null) {
+                    nextDescummAddr = elemAddr;
+                }
+                if (elemAddr === addr) {
+                    foundCurrent = true;
+                }
+            });
+            
+            // Highlight all fused instructions from current address to next descumm address
+            const highlightedAddresses = [];
+            fusedAddresses.forEach(elem => {
+                const elemAddr = parseInt(elem.dataset.address, 16);
+                
+                // Highlight if address is >= current and < next (or to end if no next)
+                if (elemAddr >= addr && (nextDescummAddr === null || elemAddr < nextDescummAddr)) {
+                    elem.closest('div').classList.add('fusion-span-highlight');
+                    highlightedAddresses.push(elemAddr);
+                }
+            });
+            
+            // Also highlight corresponding raw instructions for the entire range
+            if (highlightedAddresses.length > 0 && window.currentFusionSpans) {
+                const startAddr = highlightedAddresses[0];
+                const endAddr = nextDescummAddr || (highlightedAddresses[highlightedAddresses.length - 1] + 100); // Estimate end
+                
+                const rawAddresses = rawPanel.querySelectorAll('[data-address]');
+                rawAddresses.forEach(elem => {
+                    const elemAddr = parseInt(elem.dataset.address, 16);
+                    // Highlight raw instructions in the same range
+                    if (elemAddr >= startAddr && elemAddr < endAddr) {
                         elem.closest('div').classList.add('fusion-span-highlight');
                     }
                 });
