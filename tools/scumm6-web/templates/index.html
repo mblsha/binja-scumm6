@@ -1259,6 +1259,86 @@
             return extractedBytes.join(' ');
         }
         
+        // Extract bytecode for a descumm address (includes all corresponding raw instructions)
+        function extractBytecodeForDescummAddress(descummAddress, bytecodeHex) {
+            if (!bytecodeHex) {
+                console.log('No bytecode hex available');
+                return '';
+            }
+            
+            const addr = parseInt(descummAddress, 16);
+            const allBytes = bytecodeHex.split(' ');
+            
+            // Find the next descumm address after the current one
+            const descummAddresses = descummPanel.querySelectorAll('[data-address]');
+            let nextDescummAddr = null;
+            let foundCurrent = false;
+            
+            descummAddresses.forEach(elem => {
+                const elemAddr = parseInt(elem.dataset.address, 16);
+                if (foundCurrent && nextDescummAddr === null) {
+                    nextDescummAddr = elemAddr;
+                }
+                if (elemAddr === addr) {
+                    foundCurrent = true;
+                }
+            });
+            
+            // Find all raw addresses that should be included
+            const rawAddresses = rawPanel.querySelectorAll('[data-address]');
+            let minRawAddr = null;
+            let maxRawAddr = null;
+            
+            rawAddresses.forEach(elem => {
+                const elemAddr = parseInt(elem.dataset.address, 16);
+                
+                // Include if address is >= current descumm and < next descumm (or to end if no next)
+                if (elemAddr >= addr && (nextDescummAddr === null || elemAddr < nextDescummAddr)) {
+                    if (minRawAddr === null || elemAddr < minRawAddr) {
+                        minRawAddr = elemAddr;
+                    }
+                    if (maxRawAddr === null || elemAddr > maxRawAddr) {
+                        maxRawAddr = elemAddr;
+                    }
+                }
+            });
+            
+            if (minRawAddr === null || maxRawAddr === null) {
+                console.log('No raw addresses found for descumm address:', descummAddress);
+                return extractBytecodeForAddress(descummAddress, bytecodeHex);
+            }
+            
+            // Find the last instruction's end by looking at the next address after maxRawAddr
+            let endAddr = maxRawAddr;
+            rawAddresses.forEach(elem => {
+                const elemAddr = parseInt(elem.dataset.address, 16);
+                if (elemAddr > maxRawAddr) {
+                    if (endAddr === maxRawAddr || elemAddr < endAddr) {
+                        endAddr = elemAddr;
+                    }
+                }
+            });
+            
+            // If we didn't find a next address, estimate the end
+            if (endAddr === maxRawAddr) {
+                endAddr = maxRawAddr + 20; // Max 20 bytes for last instruction
+            }
+            
+            // Extract all bytes from minRawAddr to endAddr
+            const extractedBytes = allBytes.slice(minRawAddr, endAddr);
+            
+            console.log('Extracting bytecode for descumm address:', {
+                descummAddress,
+                minRawAddr,
+                maxRawAddr,
+                endAddr,
+                totalBytes: allBytes.length,
+                extracted: extractedBytes.join(' ')
+            });
+            
+            return extractedBytes.join(' ');
+        }
+        
         // Open analysis panel for a clicked line
         async function openAnalysisPanel(address, lineElement, panelIndex) {
             // Store current analysis data
@@ -1290,8 +1370,18 @@
                     deleteNoteBtn.style.display = 'inline-block';
                 } else {
                     currentNoteId = null;
-                    // Extract bytecode using stored hex
-                    panelBytecode.value = extractBytecodeForAddress(address, window.currentBytecodeHex);
+                    // Extract bytecode - check if we clicked on descumm panel
+                    let bytecodeToExtract = '';
+                    
+                    if (panelIndex === 0) { // Descumm panel
+                        // Extract bytecode for all highlighted raw instructions
+                        bytecodeToExtract = extractBytecodeForDescummAddress(address, window.currentBytecodeHex);
+                    } else {
+                        // Extract bytecode for single address
+                        bytecodeToExtract = extractBytecodeForAddress(address, window.currentBytecodeHex);
+                    }
+                    
+                    panelBytecode.value = bytecodeToExtract;
                     panelExpectedOutput.value = '';
                     panelNotes.value = '';
                     deleteNoteBtn.style.display = 'none';
@@ -1299,7 +1389,14 @@
             } catch (error) {
                 console.error('Failed to load notes:', error);
                 currentNoteId = null;
-                panelBytecode.value = extractBytecodeForAddress(address, window.currentBytecodeHex);
+                // Same logic for error case
+                let bytecodeToExtract = '';
+                if (panelIndex === 0) { // Descumm panel
+                    bytecodeToExtract = extractBytecodeForDescummAddress(address, window.currentBytecodeHex);
+                } else {
+                    bytecodeToExtract = extractBytecodeForAddress(address, window.currentBytecodeHex);
+                }
+                panelBytecode.value = bytecodeToExtract;
                 panelExpectedOutput.value = '';
                 panelNotes.value = '';
                 deleteNoteBtn.style.display = 'none';
@@ -1394,10 +1491,18 @@
         saveNoteBtn.addEventListener('click', async () => {
             if (!currentAnalysisData) return;
             
+            // Extract original bytecode based on panel type
+            let originalBytecode = '';
+            if (currentAnalysisData.panel_index === 0) { // Descumm panel
+                originalBytecode = extractBytecodeForDescummAddress(currentAnalysisData.address, window.currentBytecodeHex);
+            } else {
+                originalBytecode = extractBytecodeForAddress(currentAnalysisData.address, window.currentBytecodeHex);
+            }
+            
             const noteData = {
                 script_name: currentAnalysisData.script_name,
                 address: currentAnalysisData.address,
-                original_bytes_hex: extractBytecodeForAddress(currentAnalysisData.address, window.currentBytecodeHex),
+                original_bytes_hex: originalBytecode,
                 edited_bytes_hex: panelBytecode.value.trim(),
                 expected_fused_output: panelExpectedOutput.value.trim(),
                 user_notes: panelNotes.value.trim()
