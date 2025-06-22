@@ -1269,3 +1269,116 @@ expected_disasm_fusion_output=dedent("""
 5. **Skip Validation**: Don't assume improvements work without testing
 
 This methodology has proven effective for achieving measurable progress toward descumm-level output quality through systematic, data-driven improvement.
+
+## Enabling Fusion for Intrinsic Instructions
+
+When implementing instruction fusion for intrinsic operations that accept parameters, there's a critical configuration step that's easy to miss.
+
+### The Problem
+
+You may find that an intrinsic instruction like `is_script_running` doesn't fuse with push operations even though it should. The disassembly shows fusion working:
+
+```
+# Without fusion:
+[0000] push_word(137)
+[0003] isScriptRunning(...)
+
+# With fusion (disassembly):
+[0000] isScriptRunning(137)
+```
+
+But the LLIL still uses stack pops instead of direct parameters:
+
+```python
+# Expected LLIL with fusion:
+mintrinsic('is_script_running', outputs=[TEMP0], params=[CONST.4(137)])
+
+# Actual LLIL (fusion not working):
+mintrinsic('is_script_running', outputs=[TEMP0], params=[POP.4])
+```
+
+### The Root Cause
+
+The issue is in `src/pyscumm6/instr/factories.py`. The `create_intrinsic_instruction` function has a hardcoded list of fusible instructions:
+
+```python
+def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Instruction]:
+    # List of instructions that should support fusion
+    FUSIBLE_INSTRUCTIONS = {
+        "draw_object",
+        "start_script",
+        "walk_actor_to",
+        # ... other instructions
+    }
+    
+    # Choose base class based on whether instruction should support fusion
+    if name in FUSIBLE_INSTRUCTIONS:
+        base_class = SmartFusibleIntrinsic  # Supports fusion
+    else:
+        base_class = SmartIntrinsicOp       # No fusion support
+```
+
+Instructions not in this set are created with `SmartIntrinsicOp` which doesn't support fusion. Instructions in the set use `SmartFusibleIntrinsic` which has fusion capabilities.
+
+### The Solution
+
+Add your intrinsic to the `FUSIBLE_INSTRUCTIONS` set:
+
+```python
+FUSIBLE_INSTRUCTIONS = {
+    # ... existing instructions ...
+    "is_script_running",  # Add this line
+}
+```
+
+### How It Works
+
+1. **SmartIntrinsicOp**: Basic intrinsic with no fusion support
+   - Always pops parameters from stack
+   - Simpler implementation
+
+2. **SmartFusibleIntrinsic**: Enhanced intrinsic with fusion support
+   - Inherits from SmartIntrinsicOp and FusibleMultiOperandMixin
+   - Implements `fuse()` method to combine with push instructions
+   - Overrides `lift()` to use fused operands directly
+   - Reduces stack operations in generated LLIL
+
+### Testing the Fix
+
+After adding an intrinsic to `FUSIBLE_INSTRUCTIONS`, verify fusion works:
+
+```python
+# Test bytecode
+bytecode = bytes([
+    0x01, 0x89, 0x00,  # push_word(137)
+    0x8B,               # is_script_running
+])
+
+# Check disassembly shows fusion
+instruction = decode_with_fusion(bytecode, 0x0)
+assert instruction.__class__.__name__ == "IsScriptRunning"
+assert len(instruction.fused_operands) == 1
+assert instruction.stack_pop_count == 0  # No stack pops needed
+
+# Verify LLIL uses direct parameter
+# Should see: params=[MockLLIL(op='CONST.4', ops=[137])]
+# Not: params=[MockLLIL(op='POP.4', ops=[])]
+```
+
+### Common Fusible Intrinsics
+
+Intrinsics that typically benefit from fusion:
+- **Script operations**: `start_script`, `stop_script`, `is_script_running`
+- **Object operations**: `draw_object`, `set_state`, `get_object_x`
+- **Actor operations**: `walk_actor_to`, `put_actor_at_xy`, `animate_actor`
+- **Room operations**: `load_room`, `set_camera_at`
+- **Any intrinsic taking parameters**: If it pops values, it can likely fuse
+
+### Performance Impact
+
+Fusion improves both readability and performance:
+- **Fewer IL operations**: Direct parameters instead of push/pop sequences
+- **Better decompilation**: Binary Ninja can recognize patterns more easily
+- **Cleaner output**: `isScriptRunning(137)` is clearer than separate operations
+
+This simple configuration change enables significant improvements in IL quality for intrinsic operations.
