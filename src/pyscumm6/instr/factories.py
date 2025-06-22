@@ -180,4 +180,10 @@ def generate_all_instructions() -> Dict[str, Type[Instruction]]:
     from . import instructions
     registry["print_debug"] = instructions.PrintDebug
     
+    # Override start_script_quick with custom implementation
+    from . import script_ops
+    # Set the config from the generated class
+    script_ops.StartScriptQuick._config = SEMANTIC_CONFIGS["start_script_quick"]
+    registry["start_script_quick"] = script_ops.StartScriptQuick
+    
     return registry

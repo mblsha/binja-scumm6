@@ -181,8 +181,7 @@ script_test_cases = [
             [0000] isScriptRunning(137)
             [0004] nott
             [0005] unless goto +18
-            [0008] push_word(93)
-            [000B] startScriptQuick(1, 1)
+            [0008] startScriptQuick(93, [1])
             [0012] roomOps.setScreen(0, 200)
             [001A] stopObjectCodeA()
         """).strip(),
@@ -210,8 +209,7 @@ script_test_cases = [
             (0x0004, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
             (0x0004, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CMP_E.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')]), MockLLIL(op='CONST.4', ops=[0])])])),
             (0x0005, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
-            (0x0008, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[93])])),
-            (0x000B, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='CONST.4', ops=[1]), MockLLIL(op='CONST.4', ops=[1])])),
+            (0x0008, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='CONST.4', ops=[93]), MockLLIL(op='CONST.4', ops=[1]), MockLLIL(op='CONST.4', ops=[1])])),
             (0x0012, mintrinsic('room_ops.room_screen', outputs=[], params=[MockLLIL(op='CONST.4', ops=[0]), MockLLIL(op='CONST.4', ops=[200])])),
             (0x001A, mintrinsic('stop_object_code1', outputs=[], params=[])),
             (0x001A, MockLLIL(op='NORET', ops=[])),
