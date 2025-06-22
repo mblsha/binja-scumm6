@@ -152,6 +152,143 @@ script_test_cases = [
             [01CE] (66) stopObjectCodeB()
             END
         """).strip(),
+        expected_disasm_output=dedent("""
+            [0000] push_word_var(var_0)
+            [0003] getObjectX(...)
+            [0004] push_word_var(var_1)
+            [0007] sub
+            [0008] write_word_var(var_5)
+            [000B] push_word_var(var_0)
+            [000E] getObjectY(...)
+            [000F] push_word_var(var_2)
+            [0012] sub
+            [0013] write_word_var(var_6)
+            [0016] push_word_var(var_5)
+            [0019] abs
+            [001A] write_word_var(var_5)
+            [001D] push_word_var(var_6)
+            [0020] abs
+            [0021] write_word_var(var_6)
+            [0024] push_word_var(var_5)
+            [0027] push_word_var(var_3)
+            [002A] gt
+            [002B] unless goto +10
+            [002E] push_word(0)
+            [0031] write_word_var(var_137)
+            [0034] push_word(0)
+            [0037] stopScript(...)
+            [0038] push_word_var(var_6)
+            [003B] push_word_var(var_4)
+            [003E] gt
+            [003F] unless goto +10
+            [0042] push_word(0)
+            [0045] write_word_var(var_137)
+            [0048] push_word(0)
+            [004B] stopScript(...)
+            [004C] push_word_var(var_5)
+            [004F] push_word_var(var_5)
+            [0052] mul
+            [0053] write_word_var(var_7)
+            [0056] push_word_var(var_6)
+            [0059] push_word_var(var_6)
+            [005C] mul
+            [005D] write_word_var(var_8)
+            [0060] push_word_var(var_7)
+            [0063] push_word(0)
+            [0066] lt
+            [0067] unless goto +42
+            [006A] printDebug.begin()
+            [006C] printDebug.msg("x2 value overflowing in ellipse check")
+            [0094] push_word_var(var_8)
+            [0097] push_word(0)
+            [009A] lt
+            [009B] unless goto +42
+            [009E] printDebug.begin()
+            [00A0] printDebug.msg("y2 value overflowing in ellipse check")
+            [00C8] push_word(1)
+            [00CB] write_word_var(var_11)
+            [00CE] push_word(0)
+            [00D1] write_word_var(var_12)
+            [00D4] push_word_var(var_7)
+            [00D7] push_word(4000)
+            [00DA] le
+            [00DB] unless goto +13
+            [00DE] push_word_var(var_7)
+            [00E1] push_word(4)
+            [00E4] mul
+            [00E5] write_word_var(var_7)
+            [00E8] goto +10
+            [00EB] push_word_var(var_3)
+            [00EE] push_word(2)
+            [00F1] div
+            [00F2] write_word_var(var_3)
+            [00F5] push_word_var(var_8)
+            [00F8] push_word(4000)
+            [00FB] le
+            [00FC] unless goto +13
+            [00FF] push_word_var(var_8)
+            [0102] push_word(4)
+            [0105] mul
+            [0106] write_word_var(var_8)
+            [0109] goto +10
+            [010C] push_word_var(var_4)
+            [010F] push_word(2)
+            [0112] div
+            [0113] write_word_var(var_4)
+            [0116] push_word_var(var_11)
+            [0119] push_word(4)
+            [011C] mul
+            [011D] write_word_var(var_11)
+            [0120] push_word_var(var_11)
+            [0123] push_word(64)
+            [0126] ge
+            [0127] unless goto +6
+            [012A] push_word(1)
+            [012D] write_word_var(var_12)
+            [0130] push_word_var(var_12)
+            [0133] unless goto -98
+            [0136] push_word_var(var_3)
+            [0139] push_word(0)
+            [013C] eq
+            [013D] unless goto +38
+            [0140] push_word(1)
+            [0143] write_word_var(var_3)
+            [0146] printDebug.begin()
+            [0148] printDebug.msg("very skinny ellipse warning")
+            [0166] push_word_var(var_4)
+            [0169] push_word(0)
+            [016C] eq
+            [016D] unless goto +36
+            [0170] push_word(1)
+            [0173] write_word_var(var_4)
+            [0176] printDebug.begin()
+            [0178] printDebug.msg("very flat ellipse warning")
+            [0194] push_word_var(var_7)
+            [0197] push_word_var(var_3)
+            [019A] push_word_var(var_3)
+            [019D] mul
+            [019E] div
+            [019F] push_word_var(var_8)
+            [01A2] push_word_var(var_4)
+            [01A5] push_word_var(var_4)
+            [01A8] mul
+            [01A9] div
+            [01AA] add
+            [01AB] write_word_var(var_137)
+            [01AE] push_word_var(var_137)
+            [01B1] push_word(0)
+            [01B4] eq
+            [01B5] unless goto +6
+            [01B8] push_word(1)
+            [01BB] write_word_var(var_137)
+            [01BE] push_word_var(var_137)
+            [01C1] push_word_var(var_11)
+            [01C4] gt
+            [01C5] unless goto +6
+            [01C8] push_word(0)
+            [01CB] write_word_var(var_137)
+            [01CE] stopObjectCodeB()
+        """).strip(),
         expected_disasm_fusion_output=dedent("""
             [0000] push_word_var(var_0)
             [0003] getObjectX(...)
