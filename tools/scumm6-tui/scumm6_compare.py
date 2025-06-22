@@ -48,7 +48,7 @@ class DataProvider:
         self.scripts: List[ScriptAddr] = []
         self.state: Optional[State] = None
         self.bsc6_data: bytes = b""
-        self.descumm_path: descumm_path
+        self.descumm_path = descumm_path
         self.bsc6_path = bsc6_path
         self.comparisons: Dict[str, ScriptComparison] = {}
         
@@ -227,7 +227,7 @@ class Scumm6CompareApp(cli.Application):
     show_diff = cli.Flag(
         ["d", "diff"], 
         help="Show side-by-side diff (use with --compare)",
-        requires=["compare_script"]
+        requires=["compare"]
     )
     bsc6_path = cli.SwitchAttr(
         ["b", "bsc6-path"],
