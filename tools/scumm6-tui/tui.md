@@ -93,6 +93,7 @@ Create a terminal user interface (TUI) application to visualize and analyze sema
 - [x] Add progress indicators
 - [x] Polish UI styling (basic styling complete)
 - [x] Create documentation and helper scripts
+- [x] Add loading screen with script analysis progress
 
 #### Phase 4: Enhancement Features
 - [ ] Add caching for comparison results

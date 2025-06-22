@@ -8,16 +8,90 @@ disassembly differences.
 
 
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical, Container
-from textual.widgets import Header, Footer, ListView, ListItem, Label, Input
-from textual.screen import Screen
+from textual.containers import Horizontal, Vertical, Container, Center, Middle
+from textual.widgets import Header, Footer, ListView, ListItem, Label, Input, ProgressBar, Static
+from textual.screen import Screen, ModalScreen
 from textual.binding import Binding
+from textual.worker import Worker, get_current_worker
 
 # Import our enhanced diff widgets
 try:
     from .diff_widgets import DiffPanelContainer
 except ImportError:
     from diff_widgets import DiffPanelContainer
+
+
+class LoadingScreen(ModalScreen):
+    """Modal screen showing progress while loading scripts."""
+    
+    CSS = """
+    LoadingScreen {
+        align: center middle;
+    }
+    
+    #loading-container {
+        background: $surface;
+        border: solid $primary;
+        padding: 2 4;
+        width: 60;
+        height: 12;
+    }
+    
+    #loading-title {
+        text-align: center;
+        text-style: bold;
+        margin-bottom: 1;
+    }
+    
+    #loading-status {
+        text-align: center;
+        margin-bottom: 1;
+    }
+    
+    #loading-current {
+        text-align: center;
+        color: $text-muted;
+        height: 3;
+    }
+    
+    ProgressBar {
+        margin: 1 0;
+    }
+    """
+    
+    def __init__(self):
+        super().__init__()
+        self.progress_bar = None
+        self.status_label = None
+        self.current_label = None
+        
+    def compose(self) -> ComposeResult:
+        """Create the loading screen layout."""
+        with Container(id="loading-container"):
+            yield Label("Loading SCUMM6 Scripts", id="loading-title")
+            yield Label("Initializing...", id="loading-status")
+            self.progress_bar = ProgressBar(total=100, show_eta=False)
+            yield self.progress_bar
+            yield Label("", id="loading-current")
+    
+    def on_mount(self) -> None:
+        """Store references when mounted."""
+        self.progress_bar = self.query_one(ProgressBar)
+        self.status_label = self.query_one("#loading-status", Label)
+        self.current_label = self.query_one("#loading-current", Label)
+    
+    def update_progress(self, current: int, total: int, script_name: str) -> None:
+        """Update the progress display."""
+        if total > 0:
+            self.progress_bar.total = total
+            self.progress_bar.progress = current
+            percentage = (current / total) * 100
+            self.status_label.update(f"Processing scripts: {current}/{total} ({percentage:.0f}%)")
+            
+            if script_name == "Complete":
+                self.current_label.update("✓ Analysis complete!")
+            else:
+                self.current_label.update(f"Analyzing: {script_name}")
 
 
 class DiffScreen(Screen):
@@ -251,25 +325,53 @@ class Scumm6ComparisonApp(App):
         
     def on_mount(self) -> None:
         """Initialize data when app mounts."""
-        self.load_data()
+        # Show loading screen and start background processing
+        self.loading_screen = LoadingScreen()
+        self.push_screen(self.loading_screen)
+        self.run_worker(self.process_scripts_worker(), exclusive=True)
         
-    def load_data(self) -> None:
-        """Load and process all script data."""
-        # Show loading state
-        list_view = self.query_one("#script-list", ListView)
-        list_view.loading = True
-        self.notify("Loading scripts...", title="Please wait")
+    async def process_scripts_worker(self) -> None:
+        """Process scripts in a background worker."""
+        worker = get_current_worker()
+        
+        def progress_callback(current, total, script_name):
+            # Update progress in the main thread
+            if not worker.is_cancelled:
+                self.call_from_thread(
+                    self.loading_screen.update_progress,
+                    current, total, script_name
+                )
         
         try:
-            self.data_provider.process_all_scripts()
-            list_view.loading = False
-            self.refresh_list()
-            self.notify(f"Loaded {len(self.data_provider.scripts)} scripts", 
-                       title="Success", severity="information")
+            # Process all scripts with progress updates
+            self.data_provider.process_all_scripts(progress_callback)
+            
+            # Update UI in main thread
+            self.call_from_thread(self.on_scripts_loaded)
+            
         except Exception as e:
-            list_view.loading = False
-            self.notify(f"Error loading data: {str(e)}", 
-                       title="Error", severity="error")
+            self.call_from_thread(self.on_scripts_error, str(e))
+    
+    def on_scripts_loaded(self) -> None:
+        """Called when all scripts have been processed."""
+        # Dismiss loading screen
+        self.pop_screen()
+        
+        # Refresh the list
+        self.refresh_list()
+        
+        # Show success notification
+        self.notify(f"Loaded {len(self.data_provider.scripts)} scripts", 
+                   title="Success", severity="information")
+    
+    def on_scripts_error(self, error_msg: str) -> None:
+        """Called when there's an error processing scripts."""
+        # Dismiss loading screen
+        self.pop_screen()
+        
+        # Show error
+        self.notify(f"Error loading data: {error_msg}", 
+                   title="Error", severity="error")
     
     def compose(self) -> ComposeResult:
         """Create the main UI layout."""
@@ -330,7 +432,13 @@ class Scumm6ComparisonApp(App):
     
     def action_refresh(self) -> None:
         """Refresh all data."""
-        self.load_data()
+        # Clear existing comparisons
+        self.data_provider.comparisons.clear()
+        
+        # Show loading screen and reprocess
+        self.loading_screen = LoadingScreen()
+        self.push_screen(self.loading_screen)
+        self.run_worker(self.process_scripts_worker(), exclusive=True)
     
     def action_search(self) -> None:
         """Activate search mode."""

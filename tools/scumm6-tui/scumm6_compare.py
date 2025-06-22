@@ -149,10 +149,16 @@ class DataProvider:
         self.comparisons[script.name] = comparison
         return comparison
     
-    def process_all_scripts(self) -> None:
+    def process_all_scripts(self, progress_callback=None) -> None:
         """Process all scripts in the container."""
-        for script in self.scripts:
+        total = len(self.scripts)
+        for i, script in enumerate(self.scripts):
+            if progress_callback:
+                progress_callback(i, total, script.name)
             self.process_script(script.name)
+        
+        if progress_callback:
+            progress_callback(total, total, "Complete")
     
     def _normalize_line(self, line: str) -> str:
         """Normalize a line for fuzzy matching."""

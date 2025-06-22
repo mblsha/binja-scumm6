@@ -5,6 +5,7 @@ A terminal user interface (TUI) and command-line tool for comparing disassembly 
 ## Features
 
 - **Interactive TUI**: Browse all scripts with real-time search and filtering
+- **Progress indicator**: Shows analysis progress for each script during startup
 - **Three-way comparison**: View descumm, pyscumm6 (fused), and pyscumm6 (raw) outputs side-by-side
 - **Fuzzy matching**: Smart comparison that handles formatting differences
 - **CLI mode**: Scriptable interface for automation and testing
