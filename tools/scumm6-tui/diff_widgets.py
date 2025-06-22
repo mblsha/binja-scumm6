@@ -13,7 +13,6 @@ from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual import events
 from rich.text import Text
 from rich.style import Style
 
@@ -67,7 +66,7 @@ class SynchronizedScrollView(ScrollableContainer):
         self.scroll_to(0, y, animate=False)
         self._is_syncing = False
     
-    def on_scroll(self, event: events.Scroll) -> None:
+    def on_scroll(self) -> None:
         """Update reactive property when scrolling."""
         self.scroll_y = self.scroll_offset.y
 

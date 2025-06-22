@@ -10,7 +10,8 @@ import os
 import sys
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+plugin_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.insert(0, plugin_root)
 
 # Set mock environment before any Binary Ninja imports
 os.environ["FORCE_BINJA_MOCK"] = "1"
@@ -24,9 +25,13 @@ import json
 
 from plumbum import cli
 
-# Import our modules
-from src.container import ContainerParser as Scumm6Disasm, ScriptAddr, State
+# Import our modules - use absolute imports from plugin root
+import src.container as container_module
+from src.container import ScriptAddr, State
 from src.test_utils import run_descumm_on_bytecode, run_scumm6_disassembler, run_scumm6_disassembler_with_fusion
+
+# Use the container parser
+Scumm6Disasm = container_module.ContainerParser
 
 
 @dataclass
