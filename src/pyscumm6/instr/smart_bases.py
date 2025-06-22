@@ -25,6 +25,7 @@ DESCUMM_FUNCTION_NAMES = {
     "animate_actor": "animateActor",
     "walk_actor_to": "walkActorTo",
     "put_actor_at_xy": "putActorAtXY",
+    "put_actor_in_xy": "putActorInXY",
     "face_actor": "faceActor",
     "start_sound": "startSound",
     "start_music": "startMusic", 
@@ -66,6 +67,13 @@ DESCUMM_FUNCTION_NAMES = {
     "print_debug.begin": "printDebug.begin",
     "print_debug.msg": "printDebug.msg",
     "room_ops.room_screen": "roomOps.setScreen",
+    # Actor operations subcommands
+    "actor_ops.set_current_actor": "actorOps.setCurActor",
+    "actor_ops.init": "actorOps.init",
+    "actor_ops.set_costume": "actorOps.setCostume", 
+    "actor_ops.ignore_boxes": "actorOps.setIgnoreBoxes",
+    "actor_ops.never_zclip": "actorOps.setNeverZClip",
+    "actor_ops.elevation": "actorOps.setElevation",
 }
 
 
