@@ -329,20 +329,17 @@ script_test_cases = [
             [0045] dup
             [0046] if condition goto +46
             [004D] pop1
-            [004E] push_word(3)
-            [0051] talkActor()
+            [004E] talkActor("Hmm.  This door appears to be locked.", 3)
             [0078] goto +109
             [007B] dup
             [007C] if condition goto +46
             [0083] pop1
-            [0084] push_word(1)
-            [0087] talkActor()
+            [0084] talkActor("Hmm.  This door appears to be locked.", 1)
             [00AE] goto +55
             [00B1] dup
             [00B2] if condition goto +46
             [00B9] pop1
-            [00BA] push_word(2)
-            [00BD] talkActor()
+            [00BA] talkActor("Hmm.  This door appears to be locked.", 2)
             [00E4] goto +1
             [00E7] pop1
             [00E8] stopObjectCodeB()
@@ -445,22 +442,19 @@ script_test_cases = [
             (0x0045, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
             (0x0045, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
             (0x004D, mintrinsic('pop1', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
-            (0x004E, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[3])])),
-            (0x0051, mintrinsic('talk_actor', outputs=[], params=[])),
+            (0x004E, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='CONST.4', ops=[3])])),
             (0x0078, MockLLIL(op='JUMP', ops=[MockLLIL(op='CONST_PTR.4', ops=[579297])])),
             (0x007B, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
             (0x007B, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
             (0x007B, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
             (0x0083, mintrinsic('pop1', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
-            (0x0084, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[1])])),
-            (0x0087, mintrinsic('talk_actor', outputs=[], params=[])),
+            (0x0084, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='CONST.4', ops=[1])])),
             (0x00AE, MockLLIL(op='JUMP', ops=[MockLLIL(op='CONST_PTR.4', ops=[579297])])),
             (0x00B1, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
             (0x00B1, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
             (0x00B1, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
             (0x00B9, mintrinsic('pop1', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
-            (0x00BA, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[2])])),
-            (0x00BD, mintrinsic('talk_actor', outputs=[], params=[])),
+            (0x00BA, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='CONST.4', ops=[2])])),
             (0x00E4, MockLLIL(op='JUMP', ops=[MockLLIL(op='CONST_PTR.4', ops=[579297])])),
             (0x00E7, mintrinsic('pop1', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
             (0x00E8, mintrinsic('stop_object_code2', outputs=[], params=[])),

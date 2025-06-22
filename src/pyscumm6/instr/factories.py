@@ -179,6 +179,7 @@ def generate_all_instructions() -> Dict[str, Type[Instruction]]:
     # Add custom instruction implementations
     from . import instructions
     registry["print_debug"] = instructions.PrintDebug
+    registry["talk_actor"] = instructions.TalkActor
     
     # Override start_script_quick with custom implementation
     from . import script_ops
