@@ -193,4 +193,8 @@ def generate_all_instructions() -> Dict[str, Type[Instruction]]:
     script_ops.StartScriptQuick._config = SEMANTIC_CONFIGS["start_script_quick"]
     registry["start_script_quick"] = script_ops.StartScriptQuick
     
+    # Override start_script with custom implementation
+    script_ops.StartScript._config = SEMANTIC_CONFIGS["start_script"]
+    registry["start_script"] = script_ops.StartScript
+    
     return registry

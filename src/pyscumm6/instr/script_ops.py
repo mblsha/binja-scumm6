@@ -134,3 +134,86 @@ class StartScriptQuick(SmartSemanticIntrinsicOp):
         else:
             # Fallback to default lifting
             super().lift(il, addr)
+
+
+class StartScript(SmartSemanticIntrinsicOp):
+    """StartScript with variable argument handling: startScript(script_id, flags, [args])"""
+    
+    # Set class attributes that parent expects
+    _name = "start_script"
+    _config: SemanticIntrinsicConfig  # Will be set by factory
+    
+    def __init__(self, kaitai_op: Any, length: int) -> None:
+        super().__init__(kaitai_op, length)
+        self._arg_count: Optional[int] = None
+        
+    def fuse(self, previous: Instruction) -> Optional['StartScript']:
+        """
+        Fusion pattern: script_id, flags, arg_count (then args...)
+        Stack order (LIFO): script_id, flags, arg_count
+        Output: startScript(script_id, flags, [])
+        """
+        # First fusion: arg_count
+        if not self.fused_operands:
+            if not self._is_fusible_push(previous):
+                return None
+            fused = copy.deepcopy(self)
+            fused.fused_operands = [previous]
+            fused._length = self._length + previous.length()
+            if previous.__class__.__name__ in ['PushByte', 'PushWord']:
+                fused._arg_count = previous.op_details.body.data
+            return fused
+            
+        # Second fusion: flags
+        elif len(self.fused_operands) == 1:
+            if not self._is_fusible_push(previous):
+                return None
+            fused = copy.deepcopy(self)
+            fused.fused_operands = [previous] + self.fused_operands
+            fused._length = self._length + previous.length()
+            fused._arg_count = self._arg_count
+            return fused
+            
+        # Third fusion: script_id
+        elif len(self.fused_operands) == 2:
+            if not self._is_fusible_push(previous):
+                return None
+            fused = copy.deepcopy(self)
+            fused.fused_operands = [previous] + self.fused_operands
+            fused._length = self._length + previous.length()
+            fused._arg_count = self._arg_count
+            return fused
+        
+        return None
+        
+    def render(self) -> List[Token]:
+        """Render as: startScript(script_id, flags, [])"""
+        if self.fused_operands and len(self.fused_operands) >= 3:
+            tokens = [TInstr("startScript"), TSep("(")]
+            
+            # script_id (first due to LIFO)
+            tokens.extend(self._render_operand(self.fused_operands[0]))
+            tokens.append(TSep(", "))
+            
+            # flags (second)
+            tokens.extend(self._render_operand(self.fused_operands[1]))
+            tokens.append(TSep(", "))
+            
+            # Empty array for now (no variable args implemented yet)
+            tokens.append(TSep("[]"))
+            
+            tokens.append(TSep(")"))
+            return tokens
+        else:
+            return super().render()
+            
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Generate LLIL with script_id and flags."""
+        if self.fused_operands and len(self.fused_operands) >= 3:
+            params = [
+                self._lift_operand(il, self.fused_operands[0]),  # script_id
+                self._lift_operand(il, self.fused_operands[1]),  # flags
+            ]
+            il.append(il.intrinsic([], "start_script", params))
+        else:
+            super().lift(il, addr)
