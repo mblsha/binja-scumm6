@@ -1,8 +1,9 @@
 """New decoder implementation using object-oriented instruction classes."""
 
 from typing import Optional, Iterator, Tuple, List
-from kaitaistruct import KaitaiStream
+from kaitaistruct import KaitaiStream, KaitaiStructError
 from io import BytesIO
+import logging
 
 # Import the Kaitai-generated parser
 from ..scumm6_opcodes import Scumm6Opcodes
@@ -16,26 +17,33 @@ def _iter_decode(data: bytes, addr: int) -> Iterator[Tuple[Instruction, int]]:
     """A generator that yields decoded instructions one by one."""
     offset = 0
     while offset < len(data):
+        remaining_data = data[offset:]
+        if not remaining_data:
+            break
+
         try:
-            remaining_data = data[offset:]
-            if not remaining_data:
-                break
-            
             ks = KaitaiStream(BytesIO(remaining_data))
             parsed_op = Scumm6Opcodes(ks).op
-            length = ks.pos()
-            if length == 0:
-                break
-
-            InstructionClass = OPCODE_MAP.get(parsed_op.id)
-            if InstructionClass:
-                instr = InstructionClass(kaitai_op=parsed_op, length=length)
-                yield instr, addr + offset
-                offset += length
-            else:
-                break
-        except Exception:
+        except (KaitaiStructError, EOFError) as exc:
+            logging.debug(
+                "Failed to parse opcode at 0x%x: %s", addr + offset, exc
+            )
             break
+
+        length = ks.pos()
+        if length == 0:
+            break
+
+        InstructionClass = OPCODE_MAP.get(parsed_op.id)
+        if InstructionClass is None:
+            logging.debug(
+                "Unknown opcode %s at 0x%x", parsed_op.id, addr + offset
+            )
+            break
+
+        instr = InstructionClass(kaitai_op=parsed_op, length=length)
+        yield instr, addr + offset
+        offset += length
 
 
 def _fusion(instruction_iterator: Iterator[Tuple[Instruction, int]]) -> Iterator[Tuple[Instruction, int]]:
