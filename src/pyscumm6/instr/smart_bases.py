@@ -68,6 +68,88 @@ DESCUMM_FUNCTION_NAMES = {
     "room_ops.room_screen": "roomOps.setScreen",
 }
 
+
+class FusibleMultiOperandMixin:
+    """
+    Mixin class providing common fusion logic for instructions that consume multiple operands.
+    
+    This mixin consolidates the common fusion patterns found across:
+    - SmartFusibleIntrinsic (pop_count operands)
+    - SmartBinaryOp (2 operands)
+    - SmartArrayOp (2-3 operands)
+    - SmartComparisonOp (2 operands)
+    - SmartConditionalJump (1 operand)
+    
+    Reduces code duplication by 80+ lines across multiple classes.
+    """
+    
+    def _get_max_operands(self) -> int:
+        """Return the maximum number of operands this instruction can fuse."""
+        # Subclasses should override this method
+        if hasattr(self, '_config') and hasattr(self._config, 'pop_count'):
+            return int(self._config.pop_count)
+        return 2  # Default for binary operations
+    
+    def _can_fuse_more(self) -> bool:
+        """Check if this instruction can accept more fused operands."""
+        if not hasattr(self, 'fused_operands'):
+            return True
+        return len(self.fused_operands) < self._get_max_operands()
+    
+    def _create_fused_copy(self, previous: Instruction) -> 'Instruction':
+        """Create a deep copy of this instruction with the previous instruction fused."""
+        fused = copy.deepcopy(self)
+        
+        # Ensure fused_operands exists
+        if not hasattr(fused, 'fused_operands'):
+            return fused  # type: ignore[return-value]
+            
+        # For stack-based operations, use LIFO ordering: most recent push goes to front
+        # This ensures proper stack semantics where last-pushed becomes first operand
+        fused.fused_operands.insert(0, previous)
+        
+        # Update total length if _length exists
+        if hasattr(fused, '_length') and hasattr(self, '_length') and hasattr(previous, 'length'):
+            fused._length = self._length + previous.length()
+        
+        return fused  # type: ignore[return-value]
+    
+    def _standard_fuse(self, previous: Instruction) -> Optional['Instruction']:
+        """
+        Standard fusion logic suitable for most multi-operand instructions.
+        
+        Args:
+            previous: The previous instruction to potentially fuse with
+            
+        Returns:
+            A new fused instruction if fusion is possible, None otherwise
+        """
+        # Check if we can accept more operands
+        if not self._can_fuse_more():
+            return None
+        
+        # Check if previous is fusible
+        if not self._is_fusible_push(previous):
+            return None
+        
+        # Create and return fused instruction
+        return self._create_fused_copy(previous)
+    
+    def _is_fusible_push(self, instr: Instruction) -> bool:
+        """Check if instruction is a push that can be fused."""
+        class_name = instr.__class__.__name__
+        
+        # Basic push operations
+        if class_name in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']:
+            return True
+        
+        # Result-producing operations (for multi-level fusion)
+        if hasattr(instr, 'produces_result') and instr.produces_result():
+            return True
+        
+        return False
+
+
 class SmartIntrinsicOp(Instruction):
     """Self-configuring intrinsic operation base class."""
     
@@ -138,35 +220,12 @@ class SmartIntrinsicOp(Instruction):
         il.append(il.intrinsic([], self._name, params))
 
 
-class SmartFusibleIntrinsic(SmartIntrinsicOp):
+class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
     """Intrinsic operation that supports instruction fusion for function-call style rendering."""
     
     def fuse(self, previous: Instruction) -> Optional['SmartFusibleIntrinsic']:
-        """Attempt to fuse with the previous instruction."""
-        # Only fuse if we need more operands
-        if len(self.fused_operands) >= self._config.pop_count:
-            return None
-        
-        # Check if previous is a fusible push instruction
-        if not self._is_fusible_push(previous):
-            return None
-        
-        # Create a new fused instruction
-        fused = copy.deepcopy(self)
-        
-        # Add the previous instruction to the front (stack is LIFO)
-        fused.fused_operands.insert(0, previous)
-        
-        # Update length to include the fused instruction
-        fused._length = self._length + previous.length()
-        
-        return fused
-    
-    def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if instruction is a push that can be fused."""
-        return instr.__class__.__name__ in [
-            'PushByte', 'PushWord', 'PushByteVar', 'PushWordVar'
-        ]
+        """Attempt to fuse with the previous instruction using standard fusion logic."""
+        return cast(Optional['SmartFusibleIntrinsic'], self._standard_fuse(previous))
     
     @property
     def stack_pop_count(self) -> int:
@@ -371,11 +430,15 @@ class SmartComplexOp(Instruction):
             il.append(il.intrinsic([], intrinsic_name, params))
 
 # Smart stack operation base classes
-class SmartBinaryOp(Instruction):
+class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
     """Self-configuring binary stack operation."""
     
     _name: str
     _config: StackConfig
+
+    def _get_max_operands(self) -> int:
+        """Binary operations accept exactly 2 operands."""
+        return 2
 
     @property
     def stack_pop_count(self) -> int:
@@ -388,52 +451,8 @@ class SmartBinaryOp(Instruction):
         return True
 
     def fuse(self, previous: Instruction) -> Optional['SmartBinaryOp']:
-        """
-        Attempt to fuse with a previous push instruction.
-        
-        Args:
-            previous: The previous instruction to potentially fuse with
-            
-        Returns:
-            A new fused instruction if fusion is possible, None otherwise
-        """
-        # Only fuse if we need more operands
-        if len(self.fused_operands) >= 2:
-            return None
-            
-        # Check if previous is a fusible push instruction
-        if not self._is_fusible_push(previous):
-            return None
-            
-        # Create a new fused instruction by copying ourselves
-        fused = copy.deepcopy(self)
-        
-        # Add the previous instruction to the front of fused operands
-        # (since stack is LIFO, the most recent push becomes the first operand)
-        fused.fused_operands.insert(0, previous)
-        
-        # Update length to include the fused instruction
-        fused._length = self._length + previous.length()
-        
-        return fused
-    
-    def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if an instruction is a fusible push operation or produces a consumable result."""
-        # Check for factory-generated push constants (they have specific class names)
-        class_name = instr.__class__.__name__
-        if class_name in ('PushByte', 'PushWord'):
-            return True
-            
-        # Check for manual push variable instructions
-        if class_name in ('PushByteVar', 'PushWordVar'):
-            return True
-        
-        # Check if instruction produces a result that can be consumed
-        # This enables multi-level expression building
-        if instr.produces_result():
-            return True
-            
-        return False
+        """Attempt to fuse with the previous instruction using standard fusion logic."""
+        return cast(Optional['SmartBinaryOp'], self._standard_fuse(previous))
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""

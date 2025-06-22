@@ -1096,7 +1096,7 @@ python scripts/analyze_dottdemo_scripts.py
 # Creates comprehensive inventory: 66 DOTTDEMO scripts categorized by complexity
 
 # Focus on smallest scripts first for maximum impact
-python scripts/analyze_simple_scripts.py 
+python scripts/analyze_simple_scripts_refactored.py 
 # Identifies specific, actionable fusion opportunities
 ```
 
