@@ -203,22 +203,42 @@ class DataProvider:
         total_score = 0.0
         matched_count = 0
         line_matches = []
+        used_fused_indices = set()
 
-        # For each descumm line, find best match in fused
+        # First pass: find exact matches
+        exact_matches = {}
+        for i, d_line in enumerate(norm_descumm):
+            if not d_line:
+                continue
+            for j, f_line in enumerate(norm_fused):
+                if not f_line or j in used_fused_indices:
+                    continue
+                if d_line == f_line:  # Exact match
+                    exact_matches[i] = j
+                    used_fused_indices.add(j)
+                    break
+
+        # Second pass: match remaining lines by best similarity
         for i, d_line in enumerate(norm_descumm):
             if not d_line:
                 continue
 
-            best_score = 0.0
-            best_match_idx = -1
+            if i in exact_matches:
+                # Already matched exactly
+                best_match_idx = exact_matches[i]
+                best_score = 1.0
+            else:
+                # Find best match among unused fused lines
+                best_score = 0.0
+                best_match_idx = -1
 
-            for j, f_line in enumerate(norm_fused):
-                if not f_line:
-                    continue
-                score = difflib.SequenceMatcher(None, d_line, f_line).ratio()
-                if score > best_score:
-                    best_score = score
-                    best_match_idx = j
+                for j, f_line in enumerate(norm_fused):
+                    if not f_line or j in used_fused_indices:
+                        continue
+                    score = difflib.SequenceMatcher(None, d_line, f_line).ratio()
+                    if score > best_score:
+                        best_score = score
+                        best_match_idx = j
 
             line_match_info = {
                 'descumm_idx': i,
@@ -234,6 +254,7 @@ class DataProvider:
                 line_match_info['fused_idx'] = best_match_idx
                 line_match_info['fused_line'] = fused_lines[best_match_idx]
                 line_match_info['normalized_fused'] = norm_fused[best_match_idx]
+                used_fused_indices.add(best_match_idx)
             else:
                 unmatched.append(descumm_lines[i])
                 line_match_info['fused_idx'] = None
