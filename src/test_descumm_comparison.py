@@ -290,12 +290,10 @@ script_test_cases = [
             [01CE] stopObjectCodeB()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] push_word_var(var_0)
-            [0003] getObjectX(...)
+            [0000] getObjectX(var_0)
             [0004] sub(var_1, ...)
             [0008] write_word_var(var_5)
-            [000B] push_word_var(var_0)
-            [000E] getObjectY(...)
+            [000B] getObjectY(var_0)
             [000F] sub(var_2, ...)
             [0013] write_word_var(var_6)
             [0016] push_word_var(var_5)
@@ -514,8 +512,7 @@ script_test_cases = [
             [0003] nott
             [0004] unless goto +6
             [0007] var_0 = var_7
-            [000D] push_word_var(var_0)
-            [0010] get_state(...)
+            [000D] get_state(var_0)
             [0011] if condition goto +208
             [0018] push_word_var(var_0)
             [001B] push_word(6)
@@ -626,9 +623,8 @@ script_test_cases = [
             (0x0003, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CMP_E.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')]), MockLLIL(op='CONST.4', ops=[0])])])),
             (0x0004, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
             (0x0007, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='L0'), MockLLIL(op='LOAD.4', ops=[MockLLIL(op='CONST_PTR.4', ops=[1073741852])])])),
-            (0x000D, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')])])),
-            (0x0010, mintrinsic('get_state', outputs=[MockReg(name='TEMP0')], params=[MockLLIL(op='POP.4', ops=[])])),
-            (0x0010, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
+            (0x000D, mintrinsic('get_state', outputs=[MockReg(name='TEMP0')], params=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')])])),
+            (0x000D, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
             (0x0018, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')])])),
             (0x001B, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[6])])),
             (0x001E, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[1])])),

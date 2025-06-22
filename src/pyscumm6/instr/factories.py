@@ -35,6 +35,12 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
         "start_sound",      # 1 param: sound_id
         "start_music",      # 1 param: music_id
         "stop_sound",       # 1 param: sound_id
+        # Object query operations
+        "get_object_x",     # 1 param: object_id -> x position
+        "get_object_y",     # 1 param: object_id -> y position
+        "get_object_old_dir", # 1 param: object_id -> old direction
+        "get_object_new_dir", # 1 param: object_id -> new direction
+        "get_state",        # 1 param: object_id -> state
         # Object operations
         "set_state",        # 2 params: object, state
         "set_owner",        # 2 params: object, owner
