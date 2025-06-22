@@ -1,184 +1,112 @@
-"""Test cases for variable write instruction fusion.
-
-This module tests fusion of push instructions with variable write instructions
-(write_byte_var, write_word_var) to create assignment-style rendering.
-"""
+#!/usr/bin/env python3
+"""Declarative tests for variable write instruction fusion."""
 
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
+
+from dataclasses import dataclass
+from typing import Optional, Callable, Any
+
+import pytest
 from binja_helpers import binja_api  # noqa: F401
 
 from .pyscumm6.disasm import decode_with_fusion
 
 
-class TestVariableWriteFusion:
-    """Test cases for variable write instruction fusion patterns."""
-    
-    def test_write_byte_var_constant_fusion(self) -> None:
-        """Test fusion of push_byte + write_byte_var."""
-        # Bytecode: push_byte(5), write_byte_var(var_10)
-        bytecode = bytes([
-            0x00, 0x05,  # push_byte(5)
-            0x42, 0x0A   # write_byte_var(var_10)
-        ])
-        
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be write_byte_var with fused operand
-        assert instruction.__class__.__name__ == "WriteByteVar"
-        assert len(instruction.fused_operands) == 1
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output (note: write_byte_var has a Kaitai bug so shows var_?)
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "var_? = 5"
-    
-    def test_write_word_var_constant_fusion(self) -> None:
-        """Test fusion of push_word + write_word_var."""
-        # Bytecode: push_word(1000), write_word_var(var_20)
-        bytecode = bytes([
-            0x01, 0xE8, 0x03,  # push_word(1000)
-            0x43, 0x14, 0x00   # write_word_var(var_20)
-        ])
-        
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be write_word_var with fused operand
-        assert instruction.__class__.__name__ == "WriteWordVar"
-        assert len(instruction.fused_operands) == 1
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "var_20 = 1000"
-    
-    def test_write_var_from_var_fusion(self) -> None:
-        """Test fusion with variable-to-variable assignment."""
-        # Bytecode: push_byte_var(var_5), write_byte_var(var_10)
-        bytecode = bytes([
-            0x02, 0x05,  # push_byte_var(var_5)
-            0x42, 0x0A   # write_byte_var(var_10)
-        ])
-        
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be write_byte_var with fused operand
-        assert instruction.__class__.__name__ == "WriteByteVar"
-        assert len(instruction.fused_operands) == 1
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output (note: write_byte_var has a Kaitai bug so shows var_?)
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "var_? = var_5"
-    
-    def test_write_word_var_from_byte_fusion(self) -> None:
-        """Test fusion with type promotion (byte to word)."""
-        # Bytecode: push_byte(100), write_word_var(var_30)
-        bytecode = bytes([
-            0x00, 0x64,        # push_byte(100)
-            0x43, 0x1E, 0x00   # write_word_var(var_30)
-        ])
-        
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be write_word_var with fused operand
-        assert instruction.__class__.__name__ == "WriteWordVar"
-        assert len(instruction.fused_operands) == 1
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "var_30 = 100"
-    
-    def test_no_fusion_with_non_push(self) -> None:
-        """Test that write_var doesn't fuse with non-push instructions."""
-        # Bytecode: dup, write_byte_var(var_10)
-        bytecode = bytes([
-            0x0C,        # dup
-            0x42, 0x0A   # write_byte_var(var_10)
-        ])
-        
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be write_byte_var with no fused operands
-        assert instruction.__class__.__name__ == "WriteByteVar"
-        assert len(instruction.fused_operands) == 0
-        assert instruction.stack_pop_count == 1  # Normal stack pop
-        
-        # Check render output (note: write_byte_var has a Kaitai bug so shows var_?)
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "write_byte_var(var_?)"
-    
-    def test_write_var_negative_value_fusion(self) -> None:
-        """Test fusion with negative value assignment."""
-        # Bytecode: push_byte(-5), write_byte_var(var_15)
-        bytecode = bytes([
-            0x00, 0xFB,  # push_byte(-5 as signed byte = 251 unsigned)
-            0x42, 0x0F   # write_byte_var(var_15)
-        ])
-        
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be write_byte_var with fused operand
-        assert instruction.__class__.__name__ == "WriteByteVar"
-        assert len(instruction.fused_operands) == 1
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output (note: write_byte_var has a Kaitai bug so shows var_?)
-        # Note: The value is displayed as signed (-5) as parsed by Kaitai
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "var_? = -5"
-    
-    def test_write_var_zero_fusion(self) -> None:
-        """Test fusion with zero assignment (common pattern)."""
-        # Bytecode: push_byte(0), write_byte_var(var_99)
-        bytecode = bytes([
-            0x00, 0x00,  # push_byte(0)
-            0x42, 0x63   # write_byte_var(var_99)
-        ])
-        
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be write_byte_var with fused operand
-        assert instruction.__class__.__name__ == "WriteByteVar"
-        assert len(instruction.fused_operands) == 1
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output (note: write_byte_var has a Kaitai bug so shows var_?)
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "var_? = 0"
-    
-    def test_write_var_max_word_fusion(self) -> None:
-        """Test fusion with maximum word value."""
-        # Bytecode: push_word(65535), write_word_var(var_255)
-        bytecode = bytes([
-            0x01, 0xFF, 0xFF,  # push_word(65535)
-            0x43, 0xFF, 0x00   # write_word_var(var_255)
-        ])
-        
-        instruction = decode_with_fusion(bytecode, 0x1000)
-        assert instruction is not None
-        
-        # Should be write_word_var with fused operand
-        assert instruction.__class__.__name__ == "WriteWordVar"
-        assert len(instruction.fused_operands) == 1
-        assert instruction.stack_pop_count == 0
-        
-        # Check render output (note: Kaitai parses as signed, so 0xFFFF = -1)
-        tokens = instruction.render()
-        token_text = ''.join(str(token.text if hasattr(token, 'text') else token) for token in tokens)
-        assert token_text == "var_255 = -1"
+@dataclass
+class FusionTestCase:
+    test_id: str
+    bytecode: bytes
+    expected_class: str
+    expected_fused_operands: int
+    expected_stack_pops: int
+    expected_render_text: Optional[str] = None
+    additional_validation: Optional[Callable[[Any], None]] = None
+    addr: int = 0x1000
+
+
+def run_fusion_test(case: FusionTestCase) -> None:
+    instr = decode_with_fusion(case.bytecode, case.addr)
+    assert instr is not None, f"Failed to decode {case.test_id}"
+    assert instr.__class__.__name__ == case.expected_class
+    assert len(instr.fused_operands) == case.expected_fused_operands
+    assert instr.stack_pop_count == case.expected_stack_pops
+    tokens = instr.render()
+    token_text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
+    if case.expected_render_text is not None:
+        assert token_text == case.expected_render_text
+    if case.additional_validation:
+        case.additional_validation(instr)
+
+
+fusion_test_cases = [
+    FusionTestCase(
+        test_id="write_byte_const",
+        bytecode=bytes([0x00, 0x05, 0x42, 0x0A]),
+        expected_class="WriteByteVar",
+        expected_fused_operands=1,
+        expected_stack_pops=0,
+        expected_render_text="var_? = 5",
+    ),
+    FusionTestCase(
+        test_id="write_word_const",
+        bytecode=bytes([0x01, 0xE8, 0x03, 0x43, 0x14, 0x00]),
+        expected_class="WriteWordVar",
+        expected_fused_operands=1,
+        expected_stack_pops=0,
+        expected_render_text="var_20 = 1000",
+    ),
+    FusionTestCase(
+        test_id="write_from_var",
+        bytecode=bytes([0x02, 0x05, 0x42, 0x0A]),
+        expected_class="WriteByteVar",
+        expected_fused_operands=1,
+        expected_stack_pops=0,
+        expected_render_text="var_? = var_5",
+    ),
+    FusionTestCase(
+        test_id="word_from_byte",
+        bytecode=bytes([0x00, 0x64, 0x43, 0x1E, 0x00]),
+        expected_class="WriteWordVar",
+        expected_fused_operands=1,
+        expected_stack_pops=0,
+        expected_render_text="var_30 = 100",
+    ),
+    FusionTestCase(
+        test_id="no_fusion_non_push",
+        bytecode=bytes([0x0C, 0x42, 0x0A]),
+        expected_class="WriteByteVar",
+        expected_fused_operands=0,
+        expected_stack_pops=1,
+        expected_render_text="write_byte_var(var_?)",
+    ),
+    FusionTestCase(
+        test_id="negative_value",
+        bytecode=bytes([0x00, 0xFB, 0x42, 0x0F]),
+        expected_class="WriteByteVar",
+        expected_fused_operands=1,
+        expected_stack_pops=0,
+        expected_render_text="var_? = -5",
+    ),
+    FusionTestCase(
+        test_id="zero_value",
+        bytecode=bytes([0x00, 0x00, 0x42, 0x63]),
+        expected_class="WriteByteVar",
+        expected_fused_operands=1,
+        expected_stack_pops=0,
+        expected_render_text="var_? = 0",
+    ),
+    FusionTestCase(
+        test_id="max_word",
+        bytecode=bytes([0x01, 0xFF, 0xFF, 0x43, 0xFF, 0x00]),
+        expected_class="WriteWordVar",
+        expected_fused_operands=1,
+        expected_stack_pops=0,
+        expected_render_text="var_255 = -1",
+    ),
+]
+
+
+@pytest.mark.parametrize("case", fusion_test_cases, ids=lambda c: c.test_id)
+def test_variable_write_fusion(case: FusionTestCase) -> None:
+    run_fusion_test(case)
