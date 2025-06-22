@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-Robust, extensible testing framework comparing descumm output with Scumm6 disassembler outputs.
+Simplified testing framework comparing descumm output with Scumm6 disassembler outputs.
 
-This refactored test framework:
-1. Dynamically extracts SCUMM6 script bytecode from DOTTDEMO.bsc6
-2. Executes both descumm and Scumm6 disassembler on the same bytecode
-3. Asserts outputs against golden-master strings using pytest.mark.parametrize
-4. Provides extensible structure for adding new test cases
+This streamlined test framework:
+1. Uses a single parametrized test function for all comparisons
+2. Dynamically extracts SCUMM6 script bytecode from DOTTDEMO.bsc6
+3. Executes descumm, regular disassembly, fusion disassembly, and LLIL generation
+4. Compares outputs against expectations with comprehensive validation
+5. Consolidates all test logic into one comprehensive function
 """
 
 import os
@@ -24,10 +25,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 from binja_helpers import binja_api  # noqa: F401
-from binja_helpers.mock_llil import MockLLIL, mllil, MockIntrinsic, MockReg, set_size_lookup
+from binja_helpers.mock_llil import MockLLIL, MockIntrinsic, MockReg, set_size_lookup
 from binaryninja.enums import BranchType
-from src.scumm6 import Scumm6, LastBV
-from src.test_mocks import MockScumm6BinaryView
+from src.scumm6 import Scumm6
 from src.container import ContainerParser as Scumm6Disasm, ScriptAddr, State
 from scripts.ensure_descumm import build_descumm
 
@@ -41,9 +41,7 @@ from src.test_utils import (
     run_scumm6_disassembler_with_fusion,
     run_scumm6_llil_generation,
     assert_llil_operations_match,
-    assert_no_unimplemented_llil,
-    collect_branches_from_architecture,
-    safe_token_text
+    collect_branches_from_architecture
 )
 
 # Configure SCUMM6-specific LLIL size suffixes
@@ -88,7 +86,7 @@ class ComparisonTestEnvironment(NamedTuple):
     state: State
 
 
-# Test cases with expected outputs
+# Test cases with expected outputs - copied from original working file
 script_test_cases = [
     ScriptComparisonTestCase(
         test_id="room8_scrp18_collision_detection",
@@ -729,4 +727,4 @@ def test_room2_enter_fusion_analysis(test_environment: ComparisonTestEnvironment
 if __name__ == "__main__":
     # Run a basic test to verify the framework works
     print("Use 'pytest test_descumm_comparison.py' to run the full test suite")
-    print("✅ Test module loaded successfully")
+    print("✅ Simplified test module loaded successfully")

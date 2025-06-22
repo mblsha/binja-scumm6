@@ -3,4 +3,4 @@
 	url = https://github.com/mblsha/binja-esr.git
 [submodule "scummvm-tools"]
 	path = scummvm-tools
-	url = https://github.com/scummvm/scummvm-tools.git
+	url = https://github.com/mblsha/scummvm-tools.git
