@@ -438,8 +438,8 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
         # Handle fused operands
         if self.fused_operands:
             tokens = [TInstr(display_name), TSep("(")]
-            # Render operands in reverse order (stack semantics)
-            for i, operand in enumerate(reversed(self.fused_operands)):
+            # Render operands in push order (not reversed)
+            for i, operand in enumerate(self.fused_operands):
                 if i > 0:
                     tokens.append(TSep(", "))
                 tokens.extend(self._render_operand(operand))
@@ -482,9 +482,9 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
         
         # Pop arguments and call intrinsic
         if self.fused_operands:
-            # Use fused operands in reverse order (stack semantics)
+            # Use fused operands in push order
             params = []
-            for operand in reversed(self.fused_operands):
+            for operand in self.fused_operands:
                 params.append(self._lift_operand(il, operand))
         else:
             params = [il.pop(4) for _ in range(pop_count)]
