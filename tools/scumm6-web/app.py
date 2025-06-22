@@ -50,6 +50,7 @@ class ScriptComparison:
     unmatched_lines: List[str]
     line_matches: List[Dict[str, any]]  # Line-by-line match information
     fusion_spans: List[Dict[str, int]]  # Fusion span information
+    bytecode_hex: str = ""  # Hex representation of the bytecode
 
 
 class DataProvider:
@@ -168,7 +169,8 @@ class DataProvider:
             match_score=match_score,
             unmatched_lines=unmatched_lines,
             line_matches=line_matches,
-            fusion_spans=fusion_spans
+            fusion_spans=fusion_spans,
+            bytecode_hex=bytecode.hex(' ')  # Store hex representation with spaces
         )
         self.comparisons[script.name] = comparison
         return comparison
@@ -408,12 +410,14 @@ def disassemble_bytecode():
         try:
             descumm_output = run_descumm_on_bytecode(data_provider.descumm_path, bytecode)
             fused_output, _ = run_scumm6_disassembler_with_fusion_details(bytecode, 0)
+            raw_output = run_scumm6_disassembler(bytecode, 0)
         except Exception as e:
             return jsonify({'error': f'Disassembly failed: {str(e)}'}), 500
         
         return jsonify({
             'descumm_output': descumm_output,
-            'fused_output': fused_output
+            'fused_output': fused_output,
+            'raw_output': raw_output
         })
         
     except Exception as e:
@@ -489,13 +493,9 @@ def generate_test_case():
         expected_fused = data.get('expected_fused_output', '')
         descumm_output = data.get('descumm_output', '')
         
-        # Generate test case
-        test_case = f'''ScriptComparisonTestCase(
-    test_id="user_analysis_{script_name}_{address}",
-    bytecode=bytes.fromhex("{bytecode_hex.replace(' ', '')}"),
-    expected_descumm_output="""{descumm_output}""",
-    expected_disasm_fusion_output="""{expected_fused}"""
-)'''
+        # Generate terse AI-friendly test case instruction
+        clean_bytes = bytecode_hex.replace(' ', '').upper()
+        test_case = f'''Add `{clean_bytes}` to the test_descumm_comparison.py as a new test case, with expected descumm output `{descumm_output.strip()}`. Want the fused disassembly to be similar to `{expected_fused.strip()}`.'''
         
         return jsonify({'test_case': test_case})
         

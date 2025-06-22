@@ -35,6 +35,11 @@
             display: flex;
             flex: 1;
             overflow: hidden;
+            transition: margin-bottom 0.3s ease;
+        }
+        
+        .container.panel-open {
+            margin-bottom: 240px;
         }
         
         .sidebar {
@@ -271,16 +276,17 @@
         /* Analysis Panel Styles */
         #analysis-panel {
             position: fixed;
+            left: 0;
             right: 0;
-            top: 0;
             bottom: 0;
-            width: 400px;
+            height: 240px;
             background: #252525;
-            border-left: 2px solid #0178d4;
+            border-top: 2px solid #0178d4;
             display: none;
             flex-direction: column;
             z-index: 100;
-            overflow-y: auto;
+            overflow: hidden;
+            box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.3);
         }
         
         #analysis-panel.active {
@@ -288,65 +294,84 @@
         }
         
         #analysis-panel .panel-header {
-            padding: 1rem;
+            padding: 0.5rem 1rem;
             background: #2d2d2d;
             border-bottom: 1px solid #444;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
+        }
+        
+        #analysis-panel .panel-header h3 {
+            margin: 0;
+            font-size: 1rem;
         }
         
         #analysis-panel .panel-content {
             flex: 1;
-            padding: 1rem;
-            overflow-y: auto;
+            padding: 0.5rem;
+            overflow: hidden;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .panel-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
         
         .panel-section {
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.25rem;
         }
         
         .panel-section h3 {
-            margin-bottom: 0.5rem;
+            margin: 0 0 0.25rem 0;
             color: #0178d4;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
+        }
+        
+        .panel-section h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 0.75rem;
         }
         
         .panel-section input,
         .panel-section textarea {
             width: 100%;
-            padding: 0.5rem;
+            padding: 0.4rem;
             background: #1a1a1a;
             border: 1px solid #444;
             color: #e0e0e0;
             border-radius: 4px;
             font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
         }
         
         .panel-section textarea {
-            min-height: 100px;
             resize: vertical;
         }
         
         .panel-buttons {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
         }
         
         .panel-buttons button {
             flex: 1;
-            min-width: 100px;
-            padding: 0.5rem;
+            min-width: 50px;
+            padding: 0.3rem 0.4rem;
             background: #0178d4;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
         }
         
         .panel-buttons button:hover {
@@ -377,10 +402,6 @@
             background: #0269c0;
         }
         
-        .inert-view {
-            pointer-events: none;
-            opacity: 0.7;
-        }
         
         .note-indicator {
             display: inline-block;
@@ -412,6 +433,10 @@
             white-space: pre-wrap;
             word-break: break-all;
             min-height: 150px;
+        }
+        
+        #copy-test-btn:hover {
+            background: #555 !important;
         }
     </style>
 </head>
@@ -475,43 +500,64 @@
     <div id="analysis-panel">
         <div class="panel-header">
             <h3>Interactive Analysis</h3>
-            <button id="close-panel" class="secondary">Close</button>
+            <div style="display: flex; gap: 0.5rem;">
+                <button id="save-note-btn" class="primary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Save</button>
+                <button id="delete-note-btn" class="danger" style="display: none; padding: 0.3rem 0.6rem; font-size: 0.75rem;">Delete</button>
+                <button id="generate-test-btn" class="secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Test</button>
+                <button id="close-panel" class="secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Close</button>
+            </div>
         </div>
         
         <div class="panel-content">
-            <div class="panel-section">
-                <h3>Instruction Info</h3>
-                <div id="panel-info">
-                    <strong>Script:</strong> <span id="panel-script-name">-</span><br>
-                    <strong>Address:</strong> <span id="panel-address">-</span>
+            <div class="panel-column" style="flex: 0 0 400px;">
+                <div style="display: flex; gap: 0.5rem; height: 100%;">
+                    <div style="flex: 0 0 200px; display: flex; flex-direction: column;">
+                        <h3 style="margin: 0 0 0.2rem 0; font-size: 0.75rem; color: #0178d4;">INSTRUCTION</h3>
+                        <div id="panel-info" style="font-size: 0.7rem; line-height: 1.2; margin-bottom: 0.5rem;">
+                            <div><strong>Script:</strong> <span id="panel-script-name">-</span></div>
+                            <div><strong>Address:</strong> <span id="panel-address">-</span></div>
+                        </div>
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <h3 style="margin: 0 0 0.2rem 0; font-size: 0.75rem; color: #0178d4;">EXPECTED OUTPUT</h3>
+                        <textarea id="panel-expected-output" placeholder="e.g., var_20 = 1000" style="flex: 1; min-height: 0;"></textarea>
+                    </div>
                 </div>
             </div>
             
-            <div class="panel-section">
-                <h3>Bytecode (Hex)</h3>
-                <input type="text" id="panel-bytecode" placeholder="e.g., 01 E8 03 43 14 00" />
+            <div class="panel-column" style="flex: 1; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
+                    <h3 style="margin: 0; font-size: 0.75rem; color: #0178d4;">DYNAMIC DISASSEMBLY</h3>
+                    <input type="text" id="panel-bytecode" placeholder="Bytecode hex (auto-updates)" style="flex: 1; height: 24px; font-size: 0.7rem;" />
+                </div>
+                <div style="display: flex; gap: 0.5rem; height: calc(100% - 32px);">
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <h4 style="margin: 0 0 0.2rem 0; font-size: 0.7rem; color: #2e7d32;">descumm</h4>
+                        <div id="panel-descumm" style="flex: 1; background: #1a1a1a; padding: 0.3rem; border-radius: 3px; font-family: monospace; font-size: 0.65rem; overflow-y: auto; white-space: pre-wrap; line-height: 1.2;">
+                            Ready
+                        </div>
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <h4 style="margin: 0 0 0.2rem 0; font-size: 0.7rem; color: #0178d4;">pyscumm6 (fused)</h4>
+                        <div id="panel-fused" style="flex: 1; background: #1a1a1a; padding: 0.3rem; border-radius: 3px; font-family: monospace; font-size: 0.65rem; overflow-y: auto; white-space: pre-wrap; line-height: 1.2;">
+                            Ready
+                        </div>
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <h4 style="margin: 0 0 0.2rem 0; font-size: 0.7rem; color: #9c27b0;">pyscumm6 (raw)</h4>
+                        <div id="panel-raw" style="flex: 1; background: #1a1a1a; padding: 0.3rem; border-radius: 3px; font-family: monospace; font-size: 0.65rem; overflow-y: auto; white-space: pre-wrap; line-height: 1.2;">
+                            Ready
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <div class="panel-section">
-                <h3>Expected Fused Output</h3>
-                <textarea id="panel-expected-output" placeholder="e.g., var_20 = 1000"></textarea>
-            </div>
-            
-            <div class="panel-section">
-                <h3>Analysis Notes</h3>
-                <textarea id="panel-notes" placeholder="Your analysis and observations..."></textarea>
-            </div>
-            
-            <div class="panel-buttons">
-                <button id="update-view-btn" class="primary">Update View</button>
-                <button id="save-note-btn" class="primary">Save Note</button>
-                <button id="delete-note-btn" class="danger" style="display: none;">Delete Note</button>
-                <button id="generate-test-btn" class="secondary">Generate Test Case</button>
-            </div>
-            
-            <div class="panel-section" id="test-output-section" style="display: none;">
-                <h3>Generated Test Case</h3>
-                <div id="test-output"></div>
+            <div class="panel-column" id="test-output-section" style="flex: 0 0 200px; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
+                    <h3 style="margin: 0; font-size: 0.75rem; color: #0178d4;">TEST CASE</h3>
+                    <button id="copy-test-btn" style="padding: 0.2rem 0.4rem; background: #666; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.6rem;">Copy</button>
+                </div>
+                <textarea id="test-output" style="width: 100%; background: #1a1a1a; padding: 0.3rem; border: 1px solid #444; border-radius: 3px; font-family: monospace; font-size: 0.6rem; height: calc(100% - 30px); white-space: pre-wrap; line-height: 1.2; color: #e0e0e0; resize: none;" placeholder="Generated test case will appear here..."></textarea>
             </div>
         </div>
     </div>
@@ -709,6 +755,10 @@
         function displayWithLineMatches(data) {
             // Store fusion spans globally for hover handling
             window.currentFusionSpans = data.fusion_spans || [];
+            // Store bytecode hex globally for extraction
+            window.currentBytecodeHex = data.bytecode_hex || '';
+            // Store current script name for note indicators
+            window.currentScriptName = currentScript;
             
             // Parse lines
             const descummLines = data.descumm_output.split('\n');
@@ -985,90 +1035,144 @@
         const panelAddress = document.getElementById('panel-address');
         const panelBytecode = document.getElementById('panel-bytecode');
         const panelExpectedOutput = document.getElementById('panel-expected-output');
-        const panelNotes = document.getElementById('panel-notes');
-        const updateViewBtn = document.getElementById('update-view-btn');
         const saveNoteBtn = document.getElementById('save-note-btn');
         const deleteNoteBtn = document.getElementById('delete-note-btn');
         const generateTestBtn = document.getElementById('generate-test-btn');
         const testOutputSection = document.getElementById('test-output-section');
         const testOutput = document.getElementById('test-output');
+        const copyTestBtn = document.getElementById('copy-test-btn');
+        const panelDescumm = document.getElementById('panel-descumm');
+        const panelFused = document.getElementById('panel-fused');
+        const panelRaw = document.getElementById('panel-raw');
+        
+        // Create hidden notes field
+        const panelNotes = document.createElement('input');
+        panelNotes.type = 'hidden';
+        panelNotes.id = 'panel-notes';
+        document.body.appendChild(panelNotes);
         
         // Make disassembly lines clickable
         function makeDisassemblyLinesClickable() {
             const panels = [descummPanel, fusedPanel, rawPanel];
             
             panels.forEach((panel, panelIndex) => {
-                // Find all lines in the panel
-                const lines = panel.querySelectorAll('div');
+                // Find all address spans that were wrapped
+                const addressSpans = panel.querySelectorAll('.address-hover');
                 
-                lines.forEach(line => {
-                    const text = line.textContent;
-                    // Extract address from line (e.g., [0000] or (0000))
-                    const addressMatch = text.match(/^.*?[\[\(]([0-9A-Fa-f]{4})[\]\)]/);
-                    
-                    if (addressMatch) {
-                        const address = addressMatch[1];
+                addressSpans.forEach(span => {
+                    const address = span.dataset.address;
+                    // Find the parent line div
+                    const line = span.closest('div');
+                    if (line && address) {
+                        // Make the whole line clickable
                         line.style.cursor = 'pointer';
-                        line.addEventListener('click', () => openAnalysisPanel(address, line, panelIndex));
+                        
+                        // Add click handler to the address span itself
+                        span.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            openAnalysisPanel(address, line, panelIndex);
+                        });
+                        
+                        // Also make the rest of the line clickable
+                        line.addEventListener('click', (e) => {
+                            // Only trigger if we have an address for this line
+                            const addressSpan = line.querySelector('.address-hover');
+                            if (addressSpan && addressSpan.dataset.address) {
+                                e.stopPropagation();
+                                openAnalysisPanel(addressSpan.dataset.address, line, panelIndex);
+                            }
+                        });
                     }
                 });
             });
         }
         
-        // Extract bytecode from the raw panel for a given address range
-        function extractBytecodeForAddress(address) {
+        // Extract bytecode from the stored bytecode_hex using address ranges
+        function extractBytecodeForAddress(address, bytecodeHex) {
+            if (!bytecodeHex) {
+                console.log('No bytecode hex available');
+                return '';
+            }
+            
             const startAddr = parseInt(address, 16);
-            const rawLines = rawPanel.querySelectorAll('div');
+            const allBytes = bytecodeHex.split(' ');
             
-            // Find the line with this address
-            let targetLine = null;
-            let nextLine = null;
-            
-            for (let i = 0; i < rawLines.length; i++) {
-                const lineText = rawLines[i].textContent;
-                const lineMatch = lineText.match(/^.*?[\[\(]([0-9A-Fa-f]{4})[\]\)]/);
+            // Check if this address is part of a fusion span
+            if (window.currentFusionSpans) {
+                const fusionSpan = window.currentFusionSpans.find(span => 
+                    startAddr >= span.start_offset && startAddr < span.end_offset
+                );
                 
+                if (fusionSpan) {
+                    // Extract the complete fused instruction sequence
+                    const startByteIndex = fusionSpan.start_offset;
+                    const endByteIndex = fusionSpan.end_offset;
+                    const extractedBytes = allBytes.slice(startByteIndex, endByteIndex);
+                    
+                    console.log('Extracting fused instruction sequence:', {
+                        address,
+                        fusionSpan,
+                        startByteIndex,
+                        endByteIndex,
+                        totalBytes: allBytes.length,
+                        extracted: extractedBytes.join(' ')
+                    });
+                    
+                    return extractedBytes.join(' ');
+                }
+            }
+            
+            // Fallback: single instruction extraction
+            // Parse all raw lines to build address map
+            const rawLines = rawPanel.querySelectorAll('div');
+            const addressMap = [];
+            
+            rawLines.forEach(line => {
+                const lineText = line.textContent;
+                const lineMatch = lineText.match(/^\[([0-9A-Fa-f]{4})\]/);
                 if (lineMatch) {
-                    const lineAddr = parseInt(lineMatch[1], 16);
-                    if (lineAddr === startAddr) {
-                        targetLine = rawLines[i];
-                        // Find next line with address to determine instruction length
-                        for (let j = i + 1; j < rawLines.length; j++) {
-                            const nextText = rawLines[j].textContent;
-                            const nextMatch = nextText.match(/^.*?[\[\(]([0-9A-Fa-f]{4})[\]\)]/);
-                            if (nextMatch) {
-                                nextLine = rawLines[j];
-                                break;
-                            }
-                        }
-                        break;
-                    }
+                    addressMap.push({
+                        offset: parseInt(lineMatch[1], 16),
+                        line: line
+                    });
+                }
+            });
+            
+            // Sort by offset
+            addressMap.sort((a, b) => a.offset - b.offset);
+            
+            // Find our target and next address
+            let targetIndex = -1;
+            for (let i = 0; i < addressMap.length; i++) {
+                if (addressMap[i].offset === startAddr) {
+                    targetIndex = i;
+                    break;
                 }
             }
             
-            if (!targetLine) return '';
-            
-            // For now, we'll need to get the actual bytecode from the backend
-            // This is a placeholder that extracts the hex representation if visible
-            // In practice, we'd need to store the bytecode data with each line
-            
-            // Estimate bytecode length (this is a simplification)
-            let estimatedLength = 2; // Default instruction length
-            if (nextLine) {
-                const nextMatch = nextLine.textContent.match(/^.*?[\[\(]([0-9A-Fa-f]{4})[\]\)]/);
-                if (nextMatch) {
-                    const nextAddr = parseInt(nextMatch[1], 16);
-                    estimatedLength = nextAddr - startAddr;
-                }
+            if (targetIndex === -1) {
+                console.log('Address not found in map:', address);
+                return '';
             }
             
-            // Generate placeholder hex (in real implementation, we'd have actual bytecode)
-            const hexBytes = [];
-            for (let i = 0; i < estimatedLength; i++) {
-                hexBytes.push('00');
-            }
+            // The offset in raw output corresponds to byte position
+            const startByteIndex = addressMap[targetIndex].offset;
+            const endByteIndex = targetIndex + 1 < addressMap.length 
+                ? addressMap[targetIndex + 1].offset 
+                : startByteIndex + 20; // Max 20 bytes if last instruction
             
-            return hexBytes.join(' ');
+            // Extract bytes from the hex string
+            const extractedBytes = allBytes.slice(startByteIndex, endByteIndex);
+            
+            console.log('Extracting single instruction:', {
+                address,
+                startByteIndex,
+                endByteIndex,
+                totalBytes: allBytes.length,
+                extracted: extractedBytes.join(' ')
+            });
+            
+            return extractedBytes.join(' ');
         }
         
         // Open analysis panel for a clicked line
@@ -1102,8 +1206,8 @@
                     deleteNoteBtn.style.display = 'inline-block';
                 } else {
                     currentNoteId = null;
-                    // Extract bytecode (placeholder for now)
-                    panelBytecode.value = extractBytecodeForAddress(address);
+                    // Extract bytecode using stored hex
+                    panelBytecode.value = extractBytecodeForAddress(address, window.currentBytecodeHex);
                     panelExpectedOutput.value = '';
                     panelNotes.value = '';
                     deleteNoteBtn.style.display = 'none';
@@ -1111,7 +1215,7 @@
             } catch (error) {
                 console.error('Failed to load notes:', error);
                 currentNoteId = null;
-                panelBytecode.value = extractBytecodeForAddress(address);
+                panelBytecode.value = extractBytecodeForAddress(address, window.currentBytecodeHex);
                 panelExpectedOutput.value = '';
                 panelNotes.value = '';
                 deleteNoteBtn.style.display = 'none';
@@ -1119,28 +1223,46 @@
             
             // Show panel
             analysisPanel.classList.add('active');
-            document.querySelector('.container').classList.add('inert-view');
+            document.querySelector('.container').classList.add('panel-open');
             
             // Hide test output initially
             testOutputSection.style.display = 'none';
+            
+            // Clear previous disassembly
+            panelDescumm.textContent = 'Ready';
+            panelFused.textContent = 'Ready';
+            panelRaw.textContent = 'Ready';
+            
+            // Auto-run disassembly if we have bytecode
+            if (panelBytecode.value.trim()) {
+                updateDisassembly();
+            }
         }
         
         // Close analysis panel
         closePanelBtn.addEventListener('click', () => {
             analysisPanel.classList.remove('active');
-            document.querySelector('.container').classList.remove('inert-view');
+            document.querySelector('.container').classList.remove('panel-open');
             currentAnalysisData = null;
             currentNoteId = null;
         });
         
-        // Update view with dynamic bytecode
-        updateViewBtn.addEventListener('click', async () => {
+        // Update disassembly function
+        let updateTimeout = null;
+        async function updateDisassembly() {
             const bytecodeHex = panelBytecode.value.trim();
             
             if (!bytecodeHex) {
-                alert('Please enter bytecode in hex format');
+                panelDescumm.textContent = 'Enter bytecode hex';
+                panelFused.textContent = 'Enter bytecode hex';
+                panelRaw.textContent = 'Enter bytecode hex';
                 return;
             }
+            
+            // Show loading state
+            panelDescumm.textContent = 'Loading...';
+            panelFused.textContent = 'Loading...';
+            panelRaw.textContent = 'Loading...';
             
             try {
                 const response = await fetch('/api/disassemble', {
@@ -1152,17 +1274,35 @@
                 const data = await response.json();
                 
                 if (data.error) {
-                    alert(`Error: ${data.error}`);
+                    panelDescumm.textContent = `Error: ${data.error}`;
+                    panelFused.textContent = `Error: ${data.error}`;
+                    panelRaw.textContent = `Error: ${data.error}`;
                     return;
                 }
                 
-                // Update the descumm and fused panels with new output
-                descummPanel.innerHTML = `<div style="color: #4caf50;">[Dynamic Analysis]</div>${escapeHtml(data.descumm_output)}`;
-                fusedPanel.innerHTML = `<div style="color: #4caf50;">[Dynamic Analysis]</div>${escapeHtml(data.fused_output)}`;
-                rawPanel.innerHTML = `<div style="color: #999;">[Dynamic analysis mode - original bytecode modified]</div>`;
+                // Update the panel's disassembly views
+                panelDescumm.textContent = data.descumm_output || 'No output';
+                panelFused.textContent = data.fused_output || 'No output';
+                panelRaw.textContent = data.raw_output || 'No output';
                 
             } catch (error) {
-                alert(`Failed to update view: ${error.message}`);
+                panelDescumm.textContent = `Error: ${error.message}`;
+                panelFused.textContent = `Error: ${error.message}`;
+                panelRaw.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        // Auto-update on bytecode input change with debouncing
+        panelBytecode.addEventListener('input', () => {
+            clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(updateDisassembly, 500); // 500ms delay
+        });
+        
+        // Also trigger on enter key
+        panelBytecode.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                clearTimeout(updateTimeout);
+                updateDisassembly();
             }
         });
         
@@ -1173,7 +1313,7 @@
             const noteData = {
                 script_name: currentAnalysisData.script_name,
                 address: currentAnalysisData.address,
-                original_bytes_hex: extractBytecodeForAddress(currentAnalysisData.address),
+                original_bytes_hex: extractBytecodeForAddress(currentAnalysisData.address, window.currentBytecodeHex),
                 edited_bytes_hex: panelBytecode.value.trim(),
                 expected_fused_output: panelExpectedOutput.value.trim(),
                 user_notes: panelNotes.value.trim()
@@ -1195,10 +1335,10 @@
                 
                 currentNoteId = data.id;
                 deleteNoteBtn.style.display = 'inline-block';
-                alert('Note saved successfully');
                 
                 // Update note indicators
                 updateNoteIndicators();
+                addNoteIndicators();
                 
             } catch (error) {
                 alert(`Failed to save note: ${error.message}`);
@@ -1208,8 +1348,6 @@
         // Delete note
         deleteNoteBtn.addEventListener('click', async () => {
             if (!currentNoteId) return;
-            
-            if (!confirm('Are you sure you want to delete this note?')) return;
             
             try {
                 const response = await fetch(`/api/notes/${currentNoteId}`, {
@@ -1223,11 +1361,14 @@
                     return;
                 }
                 
-                alert('Note deleted successfully');
+                // Store script name before closing panel (which sets currentAnalysisData to null)
+                const scriptName = currentAnalysisData.script_name;
                 closePanelBtn.click(); // Close panel
                 
-                // Update note indicators
-                updateNoteIndicators();
+                // Update note indicators in script list and current view
+                await updateNoteIndicators();
+                // Refresh the current view indicators
+                addNoteIndicators(scriptName);
                 
             } catch (error) {
                 alert(`Failed to delete note: ${error.message}`);
@@ -1243,7 +1384,7 @@
                 address: currentAnalysisData.address,
                 bytecode_hex: panelBytecode.value.trim(),
                 expected_fused_output: panelExpectedOutput.value.trim(),
-                descumm_output: descummPanel.textContent.replace('[Dynamic Analysis]', '').trim()
+                descumm_output: panelDescumm.textContent.trim()
             };
             
             try {
@@ -1260,12 +1401,47 @@
                     return;
                 }
                 
-                // Display generated test case
-                testOutput.textContent = data.test_case;
+                // Display generated test case in textarea
+                testOutput.value = data.test_case;
                 testOutputSection.style.display = 'block';
                 
             } catch (error) {
                 alert(`Failed to generate test: ${error.message}`);
+            }
+        });
+        
+        // Copy test case to clipboard
+        copyTestBtn.addEventListener('click', async () => {
+            const testText = testOutput.value;
+            if (!testText.trim()) {
+                alert('No test case to copy');
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(testText);
+                // Visual feedback
+                const originalText = copyTestBtn.textContent;
+                copyTestBtn.textContent = 'Copied!';
+                copyTestBtn.style.background = '#4caf50';
+                setTimeout(() => {
+                    copyTestBtn.textContent = originalText;
+                    copyTestBtn.style.background = '#666';
+                }, 1500);
+            } catch (error) {
+                // Fallback for older browsers
+                testOutput.select();
+                testOutput.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                
+                // Visual feedback
+                const originalText = copyTestBtn.textContent;
+                copyTestBtn.textContent = 'Copied!';
+                copyTestBtn.style.background = '#4caf50';
+                setTimeout(() => {
+                    copyTestBtn.textContent = originalText;
+                    copyTestBtn.style.background = '#666';
+                }, 1500);
             }
         });
         
@@ -1275,12 +1451,62 @@
             await loadScripts();
         }
         
+        // Load and add note indicators
+        async function addNoteIndicators(scriptName = null) {
+            const targetScript = scriptName || window.currentScriptName;
+            if (!targetScript) return;
+            
+            try {
+                // First remove all existing note indicators
+                const panels = [descummPanel, fusedPanel, rawPanel];
+                panels.forEach(panel => {
+                    const existingIndicators = panel.querySelectorAll('.note-indicator');
+                    existingIndicators.forEach(indicator => indicator.remove());
+                });
+                
+                const response = await fetch(`/api/notes?script_name=${targetScript}`);
+                const data = await response.json();
+                const notes = data.notes || [];
+                
+                // Create a map of addresses that have notes
+                const noteAddresses = new Set();
+                notes.forEach(note => {
+                    noteAddresses.add(note.address.toLowerCase());
+                });
+                
+                // Add indicators to lines with notes
+                panels.forEach(panel => {
+                    const addressSpans = panel.querySelectorAll('.address-hover');
+                    addressSpans.forEach(span => {
+                        const address = span.dataset.address;
+                        if (noteAddresses.has(address)) {
+                            // Add note indicator
+                            const line = span.closest('div');
+                            if (line) {
+                                const indicator = document.createElement('span');
+                                indicator.className = 'note-indicator';
+                                indicator.textContent = ' 📝';
+                                indicator.style.cursor = 'pointer';
+                                indicator.title = 'Has note';
+                                line.appendChild(indicator);
+                            }
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Failed to load note indicators:', error);
+            }
+        }
+        
         // Update displayWithLineMatches to make lines clickable
         const originalDisplayWithLineMatches = displayWithLineMatches;
         displayWithLineMatches = function(data) {
             originalDisplayWithLineMatches(data);
             // Make lines clickable after display
-            setTimeout(makeDisassemblyLinesClickable, 100);
+            setTimeout(() => {
+                makeDisassemblyLinesClickable();
+                addNoteIndicators();
+            }, 100);
         };
     </script>
 </body>
