@@ -262,16 +262,16 @@ class DataProvider:
             except Exception:
                 return {}
         return {}
-    
+
     def _save_notes(self) -> None:
         """Save notes to JSON file."""
         with open(self.notes_file, 'w') as f:
             json.dump(self.notes, f, indent=2)
-    
+
     def get_note(self, note_id: str) -> Optional[dict]:
         """Get a specific note by ID."""
         return self.notes.get(note_id)
-    
+
     def save_note(self, note_data: dict) -> str:
         """Save or update a note."""
         note_id = f"{note_data['script_name']}:{note_data['address']}"
@@ -279,7 +279,7 @@ class DataProvider:
         self.notes[note_id] = note_data
         self._save_notes()
         return note_id
-    
+
     def delete_note(self, note_id: str) -> bool:
         """Delete a note."""
         if note_id in self.notes:
@@ -287,7 +287,7 @@ class DataProvider:
             self._save_notes()
             return True
         return False
-    
+
     def get_notes_for_script(self, script_name: str) -> List[dict]:
         """Get all notes for a specific script."""
         return [note for note in self.notes.values() if note.get('script_name') == script_name]
@@ -311,7 +311,7 @@ def get_scripts():
     for script in data_provider.scripts:
         # Check if we have comparison data
         comparison = data_provider.comparisons.get(script.name)
-        
+
         # Count notes for this script
         notes_count = len(data_provider.get_notes_for_script(script.name))
 
@@ -391,21 +391,21 @@ def disassemble_bytecode():
         data = request.get_json()
         if not data or 'bytecode_hex' not in data:
             return jsonify({'error': 'Missing bytecode_hex parameter'}), 400
-        
+
         # Parse hex string to bytes
         hex_string = data['bytecode_hex'].strip()
         # Remove spaces if present
         hex_string = hex_string.replace(' ', '')
-        
+
         # Convert hex string to bytes
         try:
             bytecode = bytes.fromhex(hex_string)
         except ValueError as e:
             return jsonify({'error': f'Invalid hex string: {str(e)}'}), 400
-        
+
         if not bytecode:
             return jsonify({'error': 'Empty bytecode'}), 400
-        
+
         # Run disassemblers
         try:
             descumm_output = run_descumm_on_bytecode(data_provider.descumm_path, bytecode)
@@ -413,13 +413,13 @@ def disassemble_bytecode():
             raw_output = run_scumm6_disassembler(bytecode, 0)
         except Exception as e:
             return jsonify({'error': f'Disassembly failed: {str(e)}'}), 500
-        
+
         return jsonify({
             'descumm_output': descumm_output,
             'fused_output': fused_output,
             'raw_output': raw_output
         })
-        
+
     except Exception as e:
         return jsonify({'error': f'Internal error: {str(e)}'}), 500
 
@@ -429,7 +429,7 @@ def handle_notes():
     """Handle notes CRUD operations."""
     if data_provider is None:
         return jsonify({'error': 'Data provider not initialized'}), 500
-    
+
     if request.method == 'GET':
         # Get notes for a specific script
         script_name = request.args.get('script_name')
@@ -438,24 +438,24 @@ def handle_notes():
         else:
             notes = list(data_provider.notes.values())
         return jsonify({'notes': notes})
-    
+
     elif request.method == 'POST':
         # Create or update a note
         try:
             note_data = request.get_json()
             if not note_data:
                 return jsonify({'error': 'No data provided'}), 400
-            
+
             # Validate required fields
             required_fields = ['script_name', 'address']
             for field in required_fields:
                 if field not in note_data:
                     return jsonify({'error': f'Missing required field: {field}'}), 400
-            
+
             # Save the note
             note_id = data_provider.save_note(note_data)
             return jsonify({'id': note_id, 'message': 'Note saved successfully'})
-            
+
         except Exception as e:
             return jsonify({'error': f'Failed to save note: {str(e)}'}), 500
 
@@ -465,13 +465,13 @@ def handle_note(note_id):
     """Handle individual note operations."""
     if data_provider is None:
         return jsonify({'error': 'Data provider not initialized'}), 500
-    
+
     if request.method == 'GET':
         note = data_provider.get_note(note_id)
         if note:
             return jsonify(note)
         return jsonify({'error': 'Note not found'}), 404
-    
+
     elif request.method == 'DELETE':
         if data_provider.delete_note(note_id):
             return jsonify({'message': 'Note deleted successfully'})
@@ -485,18 +485,28 @@ def generate_test_case():
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
+
         # Extract data
         bytecode_hex = data.get('bytecode_hex', '')
         expected_fused = data.get('expected_fused_output', '')
         descumm_output = data.get('descumm_output', '')
-        
+
         # Generate terse AI-friendly test case instruction
         clean_bytes = bytecode_hex.replace(' ', '').upper()
-        test_case = f'''Add `{clean_bytes}` to the test_descumm_comparison.py as a new test case, with expected descumm output `{descumm_output.strip()}`. Want the fused disassembly to be similar to `{expected_fused.strip()}`.'''
-        
+        test_case = f'''Add `{clean_bytes}` to the test_descumm_comparison.py as
+        a new test case, with expected descumm output
+        `{descumm_output.strip()}` (might need to update the offsets). Want the
+        fused disassembly to be similar to {expected_fused.strip()}; Update the
+        code to have correct fusion, try to follow the established best
+        practices to make minimal changes to the code, try to create elegant
+        generic solutions that would apply to many types of fusion, and ensure
+        `run-tests.fish --once` passes afterwards.
+        '''
+        test_case = ' '.join(test_case.split())
+
+
         return jsonify({'test_case': test_case})
-        
+
     except Exception as e:
         return jsonify({'error': f'Failed to generate test: {str(e)}'}), 500
 
