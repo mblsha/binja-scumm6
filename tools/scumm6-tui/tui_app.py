@@ -6,24 +6,18 @@ The Textual-based terminal user interface for interactive exploration of
 disassembly differences.
 """
 
-from typing import List, Dict
-from dataclasses import dataclass
 
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical, Container
-from textual.widgets import Header, Footer, ListView, ListItem, Label, Static, Input, LoadingIndicator
+from textual.widgets import Header, Footer, ListView, ListItem, Label, Input
 from textual.screen import Screen
-from textual.reactive import reactive
 from textual.binding import Binding
-from textual import events
-from textual.widget import Widget
-from textual.message import Message
 
 # Import our enhanced diff widgets
 try:
-    from .diff_widgets import DiffPanelContainer, SynchronizedScrollView
+    from .diff_widgets import DiffPanelContainer
 except ImportError:
-    from diff_widgets import DiffPanelContainer, SynchronizedScrollView
+    from diff_widgets import DiffPanelContainer
 
 
 class DiffScreen(Screen):

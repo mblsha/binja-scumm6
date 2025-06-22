@@ -5,13 +5,12 @@ Enhanced diff visualization widgets for SCUMM6 comparison TUI.
 Provides synchronized scrolling and difference highlighting.
 """
 
-from typing import List, Tuple, Optional
+from typing import List, Optional
 import difflib
 import re
 
 from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
-from textual.widgets import Static
 from textual.reactive import reactive
 from textual.widget import Widget
 from textual import events
@@ -153,7 +152,6 @@ class HighlightedDiffPanel(Widget):
             [norm for _, norm in norm_lines]
         )
         
-        line_idx = 0
         for tag, i1, i2, j1, j2 in matcher.get_opcodes():
             if tag == 'equal':
                 for i in range(j2 - j1):

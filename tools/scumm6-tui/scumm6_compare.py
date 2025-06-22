@@ -168,12 +168,12 @@ class DataProvider:
     
     def _compare_outputs(self, descumm: str, fused: str) -> Tuple[bool, float, List[str]]:
         """Compare descumm output with fused output."""
-        descumm_lines = [l for l in descumm.strip().split('\n') if l.strip() and l.strip() != 'END']
-        fused_lines = [l for l in fused.strip().split('\n') if l.strip()]
+        descumm_lines = [line for line in descumm.strip().split('\n') if line.strip() and line.strip() != 'END']
+        fused_lines = [line for line in fused.strip().split('\n') if line.strip()]
         
         # Normalize all lines
-        norm_descumm = [self._normalize_line(l) for l in descumm_lines]
-        norm_fused = [self._normalize_line(l) for l in fused_lines]
+        norm_descumm = [self._normalize_line(line) for line in descumm_lines]
+        norm_fused = [self._normalize_line(line) for line in fused_lines]
         
         # Track unmatched lines
         unmatched = []
@@ -186,7 +186,6 @@ class DataProvider:
                 continue
                 
             best_score = 0.0
-            best_match = None
             
             for f_line in norm_fused:
                 if not f_line:
@@ -194,7 +193,6 @@ class DataProvider:
                 score = difflib.SequenceMatcher(None, d_line, f_line).ratio()
                 if score > best_score:
                     best_score = score
-                    best_match = f_line
             
             if best_score >= 0.85:  # High confidence match
                 matched_count += 1
@@ -353,7 +351,7 @@ class Scumm6CompareApp(cli.Application):
             print(f"{d_line} | {f_line}")
         
         if comparison.unmatched_lines:
-            print(f"\nUnmatched lines from descumm:")
+            print("\nUnmatched lines from descumm:")
             for line in comparison.unmatched_lines:
                 print(f"  {line}")
     
