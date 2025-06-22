@@ -192,7 +192,7 @@ script_test_cases = [
         expected_branches=[(0x05, (BranchType.TrueBranch, 0x1A))],
         expected_llil=[
             (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[137])])),
-            (0x0003, mintrinsic('is_script_running', outputs=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')])], params=[MockLLIL(op='POP.4', ops=[])])),
+            (0x0003, mintrinsic('is_script_running', outputs=[mreg('TEMP0')], params=[MockLLIL(op='POP.4', ops=[])])),
             (0x0003, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')])])),
             (0x0004, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
             (0x0004, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CMP_E.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')]), MockLLIL(op='CONST.4', ops=[0])])])),
@@ -209,7 +209,7 @@ script_test_cases = [
         ],
         expected_llil_fusion=[
             (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[137])])),
-            (0x0003, mintrinsic('is_script_running', outputs=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')])], params=[MockLLIL(op='POP.4', ops=[])])),
+            (0x0003, mintrinsic('is_script_running', outputs=[mreg('TEMP0')], params=[MockLLIL(op='POP.4', ops=[])])),
             (0x0003, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')])])),
             (0x0004, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
             (0x0004, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CMP_E.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')]), MockLLIL(op='CONST.4', ops=[0])])])),

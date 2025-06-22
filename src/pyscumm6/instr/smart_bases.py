@@ -194,10 +194,12 @@ class SmartIntrinsicOp(Instruction):
         params = [il.pop(4) for _ in range(self._config.pop_count)]
         
         if self._config.push_count > 0:
-            outputs = [il.reg(4, LLIL_TEMP(i)) for i in range(self._config.push_count)]
-            il.append(il.intrinsic(outputs, self._name, params))
-            for out_reg in outputs:
-                il.append(il.push(4, out_reg))
+            # Create temp registers for outputs
+            output_regs = [LLIL_TEMP(i) for i in range(self._config.push_count)]
+            il.append(il.intrinsic(output_regs, self._name, params))
+            # Push the output values
+            for reg in output_regs:
+                il.append(il.push(4, il.reg(4, reg)))
         else:
             il.append(il.intrinsic([], self._name, params))
     
@@ -292,10 +294,12 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
             
             # Generate the intrinsic call
             if self._config.push_count > 0:
-                outputs = [il.reg(4, LLIL_TEMP(i)) for i in range(self._config.push_count)]
-                il.append(il.intrinsic(outputs, IntrinsicName(self._name), params))
-                for out_reg in outputs:
-                    il.append(il.push(4, out_reg))
+                # Create temp registers for outputs
+                output_regs = [LLIL_TEMP(i) for i in range(self._config.push_count)]
+                il.append(il.intrinsic(output_regs, IntrinsicName(self._name), params))
+                # Push the output values
+                for reg in output_regs:
+                    il.append(il.push(4, il.reg(4, reg)))
             else:
                 il.append(il.intrinsic([], IntrinsicName(self._name), params))
         else:
