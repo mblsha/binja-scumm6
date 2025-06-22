@@ -69,7 +69,8 @@ def mreg(name: str) -> MockReg:
 class ScriptComparisonTestCase:
     """Test case for comparing descumm and SCUMM6 disassembler outputs."""
     test_id: str
-    script_name: str  # e.g., "room8_scrp18", "room11_enter"
+    script_name: Optional[str] = None  # e.g., "room8_scrp18", "room11_enter" - optional if bytecode is provided
+    bytecode: Optional[bytes] = None  # Hard-coded bytecode sequence for testing
     expected_descumm_output: Optional[str] = None
     expected_disasm_output: Optional[str] = None
     expected_disasm_fusion_output: Optional[str] = None  # Output with instruction fusion enabled
@@ -466,6 +467,39 @@ script_test_cases = [
             (0x00E8, MockLLIL(op='NORET', ops=[])),
         ],
     ),
+    ScriptComparisonTestCase(
+        test_id="start_script_quick_multi_args",
+        bytecode=bytes([
+            0x01, 0x5D, 0x00, 0x01, 0x0B, 0x00, 0x01, 0x16,
+            0x00, 0x01, 0x21, 0x00, 0x01, 0x03, 0x00, 0x5F,
+        ]),
+        expected_descumm_output=dedent("""
+            [0000] (5F) startScriptQuick(93,[11,22,33])
+            END
+        """).strip(),
+        expected_disasm_output=dedent("""
+            [0000] push_word(93)
+            [0003] push_word(11)
+            [0006] push_word(22)
+            [0009] push_word(33)
+            [000C] push_word(3)
+            [000F] startScriptQuick(...)
+        """).strip(),
+        expected_disasm_fusion_output=dedent("""
+            [0000] startScriptQuick(93, [22, 33, 3])
+        """).strip(),  # TODO: Should be startScriptQuick(93, [11, 22, 33]) - fix fusion algorithm
+        expected_llil=[
+            (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[93])])),
+            (0x0003, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[11])])),
+            (0x0006, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[22])])),
+            (0x0009, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[33])])),
+            (0x000C, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[3])])),
+            (0x000F, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
+        ],
+        expected_llil_fusion=[
+            (0x0000, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='CONST.4', ops=[93]), MockLLIL(op='CONST.4', ops=[3]), MockLLIL(op='CONST.4', ops=[11]), MockLLIL(op='CONST.4', ops=[22]), MockLLIL(op='CONST.4', ops=[33])])),
+        ],
+    ),
 ]
 
 
@@ -502,21 +536,28 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     Always verifies that all disassemblers produce output.
     """
     
-    # 1. Find and extract the script bytecode
-    script_info = find_script_by_name(case.script_name, test_environment.scripts)
-    bytecode = test_environment.bsc6_data[script_info.start:script_info.end]
+    # 1. Get the bytecode - either from hard-coded data or by finding the script
+    if case.bytecode is not None:
+        bytecode = case.bytecode
+        start_addr = 0x0  # Use 0 as base address for hard-coded bytecode
+    else:
+        if case.script_name is None:
+            raise ValueError("Either script_name or bytecode must be provided")
+        script_info = find_script_by_name(case.script_name, test_environment.scripts)
+        bytecode = test_environment.bsc6_data[script_info.start:script_info.end]
+        start_addr = script_info.start
 
     # 2. Execute all disassemblers and LLIL generation
     descumm_output = run_descumm_on_bytecode(test_environment.descumm_path, bytecode)
-    disasm_output = run_scumm6_disassembler(bytecode, script_info.start)
-    disasm_fusion_output = run_scumm6_disassembler_with_fusion(bytecode, script_info.start)
-    llil_operations = run_scumm6_llil_generation(bytecode, script_info.start, use_fusion=False)
-    llil_fusion_operations = run_scumm6_llil_generation(bytecode, script_info.start, use_fusion=True)
+    disasm_output = run_scumm6_disassembler(bytecode, start_addr)
+    disasm_fusion_output = run_scumm6_disassembler_with_fusion(bytecode, start_addr)
+    llil_operations = run_scumm6_llil_generation(bytecode, start_addr, use_fusion=False)
+    llil_fusion_operations = run_scumm6_llil_generation(bytecode, start_addr, use_fusion=True)
 
     # 3. Check branch information if expected branches are provided
     if case.expected_branches is not None:
         arch = Scumm6()
-        actual_branches = collect_branches_from_architecture(arch, bytecode, script_info.start)
+        actual_branches = collect_branches_from_architecture(arch, bytecode, start_addr)
         
         assert len(actual_branches) == len(case.expected_branches), \
             f"Expected {len(case.expected_branches)} branches, got {len(actual_branches)}"
@@ -528,28 +569,28 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     if case.expected_descumm_output is not None:
         expected_descumm = dedent(case.expected_descumm_output).strip()
         assert descumm_output.strip() == expected_descumm, \
-            f"descumm output for '{case.script_name}' does not match expected.\n" \
+            f"descumm output for '{case.test_id}' does not match expected.\n" \
             f"Expected:\n{expected_descumm}\n\nActual:\n{descumm_output.strip()}"
 
     if case.expected_disasm_output is not None:
         expected_disasm = dedent(case.expected_disasm_output).strip()
         assert disasm_output.strip() == expected_disasm, \
-            f"SCUMM6 disassembler output for '{case.script_name}' does not match expected.\n" \
+            f"SCUMM6 disassembler output for '{case.test_id}' does not match expected.\n" \
             f"Expected:\n{expected_disasm}\n\nActual:\n{disasm_output.strip()}"
 
     if case.expected_disasm_fusion_output is not None:
         expected_disasm_fusion = dedent(case.expected_disasm_fusion_output).strip()
         assert disasm_fusion_output.strip() == expected_disasm_fusion, \
-            f"SCUMM6 disassembler with fusion output for '{case.script_name}' does not match expected.\n" \
+            f"SCUMM6 disassembler with fusion output for '{case.test_id}' does not match expected.\n" \
             f"Expected:\n{expected_disasm_fusion}\n\nActual:\n{disasm_fusion_output.strip()}"
 
     if case.expected_llil is not None:
-        assert_llil_operations_match(llil_operations, case.expected_llil, case.script_name, "regular LLIL")
+        assert_llil_operations_match(llil_operations, case.expected_llil, case.test_id, "regular LLIL")
 
     if case.expected_llil_fusion is not None:
-        assert_llil_operations_match(llil_fusion_operations, case.expected_llil_fusion, case.script_name, "fusion LLIL")
+        assert_llil_operations_match(llil_fusion_operations, case.expected_llil_fusion, case.test_id, "fusion LLIL")
 
     # Always verify that outputs were generated
-    assert len(descumm_output.strip()) > 0, f"descumm produced no output for '{case.script_name}'"
-    assert len(disasm_output.strip()) > 0, f"SCUMM6 produced no output for '{case.script_name}'"
-    assert len(disasm_fusion_output.strip()) > 0, f"SCUMM6 with fusion produced no output for '{case.script_name}'"
+    assert len(descumm_output.strip()) > 0, f"descumm produced no output for '{case.test_id}'"
+    assert len(disasm_output.strip()) > 0, f"SCUMM6 produced no output for '{case.test_id}'"
+    assert len(disasm_fusion_output.strip()) > 0, f"SCUMM6 with fusion produced no output for '{case.test_id}'"

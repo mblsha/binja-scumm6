@@ -43,7 +43,7 @@ class StartScriptQuick(SmartSemanticIntrinsicOp):
             
         # If we have some operands, check if we need more
         if len(self.fused_operands) == 1:
-            # We have one operand, need the arg_count
+            # We have the arg_count, now we need arguments
             if not self._is_fusible_push(previous):
                 return None
                 
@@ -51,34 +51,50 @@ class StartScriptQuick(SmartSemanticIntrinsicOp):
             fused.fused_operands = [previous] + self.fused_operands
             fused._length = self._length + previous.length()
             
-            # Extract arg_count value if it's a constant
-            if previous.__class__.__name__ in ['PushByte', 'PushWord']:
-                fused._arg_count = previous.op_details.body.data
+            # Extract arg_count from the FIRST operand we fused (which is last in list)
+            # Only set it once!
+            if fused._arg_count is None and self.fused_operands[0].__class__.__name__ in ['PushByte', 'PushWord']:
+                fused._arg_count = self.fused_operands[0].op_details.body.data
             
             return fused
             
-        # Check if we need the script ID
-        if len(self.fused_operands) == 2 and self._arg_count == 1:
-            # We have arg_count and one arg, now need script_id
-            if not self._is_fusible_push(previous):
-                return None
-                
-            fused = copy.deepcopy(self)
-            fused.fused_operands = [previous] + self.fused_operands
-            fused._length = self._length + previous.length()
+        # Check if we need more arguments or the script ID
+        if self._arg_count is not None:
+            # We know how many arguments we need
+            current_arg_count = len(self.fused_operands) - 1  # Subtract 1 for arg_count itself
             
-            # Extract script_id value
-            if previous.__class__.__name__ in ['PushByte', 'PushWord']:
-                fused._script_id = previous.op_details.body.data
+            if current_arg_count < self._arg_count:
+                # Still need more arguments
+                if not self._is_fusible_push(previous):
+                    return None
+                    
+                fused = copy.deepcopy(self)
+                fused.fused_operands = [previous] + self.fused_operands
+                fused._length = self._length + previous.length()
+                fused._arg_count = self._arg_count  # Preserve arg count
+                return fused
                 
-            return fused
-            
-        # For now, don't handle more complex cases
+            elif current_arg_count == self._arg_count:
+                # We have all arguments, now need script_id
+                if not self._is_fusible_push(previous):
+                    return None
+                    
+                fused = copy.deepcopy(self)
+                fused.fused_operands = [previous] + self.fused_operands
+                fused._length = self._length + previous.length()
+                
+                # Extract script_id value
+                if previous.__class__.__name__ in ['PushByte', 'PushWord']:
+                    fused._script_id = previous.op_details.body.data
+                    
+                return fused
+        
+        # No more fusion possible
         return None
         
     def render(self) -> List[Token]:
         """Render in descumm style: startScriptQuick(script_id, [args])"""
-        if self.fused_operands and len(self.fused_operands) >= 3:
+        if self.fused_operands and self._arg_count is not None and len(self.fused_operands) >= self._arg_count + 2:
             # We have script_id, arg_count, and at least one arg
             tokens = [TInstr("startScriptQuick"), TSep("(")]
             
@@ -104,7 +120,7 @@ class StartScriptQuick(SmartSemanticIntrinsicOp):
             
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         """Generate LLIL for startScriptQuick with proper parameter handling."""
-        if self.fused_operands and len(self.fused_operands) >= 3:
+        if self.fused_operands and self._arg_count is not None and len(self.fused_operands) >= self._arg_count + 2:
             # We have all parameters fused
             # Parameters: script_id, arg_count, args...
             params = []
