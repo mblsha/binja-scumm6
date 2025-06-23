@@ -1526,8 +1526,8 @@
                 deleteNoteBtn.style.display = 'inline-block';
                 
                 // Update note indicators
-                updateNoteIndicators();
-                addNoteIndicators();
+                await updateNoteIndicators();
+                // No need to call addNoteIndicators here - updateNoteIndicators already does it
                 
             } catch (error) {
                 alert(`Failed to save note: ${error.message}`);
@@ -1556,8 +1556,7 @@
                 
                 // Update note indicators in script list and current view
                 await updateNoteIndicators();
-                // Refresh the current view indicators
-                addNoteIndicators(scriptName);
+                // No need to call addNoteIndicators here - updateNoteIndicators already does it
                 
             } catch (error) {
                 alert(`Failed to delete note: ${error.message}`);
@@ -1638,53 +1637,81 @@
         async function updateNoteIndicators() {
             // Reload scripts to get updated note counts
             await loadScripts();
+            // Add note indicators to current view
+            addNoteIndicators();
         }
         
         // Load and add note indicators
+        let noteIndicatorTimeout = null;
+        let isAddingIndicators = false;
+        
         async function addNoteIndicators(scriptName = null) {
-            const targetScript = scriptName || window.currentScriptName;
-            if (!targetScript) return;
-            
-            try {
-                // First remove all existing note indicators
-                const panels = [descummPanel, fusedPanel, rawPanel];
-                panels.forEach(panel => {
-                    const existingIndicators = panel.querySelectorAll('.note-indicator');
-                    existingIndicators.forEach(indicator => indicator.remove());
-                });
-                
-                const response = await fetch(`/api/notes?script_name=${targetScript}`);
-                const data = await response.json();
-                const notes = data.notes || [];
-                
-                // Create a map of addresses that have notes
-                const noteAddresses = new Set();
-                notes.forEach(note => {
-                    noteAddresses.add(note.address.toLowerCase());
-                });
-                
-                // Add indicators to lines with notes
-                panels.forEach(panel => {
-                    const addressSpans = panel.querySelectorAll('.address-hover');
-                    addressSpans.forEach(span => {
-                        const address = span.dataset.address;
-                        if (noteAddresses.has(address)) {
-                            // Add note indicator
-                            const line = span.closest('div');
-                            if (line) {
-                                const indicator = document.createElement('span');
-                                indicator.className = 'note-indicator';
-                                indicator.textContent = ' 📝';
-                                indicator.style.cursor = 'pointer';
-                                indicator.title = 'Has note';
-                                line.appendChild(indicator);
-                            }
-                        }
-                    });
-                });
-            } catch (error) {
-                console.error('Failed to load note indicators:', error);
+            // Clear any pending calls
+            if (noteIndicatorTimeout) {
+                clearTimeout(noteIndicatorTimeout);
             }
+            
+            // Debounce the call to prevent multiple simultaneous executions
+            noteIndicatorTimeout = setTimeout(async () => {
+                // Prevent concurrent executions
+                if (isAddingIndicators) return;
+                isAddingIndicators = true;
+                
+                const targetScript = scriptName || window.currentScriptName;
+                if (!targetScript) {
+                    isAddingIndicators = false;
+                    return;
+                }
+                
+                try {
+                    // First remove all existing note indicators and classes
+                    const panels = [descummPanel, fusedPanel, rawPanel];
+                    panels.forEach(panel => {
+                        const existingIndicators = panel.querySelectorAll('.note-indicator');
+                        existingIndicators.forEach(indicator => indicator.remove());
+                        
+                        // Also remove the line-with-note class
+                        const linesWithNotes = panel.querySelectorAll('.line-with-note');
+                        linesWithNotes.forEach(line => line.classList.remove('line-with-note'));
+                    });
+                    
+                    const response = await fetch(`/api/notes?script_name=${targetScript}`);
+                    const data = await response.json();
+                    const notes = data.notes || [];
+                    
+                    // Create a map of addresses that have notes
+                    const noteAddresses = new Set();
+                    notes.forEach(note => {
+                        noteAddresses.add(note.address.toLowerCase());
+                    });
+                    
+                    // Add indicators to lines with notes
+                    panels.forEach((panel, panelIndex) => {
+                        const addressSpans = panel.querySelectorAll('.address-hover');
+                        addressSpans.forEach(span => {
+                            const address = span.dataset.address;
+                            if (address && noteAddresses.has(address.toLowerCase())) {
+                                // Add note indicator
+                                const line = span.closest('div');
+                                if (line && !line.querySelector('.note-indicator')) {
+                                    line.classList.add('line-with-note');
+                                    const indicator = document.createElement('span');
+                                    indicator.className = 'note-indicator';
+                                    indicator.textContent = ' 📝';
+                                    indicator.style.cursor = 'pointer';
+                                    indicator.title = 'Has note';
+                                    indicator.dataset.panel = panelIndex; // Track which panel this belongs to
+                                    line.appendChild(indicator);
+                                }
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.error('Failed to load note indicators:', error);
+                } finally {
+                    isAddingIndicators = false;
+                }
+            }, 100); // 100ms debounce
         }
         
         // Update displayWithLineMatches to make lines clickable
