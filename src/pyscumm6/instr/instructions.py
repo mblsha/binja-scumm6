@@ -911,19 +911,37 @@ class IfClassOfIs(Instruction):
 class PrintDebug(Instruction):
     """Print debug with text parameter."""
     
-    def _extract_message_text(self, message: Any) -> str:
-        """Extract text from a SCUMM6 Message object."""
+    def _extract_message_text(self, message: Any) -> Tuple[List[str], str]:
+        """Extract text from a SCUMM6 Message object, including sound commands.
+        
+        Returns:
+            A tuple of (sound_commands, text_string)
+        """
+        sound_commands: List[str] = []
         text_chars: List[str] = []
+        
         for part in message.parts:
-            if hasattr(part, 'data') and part.data != 0:  # Skip terminator
-                if hasattr(part, 'content'):
-                    # Check if it's a RegularChar
-                    if hasattr(part.content, 'value'):
-                        # Convert byte value to character
-                        char_value = part.content.value
-                        if isinstance(char_value, int) and 32 <= char_value <= 126:  # Printable ASCII
-                            text_chars.append(chr(char_value))
-        return ''.join(text_chars)
+            if hasattr(part, 'data'):
+                if part.data == 0xFF:
+                    # This might be a special sequence
+                    if hasattr(part, 'content') and hasattr(part.content, 'payload'):
+                        # Check if it's a Sound special sequence
+                        payload = part.content.payload
+                        if payload.__class__.__name__ == 'Sound':
+                            # Extract sound parameters (v1 and v3, skip v2)
+                            if hasattr(payload, 'v1') and hasattr(payload, 'v3'):
+                                sound_commands.append(f"sound({hex(payload.v1).upper().replace('X', 'x')}, {hex(payload.v3).upper().replace('X', 'x')})")
+                elif part.data != 0:  # Skip terminator
+                    if hasattr(part, 'content'):
+                        # Check if it's a RegularChar
+                        if hasattr(part.content, 'value'):
+                            # Convert byte value to character
+                            char_value = part.content.value
+                            if isinstance(char_value, int) and 32 <= char_value <= 126:  # Printable ASCII
+                                text_chars.append(chr(char_value))
+        
+        # Return sound commands and text separately
+        return sound_commands, ''.join(text_chars)
     
     def render(self) -> List[Token]:
         # Check if this instruction contains a message
@@ -934,12 +952,31 @@ class PrintDebug(Instruction):
             if (self.op_details.body.subop == Scumm6Opcodes.SubopType.textstring and 
                 isinstance(self.op_details.body.body, Scumm6Opcodes.Message)):
                 # Extract the actual message text
-                message_text = self._extract_message_text(self.op_details.body.body)
-                if message_text:
-                    return [TInstr("printDebug"), TText(".msg("), TText(f'"{message_text}"'), TText(")")]
+                sound_commands, text = self._extract_message_text(self.op_details.body.body)
+                
+                tokens = [TInstr("printDebug"), TText(".msg(")]
+                
+                # Add sound commands and text
+                if sound_commands:
+                    # Add sound commands
+                    for i, sound_cmd in enumerate(sound_commands):
+                        if i > 0:
+                            tokens.extend([TText(" + ")])
+                        tokens.append(TInstr(sound_cmd))
+                    
+                    if text:
+                        tokens.extend([TText(" + "), TText(f'"{text}"')])
+                    else:
+                        # Just sound, add empty string
+                        tokens.extend([TText(" + "), TText('""')])
+                elif text:
+                    tokens.append(TText(f'"{text}"'))
                 else:
-                    # Fallback to ellipsis if text extraction fails
-                    return [TInstr("printDebug"), TText(".msg("), TText("..."), TText(")")]
+                    # No text or sound
+                    tokens.append(TText('""'))
+                
+                tokens.append(TText(")"))
+                return tokens
             else:
                 # Handle other subops like begin(), end(), etc.
                 subop_name = self.op_details.body.subop.name

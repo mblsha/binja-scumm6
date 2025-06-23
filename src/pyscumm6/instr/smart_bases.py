@@ -52,6 +52,7 @@ DESCUMM_FUNCTION_NAMES = {
     "print_actor": "printActor",
     "print_ego": "printEgo",
     "wait": "wait",
+    "wait_for_message": "waitForMessage",
     "pickup_object": "pickupObject",
     "do_sentence": "doSentence",
     "load_room": "loadRoom",
@@ -75,6 +76,10 @@ DESCUMM_FUNCTION_NAMES = {
     "actor_ops.ignore_boxes": "actorOps.setIgnoreBoxes",
     "actor_ops.never_zclip": "actorOps.setNeverZClip",
     "actor_ops.elevation": "actorOps.setElevation",
+    "actor_ops.talk_color": "actorOps.setTalkColor",
+    "actor_ops.actor_name": "actorOps.setName",
+    "actor_ops.step_dist": "actorOps.setWalkSpeed",
+    "actor_ops.walk_speed": "actorOps.setWalkSpeed",
 }
 
 
