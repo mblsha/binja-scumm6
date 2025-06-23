@@ -41,6 +41,7 @@ DESCUMM_FUNCTION_NAMES = {
     "sound_kludge": "soundKludge",
     "cutscene": "cutscene",
     "break_here": "breakHere",
+    "breakHere": "breakHere",
     "delay": "delay",
     "delay_frames": "delayFrames",
     "dim_array": "dimArray",

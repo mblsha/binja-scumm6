@@ -50,7 +50,9 @@ def make_intrinsic_instruction(
             return pop_count
 
         def render(self) -> List[Token]:
-            return [TInstr(name)]
+            from .smart_bases import DESCUMM_FUNCTION_NAMES
+            display_name = DESCUMM_FUNCTION_NAMES.get(name, name)
+            return [TInstr(display_name)]
 
         def lift(self, il: LowLevelILFunction, addr: int) -> None:
             assert isinstance(self.op_details.body, body_type), \
@@ -248,12 +250,15 @@ class VariableWriteOp(Instruction):
                 # For write_byte_var which has a Kaitai mapping bug
                 # Extract the variable ID directly from the raw bytecode
                 var_id = self._extract_var_id_from_unknownop()
+                var_prefix = "var"
             else:
                 var_id = self.op_details.body.data
+                # Check if this is a bit variable
+                var_prefix = self._get_var_prefix()
             
-            # Show as assignment: var_10 = 5
+            # Show as assignment: var_10 = 5 or bitvar327 = 1
             tokens: List[Token] = []
-            tokens.append(TInt(f"var_{var_id}"))
+            tokens.append(TInt(f"{var_prefix}_{var_id}" if var_prefix == "var" else f"{var_prefix}{var_id}"))
             tokens.append(TSep(" = "))
             tokens.extend(self._render_operand(self.fused_operands[0]))
             return tokens
@@ -264,11 +269,12 @@ class VariableWriteOp(Instruction):
             return [TInstr(self.instruction_name), TSep("("), TInstr("var_?"), TSep(")")]
         else:
             var_id = self.op_details.body.data
+            var_prefix = self._get_var_prefix()
             # Normal stack-based rendering
             return [
                 TInstr(self.instruction_name),
                 TSep("("),
-                TInt(f"var_{var_id}"),
+                TInt(f"{var_prefix}_{var_id}" if var_prefix == "var" else f"{var_prefix}{var_id}"),
                 TSep(")"),
             ]
     
@@ -328,6 +334,15 @@ class VariableWriteOp(Instruction):
         # Fallback to undefined
         return il.undefined()
 
+    def _get_var_prefix(self) -> str:
+        """Get the variable prefix based on variable type (var or bitvar)."""
+        # Check if the body has a type field (WordVarData does)
+        if hasattr(self.op_details.body, 'type'):
+            var_type = self.op_details.body.type
+            if var_type == Scumm6Opcodes.VarType.bitvar:
+                return "bitvar"
+        return "var"
+    
     def _extract_var_id_from_unknownop(self) -> str:
         """Extract variable ID from UnknownOp body (workaround for Kaitai bug)."""
         # For write_byte_var with UnknownOp, we can't reliably extract the var ID
