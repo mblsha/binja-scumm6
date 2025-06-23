@@ -870,6 +870,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] actorOps.setName("Purple Tentacle")',
     ),
+    ScriptComparisonTestCase(
+        test_id="wait_for_message",
+        bytecode=bytes.fromhex("A9A9"),
+        expected_descumm_output=dedent("""
+            [0000] (A9) wait.waitForMessage()
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] wait.waitForMessage()',
+    ),
 ]
 
 

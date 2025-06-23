@@ -80,6 +80,10 @@ DESCUMM_FUNCTION_NAMES = {
     "actor_ops.actor_name": "actorOps.setName",
     "actor_ops.step_dist": "actorOps.setWalkSpeed",
     "actor_ops.walk_speed": "actorOps.setWalkSpeed",
+    # Wait operation subcommands
+    "wait.wait_for_message": "wait.waitForMessage",
+    "wait.wait_for_actor": "wait.waitForActor",
+    "wait.wait_for_camera": "wait.waitForCamera",
 }
 
 

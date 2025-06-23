@@ -180,7 +180,6 @@ INTRINSIC_CONFIGS: Dict[str, IntrinsicConfig] = {
     "get_verb_entrypoint": IntrinsicConfig(pop_count=2, push_count=1, doc="Get verb entrypoint"),
     
     # Timing Operations
-    "wait": IntrinsicConfig(pop_count=1, doc="Wait for actor"),
     "delay": IntrinsicConfig(pop_count=1, doc="Delay"),
     "delay_seconds": IntrinsicConfig(pop_count=1, doc="Delay seconds"),
     "delay_minutes": IntrinsicConfig(pop_count=1, doc="Delay minutes"),
@@ -262,6 +261,7 @@ COMPLEX_CONFIGS: Dict[str, ComplexConfig] = {
     "room_ops": ComplexConfig("RoomOps", "Room operations with sub-commands"),
     "system_ops": ComplexConfig("SystemOps", "System operations with sub-commands"),
     "resource_routines": ComplexConfig("ResourceRoutines", "Resource management operations"),
+    "wait": ComplexConfig("Wait", "Wait operations with sub-commands"),
 }
 
 # Stack Operations
