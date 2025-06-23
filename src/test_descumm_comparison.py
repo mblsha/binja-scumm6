@@ -861,6 +861,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] talkActor(sound(0x8, 0xE) + "I don\'t think you should drink that^", 6)',
     ),
+    ScriptComparisonTestCase(
+        test_id="actor_ops_set_name",
+        bytecode=bytes.fromhex("9D58507572706C652054656E7461636C6500"),
+        expected_descumm_output=dedent("""
+            [0000] (9D) actorOps.setName("Purple Tentacle")
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] actorOps.setName("Purple Tentacle")',
+    ),
 ]
 
 

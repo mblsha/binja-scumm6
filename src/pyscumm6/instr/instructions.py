@@ -1157,20 +1157,36 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
     
     def render(self) -> List[Token]:
         from .smart_bases import DESCUMM_FUNCTION_NAMES
+        from ...scumm6_opcodes import Scumm6Opcodes
+        
         subop_name = self.op_details.body.subop.name
         full_name = f"actor_ops.{subop_name}"
         display_name = DESCUMM_FUNCTION_NAMES.get(full_name, full_name)
         
         tokens: List[Token] = [TInstr(display_name)]
         
-        # Add parameters if we have fused operands
-        if self.fused_operands:
+        # Check if this subop has string data (like actor_name)
+        subop_body = self.op_details.body.body
+        if isinstance(subop_body, Scumm6Opcodes.CallFuncString):
+            # String parameter
+            tokens.append(TText("("))
+            tokens.append(TText(f'"{subop_body.data}"'))
+            tokens.append(TText(")"))
+        elif isinstance(subop_body, Scumm6Opcodes.CallFuncPop0):
+            # No parameters - just show empty parens if there's nothing fused
+            if not self.fused_operands:
+                tokens.append(TText("()"))
+        elif self.fused_operands:
+            # Add fused operand parameters
             tokens.append(TText("("))
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
                     tokens.append(TSep(", "))
                 tokens.extend(self._render_operand(operand))
             tokens.append(TText(")"))
+        else:
+            # No fusion and not handled above - show empty parens
+            tokens.append(TText("()"))
         
         return tokens
     
