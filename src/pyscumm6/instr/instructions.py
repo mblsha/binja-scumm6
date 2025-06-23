@@ -544,23 +544,25 @@ class Iff(ControlFlowOp):
 
     def render(self) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
-        # Follow descumm philosophy: show semantic meaning
-        # Positive offset = forward jump, negative = backward jump
-        if jump_offset > 0:
+        # Follow descumm format
+        if self._addr is not None and jump_offset != 0:
+            # Calculate absolute target address
+            target_addr = self._addr + self._length + jump_offset
             return [
                 TInstr("if"),
                 TSep(" "),
-                TInstr("goto"),
+                TInstr("jump"),
                 TSep(" "),
-                TInstr(f"+{jump_offset}"),
+                TText(f"{target_addr:x}"),  # Hexadecimal format to match descumm
             ]
         else:
+            # Fallback format
             return [
                 TInstr("if"),
                 TSep(" "),
                 TInstr("goto"),
                 TSep(" "),
-                TInstr(f"{jump_offset}"),
+                TInt(f"{jump_offset:+d}"),
             ]
 
     def is_conditional(self) -> bool:
@@ -604,31 +606,25 @@ class IfNot(ControlFlowOp):
 
     def render(self) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
-        # Follow descumm philosophy: show semantic meaning
-        if jump_offset > 0:
+        # Follow descumm format
+        if self._addr is not None and jump_offset != 0:
+            # Calculate absolute target address
+            target_addr = self._addr + self._length + jump_offset
             return [
                 TInstr("unless"),
                 TSep(" "),
-                TInstr("goto"),
+                TInstr("jump"),
                 TSep(" "),
-                TInstr(f"+{jump_offset}"),
-            ]
-        elif jump_offset < 0:
-            return [
-                TInstr("unless"),
-                TSep(" "),
-                TInstr("goto"),
-                TSep(" "),
-                TInstr(f"{jump_offset}"),
+                TText(f"{target_addr:x}"),  # Hexadecimal format to match descumm
             ]
         else:
-            # Zero offset = skip next instruction if true
+            # Fallback format
             return [
                 TInstr("unless"),
                 TSep(" "),
                 TInstr("goto"),
                 TSep(" "),
-                TInstr("self"),
+                TInt(f"{jump_offset:+d}"),
             ]
 
     def is_conditional(self) -> bool:
@@ -668,25 +664,21 @@ class Jump(ControlFlowOp):
 
     def render(self) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
-        # Follow descumm philosophy: show semantic meaning
-        if jump_offset > 0:
+        # Match descumm format: "jump" followed by absolute target address
+        if self._addr is not None:
+            # Calculate absolute target address
+            target_addr = self._addr + self._length + jump_offset
             return [
-                TInstr("goto"),
+                TInstr("jump"),
                 TSep(" "),
-                TInstr(f"+{jump_offset}"),
-            ]
-        elif jump_offset < 0:
-            return [
-                TInstr("goto"),
-                TSep(" "),
-                TInstr(f"{jump_offset}"),
+                TText(f"{target_addr:x}"),  # Hexadecimal format to match descumm
             ]
         else:
-            # Zero offset = infinite loop
+            # Fallback: show relative offset if address not available
             return [
                 TInstr("goto"),
                 TSep(" "),
-                TInstr("self"),
+                TInt(f"{jump_offset:+d}"),
             ]
 
     def is_conditional(self) -> bool:
@@ -708,8 +700,8 @@ class Jump(ControlFlowOp):
 class SmartIff(SmartConditionalJump):
     """Fusible 'if true' conditional jump instruction."""
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self._name = "iff"
         self._is_if_not = False  # This is 'if', not 'if_not'
 
@@ -717,8 +709,8 @@ class SmartIff(SmartConditionalJump):
 class SmartIfNot(SmartConditionalJump):
     """Fusible 'if false/unless' conditional jump instruction."""
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self._name = "if_not"
         self._is_if_not = True  # This is 'if_not'
 
@@ -1005,8 +997,8 @@ class PrintDebug(Instruction):
 class TalkActor(FusibleMultiOperandMixin, Instruction):
     """Talk actor with string message and actor parameter."""
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self.fused_operands: List[Instruction] = []
         self._stack_pop_count = 1  # Pops actor ID from stack by default
     
@@ -1139,8 +1131,8 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
 class ActorOps(FusibleMultiOperandMixin, Instruction):
     """Actor operations with various sub-commands."""
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self.fused_operands: List[Instruction] = []
     
     def _get_max_operands(self) -> int:

@@ -41,7 +41,7 @@ def _iter_decode(data: bytes, addr: int) -> Iterator[Tuple[Instruction, int]]:
             )
             break
 
-        instr = InstructionClass(kaitai_op=parsed_op, length=length)
+        instr = InstructionClass(kaitai_op=parsed_op, length=length, addr=addr + offset)
         yield instr, addr + offset
         offset += length
 
