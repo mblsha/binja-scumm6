@@ -125,12 +125,8 @@ jobs:
             fi
           fi
       
-      - name: Run Pytest with coverage
+      - name: Run Pytest
         run: python scripts/run_pytest_direct.py
-      
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        if: success()
 
   summary:
     runs-on: ubuntu-latest
