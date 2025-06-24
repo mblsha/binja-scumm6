@@ -69,6 +69,45 @@ cd tools/scumm6-web
 python3 -m pip install -r requirements.txt
 ```
 
+## Jump Instructions and Absolute Addressing
+
+### Absolute Address Display
+Jump instructions now display absolute addresses instead of relative offsets to match descumm's output format:
+- **Before**: `[00E8] goto +10`
+- **After**: `[00E8] jump 8d892`
+
+This change improves consistency with descumm and makes it easier to understand control flow.
+
+### Implementation Details
+1. **Instruction Address Propagation**: All instruction classes now accept an optional `addr` parameter in their constructors
+2. **Address Calculation**: Jump, Iff, and IfNot instructions calculate absolute addresses when rendering:
+   ```python
+   target_addr = self.addr + self.length() + jump_offset
+   ```
+3. **Hex Formatting**: Negative addresses are formatted as unsigned 32-bit hex values (e.g., `ffffff18`)
+
+### Jump Address Normalization
+When scripts execute from non-zero starting addresses, jump targets can be large hex values that are hard to read. The plugin provides address normalization:
+
+#### Shared Normalization Module
+The `src/address_normalization.py` module provides:
+- `normalize_jump_addresses()` - Transforms large absolute addresses to script-relative addresses
+- Applied to both test cases and web UI for consistency
+
+#### Example Normalization
+For a script starting at address `0x8d79d`:
+- **Raw output**: `[00E8] jump 8d892`
+- **Normalized**: `[00E8] jump f5` (0x8d892 - 0x8d79d = 0xf5)
+
+#### Usage in Tests
+Test cases automatically normalize jump addresses when scripts start at non-zero addresses:
+```python
+if start_addr != 0:
+    disasm_output = normalize_jump_addresses(disasm_output, start_addr)
+```
+
+This ensures test expectations match descumm's relative addressing while the actual implementation uses absolute addresses.
+
 ## Running Tests
 
 To run tests correctly, use one of these methods:
