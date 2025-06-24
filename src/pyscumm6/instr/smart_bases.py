@@ -385,8 +385,8 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
     _name: str
     _config: ComplexConfig
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self.fused_operands: List['Instruction'] = []
 
     @property
@@ -684,8 +684,8 @@ class SmartConditionalJump(ControlFlowOp):
     _name: str
     _is_if_not: bool  # True for if_not, False for iff
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self.fused_operands: List['Instruction'] = []
     
     @property
@@ -910,8 +910,8 @@ class SmartComparisonOp(Instruction):
     _name: str
     _config: StackConfig
 
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self.fused_operands: List['Instruction'] = []
 
     @property

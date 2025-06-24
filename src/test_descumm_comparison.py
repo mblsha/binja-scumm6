@@ -217,7 +217,7 @@ script_test_cases = [
             [00E1] push_word(4)
             [00E4] mul
             [00E5] write_word_var(var_7)
-            [00E8] goto +10
+            [00E8] jump 8d892
             [00EB] push_word_var(var_3)
             [00EE] push_word(2)
             [00F1] div
@@ -230,7 +230,7 @@ script_test_cases = [
             [0102] push_word(4)
             [0105] mul
             [0106] write_word_var(var_8)
-            [0109] goto +10
+            [0109] jump 8d8b3
             [010C] push_word_var(var_4)
             [010F] push_word(2)
             [0112] div
@@ -323,13 +323,13 @@ script_test_cases = [
             [00D4] if var_7 > 4000 goto +13
             [00DE] mul(var_7, 4)
             [00E5] write_word_var(var_7)
-            [00E8] goto +10
+            [00E8] jump 8d892
             [00EB] div(var_3, 2)
             [00F2] write_word_var(var_3)
             [00F5] if var_8 > 4000 goto +13
             [00FF] mul(var_8, 4)
             [0106] write_word_var(var_8)
-            [0109] goto +10
+            [0109] jump 8d8b3
             [010C] div(var_4, 2)
             [0113] write_word_var(var_4)
             [0116] mul(var_11, 4)
@@ -478,7 +478,7 @@ script_test_cases = [
             [0038] setState(...)
             [0039] printDebug.begin()
             [003B] printDebug.msg(" ")
-            [003F] goto +166
+            [003F] jump 8d6e1
             [0042] push_word_var(var_1)
             [0045] dup
             [0046] push_word(3)
@@ -487,7 +487,7 @@ script_test_cases = [
             [004D] pop1
             [004E] push_word(3)
             [0051] talkActor()
-            [0078] goto +109
+            [0078] jump 8d6e1
             [007B] dup
             [007C] push_word(1)
             [007F] eq
@@ -495,7 +495,7 @@ script_test_cases = [
             [0083] pop1
             [0084] push_word(1)
             [0087] talkActor()
-            [00AE] goto +55
+            [00AE] jump 8d6e1
             [00B1] dup
             [00B2] push_word(2)
             [00B5] eq
@@ -503,7 +503,7 @@ script_test_cases = [
             [00B9] pop1
             [00BA] push_word(2)
             [00BD] talkActor()
-            [00E4] goto +1
+            [00E4] jump 8d6e1
             [00E7] pop1
             [00E8] stopObjectCodeB()
         """).strip(),
@@ -524,23 +524,23 @@ script_test_cases = [
             [0032] setState(var_1, 1)
             [0039] printDebug.begin()
             [003B] printDebug.msg(" ")
-            [003F] goto +166
+            [003F] jump 8d6e1
             [0042] push_word_var(var_1)
             [0045] dup
             [0046] if condition goto +46
             [004D] pop1
             [004E] talkActor("Hmm.  This door appears to be locked.", 3)
-            [0078] goto +109
+            [0078] jump 8d6e1
             [007B] dup
             [007C] if condition goto +46
             [0083] pop1
             [0084] talkActor("Hmm.  This door appears to be locked.", 1)
-            [00AE] goto +55
+            [00AE] jump 8d6e1
             [00B1] dup
             [00B2] if condition goto +46
             [00B9] pop1
             [00BA] talkActor("Hmm.  This door appears to be locked.", 2)
-            [00E4] goto +1
+            [00E4] jump 8d6e1
             [00E7] pop1
             [00E8] stopObjectCodeB()
         """).strip(),
@@ -878,6 +878,28 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] wait.waitForMessage()',
+    ),
+    ScriptComparisonTestCase(
+        test_id="jump_absolute_address",
+        # Simple test with padding and a jump instruction to test absolute addressing
+        bytecode=bytes.fromhex("01C80043890073F7FF"), 
+        # [0000] push_word(200)      # 01 C8 00
+        # [0003] write_word_var(137) # 43 89 00
+        # [0006] jump -9             # 73 F7 FF (jumps to address 0x0006 + 3 + (-9) = 0 = 0x0)
+        expected_descumm_output=dedent("""
+            [0000] (43) var137 = 200
+            [0006] (73) jump 0
+            END
+        """).strip(),
+        expected_disasm_output=dedent("""
+            [0000] push_word(200)
+            [0003] write_word_var(var_137)
+            [0006] jump 0
+        """).strip(),
+        expected_disasm_fusion_output=dedent("""
+            [0000] var_137 = 200
+            [0006] jump 0
+        """).strip(),
     ),
 ]
 

@@ -538,14 +538,33 @@ class WordArrayDec(Instruction):
 
 class Iff(ControlFlowOp):
 
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+
     @property
     def stack_pop_count(self) -> int:
         return 1
 
     def render(self) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
-        # Follow descumm philosophy: show semantic meaning
-        # Positive offset = forward jump, negative = backward jump
+        
+        # Display absolute address like descumm if we have the current address
+        if self.addr is not None:
+            target_addr = self.addr + self.length() + jump_offset
+            # Format as hex with leading zeros if negative (like descumm)
+            if target_addr < 0:
+                formatted_addr = f"{target_addr & 0xFFFFFFFF:x}"
+            else:
+                formatted_addr = f"{target_addr:x}"
+            return [
+                TInstr("if"),
+                TSep(" "),
+                TInstr("goto"),
+                TSep(" "),
+                TInstr(formatted_addr),
+            ]
+        
+        # Fallback to relative addressing if no address available
         if jump_offset > 0:
             return [
                 TInstr("if"),
@@ -598,13 +617,43 @@ class Iff(ControlFlowOp):
 
 class IfNot(ControlFlowOp):
 
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+
     @property
     def stack_pop_count(self) -> int:
         return 1
 
     def render(self) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
-        # Follow descumm philosophy: show semantic meaning
+        
+        # Display absolute address like descumm if we have the current address
+        if self.addr is not None:
+            target_addr = self.addr + self.length() + jump_offset
+            if jump_offset == 0:
+                # Special case for zero offset (infinite loop)
+                return [
+                    TInstr("unless"),
+                    TSep(" "),
+                    TInstr("goto"),
+                    TSep(" "),
+                    TInstr("self"),
+                ]
+            else:
+                # Format as hex with leading zeros if negative (like descumm)
+                if target_addr < 0:
+                    formatted_addr = f"{target_addr & 0xFFFFFFFF:x}"
+                else:
+                    formatted_addr = f"{target_addr:x}"
+                return [
+                    TInstr("unless"),
+                    TSep(" "),
+                    TInstr("goto"),
+                    TSep(" "),
+                    TInstr(formatted_addr),
+                ]
+        
+        # Fallback to relative addressing if no address available
         if jump_offset > 0:
             return [
                 TInstr("unless"),
@@ -666,9 +715,35 @@ class IfNot(ControlFlowOp):
 
 class Jump(ControlFlowOp):
 
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+
     def render(self) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
-        # Follow descumm philosophy: show semantic meaning
+        
+        # Display absolute address like descumm if we have the current address
+        if self.addr is not None:
+            target_addr = self.addr + self.length() + jump_offset
+            if jump_offset == 0:
+                # Special case for zero offset (infinite loop)
+                return [
+                    TInstr("jump"),
+                    TSep(" "),
+                    TInstr("self"),
+                ]
+            else:
+                # Format as hex with leading zeros if negative (like descumm)
+                if target_addr < 0:
+                    formatted_addr = f"{target_addr & 0xFFFFFFFF:x}"
+                else:
+                    formatted_addr = f"{target_addr:x}"
+                return [
+                    TInstr("jump"),
+                    TSep(" "),
+                    TInstr(formatted_addr),
+                ]
+        
+        # Fallback to relative addressing if no address available
         if jump_offset > 0:
             return [
                 TInstr("goto"),
@@ -708,8 +783,8 @@ class Jump(ControlFlowOp):
 class SmartIff(SmartConditionalJump):
     """Fusible 'if true' conditional jump instruction."""
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self._name = "iff"
         self._is_if_not = False  # This is 'if', not 'if_not'
 
@@ -717,8 +792,8 @@ class SmartIff(SmartConditionalJump):
 class SmartIfNot(SmartConditionalJump):
     """Fusible 'if false/unless' conditional jump instruction."""
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self._name = "if_not"
         self._is_if_not = True  # This is 'if_not'
 
@@ -1005,8 +1080,8 @@ class PrintDebug(Instruction):
 class TalkActor(FusibleMultiOperandMixin, Instruction):
     """Talk actor with string message and actor parameter."""
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self.fused_operands: List[Instruction] = []
         self._stack_pop_count = 1  # Pops actor ID from stack by default
     
@@ -1139,8 +1214,8 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
 class ActorOps(FusibleMultiOperandMixin, Instruction):
     """Actor operations with various sub-commands."""
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self.fused_operands: List[Instruction] = []
     
     def _get_max_operands(self) -> int:

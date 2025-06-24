@@ -17,8 +17,8 @@ class StartScriptQuick(SmartSemanticIntrinsicOp):
     _name = "start_script_quick"
     _config: SemanticIntrinsicConfig  # Will be set by factory
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self._script_id: Optional[int] = None
         self._arg_count: Optional[int] = None
         
@@ -143,8 +143,8 @@ class StartScript(SmartSemanticIntrinsicOp):
     _name = "start_script"
     _config: SemanticIntrinsicConfig  # Will be set by factory
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self._arg_count: Optional[int] = None
         
     def fuse(self, previous: Instruction) -> Optional['StartScript']:
@@ -226,8 +226,8 @@ class SoundKludge(SmartIntrinsicOp):
     _name = "sound_kludge"
     _config: IntrinsicConfig  # Will be set by factory
     
-    def __init__(self, kaitai_op: Any, length: int) -> None:
-        super().__init__(kaitai_op, length)
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
         self._arg_count: Optional[int] = None
         
     def _is_fusible_push(self, instr: Instruction) -> bool:
