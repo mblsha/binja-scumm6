@@ -43,6 +43,7 @@ from src.test_utils import (
     assert_llil_operations_match,
     collect_branches_from_architecture
 )
+from src.address_normalization import normalize_jump_addresses
 
 # Configure SCUMM6-specific LLIL size suffixes
 set_size_lookup(
@@ -217,7 +218,7 @@ script_test_cases = [
             [00E1] push_word(4)
             [00E4] mul
             [00E5] write_word_var(var_7)
-            [00E8] jump 8d892
+            [00E8] jump f5
             [00EB] push_word_var(var_3)
             [00EE] push_word(2)
             [00F1] div
@@ -230,7 +231,7 @@ script_test_cases = [
             [0102] push_word(4)
             [0105] mul
             [0106] write_word_var(var_8)
-            [0109] jump 8d8b3
+            [0109] jump 116
             [010C] push_word_var(var_4)
             [010F] push_word(2)
             [0112] div
@@ -323,13 +324,13 @@ script_test_cases = [
             [00D4] if var_7 > 4000 goto +13
             [00DE] mul(var_7, 4)
             [00E5] write_word_var(var_7)
-            [00E8] jump 8d892
+            [00E8] jump f5
             [00EB] div(var_3, 2)
             [00F2] write_word_var(var_3)
             [00F5] if var_8 > 4000 goto +13
             [00FF] mul(var_8, 4)
             [0106] write_word_var(var_8)
-            [0109] jump 8d8b3
+            [0109] jump 116
             [010C] div(var_4, 2)
             [0113] write_word_var(var_4)
             [0116] mul(var_11, 4)
@@ -478,7 +479,7 @@ script_test_cases = [
             [0038] setState(...)
             [0039] printDebug.begin()
             [003B] printDebug.msg(" ")
-            [003F] jump 8d6e1
+            [003F] jump e8
             [0042] push_word_var(var_1)
             [0045] dup
             [0046] push_word(3)
@@ -487,7 +488,7 @@ script_test_cases = [
             [004D] pop1
             [004E] push_word(3)
             [0051] talkActor()
-            [0078] jump 8d6e1
+            [0078] jump e8
             [007B] dup
             [007C] push_word(1)
             [007F] eq
@@ -495,7 +496,7 @@ script_test_cases = [
             [0083] pop1
             [0084] push_word(1)
             [0087] talkActor()
-            [00AE] jump 8d6e1
+            [00AE] jump e8
             [00B1] dup
             [00B2] push_word(2)
             [00B5] eq
@@ -503,7 +504,7 @@ script_test_cases = [
             [00B9] pop1
             [00BA] push_word(2)
             [00BD] talkActor()
-            [00E4] jump 8d6e1
+            [00E4] jump e8
             [00E7] pop1
             [00E8] stopObjectCodeB()
         """).strip(),
@@ -524,23 +525,23 @@ script_test_cases = [
             [0032] setState(var_1, 1)
             [0039] printDebug.begin()
             [003B] printDebug.msg(" ")
-            [003F] jump 8d6e1
+            [003F] jump e8
             [0042] push_word_var(var_1)
             [0045] dup
             [0046] if condition goto +46
             [004D] pop1
             [004E] talkActor("Hmm.  This door appears to be locked.", 3)
-            [0078] jump 8d6e1
+            [0078] jump e8
             [007B] dup
             [007C] if condition goto +46
             [0083] pop1
             [0084] talkActor("Hmm.  This door appears to be locked.", 1)
-            [00AE] jump 8d6e1
+            [00AE] jump e8
             [00B1] dup
             [00B2] if condition goto +46
             [00B9] pop1
             [00BA] talkActor("Hmm.  This door appears to be locked.", 2)
-            [00E4] jump 8d6e1
+            [00E4] jump e8
             [00E7] pop1
             [00E8] stopObjectCodeB()
         """).strip(),
@@ -954,6 +955,12 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
     disasm_fusion_output = run_scumm6_disassembler_with_fusion(bytecode, start_addr)
     llil_operations = run_scumm6_llil_generation(bytecode, start_addr, use_fusion=False)
     llil_fusion_operations = run_scumm6_llil_generation(bytecode, start_addr, use_fusion=True)
+    
+    # Normalize addresses if script starts at non-zero address
+    # This makes jump addresses more readable (e.g., "jump f5" instead of "jump 8d892")
+    if start_addr != 0:
+        disasm_output = normalize_jump_addresses(disasm_output, start_addr)
+        disasm_fusion_output = normalize_jump_addresses(disasm_fusion_output, start_addr)
 
     # 3. Check branch information if expected branches are provided
     if case.expected_branches is not None:

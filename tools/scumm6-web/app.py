@@ -28,6 +28,7 @@ os.environ["FORCE_BINJA_MOCK"] = "1"
 import src.container as container_module  # noqa: E402
 from src.container import ScriptAddr, State  # noqa: E402
 from src.test_utils import run_descumm_on_bytecode, run_scumm6_disassembler, run_scumm6_disassembler_with_fusion_details  # noqa: E402
+from src.address_normalization import normalize_jump_addresses  # noqa: E402
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -148,6 +149,12 @@ class DataProvider:
             descumm_output = run_descumm_on_bytecode(self.descumm_path, bytecode)
             fused_output, fusion_spans = run_scumm6_disassembler_with_fusion_details(bytecode, script.start)
             raw_output = run_scumm6_disassembler(bytecode, script.start)
+            
+            # Normalize jump addresses if script starts at non-zero address
+            # This makes addresses more readable (e.g., "jump f5" instead of "jump 8d892")
+            if script.start != 0:
+                fused_output = normalize_jump_addresses(fused_output, script.start)
+                raw_output = normalize_jump_addresses(raw_output, script.start)
         except Exception as e:
             # Handle errors gracefully
             descumm_output = f"Error: {str(e)}"
