@@ -174,9 +174,6 @@ class SmartIntrinsicOp(Instruction):
     _name: str
     _config: IntrinsicConfig
 
-    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
-        super().__init__(kaitai_op, length, addr)
-
     @property
     def stack_pop_count(self) -> int:
         """Number of values this instruction pops from the stack."""
@@ -245,10 +242,6 @@ class SmartIntrinsicOp(Instruction):
 
 class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
     """Intrinsic operation that supports instruction fusion for function-call style rendering."""
-    
-    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
-        super().__init__(kaitai_op, length, addr)
-        self.fused_operands: List['Instruction'] = []
     
     def fuse(self, previous: Instruction) -> Optional['SmartFusibleIntrinsic']:
         """Attempt to fuse with the previous instruction using standard fusion logic."""
@@ -392,8 +385,8 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
     _name: str
     _config: ComplexConfig
     
-    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
-        super().__init__(kaitai_op, length, addr)
+    def __init__(self, kaitai_op: Any, length: int) -> None:
+        super().__init__(kaitai_op, length)
         self.fused_operands: List['Instruction'] = []
 
     @property
@@ -527,10 +520,6 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
     _name: str
     _config: StackConfig
 
-    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
-        super().__init__(kaitai_op, length, addr)
-        self.fused_operands: List['Instruction'] = []
-
     def _get_max_operands(self) -> int:
         """Binary operations accept exactly 2 operands."""
         return 2
@@ -661,9 +650,6 @@ class SmartUnaryOp(Instruction):
     _name: str
     _config: StackConfig
 
-    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
-        super().__init__(kaitai_op, length, addr)
-
     @property
     def stack_pop_count(self) -> int:
         """Number of values this instruction pops from the stack."""
@@ -698,8 +684,8 @@ class SmartConditionalJump(ControlFlowOp):
     _name: str
     _is_if_not: bool  # True for if_not, False for iff
     
-    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
-        super().__init__(kaitai_op, length, addr)
+    def __init__(self, kaitai_op: Any, length: int) -> None:
+        super().__init__(kaitai_op, length)
         self.fused_operands: List['Instruction'] = []
     
     @property
@@ -800,16 +786,10 @@ class SmartConditionalJump(ControlFlowOp):
             
             # Add jump target
             jump_offset = self.op_details.body.jump_offset
-            if self._addr is not None and jump_offset != 0:
-                # Calculate absolute target address
-                target_addr = self._addr + self._length + jump_offset
-                tokens.append(TText(f" jump {target_addr:x}"))
+            if jump_offset >= 0:
+                tokens.append(TText(f" goto +{jump_offset}"))
             else:
-                # Fallback to relative offset
-                if jump_offset >= 0:
-                    tokens.append(TText(f" goto +{jump_offset}"))
-                else:
-                    tokens.append(TText(f" goto {jump_offset}"))
+                tokens.append(TText(f" goto {jump_offset}"))
             
             return tokens
         else:
@@ -820,11 +800,7 @@ class SmartConditionalJump(ControlFlowOp):
             else:
                 instr_name = "if"
             
-            if self._addr is not None and jump_offset != 0:
-                # Calculate absolute target address
-                target_addr = self._addr + self._length + jump_offset
-                return [TInstr(instr_name), TText(" "), TInstr("jump"), TText(" "), TText(f"{target_addr:x}")]
-            elif jump_offset == 0:
+            if jump_offset == 0:
                 # Handle zero offset as 'self'
                 return [TInstr(instr_name), TText(" "), TInstr("goto"), TText(" "), TInstr("self")]
             elif jump_offset > 0:
@@ -934,8 +910,8 @@ class SmartComparisonOp(Instruction):
     _name: str
     _config: StackConfig
 
-    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
-        super().__init__(kaitai_op, length, addr)
+    def __init__(self, kaitai_op: Any, length: int) -> None:
+        super().__init__(kaitai_op, length)
         self.fused_operands: List['Instruction'] = []
 
     @property

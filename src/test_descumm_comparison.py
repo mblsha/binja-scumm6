@@ -152,8 +152,12 @@ script_test_cases = [
             [01CE] (66) stopObjectCodeB()
             END
         """).strip(),
-        # expected_disasm_output removed due to address format change (relative -> absolute)
-        # Removed large expected_disasm_output section
+        expected_disasm_output=dedent("""
+            [0000] push_word_var(var_0)
+            [0003] getObjectX(...)
+            [0004] push_word_var(var_1)
+            [0007] sub
+            [0008] write_word_var(var_5)
             [000B] push_word_var(var_0)
             [000E] getObjectY(...)
             [000F] push_word_var(var_2)
@@ -361,8 +365,28 @@ script_test_cases = [
             [001A] (65) stopObjectCodeA()
             END
         """).strip(),
-        # expected_disasm_output removed due to address format change (relative -> absolute)
-        # expected_disasm_fusion_output removed due to address format change
+        expected_disasm_output=dedent("""
+            [0000] push_word(137)
+            [0003] isScriptRunning(...)
+            [0004] nott
+            [0005] unless goto +18
+            [0008] push_word(93)
+            [000B] push_word(1)
+            [000E] push_word(1)
+            [0011] startScriptQuick(...)
+            [0012] push_word(0)
+            [0015] push_word(200)
+            [0018] roomOps.setScreen(...)
+            [001A] stopObjectCodeA()
+        """).strip(),
+        expected_disasm_fusion_output=dedent("""
+            [0000] isScriptRunning(137)
+            [0004] nott
+            [0005] unless goto +18
+            [0008] startScriptQuick(93, [1])
+            [0012] roomOps.setScreen(0, 200)
+            [001A] stopObjectCodeA()
+        """).strip(),
         expected_branches=[(0x05, (BranchType.TrueBranch, 0x1A))],
         expected_llil=[
             (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[137])])),
@@ -428,8 +452,98 @@ script_test_cases = [
             [00E8] (66) stopObjectCodeB()
             END
         """).strip(),
-        # expected_disasm_output removed due to address format change (relative -> absolute)
-        # expected_disasm_fusion_output also removed due to address format change
+        expected_disasm_output=dedent("""
+            [0000] push_word_var(var_0)
+            [0003] nott
+            [0004] unless goto +6
+            [0007] push_word_var(var_7)
+            [000A] write_word_var(var_0)
+            [000D] push_word_var(var_0)
+            [0010] get_state(...)
+            [0011] push_word(1)
+            [0014] neq
+            [0015] unless goto +208
+            [0018] push_word_var(var_0)
+            [001B] push_word(6)
+            [001E] push_word(1)
+            [0021] if_class_of_is
+            [0022] unless goto +29
+            [0025] push_word_var(var_0)
+            [0028] push_word(1)
+            [002B] setState(...)
+            [002C] push_word_var(var_1)
+            [002F] unless goto +7
+            [0032] push_word_var(var_1)
+            [0035] push_word(1)
+            [0038] setState(...)
+            [0039] printDebug.begin()
+            [003B] printDebug.msg(" ")
+            [003F] goto +166
+            [0042] push_word_var(var_1)
+            [0045] dup
+            [0046] push_word(3)
+            [0049] eq
+            [004A] unless goto +46
+            [004D] pop1
+            [004E] push_word(3)
+            [0051] talkActor()
+            [0078] goto +109
+            [007B] dup
+            [007C] push_word(1)
+            [007F] eq
+            [0080] unless goto +46
+            [0083] pop1
+            [0084] push_word(1)
+            [0087] talkActor()
+            [00AE] goto +55
+            [00B1] dup
+            [00B2] push_word(2)
+            [00B5] eq
+            [00B6] unless goto +46
+            [00B9] pop1
+            [00BA] push_word(2)
+            [00BD] talkActor()
+            [00E4] goto +1
+            [00E7] pop1
+            [00E8] stopObjectCodeB()
+        """).strip(),
+        expected_disasm_fusion_output=dedent("""
+            [0000] push_word_var(var_0)
+            [0003] nott
+            [0004] unless goto +6
+            [0007] var_0 = var_7
+            [000D] get_state(var_0)
+            [0011] if condition goto +208
+            [0018] push_word_var(var_0)
+            [001B] push_word(6)
+            [001E] push_word(1)
+            [0021] if_class_of_is
+            [0022] unless goto +29
+            [0025] setState(var_0, 1)
+            [002C] if !var_1 goto +7
+            [0032] setState(var_1, 1)
+            [0039] printDebug.begin()
+            [003B] printDebug.msg(" ")
+            [003F] goto +166
+            [0042] push_word_var(var_1)
+            [0045] dup
+            [0046] if condition goto +46
+            [004D] pop1
+            [004E] talkActor("Hmm.  This door appears to be locked.", 3)
+            [0078] goto +109
+            [007B] dup
+            [007C] if condition goto +46
+            [0083] pop1
+            [0084] talkActor("Hmm.  This door appears to be locked.", 1)
+            [00AE] goto +55
+            [00B1] dup
+            [00B2] if condition goto +46
+            [00B9] pop1
+            [00BA] talkActor("Hmm.  This door appears to be locked.", 2)
+            [00E4] goto +1
+            [00E7] pop1
+            [00E8] stopObjectCodeB()
+        """).strip(),
         expected_llil=[
             (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')])])),
             (0x0003, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
@@ -764,17 +878,6 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] wait.waitForMessage()',
-    ),
-    ScriptComparisonTestCase(
-        test_id="jump_to_beginning",
-        # Create a simple infinite loop: jump back to start
-        bytecode=bytes.fromhex("73FDFF"),  # jump -3 (back to itself)
-        expected_descumm_output=dedent("""
-            [0000] (73) jump 0
-            END
-        """).strip(),
-        expected_disasm_fusion_output='[0000] jump 0',
-        # At address 0x0000, jump -3 targets 0x0000 + 3 + (-3) = 0x0
     ),
 ]
 

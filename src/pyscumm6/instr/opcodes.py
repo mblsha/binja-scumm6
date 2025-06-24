@@ -10,18 +10,16 @@ from binaryninja import InstructionInfo
 class Instruction(ABC):
     """Base class for all SCUMM6 instructions."""
     
-    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+    def __init__(self, kaitai_op: Any, length: int) -> None:
         """
         Initialize an instruction with its Kaitai-parsed data.
         
         Args:
             kaitai_op: The Kaitai-parsed instruction object
             length: The length of the instruction in bytes
-            addr: The address of this instruction (optional)
         """
         self.op_details = kaitai_op
         self._length = length
-        self._addr = addr
         self.fused_operands: List['Instruction'] = []
     
     def produces_result(self) -> bool:
