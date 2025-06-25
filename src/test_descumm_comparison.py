@@ -303,31 +303,31 @@ script_test_cases = [
             [001D] push_word_var(var_6)
             [0020] abs
             [0021] write_word_var(var_6)
-            [0024] if var_5 <= var_3 goto +10
+            [0024] if ((var_5 > var_3)) jump 38
             [002E] var_137 = 0
             [0034] stopScript(0)
-            [0038] if var_6 <= var_4 goto +10
+            [0038] if ((var_6 > var_4)) jump 4c
             [0042] var_137 = 0
             [0048] stopScript(0)
             [004C] mul(var_5, var_5)
             [0053] write_word_var(var_7)
             [0056] mul(var_6, var_6)
             [005D] write_word_var(var_8)
-            [0060] if var_7 >= 0 goto +42
+            [0060] if ((var_7 < 0)) jump 94
             [006A] printDebug.begin()
             [006C] printDebug.msg("x2 value overflowing in ellipse check")
-            [0094] if var_8 >= 0 goto +42
+            [0094] if ((var_8 < 0)) jump c8
             [009E] printDebug.begin()
             [00A0] printDebug.msg("y2 value overflowing in ellipse check")
             [00C8] var_11 = 1
             [00CE] var_12 = 0
-            [00D4] if var_7 > 4000 goto +13
+            [00D4] if ((var_7 <= 4000)) jump eb
             [00DE] mul(var_7, 4)
             [00E5] write_word_var(var_7)
             [00E8] jump f5
             [00EB] div(var_3, 2)
             [00F2] write_word_var(var_3)
-            [00F5] if var_8 > 4000 goto +13
+            [00F5] if ((var_8 <= 4000)) jump 10c
             [00FF] mul(var_8, 4)
             [0106] write_word_var(var_8)
             [0109] jump 116
@@ -335,22 +335,22 @@ script_test_cases = [
             [0113] write_word_var(var_4)
             [0116] mul(var_11, 4)
             [011D] write_word_var(var_11)
-            [0120] if var_11 < 64 goto +6
+            [0120] if ((var_11 >= 64)) jump 130
             [012A] var_12 = 1
             [0130] while (!var_12) { # 92 bytes
-            [0136] if var_3 != 0 goto +38
+            [0136] unless ((var_3 == 0)) jump 166
             [0140] var_3 = 1
             [0146] printDebug.begin()
             [0148] printDebug.msg("very skinny ellipse warning")
-            [0166] if var_4 != 0 goto +36
+            [0166] unless ((var_4 == 0)) jump 194
             [0170] var_4 = 1
             [0176] printDebug.begin()
             [0178] printDebug.msg("very flat ellipse warning")
             [0194] add((div(var_7, (mul(var_3, var_3)))), (div(var_8, (mul(var_4, var_4)))))
             [01AB] write_word_var(var_137)
-            [01AE] if var_137 != 0 goto +6
+            [01AE] unless ((var_137 == 0)) jump 1be
             [01B8] var_137 = 1
-            [01BE] if var_137 <= var_11 goto +6
+            [01BE] if ((var_137 > var_11)) jump 1ce
             [01C8] var_137 = 0
             [01CE] stopObjectCodeB()
         """).strip(),
@@ -514,31 +514,31 @@ script_test_cases = [
             [0004] unless goto +6
             [0007] var_0 = var_7
             [000D] get_state(var_0)
-            [0011] if condition goto +208
+            [0011] if ((condition)) jump e8
             [0018] push_word_var(var_0)
             [001B] push_word(6)
             [001E] push_word(1)
             [0021] if_class_of_is
             [0022] unless goto +29
             [0025] setState(var_0, 1)
-            [002C] if !var_1 goto +7
+            [002C] if ((!var_1)) jump 39
             [0032] setState(var_1, 1)
             [0039] printDebug.begin()
             [003B] printDebug.msg(" ")
             [003F] jump e8
             [0042] push_word_var(var_1)
             [0045] dup
-            [0046] if condition goto +46
+            [0046] unless ((condition)) jump 7b
             [004D] pop1
             [004E] talkActor("Hmm.  This door appears to be locked.", 3)
             [0078] jump e8
             [007B] dup
-            [007C] if condition goto +46
+            [007C] unless ((condition)) jump b1
             [0083] pop1
             [0084] talkActor("Hmm.  This door appears to be locked.", 1)
             [00AE] jump e8
             [00B1] dup
-            [00B2] if condition goto +46
+            [00B2] unless ((condition)) jump e7
             [00B9] pop1
             [00BA] talkActor("Hmm.  This door appears to be locked.", 2)
             [00E4] jump e8
@@ -919,6 +919,15 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] startScript(2, 69, [0, 7, 7, 241, 108])',
+    ),
+    ScriptComparisonTestCase(
+        test_id="array_conditional_jump",
+        bytecode=bytes.fromhex("01070007EC000100000E5DF2FF"),
+        expected_descumm_output=dedent("""
+            [0000] (5D) unless ((array236[7] == 0)) jump ffffffff
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] unless ((array_236[7] == 0)) jump ffffffff',
     ),
 ]
 

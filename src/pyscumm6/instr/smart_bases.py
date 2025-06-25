@@ -736,16 +736,11 @@ class SmartConditionalJump(ControlFlowOp):
             tokens: List[Token] = []
             tokens.extend(self._render_operand(left_operand))
             
-            # Get comparison operator and potentially invert it
+            # Get comparison operator
             op_name = condition_instr.__class__.__name__.lower()
-            if self._is_if_not:
-                # Invert the comparison for readability
-                inverted_ops = {'eq': '!=', 'neq': '==', 'gt': '<=', 'lt': '>=', 'le': '>', 'ge': '<'}
-                op_symbol = inverted_ops.get(op_name, f"!{op_name}")
-            else:
-                # Use normal comparison
-                normal_ops = {'eq': '==', 'neq': '!=', 'gt': '>', 'lt': '<', 'le': '<=', 'ge': '>='}
-                op_symbol = normal_ops.get(op_name, op_name)
+            # Always use the normal comparison - descumm uses "unless" with the original condition
+            normal_ops = {'eq': '==', 'neq': '!=', 'gt': '>', 'lt': '<', 'le': '<=', 'ge': '>='}
+            op_symbol = normal_ops.get(op_name, op_name)
             
             tokens.append(TText(f" {op_symbol} "))
             tokens.extend(self._render_operand(right_operand))
@@ -770,26 +765,59 @@ class SmartConditionalJump(ControlFlowOp):
             return [TInt(f"var_{operand.op_details.body.data}")]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
+        elif hasattr(operand, 'render'):
+            # For complex operands that have their own render method (like array reads)
+            return operand.render()
         else:
             return [TText("operand")]
     
     def render(self) -> List[Token]:
         if self.fused_operands:
-            # Render as readable conditional
+            # Render as readable conditional in descumm style
             tokens: List[Token] = []
-            if self._is_if_not:
-                tokens.append(TInstr("if "))
-            else:
-                tokens.append(TInstr("if "))
             
+            # Determine if we should use "unless" or "if" based on the comparison
+            use_unless = False
+            if self._is_if_not and len(self.fused_operands) > 0:
+                condition = self.fused_operands[0]
+                # Use "unless" for equality comparisons with if_not (descumm style)
+                if condition.__class__.__name__ == 'Eq':
+                    use_unless = True
+                # For simple push operations (not comparisons), use "if" with negation
+                elif condition.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']:
+                    use_unless = False  # Use "if" for simple conditions
+            
+            if use_unless:
+                tokens.append(TInstr("unless"))
+            else:
+                tokens.append(TInstr("if"))
+            
+            tokens.append(TText(" (("))
             tokens.extend(self._render_condition(self.fused_operands[0]))
+            tokens.append(TText("))"))
             
             # Add jump target
             jump_offset = self.op_details.body.jump_offset
-            if jump_offset >= 0:
-                tokens.append(TText(f" goto +{jump_offset}"))
+            tokens.append(TText(" "))
+            tokens.append(TInstr("jump"))
+            tokens.append(TText(" "))
+            
+            # Calculate absolute address if we have it
+            if hasattr(self, 'addr') and self.addr is not None:
+                # Use the original instruction length (3 bytes for if_not/iff), not fused length
+                original_length = 3  # if_not and iff are both 3 bytes
+                target_addr = self.addr + original_length + jump_offset
+                if target_addr < 0:
+                    formatted_addr = f"{target_addr & 0xFFFFFFFF:x}"
+                else:
+                    formatted_addr = f"{target_addr:x}"
+                tokens.append(TInstr(formatted_addr))
             else:
-                tokens.append(TText(f" goto {jump_offset}"))
+                # Fallback to relative offset
+                if jump_offset >= 0:
+                    tokens.append(TInstr(f"+{jump_offset}"))
+                else:
+                    tokens.append(TInstr(str(jump_offset)))
             
             return tokens
         else:
@@ -1055,11 +1083,13 @@ class SmartArrayOp(Instruction):
 
     def fuse(self, previous: Instruction) -> Optional['SmartArrayOp']:
         """Attempt to fuse with the previous instruction."""
-        if self._config.operation != "write":
-            return None  # Only support fusion for write operations
-        
         # Determine how many operands we need
-        expected_operands = 3 if self._config.indexed else 2
+        if self._config.operation == "read":
+            expected_operands = 2 if self._config.indexed else 1
+        elif self._config.operation == "write":
+            expected_operands = 3 if self._config.indexed else 2
+        else:
+            return None
         
         # Only fuse if we need more operands
         if len(self.fused_operands) >= expected_operands:
@@ -1079,6 +1109,10 @@ class SmartArrayOp(Instruction):
         fused._length = self._length + previous.length()
         
         return fused
+    
+    def produces_result(self) -> bool:
+        """Array read operations produce a result that can be consumed by other instructions."""
+        return self._config.operation == "read"
     
     def _is_fusible_push(self, instr: Instruction) -> bool:
         """Check if instruction is a push that can be fused."""
@@ -1103,10 +1137,31 @@ class SmartArrayOp(Instruction):
         if hasattr(self.op_details.body, 'array'):
             array_id = self.op_details.body.array
             
-            # Check for fusion in write operations
-            if self._config.operation == "write" and self.fused_operands:
-                # Render as array assignment: array_5[3] = 10
+            # Check for fusion in read operations
+            if self._config.operation == "read" and self.fused_operands:
+                # Render as array access: array_236[7]
                 tokens: List[Token] = []
+                tokens.append(TInt(f"array_{array_id}"))
+                tokens.append(TSep("["))
+                
+                if self._config.indexed and len(self.fused_operands) >= 2:
+                    # array[base + index]
+                    tokens.extend(self._render_operand(self.fused_operands[1]))  # base
+                    tokens.append(TSep(" + "))
+                    tokens.extend(self._render_operand(self.fused_operands[0]))  # index
+                elif len(self.fused_operands) >= 1:
+                    # array[index]
+                    tokens.extend(self._render_operand(self.fused_operands[0]))  # index
+                else:
+                    tokens.append(TSep("?"))
+                
+                tokens.append(TSep("]"))
+                return tokens
+            
+            # Check for fusion in write operations
+            elif self._config.operation == "write" and self.fused_operands:
+                # Render as array assignment: array_5[3] = 10
+                tokens = []
                 tokens.append(TInt(f"array_{array_id}"))
                 tokens.append(TSep("["))
                 
@@ -1427,6 +1482,11 @@ class SmartLoopDetector:
         # Calculate loop boundaries
         loop_start = address + conditional_jump.length() + jump_offset
         loop_end = address
+        
+        # Check if the jump target is before the start of the current code
+        # This would indicate a jump to another part of the program, not a loop
+        if loop_start < 0:
+            return None  # Jump target is outside current code boundaries
         
         # Analyze the condition for loop type detection
         if conditional_jump.fused_operands:
