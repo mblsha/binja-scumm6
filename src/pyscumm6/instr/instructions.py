@@ -1223,6 +1223,10 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
         subop_body = self.op_details.body.body
         return getattr(subop_body, "pop_count", 0)
     
+    def fuse(self, previous: Instruction) -> Optional['ActorOps']:
+        """Fuse with previous push instructions."""
+        return self._standard_fuse(previous)  # type: ignore[return-value]
+    
     @property
     def stack_pop_count(self) -> int:
         """Return remaining pops needed after fusion."""

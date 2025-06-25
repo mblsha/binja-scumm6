@@ -872,6 +872,15 @@ script_test_cases = [
         expected_disasm_fusion_output='[0000] actorOps.setName("Purple Tentacle")',
     ),
     ScriptComparisonTestCase(
+        test_id="actor_ops_set_costume",
+        bytecode=bytes.fromhex("00069D4C"),  # push_byte(6), actor_ops.set_costume
+        expected_descumm_output=dedent("""
+            [0000] (9D) actorOps.setCostume(6)
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] actorOps.setCostume(6)',
+    ),
+    ScriptComparisonTestCase(
         test_id="wait_for_message",
         bytecode=bytes.fromhex("A9A9"),
         expected_descumm_output=dedent("""
