@@ -911,6 +911,15 @@ script_test_cases = [
             [0006] jump 0
         """).strip(),
     ),
+    ScriptComparisonTestCase(
+        test_id="start_script_with_5_args",
+        bytecode=bytes.fromhex("01020001450001000001070001070001F100016C000105005E"),
+        expected_descumm_output=dedent("""
+            [0000] (5E) startScript(2,69,[0,7,7,241,108])
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] startScript(2, 69, [0, 7, 7, 241, 108])',
+    ),
 ]
 
 

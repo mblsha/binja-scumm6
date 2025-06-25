@@ -146,12 +146,21 @@ class StartScript(SmartSemanticIntrinsicOp):
     def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
         super().__init__(kaitai_op, length, addr)
         self._arg_count: Optional[int] = None
+    
+    @property
+    def stack_pop_count(self) -> int:
+        """Calculate stack pops based on fusion state."""
+        if self.fused_operands and self._arg_count is not None and len(self.fused_operands) >= self._arg_count + 3:
+            # We've fused everything - no stack pops needed
+            return 0
+        # Return -1 to indicate variable arguments when not fully fused
+        return -1
         
     def fuse(self, previous: Instruction) -> Optional['StartScript']:
         """
-        Fusion pattern: script_id, flags, arg_count (then args...)
-        Stack order (LIFO): script_id, flags, arg_count
-        Output: startScript(script_id, flags, [])
+        Fusion pattern: script_id, flags, arg1, arg2, ..., argN, arg_count
+        Stack order (LIFO): script_id, flags, arg1, arg2, ..., argN, arg_count
+        Output: startScript(script_id, flags, [arg1, arg2, ..., argN])
         """
         # First fusion: arg_count
         if not self.fused_operands:
@@ -164,34 +173,32 @@ class StartScript(SmartSemanticIntrinsicOp):
                 fused._arg_count = previous.op_details.body.data
             return fused
             
-        # Second fusion: flags
-        elif len(self.fused_operands) == 1:
-            if not self._is_fusible_push(previous):
-                return None
-            fused = copy.deepcopy(self)
-            fused.fused_operands = [previous] + self.fused_operands
-            fused._length = self._length + previous.length()
-            fused._arg_count = self._arg_count
-            return fused
+        # If we have arg_count, collect arguments
+        if self._arg_count is not None:
+            # Calculate how many more items we need
+            # We need: arg_count arguments + flags + script_id
+            total_needed = self._arg_count + 2  # +2 for flags and script_id
+            current_count = len(self.fused_operands) - 1  # -1 because arg_count doesn't count
             
-        # Third fusion: script_id
-        elif len(self.fused_operands) == 2:
-            if not self._is_fusible_push(previous):
-                return None
-            fused = copy.deepcopy(self)
-            fused.fused_operands = [previous] + self.fused_operands
-            fused._length = self._length + previous.length()
-            fused._arg_count = self._arg_count
-            return fused
+            if current_count < total_needed:
+                # Still collecting
+                if not self._is_fusible_push(previous):
+                    return None
+                fused = copy.deepcopy(self)
+                fused.fused_operands = [previous] + self.fused_operands
+                fused._length = self._length + previous.length()
+                fused._arg_count = self._arg_count
+                return fused
         
         return None
         
     def render(self) -> List[Token]:
-        """Render as: startScript(script_id, flags, [])"""
-        if self.fused_operands and len(self.fused_operands) >= 3:
+        """Render as: startScript(script_id, flags, [arg1, arg2, ...])"""
+        if self.fused_operands and self._arg_count is not None and len(self.fused_operands) >= self._arg_count + 3:
+            # We have all operands: script_id, flags, args..., arg_count
             tokens = [TInstr("startScript"), TSep("(")]
             
-            # script_id (first due to LIFO)
+            # script_id (first in fused_operands due to LIFO)
             tokens.extend(self._render_operand(self.fused_operands[0]))
             tokens.append(TSep(", "))
             
@@ -199,8 +206,14 @@ class StartScript(SmartSemanticIntrinsicOp):
             tokens.extend(self._render_operand(self.fused_operands[1]))
             tokens.append(TSep(", "))
             
-            # Empty array for now (no variable args implemented yet)
-            tokens.append(TSep("[]"))
+            # Arguments array
+            tokens.append(TSep("["))
+            # Arguments are from index 2 to 2+arg_count (exclusive of arg_count itself)
+            for i in range(2, 2 + self._arg_count):
+                if i > 2:
+                    tokens.append(TSep(", "))
+                tokens.extend(self._render_operand(self.fused_operands[i]))
+            tokens.append(TSep("]"))
             
             tokens.append(TSep(")"))
             return tokens
@@ -208,12 +221,16 @@ class StartScript(SmartSemanticIntrinsicOp):
             return super().render()
             
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        """Generate LLIL with script_id and flags."""
-        if self.fused_operands and len(self.fused_operands) >= 3:
+        """Generate LLIL with script_id, flags, and arguments."""
+        if self.fused_operands and self._arg_count is not None and len(self.fused_operands) >= self._arg_count + 3:
             params = [
                 self._lift_operand(il, self.fused_operands[0]),  # script_id
                 self._lift_operand(il, self.fused_operands[1]),  # flags
             ]
+            # Add variable arguments
+            for i in range(2, 2 + self._arg_count):
+                params.append(self._lift_operand(il, self.fused_operands[i]))
+            
             il.append(il.intrinsic([], "start_script", params))
         else:
             super().lift(il, addr)
