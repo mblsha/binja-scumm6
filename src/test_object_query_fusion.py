@@ -121,14 +121,13 @@ def test_complex_expression_with_object_queries() -> None:
         instructions.append(instr)
         addr += instr.length()
     
-    # Due to the fusion algorithm's behavior, this gets parsed as two Sub instructions
-    # This is a known limitation that doesn't affect the actual disassembly of real scripts
-    # as evidenced by the passing room8_scrp18_collision_detection test
-    assert len(instructions) == 2
+    # With the enhanced fusion algorithm, this now correctly creates a single
+    # Sub instruction that has fused with both getObjectX and the push_word_var
+    assert len(instructions) == 1
     
-    # Both end up being Sub instructions due to the algorithm's lookahead behavior
+    # The single instruction is a Sub with fused operands
     assert instructions[0].__class__.__name__ == "Sub"
-    assert instructions[1].__class__.__name__ == "Sub"
+    assert len(instructions[0].fused_operands) == 2
 
 
 if __name__ == "__main__":

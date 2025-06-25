@@ -116,9 +116,9 @@ fusion_test_cases = [
         test_id="no_fusion_not_comparison",
         bytecode=bytes([0x00, 0x05, 0x00, 0x03, 0x14, 0x5D, 0x10, 0x00]),
         expected_class="SmartIfNot",
-        expected_fused_operands=0,
-        expected_stack_pops=1,
-        expected_render_text=None,
+        expected_fused_operands=1,
+        expected_stack_pops=0,
+        expected_render_text="if ((add(5, 3))) jump",
     ),
 ]
 

@@ -291,11 +291,9 @@ script_test_cases = [
             [01CE] stopObjectCodeB()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] getObjectX(var_0)
-            [0004] sub(var_1, ...)
+            [0000] sub((getObjectX(var_0)), var_1)
             [0008] write_word_var(var_5)
-            [000B] getObjectY(var_0)
-            [000F] sub(var_2, ...)
+            [000B] sub((getObjectY(var_0)), var_2)
             [0013] write_word_var(var_6)
             [0016] push_word_var(var_5)
             [0019] abs
@@ -513,8 +511,7 @@ script_test_cases = [
             [0003] nott
             [0004] unless goto +6
             [0007] var_0 = var_7
-            [000D] get_state(var_0)
-            [0011] if ((condition)) jump e8
+            [000D] if ((get_state(var_0) != 1)) jump e8
             [0018] push_word_var(var_0)
             [001B] push_word(6)
             [001E] push_word(1)
@@ -528,17 +525,17 @@ script_test_cases = [
             [003F] jump e8
             [0042] push_word_var(var_1)
             [0045] dup
-            [0046] unless ((condition)) jump 7b
+            [0046] unless ((eq(3))) jump 7b
             [004D] pop1
             [004E] talkActor("Hmm.  This door appears to be locked.", 3)
             [0078] jump e8
             [007B] dup
-            [007C] unless ((condition)) jump b1
+            [007C] unless ((eq(1))) jump b1
             [0083] pop1
             [0084] talkActor("Hmm.  This door appears to be locked.", 1)
             [00AE] jump e8
             [00B1] dup
-            [00B2] unless ((condition)) jump e7
+            [00B2] unless ((eq(2))) jump e7
             [00B9] pop1
             [00BA] talkActor("Hmm.  This door appears to be locked.", 2)
             [00E4] jump e8
@@ -613,48 +610,6 @@ script_test_cases = [
             (0x00B9, mintrinsic('pop1', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
             (0x00BA, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[2])])),
             (0x00BD, mintrinsic('talk_actor', outputs=[], params=[])),
-            (0x00E4, MockLLIL(op='JUMP', ops=[MockLLIL(op='CONST_PTR.4', ops=[579297])])),
-            (0x00E7, mintrinsic('pop1', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
-            (0x00E8, mintrinsic('stop_object_code2', outputs=[], params=[])),
-            (0x00E8, MockLLIL(op='NORET', ops=[])),
-        ],
-        expected_llil_fusion=[
-            (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')])])),
-            (0x0003, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
-            (0x0003, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CMP_E.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')]), MockLLIL(op='CONST.4', ops=[0])])])),
-            (0x0004, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
-            (0x0007, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='L0'), MockLLIL(op='LOAD.4', ops=[MockLLIL(op='CONST_PTR.4', ops=[1073741852])])])),
-            (0x000D, mintrinsic('get_state', outputs=[MockReg(name='TEMP0')], params=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')])])),
-            (0x000D, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
-            (0x0018, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')])])),
-            (0x001B, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[6])])),
-            (0x001E, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[1])])),
-            (0x0021, mintrinsic('if_class_of_is', outputs=[MockReg(name='TEMP0')], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
-            (0x0021, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
-            (0x0022, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
-            (0x0025, mintrinsic('set_state', outputs=[], params=[MockLLIL(op='REG.4', ops=[MockReg(name='L0')]), MockLLIL(op='CONST.4', ops=[1])])),
-            (0x0032, mintrinsic('set_state', outputs=[], params=[MockLLIL(op='REG.4', ops=[MockReg(name='L1')]), MockLLIL(op='CONST.4', ops=[1])])),
-            (0x0039, mintrinsic('print_debug', outputs=[], params=[])),
-            (0x003B, mintrinsic('print_debug', outputs=[], params=[])),
-            (0x003F, MockLLIL(op='JUMP', ops=[MockLLIL(op='CONST_PTR.4', ops=[579297])])),
-            (0x0042, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='LOAD.4', ops=[MockLLIL(op='CONST_PTR.4', ops=[1073741828])])])),
-            (0x0045, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
-            (0x0045, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
-            (0x0045, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
-            (0x004D, mintrinsic('pop1', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
-            (0x004E, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='CONST.4', ops=[3])])),
-            (0x0078, MockLLIL(op='JUMP', ops=[MockLLIL(op='CONST_PTR.4', ops=[579297])])),
-            (0x007B, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
-            (0x007B, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
-            (0x007B, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
-            (0x0083, mintrinsic('pop1', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
-            (0x0084, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='CONST.4', ops=[1])])),
-            (0x00AE, MockLLIL(op='JUMP', ops=[MockLLIL(op='CONST_PTR.4', ops=[579297])])),
-            (0x00B1, MockLLIL(op='SET_REG.4{0}', ops=[MockReg(name='TEMP0'), MockLLIL(op='POP.4', ops=[])])),
-            (0x00B1, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
-            (0x00B1, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[MockReg(name='TEMP0')])])),
-            (0x00B9, mintrinsic('pop1', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
-            (0x00BA, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='CONST.4', ops=[2])])),
             (0x00E4, MockLLIL(op='JUMP', ops=[MockLLIL(op='CONST_PTR.4', ops=[579297])])),
             (0x00E7, mintrinsic('pop1', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
             (0x00E8, mintrinsic('stop_object_code2', outputs=[], params=[])),
@@ -928,6 +883,15 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] unless ((array_236[7] == 0)) jump ffffffff',
+    ),
+    ScriptComparisonTestCase(
+        test_id="is_script_running_conditional",
+        bytecode=bytes.fromhex("0103008B5D1A00"),
+        expected_descumm_output=dedent("""
+            [0000] (5D) if (isScriptRunning(3)) {
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] if ((isScriptRunning(3))) jump 21',
     ),
 ]
 

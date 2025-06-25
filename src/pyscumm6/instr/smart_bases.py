@@ -183,6 +183,10 @@ class SmartIntrinsicOp(Instruction):
             return 0
         return self._config.pop_count
     
+    def produces_result(self) -> bool:
+        """Check if this intrinsic produces a result that can be consumed by other instructions."""
+        return self._config.push_count > 0
+    
     def render(self) -> List[Token]:
         # Use descumm-style function names for better semantic clarity
         display_name = DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
@@ -705,8 +709,9 @@ class SmartConditionalJump(ControlFlowOp):
         if self.fused_operands:
             return None
             
-        # Check if previous is a comparison operation or simple push
-        if not (self._is_comparison_op(previous) or self._is_simple_push(previous)):
+        # Check if previous is fusible
+        if not (self._is_comparison_op(previous) or self._is_simple_push(previous) or 
+                (hasattr(previous, 'produces_result') and previous.produces_result())):
             return None
             
         # Create fused instruction
@@ -728,7 +733,7 @@ class SmartConditionalJump(ControlFlowOp):
     def _render_condition(self, condition_instr: Instruction) -> List[Token]:
         """Render a fused condition (comparison or simple push) as readable condition."""
         # Check if this is a comparison with fused operands
-        if hasattr(condition_instr, 'fused_operands') and len(condition_instr.fused_operands) >= 2:
+        if self._is_comparison_op(condition_instr) and hasattr(condition_instr, 'fused_operands') and len(condition_instr.fused_operands) >= 2:
             # Get operands (in reverse order due to stack semantics)
             left_operand = condition_instr.fused_operands[1]
             right_operand = condition_instr.fused_operands[0]
@@ -754,6 +759,11 @@ class SmartConditionalJump(ControlFlowOp):
                 tokens.append(TText("!"))
             tokens.extend(self._render_operand(condition_instr))
             return tokens
+        
+        # Check if this is a result-producing instruction (like isScriptRunning)
+        elif hasattr(condition_instr, 'render'):
+            # Use the instruction's own render method
+            return condition_instr.render()
         
         # Fallback for unknown condition types
         else:
