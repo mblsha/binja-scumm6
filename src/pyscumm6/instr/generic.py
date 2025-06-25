@@ -219,9 +219,17 @@ class VariableWriteOp(Instruction):
     
     def _is_fusible_push(self, instr: Instruction) -> bool:
         """Check if instruction is a push that can be fused."""
-        return instr.__class__.__name__ in [
+        # Check for basic push instructions
+        if instr.__class__.__name__ in [
             'PushByte', 'PushWord', 'PushByteVar', 'PushWordVar'
-        ]
+        ]:
+            return True
+        
+        # Check if instruction produces a result that can be consumed
+        if hasattr(instr, 'produces_result') and instr.produces_result():
+            return True
+            
+        return False
     
     @property
     def stack_pop_count(self) -> int:
@@ -256,9 +264,12 @@ class VariableWriteOp(Instruction):
                 # Check if this is a bit variable
                 var_prefix = self._get_var_prefix()
             
-            # Show as assignment: var_10 = 5 or bitvar327 = 1
+            # Show as assignment: var_10 = 5 or localvar1 = 1 or bitvar327 = 1
             tokens: List[Token] = []
-            tokens.append(TInt(f"{var_prefix}_{var_id}" if var_prefix == "var" else f"{var_prefix}{var_id}"))
+            if var_prefix == "var":
+                tokens.append(TInt(f"{var_prefix}_{var_id}"))
+            else:
+                tokens.append(TInt(f"{var_prefix}{var_id}"))
             tokens.append(TSep(" = "))
             tokens.extend(self._render_operand(self.fused_operands[0]))
             return tokens
@@ -285,11 +296,15 @@ class VariableWriteOp(Instruction):
             if hasattr(operand.op_details.body, 'data'):
                 var_num = operand.op_details.body.data
                 return [TInt(f"var_{var_num}")]
-        else:
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             # Constant push - extract value
             if hasattr(operand.op_details.body, 'data'):
                 value = operand.op_details.body.data
                 return [TInt(str(value))]
+        elif hasattr(operand, 'produces_result') and operand.produces_result():
+            # This is a result-producing instruction (like a complex expression)
+            # Just use its render method directly
+            return operand.render()
         
         # Fallback
         return [TInt("?")]
@@ -335,11 +350,13 @@ class VariableWriteOp(Instruction):
         return il.undefined()
 
     def _get_var_prefix(self) -> str:
-        """Get the variable prefix based on variable type (var or bitvar)."""
+        """Get the variable prefix based on variable type (var, localvar, or bitvar)."""
         # Check if the body has a type field (WordVarData does)
         if hasattr(self.op_details.body, 'type'):
             var_type = self.op_details.body.type
-            if var_type == Scumm6Opcodes.VarType.bitvar:
+            if var_type == Scumm6Opcodes.VarType.local:
+                return "localvar"
+            elif var_type == Scumm6Opcodes.VarType.bitvar:
                 return "bitvar"
         return "var"
     

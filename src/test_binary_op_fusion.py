@@ -34,7 +34,7 @@ def test_add_fusion_with_constants() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "add(10, 5)"
+    assert text == "(10 + 5)"
 
 
 def test_sub_fusion_with_variables() -> None:
@@ -55,7 +55,7 @@ def test_sub_fusion_with_variables() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "sub(var_5, var_3)"
+    assert text == "((var_5) - (var_3))"
 
 
 def test_mul_fusion_with_same_variable() -> None:
@@ -76,7 +76,7 @@ def test_mul_fusion_with_same_variable() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "mul(var_7, var_7)"
+    assert text == "((var_7) * (var_7))"
 
 
 def test_div_fusion_mixed_operands() -> None:
@@ -97,7 +97,7 @@ def test_div_fusion_mixed_operands() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "div(var_10, 2)"
+    assert text == "((var_10) / 2)"
 
 
 def test_partial_fusion_with_one_operand() -> None:
@@ -138,7 +138,7 @@ def test_nested_expression_fusion() -> None:
     add_instr = decode_with_fusion(add_bytecode, 0x0)
     assert add_instr is not None
     assert add_instr.__class__.__name__ == "Add"
-    assert render_tokens(add_instr.render()) == "add(10, 5)"
+    assert render_tokens(add_instr.render()) == "(10 + 5)"
     
     # mul(3, ...)  - would use stack value in real execution
     mul_bytecode = bytes([

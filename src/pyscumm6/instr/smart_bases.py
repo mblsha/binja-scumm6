@@ -545,8 +545,10 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(f"var_{operand.op_details.body.data}")]
+            # For variables, wrap in parentheses to match descumm style
+            return [TText("("), TInt(f"var_{operand.op_details.body.data}"), TText(")")]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            # Constants don't need parentheses
             return [TInt(str(operand.op_details.body.data))]
         elif operand.produces_result():
             # This is a result-producing instruction (like a fused expression)
@@ -579,9 +581,39 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
         # Apply descumm-style function name mapping
         mapped_name = DESCUMM_FUNCTION_NAMES.get(display_name, display_name)
         
-        # If we have fused operands, render in function call style
+        # If we have fused operands, render in infix style for arithmetic operations
+        if self.fused_operands and len(self.fused_operands) == 2:
+            # Map operation names to infix operators
+            infix_operators = {
+                'add': '+',
+                'sub': '-',
+                'mul': '*',
+                'div': '/',
+                'land': '&&',
+                'lor': '||'
+            }
+            
+            if self._name in infix_operators:
+                # Render as infix: (operand1 + operand2)
+                tokens: List[Token] = []
+                tokens.append(TSep("("))
+                
+                # Left operand (first pushed, so fused_operands[0])
+                tokens.extend(self._render_operand(self.fused_operands[0]))
+                
+                # Operator
+                op_symbol = infix_operators[self._name]
+                tokens.append(TText(f" {op_symbol} "))
+                
+                # Right operand (second pushed, so fused_operands[1])
+                tokens.extend(self._render_operand(self.fused_operands[1]))
+                
+                tokens.append(TSep(")"))
+                return tokens
+        
+        # If we have fused operands but not 2, or not an infix operation, use function call style
         if self.fused_operands:
-            tokens: List[Token] = [TInstr(mapped_name), TSep("(")]
+            tokens = [TInstr(mapped_name), TSep("(")]
             
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:

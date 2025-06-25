@@ -31,7 +31,7 @@ def test_simple_binary_expression_fusion() -> None:
     # Test rendering
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
-    assert text == "add(10, 5)"
+    assert text == "(10 + 5)"
 
 
 def test_multi_level_arithmetic_expression() -> None:
@@ -63,8 +63,9 @@ def test_multi_level_arithmetic_expression() -> None:
     # Test rendering - should show nested expression
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
-    # Expected: mul((add(var_5, var_7)), var_3)
-    assert "mul" in text and "add" in text and "var_5" in text and "var_7" in text and "var_3" in text
+    # Expected with infix notation: (((var_5 + var_7)) * var_3)
+    assert "*" in text and "+" in text and "var_5" in text and "var_7" in text and "var_3" in text
+    assert text == "((((var_5) + (var_7))) * (var_3))"
 
 
 def test_three_level_expression() -> None:
@@ -97,8 +98,9 @@ def test_three_level_expression() -> None:
     # Test rendering - should show deeply nested expression
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
-    # Expected: sub((mul((add(10, 5)), 3)), 2)
-    assert "sub" in text and "mul" in text and "add" in text
+    # Expected with infix notation: (((((10 + 5)) * 3)) - 2)
+    assert "-" in text and "*" in text and "+" in text
+    assert text == "(((((10 + 5)) * 3)) - 2)"
 
 
 def test_comparison_in_expression() -> None:
@@ -124,8 +126,9 @@ def test_comparison_in_expression() -> None:
     # Test rendering
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
-    # Should include both the comparison and the logical operation
-    assert "land" in text and "var_5" in text and "10" in text and "var_3" in text
+    # Should include both the comparison and the logical operation (with infix notation)
+    assert "&&" in text and ">" in text and "var_5" in text and "10" in text and "var_3" in text
+    assert text == "((var_5 > 10) && (var_3))"
 
 
 def test_mixed_variable_and_constant_fusion() -> None:
@@ -151,7 +154,9 @@ def test_mixed_variable_and_constant_fusion() -> None:
     # Test rendering
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
-    assert "div" in text and "add" in text and "var_8" in text and "20" in text and "2" in text
+    # Expected with infix notation: (((var_8 + 20)) / 2)
+    assert "/" in text and "+" in text and "var_8" in text and "20" in text and "2" in text
+    assert text == "((((var_8) + 20)) / 2)"
 
 
 def test_partial_fusion_with_multilevel() -> None:

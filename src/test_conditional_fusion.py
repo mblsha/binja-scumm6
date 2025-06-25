@@ -118,7 +118,7 @@ fusion_test_cases = [
         expected_class="SmartIfNot",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="if ((add(5, 3))) jump",
+        expected_render_text="if (((5 + 3))) jump",
     ),
 ]
 

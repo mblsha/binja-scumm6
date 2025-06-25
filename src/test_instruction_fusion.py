@@ -58,7 +58,7 @@ fusion_test_cases = [
         expected_class="Add",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="add(10, 5)",
+        expected_render_text="(10 + 5)",
         expected_length=5,
     ),
     FusionTestCase(
@@ -76,7 +76,7 @@ fusion_test_cases = [
         expected_class="Add",
         expected_fused_operands=1,
         expected_stack_pops=1,
-        expected_render_text="add(var_56, ...)",
+        expected_render_text="add((var_56), ...)",
     ),
     FusionTestCase(
         test_id="no_fusion_non_push",
@@ -92,7 +92,7 @@ fusion_test_cases = [
         expected_class="Sub",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="sub(20, 5)",
+        expected_render_text="(20 - 5)",
     ),
     FusionTestCase(
         test_id="mixed_push_types",
@@ -100,7 +100,7 @@ fusion_test_cases = [
         expected_class="Add",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="add(500, 3)",
+        expected_render_text="(500 + 3)",
     ),
 ]
 
@@ -121,7 +121,7 @@ fusion_test_cases.append(
         expected_class="Add",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="add(10, 5)",
+        expected_render_text="(10 + 5)",
         additional_validation=validate_operand_order,
     )
 )
