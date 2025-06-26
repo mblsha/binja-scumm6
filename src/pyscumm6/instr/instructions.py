@@ -1211,6 +1211,397 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
 
 
 # Complex Operations with Sub-commands
+class CursorCommand(FusibleMultiOperandMixin, Instruction):
+    """Cursor command operations with various sub-commands."""
+    
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+        self.fused_operands: List[Instruction] = []
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(f"var_{operand.op_details.body.data}")]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return [TInt(str(operand.op_details.body.data))]
+        elif hasattr(operand, 'produces_result') and operand.produces_result():
+            # This is a result-producing instruction (like a fused expression)
+            # Render it as a nested expression with parentheses
+            tokens: List[Token] = []
+            tokens.append(TText("("))
+            tokens.extend(operand.render())
+            tokens.append(TText(")"))
+            return tokens
+        else:
+            return [TText("operand")]
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return il.reg(4, f"var_{operand.op_details.body.data}")
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return il.const(4, operand.op_details.body.data)
+        elif hasattr(operand, 'produces_result') and operand.produces_result():
+            # Complex case: would need to execute operand's lift method
+            # For now, use placeholder - future enhancement needed
+            return il.const(4, 0)  # Placeholder
+        else:
+            return il.const(4, 0)  # Placeholder
+    
+    def _get_max_operands(self) -> int:
+        """Return the maximum number of operands based on subop's pop_count."""
+        subop_body = self.op_details.body.body
+        
+        # Special handling for CallFuncList which uses pop_list instead of pop_count
+        if hasattr(subop_body, "pop_list") and subop_body.pop_list:
+            # For list operations, we need to get the count from the stack
+            # This is a special case where we need to look at previous instructions
+            # For now, return a reasonable default for charsetColors (3 params)
+            if self.op_details.body.subop.name == "charset_color":
+                # The last fused operand should be the count
+                if self.fused_operands and len(self.fused_operands) > 0:
+                    last_operand = self.fused_operands[-1]
+                    if hasattr(last_operand.op_details.body, 'data'):
+                        return last_operand.op_details.body.data
+                return 4  # Default: count + 3 colors
+            return 0
+        
+        return getattr(subop_body, "pop_count", 0)
+    
+    def fuse(self, previous: Instruction) -> Optional['CursorCommand']:
+        """Fuse with previous push instructions."""
+        return self._standard_fuse(previous)  # type: ignore[return-value]
+    
+    @property
+    def stack_pop_count(self) -> int:
+        """Return remaining pops needed after fusion."""
+        max_operands = self._get_max_operands()
+        fused_count = len(self.fused_operands)
+        return max(0, max_operands - fused_count)
+    
+    def render(self) -> List[Token]:
+        from ...scumm6_opcodes import Scumm6Opcodes
+        
+        subop_name = self.op_details.body.subop.name
+        
+        # Map subop names to descumm-style names
+        subop_map = {
+            "charset_set": "initCharset",
+            "charset_color": "charsetColors",
+            "cursor_on": "on",
+            "cursor_off": "off",
+            "cursor_soft_on": "softOn",
+            "cursor_soft_off": "softOff",
+            "userput_on": "userputOn",
+            "userput_off": "userputOff",
+            "userput_soft_on": "userputSoftOn",
+            "userput_soft_off": "userputSoftOff",
+            "cursor_image": "image",
+            "cursor_hotspot": "hotspot",
+            "cursor_transparent": "transparent",
+        }
+        
+        # Use the mapped name or fall back to original
+        display_subop = subop_map.get(subop_name, subop_name)
+        display_name = f"cursorCommand.{display_subop}"
+        
+        tokens: List[Token] = [TInstr(display_name)]
+        
+        # Check for specific body types
+        subop_body = self.op_details.body.body
+        
+        if isinstance(subop_body, Scumm6Opcodes.CallFuncPop0):
+            # No parameters - just show empty parens
+            if not self.fused_operands:
+                tokens.append(TText("()"))
+        elif isinstance(subop_body, Scumm6Opcodes.CallFuncList):
+            # List parameter (for charset_color)
+            tokens.append(TText("("))
+            if self.fused_operands:
+                # The last operand is the count, the rest are the values
+                if len(self.fused_operands) > 0:
+                    # Extract count from last operand
+                    count_operand = self.fused_operands[-1]
+                    if hasattr(count_operand.op_details.body, 'data'):
+                        count = count_operand.op_details.body.data
+                        # Show as array, excluding the count
+                        tokens.append(TText("["))
+                        # Show the actual values (all operands except the last one)
+                        value_operands = self.fused_operands[:-1]
+                        for i, operand in enumerate(value_operands[:count]):
+                            if i > 0:
+                                tokens.append(TSep(", "))
+                            tokens.extend(self._render_operand(operand))
+                        tokens.append(TText("]"))
+                    else:
+                        # Fallback if we can't extract count
+                        tokens.append(TText("[..."))
+                else:
+                    tokens.append(TText("[]"))
+            else:
+                tokens.append(TText("..."))
+            tokens.append(TText(")"))
+        elif self.fused_operands:
+            # Regular parameters
+            tokens.append(TText("("))
+            for i, operand in enumerate(self.fused_operands):
+                if i > 0:
+                    tokens.append(TSep(", "))
+                tokens.extend(self._render_operand(operand))
+            tokens.append(TText(")"))
+        else:
+            # No fused operands, show (...)
+            tokens.append(TText("(...)"))
+        
+        return tokens
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Generate LLIL for cursor command."""
+        # For now, use intrinsic
+        params = []
+        
+        # Add fused operands as direct parameters
+        for operand in self.fused_operands:
+            params.append(self._lift_operand(il, operand))
+        
+        # Add remaining stack pops
+        for _ in range(self.stack_pop_count):
+            params.append(il.pop(4))
+        
+        il.append(il.intrinsic(
+            [],  # no output
+            IntrinsicName("cursor_command"),
+            params
+        ))
+
+
+class PrintActor(FusibleMultiOperandMixin, Instruction):
+    """Print actor dialog operations with various formatting options."""
+    
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+        self.fused_operands: List[Instruction] = []
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(f"var_{operand.op_details.body.data}")]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return [TInt(str(operand.op_details.body.data))]
+        elif hasattr(operand, 'produces_result') and operand.produces_result():
+            # This is a result-producing instruction (like a fused expression)
+            # Render it as a nested expression with parentheses
+            tokens: List[Token] = []
+            tokens.append(TText("("))
+            tokens.extend(operand.render())
+            tokens.append(TText(")"))
+            return tokens
+        else:
+            return [TText("operand")]
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return il.reg(4, f"var_{operand.op_details.body.data}")
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return il.const(4, operand.op_details.body.data)
+        elif hasattr(operand, 'produces_result') and operand.produces_result():
+            # Complex case: would need to execute operand's lift method
+            # For now, use placeholder - future enhancement needed
+            return il.const(4, 0)  # Placeholder
+        else:
+            return il.const(4, 0)  # Placeholder
+    
+    def _get_max_operands(self) -> int:
+        """Return the maximum number of operands based on subop's pop_count."""
+        subop_body = self.op_details.body.body
+        
+        # Special handling for begin/baseop subop which takes actor ID
+        if self.op_details.body.subop.name in ["begin", "baseop"]:
+            return 1  # Actor ID
+        
+        return getattr(subop_body, "pop_count", 0)
+    
+    def fuse(self, previous: Instruction) -> Optional['PrintActor']:
+        """Fuse with previous push instructions."""
+        return self._standard_fuse(previous)  # type: ignore[return-value]
+    
+    @property
+    def stack_pop_count(self) -> int:
+        """Return remaining pops needed after fusion."""
+        max_operands = self._get_max_operands()
+        fused_count = len(self.fused_operands)
+        return max(0, max_operands - fused_count)
+    
+    def render(self) -> List[Token]:
+        from ...scumm6_opcodes import Scumm6Opcodes
+        
+        subop_name = self.op_details.body.subop.name
+        
+        # Map subop names to descumm-style names
+        subop_map = {
+            "begin": "begin",
+            "baseop": "begin",  # Alternative name for begin
+            "color": "color",
+            "center": "center",
+            "charset": "charset",
+            "left": "left",
+            "overhead": "overhead",
+            "mumble": "mumble",
+            "msg": "msg",
+            "textstring": "msg",  # Alternative name for msg
+            "width": "width",
+            "transparency": "transparency",
+        }
+        
+        # Use the mapped name or fall back to original
+        display_subop = subop_map.get(subop_name, subop_name)
+        display_name = f"printActor.{display_subop}"
+        
+        tokens: List[Token] = [TInstr(display_name)]
+        
+        # Check for specific body types
+        subop_body = self.op_details.body.body
+        
+        if isinstance(subop_body, Scumm6Opcodes.CallFuncString):
+            # String parameter (like msg)
+            tokens.append(TText("("))
+            # Handle complex string formatting
+            string_data = subop_body.data
+            # Basic handling of special sequences
+            # TODO: Full descumm-style formatting with sound() and wait()
+            if string_data:
+                # For now, show raw string with escape sequences
+                tokens.append(TText(f'"{string_data}"'))
+            else:
+                tokens.append(TText('""'))
+            tokens.append(TText(")"))
+        elif hasattr(subop_body, '__class__') and subop_body.__class__.__name__ == 'Message':
+            # Complex message with parts (sound, text, wait, etc.)
+            tokens.append(TText("("))
+            # Parse the message parts to reconstruct descumm-style output
+            if hasattr(subop_body, 'parts') and subop_body.parts:
+                msg_tokens = []
+                i = 0
+                parts = subop_body.parts
+                
+                while i < len(parts) and parts[i].data != 0:
+                    part = parts[i]
+                    
+                    if part.data == 0xff and hasattr(part, 'content'):
+                        # Special sequence
+                        special = part.content
+                        if special.code == 0x0a:  # Sound command
+                            # Sound command with inline values
+                            if hasattr(special, 'payload'):
+                                sound = special.payload
+                                if hasattr(sound, 'value1') and hasattr(sound, 'v3'):
+                                    sound_id = sound.value1
+                                    volume = sound.v3
+                                    if msg_tokens:
+                                        msg_tokens.append(TText(" + "))
+                                    msg_tokens.append(TText(f"sound(0x{sound_id:x}, 0x{volume:x})"))
+                        elif special.code == 0x03:  # Wait command
+                            if msg_tokens:
+                                msg_tokens.append(TText(" + "))
+                            msg_tokens.append(TText("wait()"))
+                        # Other special codes can be added here
+                    elif 32 <= part.data <= 126:
+                        # Text run - collect consecutive printable characters
+                        text = ""
+                        while i < len(parts) and 32 <= parts[i].data <= 126:
+                            text += chr(parts[i].data)
+                            i += 1
+                        if msg_tokens:
+                            msg_tokens.append(TText(" + "))
+                        msg_tokens.append(TText(f'"{text}"'))
+                        i -= 1  # Back up since we'll increment at loop end
+                    i += 1
+                
+                if msg_tokens:
+                    tokens.extend(msg_tokens)
+                else:
+                    tokens.append(TText('""'))
+            else:
+                tokens.append(TText("..."))
+            tokens.append(TText(")"))
+        elif isinstance(subop_body, Scumm6Opcodes.CallFuncPop0):
+            # No parameters - just show empty parens
+            if not self.fused_operands:
+                tokens.append(TText("()"))
+        elif isinstance(subop_body, Scumm6Opcodes.CallFuncPop1):
+            # Single parameter
+            if self.fused_operands:
+                tokens.append(TText("("))
+                tokens.extend(self._render_operand(self.fused_operands[0]))
+                tokens.append(TText(")"))
+            else:
+                tokens.append(TText("(...)"))
+        elif self.fused_operands:
+            # Regular parameters
+            tokens.append(TText("("))
+            for i, operand in enumerate(self.fused_operands):
+                if i > 0:
+                    tokens.append(TSep(", "))
+                tokens.extend(self._render_operand(operand))
+            tokens.append(TText(")"))
+        else:
+            # No fused operands, show (...)
+            tokens.append(TText("(...)"))
+        
+        return tokens
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Generate LLIL for print actor."""
+        # For now, use intrinsic
+        params = []
+        
+        # Add fused operands as direct parameters
+        for operand in self.fused_operands:
+            params.append(self._lift_operand(il, operand))
+        
+        # Add remaining stack pops
+        for _ in range(self.stack_pop_count):
+            params.append(il.pop(4))
+        
+        il.append(il.intrinsic(
+            [],  # no output
+            IntrinsicName("print_actor"),
+            params
+        ))
+
+
+class PrintEgo(PrintActor):
+    """Print ego dialog operations - same as PrintActor but for ego."""
+    
+    def render(self) -> List[Token]:
+        # Get tokens from parent class
+        tokens = super().render()
+        # Replace printActor with printEgo
+        if tokens and hasattr(tokens[0], 'text'):
+            tokens[0] = TInstr(tokens[0].text.replace('printActor', 'printEgo'))
+        return tokens
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Generate LLIL for print ego."""
+        # Similar to PrintActor but with different intrinsic name
+        params = []
+        
+        # Add fused operands as direct parameters
+        for operand in self.fused_operands:
+            params.append(self._lift_operand(il, operand))
+        
+        # Add remaining stack pops
+        for _ in range(self.stack_pop_count):
+            params.append(il.pop(4))
+        
+        il.append(il.intrinsic(
+            [],  # no output
+            IntrinsicName("print_ego"),
+            params
+        ))
+
+
 class ActorOps(FusibleMultiOperandMixin, Instruction):
     """Actor operations with various sub-commands."""
     

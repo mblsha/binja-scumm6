@@ -60,6 +60,11 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
         "delay_seconds",    # 1 param: seconds
         "delay_minutes",    # 1 param: minutes
         "delay_frames",     # 1 param: frames
+        # UI operations
+        "cursor_command",   # Variable params for cursor operations
+        # Print operations
+        "print_actor",      # Complex print operations
+        "print_ego",        # Complex print operations
     }
     
     # Choose base class based on whether instruction should support fusion

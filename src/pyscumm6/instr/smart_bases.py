@@ -80,10 +80,17 @@ DESCUMM_FUNCTION_NAMES = {
     "actor_ops.actor_name": "actorOps.setName",
     "actor_ops.step_dist": "actorOps.setWalkSpeed",
     "actor_ops.walk_speed": "actorOps.setWalkSpeed",
+    "actor_ops.text_offset": "actorOps.setTalkPos",
+    "actor_ops.scale": "actorOps.setScale",
     # Wait operation subcommands
     "wait.wait_for_message": "wait.waitForMessage",
     "wait.wait_for_actor": "wait.waitForActor",
     "wait.wait_for_camera": "wait.waitForCamera",
+    # Room operations subcommands
+    "room_ops.room_palette": "roomOps.setPalColor",
+    "room_ops.room_intensity": "roomOps.darkenPalette",
+    # Cursor commands
+    "cursor_command": "cursorCommand",
 }
 
 
