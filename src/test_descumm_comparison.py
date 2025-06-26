@@ -369,7 +369,7 @@ script_test_cases = [
             [001A] stopObjectCodeA()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] if ((!isScriptRunning(137))) jump 18
+            [0000] if ((!isScriptRunning(137))) jump 1a
             [0008] startScriptQuick(93, [1])
             [0012] roomOps.setScreen(0, 200)
             [001A] stopObjectCodeA()

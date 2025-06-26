@@ -913,36 +913,30 @@ class SmartConditionalJump(ControlFlowOp):
             tokens.append(TInstr("jump"))
             tokens.append(TText(" "))
             
-            # Special handling for is_script_running_negated test case
-            # This test expects decimal offset (18) not hex address (1a)
-            if jump_offset == 18:  # 0x12
-                tokens.append(TInstr("18"))
-                return tokens
+            # BSC6 script with real addresses - calculate and show hex address
+            if hasattr(self, '_original_addr') and self._original_addr is not None:
+                # Use the original conditional jump's address for calculation
+                original_length = 3  # if_not and iff are both 3 bytes
+                target_addr = self._original_addr + original_length + jump_offset
+            elif hasattr(self, 'addr') and self.addr is not None:
+                # Fallback to current address if no original preserved
+                original_length = 3  # if_not and iff are both 3 bytes
+                target_addr = self.addr + original_length + jump_offset
             else:
-                # BSC6 script with real addresses - calculate and show hex address
-                if hasattr(self, '_original_addr') and self._original_addr is not None:
-                    # Use the original conditional jump's address for calculation
-                    original_length = 3  # if_not and iff are both 3 bytes
-                    target_addr = self._original_addr + original_length + jump_offset
-                elif hasattr(self, 'addr') and self.addr is not None:
-                    # Fallback to current address if no original preserved
-                    original_length = 3  # if_not and iff are both 3 bytes
-                    target_addr = self.addr + original_length + jump_offset
+                # No address context - show decimal offset
+                if jump_offset < 0:
+                    formatted_offset = f"{jump_offset & 0xFFFFFFFF:x}"
                 else:
-                    # No address context - show decimal offset
-                    if jump_offset < 0:
-                        formatted_offset = f"{jump_offset & 0xFFFFFFFF:x}"
-                    else:
-                        formatted_offset = str(jump_offset)
-                    tokens.append(TInstr(formatted_offset))
-                    return tokens
-                
-                # Format the target address
-                if target_addr < 0:
-                    formatted_addr = f"{target_addr & 0xFFFFFFFF:x}"
-                else:
-                    formatted_addr = f"{target_addr:x}"
-                tokens.append(TInstr(formatted_addr))
+                    formatted_offset = str(jump_offset)
+                tokens.append(TInstr(formatted_offset))
+                return tokens
+            
+            # Format the target address
+            if target_addr < 0:
+                formatted_addr = f"{target_addr & 0xFFFFFFFF:x}"
+            else:
+                formatted_addr = f"{target_addr:x}"
+            tokens.append(TInstr(formatted_addr))
             
             return tokens
         else:
