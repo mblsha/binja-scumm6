@@ -8,7 +8,7 @@ from enum import Enum
 if getattr(kaitaistruct, 'API_VERSION', (0, 9)) < (0, 9):
     raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
 
-class Scumm6Opcodes(KaitaiStruct):  # type: ignore
+class Scumm6Opcodes(KaitaiStruct):
 
     class OpType(Enum):
         push_byte = 0
@@ -311,97 +311,97 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
         scumm_var = 0
         local = 1
         bitvar = 2
-    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    def __init__(self, _io, _parent=None, _root=None):
         self._io = _io
         self._parent = _parent
         self._root = _root if _root else self
         self._read()
 
-    def _read(self):  # type: ignore
+    def _read(self):
         self.op = Scumm6Opcodes.Op(self._io, self, self._root)
 
-    class ByteArrayWrite(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class ByteArrayWrite(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
             self.array = self._io.read_u1()
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class CallFuncPop2Push(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncPop2Push(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class CallFuncPop2(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncPop2(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
 
 
-    class Wait(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class Wait(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.wait_for_actor:
@@ -414,53 +414,53 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
-    class WordArrayRead(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class WordArrayRead(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
             self.array = self._io.read_u2le()
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class StringData(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class StringData(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.data = (self._io.read_bytes_term(0, False, True, True)).decode(u"ISO-8859-1")
 
 
-    class ArrayOps(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class ArrayOps(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             self.array = self._io.read_u2le()
             _on = self.subop
@@ -470,88 +470,88 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
-    class ByteArrayIndexedRead(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class ByteArrayIndexedRead(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
             self.array = self._io.read_u1()
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class CallFuncPop1(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncPop1(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
 
 
-    class CallFuncList(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncList(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_list(self):  # type: ignore
+        def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list  # type: ignore
+                return self._m_pop_list
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
 
         @property
-        def pop_list_first(self):  # type: ignore
+        def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first  # type: ignore
+                return self._m_pop_list_first
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
 
 
-    class SystemOps(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class SystemOps(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.restart:
@@ -564,131 +564,131 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
-    class CallFuncPop3Push(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncPop3Push(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 3
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class StartScript(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class StartScript(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def pop_list(self):  # type: ignore
+        def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list  # type: ignore
+                return self._m_pop_list
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
 
         @property
-        def pop_list_first(self):  # type: ignore
+        def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first  # type: ignore
+                return self._m_pop_list_first
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
 
 
-    class CallFuncPop3Byte(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncPop3Byte(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
             self.param = self._io.read_s1()
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
-            self._m_pop_count = 1
+            self._m_pop_count = 3
             return getattr(self, '_m_pop_count', None)
 
 
-    class SetBoxFlags(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class SetBoxFlags(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def pop_list(self):  # type: ignore
+        def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list  # type: ignore
+                return self._m_pop_list
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
 
         @property
-        def pop_list_first(self):  # type: ignore
+        def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first  # type: ignore
+                return self._m_pop_list_first
 
             self._m_pop_list_first = False
             return getattr(self, '_m_pop_list_first', None)
 
 
-    class Print(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class Print(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.overhead:
@@ -715,14 +715,14 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
-    class DimArray(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class DimArray(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             self.array = self._io.read_u2le()
             _on = self.subop
@@ -742,219 +742,219 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
-    class UnknownOp(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class UnknownOp(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.data = self._io.read_bytes_full()
 
 
-    class WordData(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class WordData(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.data = self._io.read_s2le()
 
 
-    class IsAnyOf(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class IsAnyOf(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def pop_list(self):  # type: ignore
+        def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list  # type: ignore
+                return self._m_pop_list
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
 
         @property
-        def pop_list_first(self):  # type: ignore
+        def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first  # type: ignore
+                return self._m_pop_list_first
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class CallFuncPop5(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncPop5(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 5
             return getattr(self, '_m_pop_count', None)
 
 
-    class CallFuncPop0(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncPop0(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 0
             return getattr(self, '_m_pop_count', None)
 
 
-    class WordArrayIndexedWrite(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class WordArrayIndexedWrite(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
             self.array = self._io.read_u2le()
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 3
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class ByteArrayRead(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class ByteArrayRead(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
             self.array = self._io.read_u1()
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class JumpData(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class JumpData(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.jump_offset = self._io.read_s2le()
 
 
-    class DrawBlastObject(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class DrawBlastObject(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 5
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def pop_list(self):  # type: ignore
+        def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list  # type: ignore
+                return self._m_pop_list
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
 
         @property
-        def pop_list_first(self):  # type: ignore
+        def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first  # type: ignore
+                return self._m_pop_list_first
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
 
 
-    class ActorOps(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class ActorOps(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.follow_boxes:
@@ -1003,74 +1003,74 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
-    class ByteVarData(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class ByteVarData(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.data = self._io.read_u1()
 
         @property
-        def type(self):  # type: ignore
+        def type(self):
             if hasattr(self, '_m_type'):
-                return self._m_type  # type: ignore
+                return self._m_type
 
             self._m_type = Scumm6Opcodes.VarType.scumm_var
             return getattr(self, '_m_type', None)
 
 
-    class CallFuncPop1Word(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncPop1Word(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
             self.param = self._io.read_s2le()
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
 
 
-    class BeginOverride(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class BeginOverride(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
             self.arg1 = self._io.read_s1()
             self.arg2 = self._io.read_s2le()
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 0
             return getattr(self, '_m_pop_count', None)
 
 
-    class VerbOps(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class VerbOps(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.verb_new:
@@ -1111,143 +1111,143 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
-    class CallFuncPop4Push(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncPop4Push(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 4
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class WordArrayIndexedRead(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class WordArrayIndexedRead(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
             self.array = self._io.read_u2le()
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class SetClass(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class SetClass(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def pop_list(self):  # type: ignore
+        def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list  # type: ignore
+                return self._m_pop_list
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
 
         @property
-        def pop_list_first(self):  # type: ignore
+        def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first  # type: ignore
+                return self._m_pop_list_first
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
 
 
-    class WordArrayWrite(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class WordArrayWrite(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
             self.array = self._io.read_u2le()
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 2
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class NoData(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class NoData(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.data = self._io.read_bytes(0)
 
 
-    class Word7Data(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class Word7Data(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.data1 = self._io.read_s2le()
             self.data2 = self._io.read_s2le()
             self.data3 = self._io.read_s2le()
@@ -1257,25 +1257,25 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
             self.data7 = self._io.read_s2le()
 
 
-    class ByteData(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class ByteData(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.data = self._io.read_s1()
 
 
-    class ResourceRoutines(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class ResourceRoutines(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.nuke_sound:
@@ -1320,80 +1320,80 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
-    class CallFuncPop4(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncPop4(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 4
             return getattr(self, '_m_pop_count', None)
 
 
-    class StartObject(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class StartObject(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 3
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def pop_list(self):  # type: ignore
+        def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list  # type: ignore
+                return self._m_pop_list
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
 
         @property
-        def pop_list_first(self):  # type: ignore
+        def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first  # type: ignore
+                return self._m_pop_list_first
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
 
 
-    class WordVarData(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class WordVarData(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.data = self._io.read_bits_int_le(14)
             self.type = KaitaiStream.resolve_enum(Scumm6Opcodes.VarType, self._io.read_bits_int_le(2))
 
 
-    class Message(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class Message(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.parts = []
             i = 0
             while True:
@@ -1403,14 +1403,14 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                     break
                 i += 1
 
-        class Part(KaitaiStruct):  # type: ignore
-            def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+        class Part(KaitaiStruct):
+            def __init__(self, _io, _parent=None, _root=None):
                 self._io = _io
                 self._parent = _parent
                 self._root = _root if _root else self
                 self._read()
 
-            def _read(self):  # type: ignore
+            def _read(self):
                 self.data = self._io.read_u1()
                 _on = self.data
                 if _on == 0:
@@ -1420,37 +1420,37 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                 else:
                     self.content = Scumm6Opcodes.Message.Part.RegularChar(self.data, self._io, self, self._root)
 
-            class Terminator(KaitaiStruct):  # type: ignore
-                def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+            class Terminator(KaitaiStruct):
+                def __init__(self, _io, _parent=None, _root=None):
                     self._io = _io
                     self._parent = _parent
                     self._root = _root if _root else self
                     self._read()
 
-                def _read(self):  # type: ignore
+                def _read(self):
                     pass
 
 
-            class RegularChar(KaitaiStruct):  # type: ignore
-                def __init__(self, value, _io, _parent=None, _root=None):  # type: ignore
+            class RegularChar(KaitaiStruct):
+                def __init__(self, value, _io, _parent=None, _root=None):
                     self._io = _io
                     self._parent = _parent
                     self._root = _root if _root else self
                     self.value = value
                     self._read()
 
-                def _read(self):  # type: ignore
+                def _read(self):
                     pass
 
 
-            class SpecialSequence(KaitaiStruct):  # type: ignore
-                def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+            class SpecialSequence(KaitaiStruct):
+                def __init__(self, _io, _parent=None, _root=None):
                     self._io = _io
                     self._parent = _parent
                     self._root = _root if _root else self
                     self._read()
 
-                def _read(self):  # type: ignore
+                def _read(self):
                     self.code = self._io.read_u1()
                     _on = self.code
                     if _on == 14:
@@ -1480,102 +1480,102 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                     else:
                         self.payload = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
-                class VerbMessage(KaitaiStruct):  # type: ignore
-                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                class VerbMessage(KaitaiStruct):
+                    def __init__(self, _io, _parent=None, _root=None):
                         self._io = _io
                         self._parent = _parent
                         self._root = _root if _root else self
                         self._read()
 
-                    def _read(self):  # type: ignore
+                    def _read(self):
                         self.value = self._io.read_u2le()
 
 
-                class Wait(KaitaiStruct):  # type: ignore
-                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                class Wait(KaitaiStruct):
+                    def __init__(self, _io, _parent=None, _root=None):
                         self._io = _io
                         self._parent = _parent
                         self._root = _root if _root else self
                         self._read()
 
-                    def _read(self):  # type: ignore
+                    def _read(self):
                         pass
 
 
-                class KeepText(KaitaiStruct):  # type: ignore
-                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                class KeepText(KaitaiStruct):
+                    def __init__(self, _io, _parent=None, _root=None):
                         self._io = _io
                         self._parent = _parent
                         self._root = _root if _root else self
                         self._read()
 
-                    def _read(self):  # type: ignore
+                    def _read(self):
                         pass
 
 
-                class StartAnim(KaitaiStruct):  # type: ignore
-                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                class StartAnim(KaitaiStruct):
+                    def __init__(self, _io, _parent=None, _root=None):
                         self._io = _io
                         self._parent = _parent
                         self._root = _root if _root else self
                         self._read()
 
-                    def _read(self):  # type: ignore
+                    def _read(self):
                         self.value = self._io.read_u2le()
 
 
-                class NameMessage(KaitaiStruct):  # type: ignore
-                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                class NameMessage(KaitaiStruct):
+                    def __init__(self, _io, _parent=None, _root=None):
                         self._io = _io
                         self._parent = _parent
                         self._root = _root if _root else self
                         self._read()
 
-                    def _read(self):  # type: ignore
+                    def _read(self):
                         self.value = self._io.read_u2le()
 
 
-                class SetColor(KaitaiStruct):  # type: ignore
-                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                class SetColor(KaitaiStruct):
+                    def __init__(self, _io, _parent=None, _root=None):
                         self._io = _io
                         self._parent = _parent
                         self._root = _root if _root else self
                         self._read()
 
-                    def _read(self):  # type: ignore
+                    def _read(self):
                         self.value = self._io.read_u2le()
 
 
-                class Unknown13(KaitaiStruct):  # type: ignore
-                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                class Unknown13(KaitaiStruct):
+                    def __init__(self, _io, _parent=None, _root=None):
                         self._io = _io
                         self._parent = _parent
                         self._root = _root if _root else self
                         self._read()
 
-                    def _read(self):  # type: ignore
+                    def _read(self):
                         self.value = self._io.read_u2le()
 
 
-                class IntMessage(KaitaiStruct):  # type: ignore
-                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                class IntMessage(KaitaiStruct):
+                    def __init__(self, _io, _parent=None, _root=None):
                         self._io = _io
                         self._parent = _parent
                         self._root = _root if _root else self
                         self._read()
 
-                    def _read(self):  # type: ignore
+                    def _read(self):
                         self.value = self._io.read_u2le()
 
 
-                class Sound(KaitaiStruct):  # type: ignore
-                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                class Sound(KaitaiStruct):
+                    def __init__(self, _io, _parent=None, _root=None):
                         self._io = _io
                         self._parent = _parent
                         self._root = _root if _root else self
                         self._read()
 
-                    def _read(self):  # type: ignore
+                    def _read(self):
                         self.v1 = self._io.read_u2le()
                         self.pad1 = self._io.read_bytes(2)
                         if not self.pad1 == b"\xFF\x0A":
@@ -1591,66 +1591,66 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                         self.v4 = self._io.read_u2le()
 
                     @property
-                    def value1(self):  # type: ignore
+                    def value1(self):
                         if hasattr(self, '_m_value1'):
-                            return self._m_value1  # type: ignore
+                            return self._m_value1
 
                         self._m_value1 = ((self.v2 << 16) | self.v1)
                         return getattr(self, '_m_value1', None)
 
                     @property
-                    def value2(self):  # type: ignore
+                    def value2(self):
                         if hasattr(self, '_m_value2'):
-                            return self._m_value2  # type: ignore
+                            return self._m_value2
 
                         self._m_value2 = ((self.v4 << 16) | self.v3)
                         return getattr(self, '_m_value2', None)
 
 
-                class StringMessage(KaitaiStruct):  # type: ignore
-                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                class StringMessage(KaitaiStruct):
+                    def __init__(self, _io, _parent=None, _root=None):
                         self._io = _io
                         self._parent = _parent
                         self._root = _root if _root else self
                         self._read()
 
-                    def _read(self):  # type: ignore
+                    def _read(self):
                         self.value = self._io.read_u2le()
 
 
-                class SetFont(KaitaiStruct):  # type: ignore
-                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                class SetFont(KaitaiStruct):
+                    def __init__(self, _io, _parent=None, _root=None):
                         self._io = _io
                         self._parent = _parent
                         self._root = _root if _root else self
                         self._read()
 
-                    def _read(self):  # type: ignore
+                    def _read(self):
                         self.value = self._io.read_u2le()
 
 
-                class Newline(KaitaiStruct):  # type: ignore
-                    def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+                class Newline(KaitaiStruct):
+                    def __init__(self, _io, _parent=None, _root=None):
                         self._io = _io
                         self._parent = _parent
                         self._root = _root if _root else self
                         self._read()
 
-                    def _read(self):  # type: ignore
+                    def _read(self):
                         pass
 
 
 
 
 
-    class RoomOps(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class RoomOps(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.room_screen:
@@ -1681,79 +1681,79 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
-    class CallFuncPop3(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncPop3(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 3
             return getattr(self, '_m_pop_count', None)
 
 
-    class StartScriptQuick(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class StartScriptQuick(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def pop_list(self):  # type: ignore
+        def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list  # type: ignore
+                return self._m_pop_list
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
 
         @property
-        def pop_list_first(self):  # type: ignore
+        def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first  # type: ignore
+                return self._m_pop_list_first
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
 
 
-    class CallFuncString(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncString(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.data = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
 
 
-    class CursorCommand(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CursorCommand(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.userput_off:
@@ -1786,84 +1786,84 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
-    class IfClassOfIs(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class IfClassOfIs(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def pop_list(self):  # type: ignore
+        def pop_list(self):
             if hasattr(self, '_m_pop_list'):
-                return self._m_pop_list  # type: ignore
+                return self._m_pop_list
 
             self._m_pop_list = True
             return getattr(self, '_m_pop_list', None)
 
         @property
-        def pop_list_first(self):  # type: ignore
+        def pop_list_first(self):
             if hasattr(self, '_m_pop_list_first'):
-                return self._m_pop_list_first  # type: ignore
+                return self._m_pop_list_first
 
             self._m_pop_list_first = True
             return getattr(self, '_m_pop_list_first', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class CallFuncPop1Push(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class CallFuncPop1Push(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 1
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)
 
 
-    class Op(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class Op(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.id = KaitaiStream.resolve_enum(Scumm6Opcodes.OpType, self._io.read_u1())
             _on = self.id
             if _on == Scumm6Opcodes.OpType.start_object:
@@ -2122,29 +2122,29 @@ class Scumm6Opcodes(KaitaiStruct):  # type: ignore
                 self.body = Scumm6Opcodes.UnknownOp(self._io, self, self._root)
 
 
-    class ByteArrayIndexedWrite(KaitaiStruct):  # type: ignore
-        def __init__(self, _io, _parent=None, _root=None):  # type: ignore
+    class ByteArrayIndexedWrite(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
             self._read()
 
-        def _read(self):  # type: ignore
+        def _read(self):
             self.call_func = self._io.read_bytes(0)
             self.array = self._io.read_u1()
 
         @property
-        def pop_count(self):  # type: ignore
+        def pop_count(self):
             if hasattr(self, '_m_pop_count'):
-                return self._m_pop_count  # type: ignore
+                return self._m_pop_count
 
             self._m_pop_count = 3
             return getattr(self, '_m_pop_count', None)
 
         @property
-        def push_count(self):  # type: ignore
+        def push_count(self):
             if hasattr(self, '_m_push_count'):
-                return self._m_push_count  # type: ignore
+                return self._m_push_count
 
             self._m_push_count = 1
             return getattr(self, '_m_push_count', None)

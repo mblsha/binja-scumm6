@@ -952,7 +952,7 @@ types:
         type: s1
     instances:
         pop_count:
-          value: 1
+          value: 3
     -webide-representation: '{data}'
 
   call_func_pop4:

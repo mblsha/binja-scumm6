@@ -65,6 +65,8 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
         # Print operations
         "print_actor",      # Complex print operations
         "print_ego",        # Complex print operations
+        # Verb operations
+        "save_restore_verbs", # 3 params: slot1, slot2, slot3
     }
     
     # Choose base class based on whether instruction should support fusion
