@@ -82,6 +82,7 @@ DESCUMM_FUNCTION_NAMES = {
     "actor_ops.walk_speed": "actorOps.setWalkSpeed",
     "actor_ops.text_offset": "actorOps.setTalkPos",
     "actor_ops.scale": "actorOps.setScale",
+    "actor_ops.palette": "actorOps.setPalette",
     # Wait operation subcommands
     "wait.wait_for_message": "wait.waitForMessage",
     "wait.wait_for_actor": "wait.waitForActor",
