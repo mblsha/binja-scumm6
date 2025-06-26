@@ -1849,8 +1849,6 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
     
     def _extract_message_text(self, message: Any) -> str:
         """Extract string from a Message object."""
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
-        
         text_parts = []
         for part in message.parts:
             if hasattr(part, 'data'):
