@@ -96,7 +96,7 @@ DESCUMM_FUNCTION_NAMES = {
     "verb_ops.verb_init": "verbOps.init",
     "verb_ops.verb_new": "verbOps.new",
     "verb_ops.verb_delete": "verbOps.delete",
-    "verb_ops.verb_name": "verbOps.name",
+    "verb_ops.verb_name": "verbOps.loadString",
     "verb_ops.verb_at": "verbOps.at",
     "verb_ops.verb_on": "verbOps.setOn",
     "verb_ops.verb_off": "verbOps.setOff",
@@ -112,6 +112,8 @@ DESCUMM_FUNCTION_NAMES = {
     "verb_ops.verb_set_cur_verb": "verbOps.setCurVerb",
     "verb_ops.verb_init_2": "verbOps.init",
     "verb_ops.verb_end": "verbOps.end",
+    "verb_ops.endd": "verbOps.redraw",  # endd is actually redraw in descumm
+    "verb_ops.verb_dimcolor": "verbOps.dimColor",  # Missing mapping
     "verb_ops.verb_load_string": "verbOps.loadString",
     "verb_ops.save_verbs": "verbOps.saveVerbs",
     "verb_ops.restore_verbs": "verbOps.restoreVerbs",

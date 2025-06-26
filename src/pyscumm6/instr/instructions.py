@@ -1824,12 +1824,102 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
         return il.undefined()
 
 
-class VerbOps(Instruction):
+class VerbOps(FusibleMultiOperandMixin, Instruction):
     """Verb operations with various sub-commands."""
     
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+        self.fused_operands: List[Instruction] = []
+    
+    def _get_max_operands(self) -> int:
+        """Return the maximum number of operands based on subop's pop_count."""
+        subop_body = self.op_details.body.body
+        return getattr(subop_body, "pop_count", 0)
+    
+    def fuse(self, previous: Instruction) -> Optional['VerbOps']:
+        """Fuse with previous push instructions."""
+        return self._standard_fuse(previous)  # type: ignore[return-value]
+    
+    @property
+    def stack_pop_count(self) -> int:
+        """Return remaining pops needed after fusion."""
+        max_operands = self._get_max_operands()
+        fused_count = len(self.fused_operands)
+        return max(0, max_operands - fused_count)
+    
+    def _extract_message_text(self, message: Any) -> str:
+        """Extract string from a Message object."""
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        
+        text_parts = []
+        for part in message.parts:
+            if hasattr(part, 'data'):
+                if isinstance(part.data, bytes):
+                    try:
+                        decoded = part.data.decode('iso-8859-1').rstrip('\x00')
+                        text_parts.append(decoded)
+                    except UnicodeDecodeError:
+                        pass
+                elif isinstance(part.data, str):
+                    text_parts.append(part.data)
+                elif isinstance(part.data, int) and 32 <= part.data <= 126:
+                    text_parts.append(chr(part.data))
+        
+        return ''.join(text_parts)
+    
     def render(self) -> List[Token]:
+        from .smart_bases import DESCUMM_FUNCTION_NAMES
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        
         subop_name = self.op_details.body.subop.name
-        return [TInstr(f"verb_ops.{subop_name}")]
+        full_name = f"verb_ops.{subop_name}"
+        display_name = DESCUMM_FUNCTION_NAMES.get(full_name, full_name)
+        
+        tokens: List[Token] = [TInstr(display_name)]
+        
+        # Check if this subop has message data (like verb_name)
+        subop_body = self.op_details.body.body
+        if isinstance(subop_body, Scumm6Opcodes.Message):
+            # Message parameter - extract the text
+            tokens.append(TText("("))
+            text = self._extract_message_text(subop_body)
+            tokens.append(TText(f'"{text}"'))
+            tokens.append(TText(")"))
+        elif isinstance(subop_body, Scumm6Opcodes.CallFuncPop0):
+            # No parameters - just show empty parens
+            tokens.append(TText("()"))
+        elif self.fused_operands:
+            # Add fused operand parameters
+            tokens.append(TText("("))
+            for i, operand in enumerate(self.fused_operands):
+                if i > 0:
+                    tokens.append(TSep(", "))
+                tokens.extend(self._render_operand(operand))
+            tokens.append(TText(")"))
+        elif getattr(subop_body, "pop_count", 0) > 0:
+            # Has parameters but not fused
+            tokens.append(TText("(...)"))
+        else:
+            # No parameters
+            tokens.append(TText("()"))
+        
+        return tokens
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            if hasattr(operand.op_details.body, 'data'):
+                return [TInt(f"var_{operand.op_details.body.data}")]
+            else:
+                return [TInt("var_?")]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            if hasattr(operand.op_details.body, 'data'):
+                value = operand.op_details.body.data
+                return [TInt(str(value))]
+            else:
+                return [TInt("?")]
+        else:
+            return [TText("operand")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
@@ -1849,14 +1939,34 @@ class VerbOps(Instruction):
         pop_count = getattr(subop_body, "pop_count", 0)
         push_count = getattr(subop_body, "push_count", 0)
         
-        # Pop arguments and call intrinsic
-        params = [il.pop(4) for _ in range(pop_count)]
+        # Build parameters
+        if self.fused_operands:
+            # Use fused operands directly
+            params = []
+            for operand in self.fused_operands:
+                params.append(self._lift_operand(il, operand))
+            # Pop any remaining arguments
+            remaining_pops = pop_count - len(self.fused_operands)
+            for _ in range(remaining_pops):
+                params.append(il.pop(4))
+        else:
+            # Pop arguments normally
+            params = [il.pop(4) for _ in range(pop_count)]
         
         if push_count > 0:
             il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
             il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
         else:
             il.append(il.intrinsic([], intrinsic_name, params))
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return il.reg(4, f"var_{operand.op_details.body.data}")
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return il.const(4, operand.op_details.body.data)
+        else:
+            return il.const(4, 0)  # Placeholder
 
 
 class ArrayOps(Instruction):
