@@ -896,7 +896,7 @@ script_test_cases = [
             [0000] (5D) if (!isScriptRunning(3)) {
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] if ((!isScriptRunning(3))) jump 18',
+        expected_disasm_fusion_output='[0000] if ((!isScriptRunning(3))) jump 1a',
     ),
 ]
 
