@@ -916,6 +916,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] VAR_GUI_COLORS[9] = 1',
     ),
+    ScriptComparisonTestCase(
+        test_id="start_object_with_args",
+        bytecode=bytes.fromhex("01000003004001030001000001030001020060"),
+        expected_descumm_output=dedent("""
+            [0000] (60) startObject(0,localvar0,3,[0,3])
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] startObject(0, localvar0, 3, [0, 3])',
+    ),
 ]
 
 

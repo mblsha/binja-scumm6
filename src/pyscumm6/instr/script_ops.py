@@ -236,6 +236,131 @@ class StartScript(SmartSemanticIntrinsicOp):
             super().lift(il, addr)
 
 
+class StartObject(SmartSemanticIntrinsicOp):
+    """StartObject with variable argument handling: startObject(object_id, script, entrypoint, [args])"""
+    
+    # Set class attributes that parent expects
+    _name = "start_object"
+    _config: SemanticIntrinsicConfig  # Will be set by factory
+    
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+        self._arg_count: Optional[int] = None
+        
+    def fuse(self, previous: Instruction) -> Optional['StartObject']:
+        """
+        Custom fusion for startObject that handles:
+        1. Object ID
+        2. Script (variable)
+        3. Entrypoint
+        4. Variable number of arguments
+        5. Arg count
+        
+        Stack order (LIFO): object_id, script, entrypoint, arg1, arg2, ..., argN, arg_count
+        Expected output: startObject(object_id, script, entrypoint, [arg1, arg2, ..., argN])
+        """
+        # If we don't have fused operands yet, we're looking for arg_count
+        if not self.fused_operands:
+            # First fusion should be arg_count
+            if not self._is_fusible_push(previous):
+                return None
+                
+            # Create initial fusion with arg_count
+            fused = copy.deepcopy(self)
+            fused.fused_operands = [previous]
+            fused._length = self._length + previous.length()
+            
+            # Extract arg_count
+            if previous.__class__.__name__ in ['PushByte', 'PushWord']:
+                fused._arg_count = previous.op_details.body.data
+            
+            return fused
+            
+        # If we have the arg_count, collect arguments
+        if self._arg_count is not None:
+            # Calculate total operands needed: object_id, script, entrypoint, args, arg_count
+            total_needed = 3 + self._arg_count + 1  # 3 fixed params + args + arg_count
+            
+            if len(self.fused_operands) <= total_needed - 1:  # -1 because we already have arg_count
+                # Still need more operands
+                if not self._is_fusible_push(previous):
+                    return None
+                    
+                fused = copy.deepcopy(self)
+                fused.fused_operands = [previous] + self.fused_operands
+                fused._length = self._length + previous.length()
+                fused._arg_count = self._arg_count  # Preserve arg count
+                return fused
+        
+        # No more fusion possible
+        return None
+        
+    def render(self) -> List[Token]:
+        """Render in descumm style: startObject(object_id, script, entrypoint, [args])"""
+        if self.fused_operands and self._arg_count is not None:
+            total_needed = 3 + self._arg_count + 1
+            if len(self.fused_operands) >= total_needed:
+                # We have all operands
+                # Order in fused_operands (LIFO): object_id, script, entrypoint, arg1, ..., argN, arg_count
+                tokens = [TInstr("startObject"), TSep("(")]
+                
+                # Object ID (first due to LIFO)
+                tokens.extend(self._render_operand(self.fused_operands[0]))
+                tokens.append(TSep(", "))
+                
+                # Script (variable)
+                script_op = self.fused_operands[1]
+                if script_op.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+                    # Show as localvar for descumm compatibility
+                    if hasattr(script_op.op_details.body, 'data'):
+                        var_num = script_op.op_details.body.data
+                        tokens.append(TInt(f"localvar{var_num}"))
+                    else:
+                        tokens.extend(self._render_operand(script_op))
+                else:
+                    tokens.extend(self._render_operand(script_op))
+                tokens.append(TSep(", "))
+                
+                # Entrypoint
+                tokens.extend(self._render_operand(self.fused_operands[2]))
+                tokens.append(TSep(", "))
+                
+                # Arguments array
+                tokens.append(TSep("["))
+                # Arguments are from index 3 to 3+arg_count (exclusive of arg_count itself)
+                for i in range(3, 3 + self._arg_count):
+                    if i > 3:
+                        tokens.append(TSep(", "))
+                    tokens.extend(self._render_operand(self.fused_operands[i]))
+                tokens.append(TSep("]"))
+                
+                tokens.append(TSep(")"))
+                return tokens
+        
+        # Fallback to default rendering
+        return super().render()
+        
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Generate LLIL with object_id, script, entrypoint, and arguments."""
+        if self.fused_operands and self._arg_count is not None:
+            total_needed = 3 + self._arg_count + 1
+            if len(self.fused_operands) >= total_needed:
+                params = [
+                    self._lift_operand(il, self.fused_operands[0]),  # object_id
+                    self._lift_operand(il, self.fused_operands[1]),  # script
+                    self._lift_operand(il, self.fused_operands[2]),  # entrypoint
+                ]
+                # Add variable arguments
+                for i in range(3, 3 + self._arg_count):
+                    params.append(self._lift_operand(il, self.fused_operands[i]))
+                
+                il.append(il.intrinsic([], "start_object", params))
+                return
+        
+        # Fallback to default lifting
+        super().lift(il, addr)
+
+
 class SoundKludge(SmartIntrinsicOp):
     """SoundKludge with variable argument handling."""
     

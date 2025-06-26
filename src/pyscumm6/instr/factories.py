@@ -213,4 +213,14 @@ def generate_all_instructions() -> Dict[str, Type[Instruction]]:
     script_ops.SoundKludge._config = INTRINSIC_CONFIGS["sound_kludge"]
     registry["sound_kludge"] = script_ops.SoundKludge
     
+    # Override start_object with custom implementation
+    # start_object is defined as a semantic_op which returns SemanticIntrinsicConfig
+    # It's stored in INTRINSIC_CONFIGS but is actually a SemanticIntrinsicConfig
+    if "start_object" in INTRINSIC_CONFIGS:
+        # Cast is safe because start_object is defined with semantic_op()
+        script_ops.StartObject._config = INTRINSIC_CONFIGS["start_object"]  # type: ignore[assignment]
+    elif "start_object" in SEMANTIC_CONFIGS:
+        script_ops.StartObject._config = SEMANTIC_CONFIGS["start_object"]
+    registry["start_object"] = script_ops.StartObject
+    
     return registry

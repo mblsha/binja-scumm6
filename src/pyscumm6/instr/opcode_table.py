@@ -3,7 +3,7 @@
 from typing import Dict, Type
 from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
 from .opcodes import Instruction
-from . import instructions
+from . import instructions, script_ops
 from .generic import make_push_constant_instruction, make_intrinsic_instruction
 from .registry import INSTRUCTION_REGISTRY
 
@@ -182,7 +182,7 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.jump_to_script: INSTRUCTION_REGISTRY["jump_to_script"],
     Scumm6Opcodes.OpType.start_script: INSTRUCTION_REGISTRY["start_script"],
     Scumm6Opcodes.OpType.start_script_quick: INSTRUCTION_REGISTRY["start_script_quick"],
-    Scumm6Opcodes.OpType.start_object: INSTRUCTION_REGISTRY["start_object"],
+    Scumm6Opcodes.OpType.start_object: script_ops.StartObject,
     Scumm6Opcodes.OpType.start_object_quick: INSTRUCTION_REGISTRY["start_object_quick"],
     # --- Auto-Generated Array Management Operations ---
     Scumm6Opcodes.OpType.dim_array: INSTRUCTION_REGISTRY["dim_array"],

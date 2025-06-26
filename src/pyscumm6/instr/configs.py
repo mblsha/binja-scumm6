@@ -166,7 +166,13 @@ INTRINSIC_CONFIGS: Dict[str, IntrinsicConfig] = {
     "jump_to_script": IntrinsicConfig(doc="Jump to script"),
     
     # Object Script Operations
-    "start_object": IntrinsicConfig(doc="Start object"),
+    "start_object": semantic_op(
+        name="start_object",
+        params=["object_id", "script", "entrypoint", "arg_count", "*args"],
+        pop=4,  # object_id + script + entrypoint + arg_count (then variable args)
+        doc="Start object script",
+        variable_args=True
+    ),
     "start_object_quick": IntrinsicConfig(doc="Start object quick"),
     "stop_object_script": IntrinsicConfig(pop_count=1, doc="Stop object script"),
     
