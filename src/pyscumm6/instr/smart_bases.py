@@ -92,6 +92,33 @@ DESCUMM_FUNCTION_NAMES = {
     "room_ops.room_intensity": "roomOps.darkenPalette",
     # Cursor commands
     "cursor_command": "cursorCommand",
+    # Verb operations subcommands
+    "verb_ops.verb_init": "verbOps.init",
+    "verb_ops.verb_new": "verbOps.new",
+    "verb_ops.verb_delete": "verbOps.delete",
+    "verb_ops.verb_name": "verbOps.name",
+    "verb_ops.verb_at": "verbOps.at",
+    "verb_ops.verb_on": "verbOps.setOn",
+    "verb_ops.verb_off": "verbOps.setOff",
+    "verb_ops.verb_color": "verbOps.setColor",
+    "verb_ops.verb_hicolor": "verbOps.setHiColor",
+    "verb_ops.verb_redraw": "verbOps.redraw",
+    "verb_ops.verb_dim": "verbOps.dim",
+    "verb_ops.verb_key": "verbOps.setKey",
+    "verb_ops.verb_center": "verbOps.setCenter",
+    "verb_ops.verb_name_str": "verbOps.setNameStr",
+    "verb_ops.verb_image_in_room": "verbOps.image_in_room",
+    "verb_ops.verb_bakcolor": "verbOps.bakcolor",
+    "verb_ops.verb_set_cur_verb": "verbOps.setCurVerb",
+    "verb_ops.verb_init_2": "verbOps.init",
+    "verb_ops.verb_end": "verbOps.end",
+    "verb_ops.verb_load_string": "verbOps.loadString",
+    "verb_ops.save_verbs": "verbOps.saveVerbs",
+    "verb_ops.restore_verbs": "verbOps.restoreVerbs",
+    "verb_ops.delete_verbs": "verbOps.deleteVerbs",
+    "verb_ops.verb_load_string2": "verbOps.loadString",
+    "verb_ops.verb_assign": "verbOps.assign",
+    "verb_ops.set_verb_object": "verbOps.setVerbObject",
 }
 
 
