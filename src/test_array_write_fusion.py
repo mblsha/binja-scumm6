@@ -42,7 +42,7 @@ fusion_test_cases = [
         expected_class="ByteArrayWrite",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="array_5[3] = 10",
+        expected_render_text="array_5[10] = 3",  # Matches descumm: first push = index
     ),
     FusionTestCase(
         test_id="word_array_write",
@@ -50,7 +50,7 @@ fusion_test_cases = [
         expected_class="WordArrayWrite",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="array_10[7] = 1000",
+        expected_render_text="array_10[1000] = 7",  # Matches descumm: first push = index
     ),
     FusionTestCase(
         test_id="array_write_with_vars",
@@ -58,7 +58,7 @@ fusion_test_cases = [
         expected_class="ByteArrayWrite",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="array_3[var_5] = var_20",
+        expected_render_text="array_3[var_20] = var_5",  # Matches descumm: first push = index
     ),
     FusionTestCase(
         test_id="array_write_partial",
@@ -82,7 +82,7 @@ fusion_test_cases = [
         expected_class="WordArrayWrite",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="array_7[50] = var_100",
+        expected_render_text="array_7[var_100] = 50",  # Matches descumm: first push = index
     ),
     FusionTestCase(
         test_id="array_zero_index",
@@ -90,7 +90,7 @@ fusion_test_cases = [
         expected_class="ByteArrayWrite",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="array_0[0] = 42",
+        expected_render_text="array_0[42] = 0",  # Matches descumm: first push = index
     ),
     FusionTestCase(
         test_id="array_negative_value",
@@ -98,7 +98,7 @@ fusion_test_cases = [
         expected_class="ByteArrayWrite",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="array_15[5] = -1",
+        expected_render_text="array_15[-1] = 5",  # 0xFF is interpreted as signed -1
     ),
 ]
 

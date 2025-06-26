@@ -1359,8 +1359,9 @@ class SmartArrayOp(Instruction):
                 tokens.append(TSep("["))
                 
                 # Handle operand order for array operations
-                # For non-indexed: [value, index] → array[index] = value
-                # For indexed: [value, index, base] → array[base + index] = value
+                # IMPORTANT: Match descumm semantics
+                # For non-indexed: [index, value] → array[index] = value
+                # For indexed: [index, value, base] → array[base + index] = value
                 
                 if len(self.fused_operands) >= 2:
                     # We have both index and value
@@ -1368,13 +1369,13 @@ class SmartArrayOp(Instruction):
                         # array[base + index] = value
                         tokens.extend(self._render_operand(self.fused_operands[2]))  # base
                         tokens.append(TSep(" + "))
-                        tokens.extend(self._render_operand(self.fused_operands[1]))  # index
+                        tokens.extend(self._render_operand(self.fused_operands[0]))  # index
                     else:
                         # array[index] = value
-                        tokens.extend(self._render_operand(self.fused_operands[1]))  # index
+                        tokens.extend(self._render_operand(self.fused_operands[0]))  # index
                     
                     tokens.append(TSep("] = "))
-                    tokens.extend(self._render_operand(self.fused_operands[0]))  # value
+                    tokens.extend(self._render_operand(self.fused_operands[1]))  # value
                     return tokens
                 elif len(self.fused_operands) == 1:
                     # Partial fusion - might be just the value or just the index

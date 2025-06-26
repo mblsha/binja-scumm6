@@ -907,6 +907,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] saveRestoreVerbs.saveVerbs(2, 11, 2)',
     ),
+    ScriptComparisonTestCase(
+        test_id="var_gui_colors_array_write",
+        bytecode=bytes.fromhex("010900010100476E00"),
+        expected_descumm_output=dedent("""
+            [0000] (47) VAR_GUI_COLORS[9] = 1
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] VAR_GUI_COLORS[9] = 1',
+    ),
 ]
 
 

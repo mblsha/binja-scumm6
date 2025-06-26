@@ -404,14 +404,70 @@ class ByteArrayWrite(Instruction):
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
 
 
-class WordArrayWrite(Instruction):
+class WordArrayWrite(FusibleMultiOperandMixin, Instruction):
+    """Word array write with fusion support and descumm-style names."""
+    
+    # Array ID to name mapping based on descumm
+    ARRAY_NAMES = {
+        110: "VAR_GUI_COLORS",  # 0x6E
+        # Add more mappings as discovered
+    }
+    
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+        self.fused_operands: List['Instruction'] = []
+    
+    @property
+    def stack_pop_count(self) -> int:
+        """Number of values this instruction pops from the stack."""
+        if self.fused_operands:
+            return 0  # Fused instructions handle their own operands
+        return 2  # word_array_write pops index and value
+    
+    def _get_max_operands(self) -> int:
+        """Return the maximum number of operands this instruction can fuse."""
+        return 2  # array write takes 2 parameters: index and value
+    
+    def fuse(self, previous: Instruction) -> Optional['WordArrayWrite']:
+        """Attempt to fuse with previous instruction."""
+        return cast(Optional['WordArrayWrite'], self._standard_fuse(previous))
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(f"var_{operand.op_details.body.data}")]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return [TInt(str(operand.op_details.body.data))]
+        else:
+            return [TText("operand")]
 
     def render(self) -> List[Token]:
         array_id = self.op_details.body.array
+        array_name = self.ARRAY_NAMES.get(array_id, f"array_{array_id}")
+        
+        if self.fused_operands:
+            # With fusion: show as assignment
+            # IMPORTANT: The fusion order and descumm semantics require:
+            # fused_operands[0] = first pushed = index
+            # fused_operands[1] = last pushed = value
+            # This produces the correct descumm output: array[index] = value
+            if len(self.fused_operands) == 2:
+                index_operand = self.fused_operands[0]  # First pushed = index
+                value_operand = self.fused_operands[1]  # Last pushed = value
+                
+                tokens: List[Token] = []
+                tokens.append(TText(array_name))
+                tokens.append(TSep("["))
+                tokens.extend(self._render_operand(index_operand))
+                tokens.append(TSep("] = "))
+                tokens.extend(self._render_operand(value_operand))
+                return tokens
+        
+        # Without fusion: show function call style
         return [
             TInstr("word_array_write"),
             TSep("("),
-            TInt(f"array_{array_id}"),
+            TInt(array_name),
             TSep(")"),
         ]
 
@@ -419,13 +475,31 @@ class WordArrayWrite(Instruction):
         assert isinstance(self.op_details.body, Scumm6Opcodes.WordArrayWrite), \
             f"Expected WordArrayWrite body, got {type(self.op_details.body)}"
 
-        # Generate intrinsic call - pops value and base, pushes result
-        il.append(il.intrinsic(
-            [il.reg(4, LLIL_TEMP(0))],  # output
-            IntrinsicName("word_array_write"),  # intrinsic name
-            [il.pop(4), il.pop(4)]  # parameters: pop value and base from stack
-        ))
+        if self.fused_operands:
+            # Use fused operands
+            params = [self._lift_operand(il, op) for op in self.fused_operands]
+            il.append(il.intrinsic(
+                [il.reg(4, LLIL_TEMP(0))],
+                IntrinsicName("word_array_write"),
+                params
+            ))
+        else:
+            # Generate intrinsic call - pops value and index, pushes result
+            il.append(il.intrinsic(
+                [il.reg(4, LLIL_TEMP(0))],  # output
+                IntrinsicName("word_array_write"),  # intrinsic name
+                [il.pop(4), il.pop(4)]  # parameters: pop value and index from stack
+            ))
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return il.reg(4, f"var_{operand.op_details.body.data}")
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return il.const(4, operand.op_details.body.data)
+        else:
+            return il.const(4, 0)  # Placeholder
 
 
 class ByteArrayIndexedWrite(Instruction):

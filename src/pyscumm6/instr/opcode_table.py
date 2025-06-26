@@ -74,7 +74,7 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.byte_array_indexed_read: INSTRUCTION_REGISTRY["byte_array_indexed_read"],
     Scumm6Opcodes.OpType.word_array_indexed_read: INSTRUCTION_REGISTRY["word_array_indexed_read"],
     Scumm6Opcodes.OpType.byte_array_write: INSTRUCTION_REGISTRY["byte_array_write"],
-    Scumm6Opcodes.OpType.word_array_write: INSTRUCTION_REGISTRY["word_array_write"],
+    Scumm6Opcodes.OpType.word_array_write: instructions.WordArrayWrite,
     Scumm6Opcodes.OpType.byte_array_indexed_write: INSTRUCTION_REGISTRY["byte_array_indexed_write"],
     Scumm6Opcodes.OpType.word_array_indexed_write: INSTRUCTION_REGISTRY["word_array_indexed_write"],
     Scumm6Opcodes.OpType.byte_array_inc: INSTRUCTION_REGISTRY["byte_array_inc"],
