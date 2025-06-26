@@ -107,7 +107,7 @@ DESCUMM_FUNCTION_NAMES = {
     "verb_ops.verb_key": "verbOps.setKey",
     "verb_ops.verb_center": "verbOps.setCenter",
     "verb_ops.verb_name_str": "verbOps.setNameStr",
-    "verb_ops.verb_image_in_room": "verbOps.image_in_room",
+    "verb_ops.verb_image_in_room": "verbOps.setToObject",
     "verb_ops.verb_bakcolor": "verbOps.bakcolor",
     "verb_ops.verb_set_cur_verb": "verbOps.setCurVerb",
     "verb_ops.verb_init_2": "verbOps.init",
