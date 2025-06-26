@@ -1262,7 +1262,7 @@ class CursorCommand(FusibleMultiOperandMixin, Instruction):
                 if self.fused_operands and len(self.fused_operands) > 0:
                     last_operand = self.fused_operands[-1]
                     if hasattr(last_operand.op_details.body, 'data'):
-                        return last_operand.op_details.body.data
+                        return int(last_operand.op_details.body.data)
                 return 4  # Default: count + 3 colors
             return 0
         
@@ -1481,7 +1481,7 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
             tokens.append(TText("("))
             # Parse the message parts to reconstruct descumm-style output
             if hasattr(subop_body, 'parts') and subop_body.parts:
-                msg_tokens = []
+                msg_tokens: List[Token] = []
                 i = 0
                 parts = subop_body.parts
                 
