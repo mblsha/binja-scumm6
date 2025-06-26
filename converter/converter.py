@@ -1,7 +1,7 @@
 from src.container import State, decode_rnam_dscr, get_script_addrs
-from kaitaistruct import KaitaiStream, BytesIO
-from src.scumm6_opcodes import Scumm6Opcodes
-from src.scumm6_container import Scumm6Container
+from kaitaistruct import KaitaiStream, BytesIO  # type: ignore[import-untyped]
+from src.scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+from src.scumm6_container import Scumm6Container  # type: ignore[attr-defined]
 from src.pyscumm6.disasm import decode
 
 from typing import NamedTuple, List

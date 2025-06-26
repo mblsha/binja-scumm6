@@ -3,7 +3,7 @@
 import pytest
 from typing import Dict, Any
 
-from .scumm6_opcodes import Scumm6Opcodes
+from .scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
 from .pyscumm6.instr.opcode_table import OPCODE_MAP
 
 # Test cases: (OpType, expected_pop_count)

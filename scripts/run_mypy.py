@@ -12,7 +12,7 @@ from scripts.setup import setup_mypy_environment  # noqa: E402
 # Set up the environment for mypy
 setup_mypy_environment()
 
-stdout, stderr, exit_status = api.run(["--explicit-package-bases", "src", "converter"])
+stdout, stderr, exit_status = api.run(["--config-file", "pyproject.toml", "--explicit-package-bases", "src", "converter"])
 print(stdout, end="")
 print(stderr, end="", file=sys.stderr)
 sys.exit(exit_status)

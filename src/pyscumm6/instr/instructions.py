@@ -5,7 +5,7 @@ import copy
 from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName, InstructionInfo
-from ...scumm6_opcodes import Scumm6Opcodes
+from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
 
 from .opcodes import Instruction
 from .generic import VariableWriteOp, ControlFlowOp, IntrinsicOp
@@ -1113,7 +1113,7 @@ class PrintDebug(Instruction):
     
     def render(self) -> List[Token]:
         # Check if this instruction contains a message
-        from ...scumm6_opcodes import Scumm6Opcodes
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
         if hasattr(self.op_details.body, 'subop') and hasattr(self.op_details.body, 'body'):
             # This is a Print structure with a subop
@@ -1237,7 +1237,7 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
     
     def render(self) -> List[Token]:
         # Extract the message text from the bytecode
-        from ...scumm6_opcodes import Scumm6Opcodes
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
         sound_commands: List[str] = []
         text: str = ""
@@ -1373,7 +1373,7 @@ class CursorCommand(FusibleMultiOperandMixin, Instruction):
         return max(0, max_operands - fused_count)
     
     def render(self) -> List[Token]:
-        from ...scumm6_opcodes import Scumm6Opcodes
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
         subop_name = self.op_details.body.subop.name
         
@@ -1527,7 +1527,7 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
         return max(0, max_operands - fused_count)
     
     def render(self) -> List[Token]:
-        from ...scumm6_opcodes import Scumm6Opcodes
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
         subop_name = self.op_details.body.subop.name
         
@@ -1720,7 +1720,7 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
     
     def render(self) -> List[Token]:
         from .smart_bases import DESCUMM_FUNCTION_NAMES
-        from ...scumm6_opcodes import Scumm6Opcodes
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
         subop_name = self.op_details.body.subop.name
         full_name = f"actor_ops.{subop_name}"
@@ -1770,7 +1770,7 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
             return [TText("operand")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.ActorOps), \
@@ -1832,7 +1832,7 @@ class VerbOps(Instruction):
         return [TInstr(f"verb_ops.{subop_name}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.VerbOps), \
@@ -1867,7 +1867,7 @@ class ArrayOps(Instruction):
         return [TInstr(f"array_ops.{subop_name}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.ArrayOps), \
@@ -1902,7 +1902,7 @@ class RoomOps(Instruction):
         return [TInstr(f"room_ops.{subop_name}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.RoomOps), \
@@ -1937,7 +1937,7 @@ class SystemOps(Instruction):
         return [TInstr(f"system_ops.{subop_name}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.SystemOps), \
@@ -1972,7 +1972,7 @@ class ResourceRoutines(Instruction):
         return [TInstr(f"resource_routines.{subop_name}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.ResourceRoutines), \

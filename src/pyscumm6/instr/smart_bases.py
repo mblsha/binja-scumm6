@@ -10,7 +10,7 @@ from .opcodes import Instruction
 from .generic import ControlFlowOp
 from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
                      SemanticIntrinsicConfig)
-from ...scumm6_opcodes import Scumm6Opcodes
+from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
 
 # Descumm-style function name mapping for improved semantic clarity
 DESCUMM_FUNCTION_NAMES = {
@@ -452,7 +452,7 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
         
         # Ensure subop is an enum member, not an int
         if isinstance(subop, int):
-            from ...scumm6_opcodes import Scumm6Opcodes
+            from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
             try:
                 subop = Scumm6Opcodes.SubopType(subop)
             except ValueError:
@@ -483,7 +483,7 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
             return [TInstr(f"{display_name}()")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
         # Get the expected body type dynamically
         expected_type = getattr(Scumm6Opcodes, self._config.body_type_name)

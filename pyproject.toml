@@ -30,3 +30,11 @@ source = ["src"]
 
 [tool.ruff]
 extend-exclude = ["scummvm-tools", "scripts/run_pytest_direct.py", "scripts/run_pytest.py"]
+
+[tool.mypy]
+exclude = [
+    "src/scumm6_opcodes\\.py",  # Auto-generated from Kaitai
+    "src/scumm6_container\\.py",  # Auto-generated from Kaitai
+    "scripts/run_pytest_direct\\.py",
+    "scripts/run_pytest\\.py",
+]

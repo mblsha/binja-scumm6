@@ -9,7 +9,7 @@ from binaryninja.enums import BranchType
 from binaryninja import InstructionInfo
 
 from .opcodes import Instruction
-from ...scumm6_opcodes import Scumm6Opcodes
+from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
 
 
 def make_push_constant_instruction(

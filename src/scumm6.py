@@ -22,7 +22,7 @@ from binaryninja.enums import (
 )
 from binaryninja import lowlevelil
 
-from .scumm6_opcodes import Scumm6Opcodes
+from .scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
 
 from .sorted_list import SortedList
 
