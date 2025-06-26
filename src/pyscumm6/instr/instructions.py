@@ -1030,9 +1030,12 @@ class SaveRestoreVerbs(FusibleMultiOperandMixin, Instruction):
         subop_byte = self.op_details.body.param if hasattr(self.op_details.body, 'param') else 0
         
         # Map sub-operation byte to descumm-style names
-        # Based on descumm output, it seems byte 1 = saveVerbs
+        # Handle both signed and unsigned interpretation
+        # 0x8D = 141 unsigned = -115 signed
         subop_names = {
-            1: "saveVerbs",  # Most common sub-operation
+            1: "saveVerbs",
+            -115: "saveVerbs",  # 0x8D as signed byte
+            141: "saveVerbs",   # 0x8D as unsigned byte
             # Add more mappings as we discover them
         }
         

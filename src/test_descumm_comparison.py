@@ -898,6 +898,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] if ((!isScriptRunning(3))) jump 1a',
     ),
+    ScriptComparisonTestCase(
+        test_id="save_restore_verbs_fusion",
+        bytecode=bytes.fromhex("010200010B00010200A58D"),
+        expected_descumm_output=dedent("""
+            [0000] (A5) saveRestoreVerbs.saveVerbs(2,11,2)
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] saveRestoreVerbs.saveVerbs(2, 11, 2)',
+    ),
 ]
 
 
