@@ -369,9 +369,7 @@ script_test_cases = [
             [001A] stopObjectCodeA()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] isScriptRunning(137)
-            [0004] nott
-            [0005] unless goto +18
+            [0000] if ((!isScriptRunning(137))) jump 18
             [0008] startScriptQuick(93, [1])
             [0012] roomOps.setScreen(0, 200)
             [001A] stopObjectCodeA()
@@ -395,12 +393,13 @@ script_test_cases = [
             (0x001A, MockLLIL(op='NORET', ops=[])),
         ],
         expected_llil_fusion=[
+            # When instructions are fused, all LLIL operations are generated at the fused instruction's address
             (0x0000, mintrinsic('is_script_running', outputs=[mreg('TEMP0')], params=[MockLLIL(op='CONST.4', ops=[137])])),
             (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')])])),
-            (0x0004, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
-            (0x0004, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CMP_E.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')]), MockLLIL(op='CONST.4', ops=[0])])])),
-            (0x0005, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
-            (0x0008, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='CONST.4', ops=[93]), MockLLIL(op='CONST.4', ops=[1]), MockLLIL(op='CONST.4', ops=[1])])),
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
+            (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CMP_E.4', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP0')]), MockLLIL(op='CONST.4', ops=[0])])])),
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP0'), MockLLIL(op='POP.4', ops=[])])),
+            (0x0008, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='CONST.4', ops=[93]), MockLLIL(op='CONST.4', ops=[1])])),
             (0x0012, mintrinsic('room_ops.room_screen', outputs=[], params=[MockLLIL(op='CONST.4', ops=[0]), MockLLIL(op='CONST.4', ops=[200])])),
             (0x001A, mintrinsic('stop_object_code1', outputs=[], params=[])),
             (0x001A, MockLLIL(op='NORET', ops=[])),
@@ -497,9 +496,7 @@ script_test_cases = [
             [00E8] stopObjectCodeB()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] push_word_var(var_0)
-            [0003] nott
-            [0004] unless goto +6
+            [0000] if ((!!var_0)) jump d
             [0007] localvar0 = var_7
             [000D] if ((get_state(var_0) != 1)) jump e8
             [0018] push_word_var(var_0)
@@ -891,6 +888,15 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] localvar1 = (20 + (((var_56) - (((((var_56) / 4)) * 4)))))',
+    ),
+    ScriptComparisonTestCase(
+        test_id="is_script_running_negated",
+        bytecode=bytes.fromhex("0103008B0D5D1200"),
+        expected_descumm_output=dedent("""
+            [0000] (5D) if (!isScriptRunning(3)) {
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] if ((!isScriptRunning(3))) jump 18',
     ),
 ]
 
