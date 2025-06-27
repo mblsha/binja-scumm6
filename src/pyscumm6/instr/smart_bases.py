@@ -65,6 +65,7 @@ DESCUMM_FUNCTION_NAMES = {
     # Object intrinsics
     "get_object_x": "getObjectX",
     "get_object_y": "getObjectY",
+    "get_random_number": "getRandomNumber",
     # Complex operations 
     "print_debug.begin": "printDebug.begin",
     "print_debug.msg": "printDebug.msg",
@@ -329,11 +330,15 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
             if hasattr(operand.op_details.body, 'data'):
                 data = operand.op_details.body.data
                 return [TInt(f"var_{data}")]
-        else:
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             # Constant push - extract value
             if hasattr(operand.op_details.body, 'data'):
                 value = operand.op_details.body.data
                 return [TInt(str(value))]
+        elif hasattr(operand, 'produces_result') and operand.produces_result():
+            # This is a result-producing instruction (like Add with fused operands)
+            # Just render it directly
+            return operand.render()
         
         # Fallback
         return [TText("?")]

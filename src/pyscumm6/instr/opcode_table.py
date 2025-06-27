@@ -31,12 +31,9 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.pop2: make_intrinsic_instruction(
         "pop2", Scumm6Opcodes.CallFuncPop1, pop_count=1, push_count=0
     ),
-    Scumm6Opcodes.OpType.get_random_number: make_intrinsic_instruction(
-        "get_random_number", Scumm6Opcodes.CallFuncPop1Push, pop_count=1, push_count=1
-    ),
-    Scumm6Opcodes.OpType.get_random_number_range: make_intrinsic_instruction(
-        "get_random_number_range", Scumm6Opcodes.CallFuncPop2Push, pop_count=2, push_count=1
-    ),
+    # Moved to INSTRUCTION_REGISTRY for fusion support
+    Scumm6Opcodes.OpType.get_random_number: INSTRUCTION_REGISTRY["get_random_number"],
+    Scumm6Opcodes.OpType.get_random_number_range: INSTRUCTION_REGISTRY["get_random_number_range"],
 
     # --- Auto-Generated Stack Operations ---
     Scumm6Opcodes.OpType.add: INSTRUCTION_REGISTRY["add"],

@@ -939,6 +939,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] if ((ifClassOfIs(localvar1,[139]))) jump 17',
     ),
+    ScriptComparisonTestCase(
+        test_id="draw_object_with_nested_expression",
+        bytecode=bytes.fromhex("01DD02010100010200871461"),
+        expected_descumm_output=dedent("""
+            [0000] (61) drawObject(733,(1 + getRandomNumber(2)))
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] drawObject(733, (1 + (getRandomNumber(2))))',
+    ),
 ]
 
 

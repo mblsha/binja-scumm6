@@ -136,6 +136,10 @@ INTRINSIC_CONFIGS: Dict[str, IntrinsicConfig] = {
     "find_all_objects": IntrinsicConfig(push_count=1, doc="Find all objects"),
     "stamp_object": IntrinsicConfig(doc="Stamp object"),
     
+    # Random Number Operations
+    "get_random_number": IntrinsicConfig(pop_count=1, push_count=1, doc="Get random number 0 to N-1"),
+    "get_random_number_range": IntrinsicConfig(pop_count=2, push_count=1, doc="Get random number in range"),
+    
     # System & State Operations
     "end_cutscene": IntrinsicConfig(doc="End cutscene"),
     "get_state": IntrinsicConfig(pop_count=1, push_count=1, doc="Get state"),
