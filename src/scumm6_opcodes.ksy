@@ -1270,11 +1270,11 @@ types:
 
   array_ops:
     seq:
+      - id: array
+        type: u2
       - id: subop
         type: u1
         enum: subop_type
-      - id: array
-        type: u2
       - id: body
         type:
           switch-on: subop

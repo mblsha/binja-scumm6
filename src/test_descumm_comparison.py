@@ -925,6 +925,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] startObject(0, localvar0, 3, [0, 3])',
     ),
+    ScriptComparisonTestCase(
+        test_id="var_pause_msg_string_assignment",
+        bytecode=bytes.fromhex("010000A4CD5D0047616D65205061757365642E2020507265737320535041434520746F20436F6E74696E75652E00"),
+        expected_descumm_output=dedent("""
+            [0000] (A4) VAR_PAUSE_MSG[0] = "Game Paused.  Press SPACE to Continue."
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] VAR_PAUSE_MSG[0] = "Game Paused.  Press SPACE to Continue."',
+    ),
 ]
 
 

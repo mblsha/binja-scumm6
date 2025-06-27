@@ -1,5 +1,4 @@
 # This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
-# type: ignore
 
 import kaitaistruct
 from kaitaistruct import KaitaiStruct, KaitaiStream
@@ -462,8 +461,8 @@ class Scumm6Opcodes(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             self.array = self._io.read_u2le()
+            self.subop = KaitaiStream.resolve_enum(Scumm6Opcodes.SubopType, self._io.read_u1())
             _on = self.subop
             if _on == Scumm6Opcodes.SubopType.assign_string:
                 self.body = Scumm6Opcodes.Message(self._io, self, self._root)
