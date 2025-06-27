@@ -499,11 +499,7 @@ script_test_cases = [
             [0000] if ((!!var_0)) jump d
             [0007] localvar0 = var_7
             [000D] if ((get_state(var_0) != 1)) jump e8
-            [0018] push_word_var(var_0)
-            [001B] push_word(6)
-            [001E] push_word(1)
-            [0021] if_class_of_is
-            [0022] unless goto +29
+            [0018] if ((ifClassOfIs(localvar0,[6]))) jump 42
             [0025] setState(var_0, 1)
             [002C] if ((!var_1)) jump 39
             [0032] setState(var_1, 1)
@@ -933,6 +929,15 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] VAR_PAUSE_MSG[0] = "Game Paused.  Press SPACE to Continue."',
+    ),
+    ScriptComparisonTestCase(
+        test_id="if_class_of_is_conditional",
+        bytecode=bytes.fromhex("030140018B000101006D5D0A00"),
+        expected_descumm_output=dedent("""
+            [0000] (5D) if (ifClassOfIs(localvar1,[139])) {
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] if ((ifClassOfIs(localvar1,[139]))) jump 17',
     ),
 ]
 

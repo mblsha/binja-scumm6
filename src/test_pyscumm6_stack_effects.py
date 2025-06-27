@@ -84,8 +84,8 @@ def test_if_class_of_is_stack_pop_count() -> None:
             self.body = type('MockBody', (object,), {})()
     
     instruction = IfClassOfIs(kaitai_op=MockKaitaiOp(), length=1)
-    assert instruction.stack_pop_count == 2, \
-        "if_class_of_is should pop 2 values (object, class)."
+    assert instruction.stack_pop_count == 3, \
+        "if_class_of_is should pop 3 values (object, class, count)."
 
 def test_cutscene_stack_pop_count() -> None:
     """Test cutscene's dynamic pop count."""
