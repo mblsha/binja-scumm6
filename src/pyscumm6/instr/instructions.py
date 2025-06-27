@@ -2275,7 +2275,24 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
     """Array operations with various sub-commands."""
     
     def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
-        super().__init__(kaitai_op, length, addr)
+        # Check if we need to fix the length for assign_string with UnknownOp
+        actual_length = length
+        if hasattr(kaitai_op, 'body') and hasattr(kaitai_op.body, 'subop'):
+            subop_value = kaitai_op.body.subop if isinstance(kaitai_op.body.subop, int) else kaitai_op.body.subop.value
+            if subop_value == 0:  # assign_string
+                # Check if it parsed as UnknownOp (which reads too much)
+                if hasattr(kaitai_op.body, 'body') and hasattr(kaitai_op.body.body, 'data'):
+                    # Manually calculate the correct length
+                    # Format: opcode(1) + array(2) + subop(1) + message(variable)
+                    data = kaitai_op.body.body.data
+                    if isinstance(data, (bytes, bytearray)):
+                        # Find null terminator
+                        null_pos = data.find(0)
+                        if null_pos >= 0:
+                            # Correct length = 4 (opcode + array + subop) + message length + 1 (null)
+                            actual_length = 4 + null_pos + 1
+        
+        super().__init__(kaitai_op, actual_length, addr)
         self.fused_operands: List[Instruction] = []
     
     def _extract_message_text(self, message: Any) -> str:
