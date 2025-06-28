@@ -1035,6 +1035,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] beginCutscene([10, 20, 30])',
     ),
+    ScriptComparisonTestCase(
+        test_id="save_restore_verbs_restore_verbs",
+        bytecode=bytes.fromhex("010100010100010200A58E"),
+        expected_descumm_output=dedent("""
+            [0000] (A5) saveRestoreVerbs.restoreVerbs(1,1,2)
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] saveRestoreVerbs.restoreVerbs(1, 1, 2)',
+    ),
 ]
 
 

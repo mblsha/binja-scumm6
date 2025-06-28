@@ -1416,6 +1416,8 @@ class SaveRestoreVerbs(FusibleMultiOperandMixin, Instruction):
             1: "saveVerbs",
             -115: "saveVerbs",  # 0x8D as signed byte
             141: "saveVerbs",   # 0x8D as unsigned byte
+            -114: "restoreVerbs",  # 0x8E as signed byte
+            142: "restoreVerbs",   # 0x8E as unsigned byte
             # Add more mappings as we discover them
         }
         
