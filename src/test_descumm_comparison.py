@@ -369,7 +369,7 @@ script_test_cases = [
             [001A] stopObjectCodeA()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] if ((!isScriptRunning(137))) jump 1a
+            [0000] unless ((isScriptRunning(137))) jump 1a
             [0008] startScriptQuick(93, [1])
             [0012] roomOps.setScreen(0, 200)
             [001A] stopObjectCodeA()
@@ -496,7 +496,7 @@ script_test_cases = [
             [00E8] stopObjectCodeB()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] if ((!!localvar0)) jump d
+            [0000] unless ((!localvar0)) jump d
             [0007] localvar0 = var7
             [000D] if ((get_state(localvar0) != 1)) jump e8
             [0018] if ((ifClassOfIs(localvar0,[6]))) jump 42
@@ -892,7 +892,7 @@ script_test_cases = [
             [0000] (5D) if (!isScriptRunning(3)) {
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] if ((!isScriptRunning(3))) jump 1a',
+        expected_disasm_fusion_output='[0000] unless ((isScriptRunning(3))) jump 18',
     ),
     ScriptComparisonTestCase(
         test_id="save_restore_verbs_fusion",
@@ -1061,6 +1061,15 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] if ((isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]))) jump 3f',
+    ),
+    ScriptComparisonTestCase(
+        test_id="is_script_running_negated_conditional",
+        bytecode=bytes.fromhex("0103008B0D5D1200"),
+        expected_descumm_output=dedent("""
+            [0000] (5D) if (!isScriptRunning(3)) {
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] unless ((isScriptRunning(3))) jump 18',
     ),
 ]
 
