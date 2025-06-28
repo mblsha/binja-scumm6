@@ -76,7 +76,7 @@ fusion_test_cases = [
         expected_class="Add",
         expected_fused_operands=1,
         expected_stack_pops=1,
-        expected_render_text="add((soundresult), ...)",
+        expected_render_text="add((VAR_SOUNDRESULT), ...)",
     ),
     FusionTestCase(
         test_id="no_fusion_non_push",

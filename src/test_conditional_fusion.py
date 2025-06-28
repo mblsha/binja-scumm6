@@ -62,7 +62,7 @@ fusion_test_cases = [
         expected_class="Lt",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="currentdrive < 20",
+        expected_render_text="VAR_CURRENTDRIVE < 20",
     ),
     FusionTestCase(
         test_id="if_not_jump",
@@ -70,7 +70,7 @@ fusion_test_cases = [
         expected_class="SmartIfNot",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="if ((override > 10)) jump",
+        expected_render_text="if ((VAR_OVERRIDE > 10)) jump",
     ),
     FusionTestCase(
         test_id="iff_jump",
@@ -78,7 +78,7 @@ fusion_test_cases = [
         expected_class="SmartIff",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="50 == actorRangeMin",
+        expected_render_text="50 == VAR_ACTOR_RANGE_MIN",
     ),
     FusionTestCase(
         test_id="partial_comparison",
@@ -94,7 +94,7 @@ fusion_test_cases = [
         expected_class="SmartIfNot",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="if ((0 != haveMsg)) jump",
+        expected_render_text="if ((0 != VAR_HAVE_MSG)) jump",
     ),
     FusionTestCase(
         test_id="le_ge",
@@ -102,7 +102,7 @@ fusion_test_cases = [
         expected_class="Le",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="numActor <= 100",
+        expected_render_text="VAR_NUM_ACTOR <= 100",
     ),
     FusionTestCase(
         test_id="ge_part",
@@ -110,7 +110,7 @@ fusion_test_cases = [
         expected_class="Ge",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="50 >= me",
+        expected_render_text="50 >= VAR_ME",
     ),
     FusionTestCase(
         test_id="no_fusion_not_comparison",

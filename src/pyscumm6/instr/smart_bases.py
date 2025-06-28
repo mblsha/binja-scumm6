@@ -72,6 +72,7 @@ DESCUMM_FUNCTION_NAMES = {
     # Complex operations 
     "print_debug.begin": "printDebug.begin",
     "print_debug.msg": "printDebug.msg",
+    "print_text.color": "printCursor.color",
     "room_ops.room_screen": "roomOps.setScreen",
     # Actor operations subcommands
     "actor_ops.set_current_actor": "actorOps.setCurActor",
@@ -143,6 +144,9 @@ def get_variable_name(var_num: int, use_raw_names: bool = False, use_var_prefix:
     
     # If requested, always use raw variable names (matches descumm for assignments)
     if use_raw_names:
+        # For non-system variables, still use var_ prefix to match our disassembly style
+        if var_num not in vars.scumm_vars_inverse():
+            return f"var_{var_num}"
         return f"var{var_num}"
     
     # Get the system variable mappings

@@ -64,8 +64,8 @@ def test_multi_level_arithmetic_expression() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     # Expected with infix notation: (((var_5 + var_7)) * var_3)
-    assert "*" in text and "+" in text and "override" in text and "me" in text and "haveMsg" in text
-    assert text == "((((override) + (me))) * (haveMsg))"
+    assert "*" in text and "+" in text and "VAR_OVERRIDE" in text and "VAR_ME" in text and "VAR_HAVE_MSG" in text
+    assert text == "((((VAR_OVERRIDE) + (VAR_ME))) * (VAR_HAVE_MSG))"
 
 
 def test_three_level_expression() -> None:
@@ -127,8 +127,8 @@ def test_comparison_in_expression() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     # Should include both the comparison and the logical operation (with infix notation)
-    assert "&&" in text and ">" in text and "override" in text and "10" in text and "haveMsg" in text
-    assert text == "((override > 10) && (haveMsg))"
+    assert "&&" in text and ">" in text and "VAR_OVERRIDE" in text and "10" in text and "VAR_HAVE_MSG" in text
+    assert text == "(((VAR_OVERRIDE) > 10) && (VAR_HAVE_MSG))"
 
 
 def test_mixed_variable_and_constant_fusion() -> None:
@@ -155,8 +155,8 @@ def test_mixed_variable_and_constant_fusion() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     # Expected with infix notation: (((var_8 + 20)) / 2)
-    assert "/" in text and "+" in text and "numActor" in text and "20" in text and "2" in text
-    assert text == "((((numActor) + 20)) / 2)"
+    assert "/" in text and "+" in text and "VAR_NUM_ACTOR" in text and "20" in text and "2" in text
+    assert text == "((((VAR_NUM_ACTOR) + 20)) / 2)"
 
 
 def test_partial_fusion_with_multilevel() -> None:

@@ -1832,6 +1832,8 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
             # Set pop count based on subop type
             if subop_value == 0x41:  # at (XY)
                 self._stack_pop_count = 2  # Pops x and y coordinates
+            elif subop_value == 0x42:  # color
+                self._stack_pop_count = 1  # Pops color value
             # Add other subops as needed
     
     def _get_max_operands(self) -> int:
@@ -1843,6 +1845,8 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
             
             if subop_value == 0x41:  # at (XY)
                 return 2  # X and Y coordinates
+            elif subop_value == 0x42:  # color
+                return 1  # Color value
         
         return 0  # Default: no fusion for other subops
     
@@ -1857,6 +1861,9 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
             if subop_value == 0x41:  # at (XY)
                 # For XY, we need 2 operands
                 return max(0, 2 - len(self.fused_operands))
+            elif subop_value == 0x42:  # color
+                # For color, we need 1 operand
+                return max(0, 1 - len(self.fused_operands))
         
         return self._stack_pop_count
     
@@ -1886,6 +1893,17 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
                 return [TInt(str(operand.op_details.body.data))]
             else:
                 return [TInt("?")]
+        elif operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            # Handle variable pushes
+            if hasattr(operand.op_details.body, 'data'):
+                from .smart_bases import get_variable_name
+                var_id = operand.op_details.body.data
+                # Handle signed byte interpretation for PushByteVar
+                if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
+                    var_id = var_id + 256
+                return [TInt(get_variable_name(var_id))]
+            else:
+                return [TInt("var_?")]
         else:
             return operand.render()
     
@@ -1928,6 +1946,17 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
                     tokens.append(TText(")"))
                 else:
                     # Not fused, show with placeholders
+                    tokens.append(TText("(...)"))
+                return tokens
+            elif subop_value == 0x42:  # color
+                tokens = [TInstr("printCursor"), TText(".color")]
+                if self.fused_operands and len(self.fused_operands) >= 1:
+                    # Fused color value
+                    tokens.append(TText("("))
+                    tokens.extend(self._render_operand(self.fused_operands[0]))
+                    tokens.append(TText(")"))
+                else:
+                    # Not fused, show with placeholder
                     tokens.append(TText("(...)"))
                 return tokens
             else:

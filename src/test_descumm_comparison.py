@@ -154,53 +154,53 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_output=dedent("""
-            [0000] push_word_var(keypress)
+            [0000] push_word_var(VAR_KEYPRESS)
             [0003] getObjectX(...)
-            [0004] push_word_var(ego)
+            [0004] push_word_var(VAR_EGO)
             [0007] sub
             [0008] write_word_var(localvar5)
-            [000B] push_word_var(keypress)
+            [000B] push_word_var(VAR_KEYPRESS)
             [000E] getObjectY(...)
-            [000F] push_word_var(cameraPosX)
+            [000F] push_word_var(VAR_CAMERA_POS_X)
             [0012] sub
             [0013] write_word_var(localvar6)
-            [0016] push_word_var(override)
+            [0016] push_word_var(VAR_OVERRIDE)
             [0019] abs
             [001A] write_word_var(localvar5)
-            [001D] push_word_var(machineSpeed)
+            [001D] push_word_var(VAR_MACHINE_SPEED)
             [0020] abs
             [0021] write_word_var(localvar6)
-            [0024] push_word_var(override)
-            [0027] push_word_var(haveMsg)
+            [0024] push_word_var(VAR_OVERRIDE)
+            [0027] push_word_var(VAR_HAVE_MSG)
             [002A] gt
             [002B] unless goto +10
             [002E] push_word(0)
-            [0031] write_word_var(var_137)
+            [0031] write_word_var(var137)
             [0034] push_word(0)
             [0037] stopScript(...)
-            [0038] push_word_var(machineSpeed)
-            [003B] push_word_var(room)
+            [0038] push_word_var(VAR_MACHINE_SPEED)
+            [003B] push_word_var(VAR_ROOM)
             [003E] gt
             [003F] unless goto +10
             [0042] push_word(0)
-            [0045] write_word_var(var_137)
+            [0045] write_word_var(var137)
             [0048] push_word(0)
             [004B] stopScript(...)
-            [004C] push_word_var(override)
-            [004F] push_word_var(override)
+            [004C] push_word_var(VAR_OVERRIDE)
+            [004F] push_word_var(VAR_OVERRIDE)
             [0052] mul
             [0053] write_word_var(localvar7)
-            [0056] push_word_var(machineSpeed)
-            [0059] push_word_var(machineSpeed)
+            [0056] push_word_var(VAR_MACHINE_SPEED)
+            [0059] push_word_var(VAR_MACHINE_SPEED)
             [005C] mul
             [005D] write_word_var(localvar8)
-            [0060] push_word_var(me)
+            [0060] push_word_var(VAR_ME)
             [0063] push_word(0)
             [0066] lt
             [0067] unless goto +42
             [006A] printDebug.begin()
             [006C] printDebug.msg("x2 value overflowing in ellipse check")
-            [0094] push_word_var(numActor)
+            [0094] push_word_var(VAR_NUM_ACTOR)
             [0097] push_word(0)
             [009A] lt
             [009B] unless goto +42
@@ -210,45 +210,45 @@ script_test_cases = [
             [00CB] write_word_var(localvar11)
             [00CE] push_word(0)
             [00D1] write_word_var(localvar12)
-            [00D4] push_word_var(me)
+            [00D4] push_word_var(VAR_ME)
             [00D7] push_word(4000)
             [00DA] le
             [00DB] unless goto +13
-            [00DE] push_word_var(me)
+            [00DE] push_word_var(VAR_ME)
             [00E1] push_word(4)
             [00E4] mul
             [00E5] write_word_var(localvar7)
             [00E8] jump f5
-            [00EB] push_word_var(haveMsg)
+            [00EB] push_word_var(VAR_HAVE_MSG)
             [00EE] push_word(2)
             [00F1] div
             [00F2] write_word_var(localvar3)
-            [00F5] push_word_var(numActor)
+            [00F5] push_word_var(VAR_NUM_ACTOR)
             [00F8] push_word(4000)
             [00FB] le
             [00FC] unless goto +13
-            [00FF] push_word_var(numActor)
+            [00FF] push_word_var(VAR_NUM_ACTOR)
             [0102] push_word(4)
             [0105] mul
             [0106] write_word_var(localvar8)
             [0109] jump 116
-            [010C] push_word_var(room)
+            [010C] push_word_var(VAR_ROOM)
             [010F] push_word(2)
             [0112] div
             [0113] write_word_var(localvar4)
-            [0116] push_word_var(tmr1)
+            [0116] push_word_var(VAR_TMR_1)
             [0119] push_word(4)
             [011C] mul
             [011D] write_word_var(localvar11)
-            [0120] push_word_var(tmr1)
+            [0120] push_word_var(VAR_TMR_1)
             [0123] push_word(64)
             [0126] ge
             [0127] unless goto +6
             [012A] push_word(1)
             [012D] write_word_var(localvar12)
-            [0130] push_word_var(tmr2)
+            [0130] push_word_var(VAR_TMR_2)
             [0133] unless goto -98
-            [0136] push_word_var(haveMsg)
+            [0136] push_word_var(VAR_HAVE_MSG)
             [0139] push_word(0)
             [013C] eq
             [013D] unless goto +38
@@ -256,7 +256,7 @@ script_test_cases = [
             [0143] write_word_var(localvar3)
             [0146] printDebug.begin()
             [0148] printDebug.msg("very skinny ellipse warning")
-            [0166] push_word_var(room)
+            [0166] push_word_var(VAR_ROOM)
             [0169] push_word(0)
             [016C] eq
             [016D] unless goto +36
@@ -264,46 +264,46 @@ script_test_cases = [
             [0173] write_word_var(localvar4)
             [0176] printDebug.begin()
             [0178] printDebug.msg("very flat ellipse warning")
-            [0194] push_word_var(me)
-            [0197] push_word_var(haveMsg)
-            [019A] push_word_var(haveMsg)
+            [0194] push_word_var(VAR_ME)
+            [0197] push_word_var(VAR_HAVE_MSG)
+            [019A] push_word_var(VAR_HAVE_MSG)
             [019D] mul
             [019E] div
-            [019F] push_word_var(numActor)
-            [01A2] push_word_var(room)
-            [01A5] push_word_var(room)
+            [019F] push_word_var(VAR_NUM_ACTOR)
+            [01A2] push_word_var(VAR_ROOM)
+            [01A5] push_word_var(VAR_ROOM)
             [01A8] mul
             [01A9] div
             [01AA] add
-            [01AB] write_word_var(var_137)
+            [01AB] write_word_var(var137)
             [01AE] push_word_var(var_137)
             [01B1] push_word(0)
             [01B4] eq
             [01B5] unless goto +6
             [01B8] push_word(1)
-            [01BB] write_word_var(var_137)
+            [01BB] write_word_var(var137)
             [01BE] push_word_var(var_137)
-            [01C1] push_word_var(tmr1)
+            [01C1] push_word_var(VAR_TMR_1)
             [01C4] gt
             [01C5] unless goto +6
             [01C8] push_word(0)
-            [01CB] write_word_var(var_137)
+            [01CB] write_word_var(var137)
             [01CE] stopObjectCodeB()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
             [0000] localvar5 = ((getObjectX(localvar0)) - (localvar1))
             [000B] localvar6 = ((getObjectY(localvar0)) - (localvar2))
-            [0016] push_word_var(override)
+            [0016] push_word_var(VAR_OVERRIDE)
             [0019] abs
             [001A] write_word_var(localvar5)
-            [001D] push_word_var(machineSpeed)
+            [001D] push_word_var(VAR_MACHINE_SPEED)
             [0020] abs
             [0021] write_word_var(localvar6)
             [0024] if ((localvar5 > localvar3)) jump 38
-            [002E] var_137 = 0
+            [002E] var137 = 0
             [0034] stopScript(0)
             [0038] if ((localvar6 > localvar4)) jump 4c
-            [0042] var_137 = 0
+            [0042] var137 = 0
             [0048] stopScript(0)
             [004C] localvar7 = ((localvar5) * (localvar5))
             [0056] localvar8 = ((localvar6) * (localvar6))
@@ -335,11 +335,11 @@ script_test_cases = [
             [0170] localvar4 = 1
             [0176] printDebug.begin()
             [0178] printDebug.msg("very flat ellipse warning")
-            [0194] var_137 = ((((localvar7) / (((localvar3) * (localvar3))))) + (((localvar8) / (((localvar4) * (localvar4))))))
-            [01AE] unless ((var_137 == 0)) jump 1be
-            [01B8] var_137 = 1
-            [01BE] if ((var_137 > localvar11)) jump 1ce
-            [01C8] var_137 = 0
+            [0194] var137 = ((((localvar7) / (((localvar3) * (localvar3))))) + (((localvar8) / (((localvar4) * (localvar4))))))
+            [01AE] unless ((var137 == 0)) jump 1be
+            [01B8] var137 = 1
+            [01BE] if ((var137 > localvar11)) jump 1ce
+            [01C8] var137 = 0
             [01CE] stopObjectCodeB()
         """).strip(),
     ),
@@ -441,33 +441,33 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_output=dedent("""
-            [0000] push_word_var(keypress)
+            [0000] push_word_var(VAR_KEYPRESS)
             [0003] nott
             [0004] unless goto +6
-            [0007] push_word_var(me)
+            [0007] push_word_var(VAR_ME)
             [000A] write_word_var(localvar0)
-            [000D] push_word_var(keypress)
+            [000D] push_word_var(VAR_KEYPRESS)
             [0010] get_state(...)
             [0011] push_word(1)
             [0014] neq
             [0015] unless goto +208
-            [0018] push_word_var(keypress)
+            [0018] push_word_var(VAR_KEYPRESS)
             [001B] push_word(6)
             [001E] push_word(1)
             [0021] if_class_of_is
             [0022] unless goto +29
-            [0025] push_word_var(keypress)
+            [0025] push_word_var(VAR_KEYPRESS)
             [0028] push_word(1)
             [002B] setState(...)
-            [002C] push_word_var(ego)
+            [002C] push_word_var(VAR_EGO)
             [002F] unless goto +7
-            [0032] push_word_var(ego)
+            [0032] push_word_var(VAR_EGO)
             [0035] push_word(1)
             [0038] setState(...)
             [0039] printDebug.begin()
             [003B] printDebug.msg(" ")
             [003F] jump e8
-            [0042] push_word_var(ego)
+            [0042] push_word_var(VAR_EGO)
             [0045] dup
             [0046] push_word(3)
             [0049] eq
@@ -506,7 +506,7 @@ script_test_cases = [
             [0039] printDebug.begin()
             [003B] printDebug.msg(" ")
             [003F] jump e8
-            [0042] push_word_var(ego)
+            [0042] push_word_var(VAR_EGO)
             [0045] dup
             [0046] unless ((eq(3))) jump 7b
             [004D] pop1
@@ -692,7 +692,7 @@ script_test_cases = [
             [01A7] (9D) actorOps.setWalkSpeed(4,2)
             [01AF] (BA) talkActor(sound(0x47DC, 0xE) + "Nonsense!",7)
             [01CD] (A9) wait.waitForMessage()
-            [01CF] (BA) talkActor(sound(0x8517, 0x26) + "It makes me feel GREAT!" + wait() + "Smarter!  More aggressive!",7)
+            [01CF] (BA) talkActor(sound(0x8517, 0x26) + "It makes VAR_ME feel GREAT!" + wait() + "Smarter!  More aggressive!",7)
             [0217] (A9) wait.waitForMessage()
             [0219] (AC) soundKludge([272])
             [0220] (AC) soundKludge([-1])
@@ -841,11 +841,11 @@ script_test_cases = [
         """).strip(),
         expected_disasm_output=dedent("""
             [0000] push_word(200)
-            [0003] write_word_var(var_137)
+            [0003] write_word_var(var137)
             [0006] jump 0
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] var_137 = 200
+            [0000] var137 = 200
             [0006] jump 0
         """).strip(),
     ),
@@ -883,7 +883,7 @@ script_test_cases = [
             [0000] (43) localvar1 = (20 + (VAR_SOUNDRESULT - ((VAR_SOUNDRESULT / 4) * 4)))
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] localvar1 = (20 + (((soundresult) - (((((soundresult) / 4)) * 4)))))',
+        expected_disasm_fusion_output='[0000] localvar1 = (20 + (((VAR_SOUNDRESULT) - (((((VAR_SOUNDRESULT) / 4)) * 4)))))',
     ),
     ScriptComparisonTestCase(
         test_id="is_script_running_negated",
@@ -910,7 +910,7 @@ script_test_cases = [
             [0000] (47) VAR_GUI_COLORS[9] = 1
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] VAR_GUI_COLORS[9] = 1',
+        expected_disasm_fusion_output='[0000] array_110[9] = 1',
     ),
     ScriptComparisonTestCase(
         test_id="start_object_with_args",
@@ -928,7 +928,7 @@ script_test_cases = [
             [0000] (A4) VAR_PAUSE_MSG[0] = "Game Paused.  Press SPACE to Continue."
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] VAR_PAUSE_MSG[0] = "Game Paused.  Press SPACE to Continue."',
+        expected_disasm_fusion_output='[0000] array_164[0] = "Game Paused.  Press SPACE to Continue."',
     ),
     ScriptComparisonTestCase(
         test_id="if_class_of_is_conditional",
@@ -1084,7 +1084,7 @@ script_test_cases = [
             [0000] (4F) localvar5++
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] override++',
+        expected_disasm_fusion_output='[0000] VAR_OVERRIDE++',
     ),
 ]
 
