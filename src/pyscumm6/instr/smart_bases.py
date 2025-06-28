@@ -125,13 +125,21 @@ DESCUMM_FUNCTION_NAMES = {
 }
 
 
-def get_variable_name(var_num: int) -> str:
+def get_variable_name(var_num: int, use_raw_names: bool = False) -> str:
     """Get the proper variable name for a given variable number.
+    
+    Args:
+        var_num: The variable number
+        use_raw_names: If True, always use var_N format (descumm-style for assignments)
     
     Returns the descumm-style name if it's a known system variable,
     otherwise returns var_N format.
     """
     from ... import vars
+    
+    # If requested, always use raw variable names (matches descumm for assignments)
+    if use_raw_names:
+        return f"var{var_num}"
     
     # Get the system variable mappings
     var_mapping = vars.scumm_vars_inverse()

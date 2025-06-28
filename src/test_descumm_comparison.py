@@ -497,7 +497,7 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output=dedent("""
             [0000] if ((!!localvar0)) jump d
-            [0007] localvar0 = me
+            [0007] localvar0 = var7
             [000D] if ((get_state(localvar0) != 1)) jump e8
             [0018] if ((ifClassOfIs(localvar0,[6]))) jump 42
             [0025] setState(localvar0, 1)
@@ -1043,6 +1043,15 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] saveRestoreVerbs.restoreVerbs(1, 1, 2)',
+    ),
+    ScriptComparisonTestCase(
+        test_id="localvar_assignment_fusion",
+        bytecode=bytes.fromhex("030700430040"),
+        expected_descumm_output=dedent("""
+            [0000] (43) localvar0 = var7
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] localvar0 = var7',
     ),
 ]
 

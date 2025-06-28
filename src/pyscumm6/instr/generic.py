@@ -325,26 +325,10 @@ class VariableWriteOp(Instruction):
                     elif var_type == Scumm6Opcodes.VarType.bitvar:
                         return [TInt(f"bitvar{var_num}")]
                 
-                # System variable - use semantic name mapping
-                from ... import vars
-                var_mapping = vars.scumm_vars_inverse()
-                
-                if var_num in var_mapping:
-                    # Convert from VAR_MACHINE_SPEED to proper descumm format
-                    var_name = var_mapping[var_num]
-                    # Remove VAR_ prefix and convert to camelCase
-                    if var_name.startswith("VAR_"):
-                        var_name = var_name[4:]
-                    # Convert SNAKE_CASE to camelCase
-                    parts = var_name.split('_')
-                    if len(parts) > 1:
-                        # First part lowercase, rest title case
-                        var_name = parts[0].lower() + ''.join(p.title() for p in parts[1:])
-                    else:
-                        var_name = var_name.lower()
-                    return [TInt(var_name)]
-                else:
-                    return [TInt(f"var_{var_num}")]
+                # For variable assignments, use raw variable names to match descumm style
+                # (descumm shows "var7" not "me" for variable-to-variable assignments)
+                from .smart_bases import get_variable_name
+                return [TInt(get_variable_name(var_num, use_raw_names=True))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             # Constant push - extract value
             if hasattr(operand.op_details.body, 'data'):

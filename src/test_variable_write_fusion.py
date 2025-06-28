@@ -62,7 +62,7 @@ fusion_test_cases = [
         expected_class="WriteByteVar",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="var_? = override",  # VAR_OVERRIDE = 5
+        expected_render_text="var_? = var5",  # VAR_OVERRIDE = 5, but assignments use raw names
     ),
     FusionTestCase(
         test_id="word_from_byte",
@@ -70,7 +70,7 @@ fusion_test_cases = [
         expected_class="WriteWordVar",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="exitScript = 100",  # VAR_EXIT_SCRIPT = 30
+        expected_render_text="exitScript = 100",  # VAR_EXIT_SCRIPT = 30, target keeps semantic name
     ),
     FusionTestCase(
         test_id="no_fusion_non_push",
