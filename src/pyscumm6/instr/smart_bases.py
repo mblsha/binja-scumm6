@@ -127,12 +127,13 @@ DESCUMM_FUNCTION_NAMES = {
 }
 
 
-def get_variable_name(var_num: int, use_raw_names: bool = False) -> str:
+def get_variable_name(var_num: int, use_raw_names: bool = False, use_var_prefix: bool = True) -> str:
     """Get the proper variable name for a given variable number.
     
     Args:
         var_num: The variable number
         use_raw_names: If True, always use var_N format (descumm-style for assignments)
+        use_var_prefix: If True, keep VAR_ prefix for system variables (descumm-style)
     
     Returns the descumm-style name if it's a known system variable,
     otherwise returns var_N format.
@@ -147,19 +148,23 @@ def get_variable_name(var_num: int, use_raw_names: bool = False) -> str:
     var_mapping = vars.scumm_vars_inverse()
     
     if var_num in var_mapping:
-        # Convert from VAR_MACHINE_SPEED to proper descumm format
         var_name = var_mapping[var_num]
-        # Remove VAR_ prefix and convert to camelCase
-        if var_name.startswith("VAR_"):
-            var_name = var_name[4:]
-        # Convert SNAKE_CASE to camelCase
-        parts = var_name.split('_')
-        if len(parts) > 1:
-            # First part lowercase, rest title case
-            var_name = parts[0].lower() + ''.join(p.title() for p in parts[1:])
+        
+        # For descumm compatibility, preserve VAR_ prefix for system variables
+        if use_var_prefix:
+            return var_name
         else:
-            var_name = var_name.lower()
-        return var_name
+            # Legacy behavior: Remove VAR_ prefix and convert to camelCase
+            if var_name.startswith("VAR_"):
+                var_name = var_name[4:]
+            # Convert SNAKE_CASE to camelCase
+            parts = var_name.split('_')
+            if len(parts) > 1:
+                # First part lowercase, rest title case
+                var_name = parts[0].lower() + ''.join(p.title() for p in parts[1:])
+            else:
+                var_name = var_name.lower()
+            return var_name
     else:
         # For non-system variables, use var_N format
         return f"var_{var_num}"

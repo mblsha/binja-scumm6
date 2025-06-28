@@ -273,9 +273,9 @@ class VariableWriteOp(Instruction):
                 # Show as assignment: var_10 = 5 or localvar1 = 1 or bitvar327 = 1
                 tokens = []
                 if var_prefix == "var":
-                    # Use get_variable_name for system variables
+                    # For assignments, use raw variable names to match descumm style
                     from .smart_bases import get_variable_name
-                    tokens.append(TInt(get_variable_name(var_id)))
+                    tokens.append(TInt(get_variable_name(var_id, use_raw_names=True)))
                 else:
                     tokens.append(TInt(f"{var_prefix}{var_id}"))
             
@@ -295,9 +295,9 @@ class VariableWriteOp(Instruction):
             var_prefix = self._get_var_prefix()
             # Normal stack-based rendering
             if var_prefix == "var":
-                # Use get_variable_name for system variables
+                # For assignments, use raw variable names to match descumm style
                 from .smart_bases import get_variable_name
-                var_display = get_variable_name(var_id)
+                var_display = get_variable_name(var_id, use_raw_names=True)
             else:
                 var_display = f"{var_prefix}{var_id}"
             return [
