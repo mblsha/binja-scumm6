@@ -184,9 +184,13 @@ class DataProvider:
 
     def _normalize_line(self, line: str) -> str:
         """Normalize a line for fuzzy matching."""
-        # Strip address prefixes
+        # Strip address prefixes like [0000] or (0000)
         line = re.sub(r'^\[[0-9A-Fa-f]+\]\s*', '', line)
         line = re.sub(r'^\([0-9A-Fa-f]+\)\s*', '', line)
+
+        # Strip descumm opcode prefixes that come after addresses, e.g., "(B4)" or "(43)"
+        # These are 1-2 byte hex values in parentheses
+        line = re.sub(r'^\([0-9A-Fa-f]{1,2}\)\s*', '', line)
 
         # Normalize variable names
         line = re.sub(r'localvar(\d+)', r'var_\1', line)
@@ -252,7 +256,7 @@ class DataProvider:
                 'descumm_line': descumm_lines[i],
                 'normalized_descumm': d_line,
                 'match_score': best_score,
-                'is_match': best_score >= 0.85
+                'is_match': best_score == 1.0
             }
 
             if best_score >= 0.85 and best_match_idx >= 0:

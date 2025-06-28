@@ -781,9 +781,9 @@
                     if (match.descumm_idx < descummLines.length) {
                         const line = descummLines[match.descumm_idx];
                         const matchClass = match.is_match ? 'line-match' : 
-                                         (match.match_score > 0.5 ? 'line-partial-match' : 'line-no-match');
+                                         (match.match_score >= 0.85 ? 'line-partial-match' : 'line-no-match');
                         const indicator = match.is_match ? '✓' : 
-                                        (match.match_score > 0.5 ? '≈' : '✗');
+                                        (match.match_score >= 0.85 ? '≈' : '✗');
                         const scoreText = match.match_score > 0 ? ` (${Math.round(match.match_score * 100)}%)` : '';
                         
                         const lineHtml = `<span class="match-indicator" title="Match score: ${Math.round(match.match_score * 100)}%">${indicator}</span>${escapeHtml(line)}`;
@@ -800,9 +800,9 @@
                 const match = fusedLineMatches[idx];
                 if (match) {
                     const matchClass = match.is_match ? 'line-match' : 
-                                     (match.match_score > 0.5 ? 'line-partial-match' : 'line-no-match');
+                                     (match.match_score >= 0.85 ? 'line-partial-match' : 'line-no-match');
                     const indicator = match.is_match ? '✓' : 
-                                    (match.match_score > 0.5 ? '≈' : '✗');
+                                    (match.match_score >= 0.85 ? '≈' : '✗');
                     const lineHtml = `<span class="match-indicator" title="Matches descumm line ${match.descumm_idx + 1}">${indicator}</span>${escapeHtml(line)}`;
                     fusedHtml += `<div class="${matchClass}">${wrapAddresses(lineHtml)}</div>`;
                 } else if (line.trim()) {
