@@ -1071,6 +1071,12 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] unless ((isScriptRunning(3))) jump 18',
     ),
+    ScriptComparisonTestCase(
+        test_id="is_actor_in_box_fusion",
+        bytecode=bytes([0x01, 0x05, 0x00, 0x01, 0x0A, 0x00, 0xAF]),  # push_word(5), push_word(10), is_actor_in_box
+        # Note: descumm doesn't recognize is_actor_in_box opcode, so no expected_descumm_output
+        expected_disasm_fusion_output='[0000] isActorInBox(5, 10)',
+    ),
 ]
 
 

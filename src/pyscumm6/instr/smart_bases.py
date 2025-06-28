@@ -67,6 +67,7 @@ DESCUMM_FUNCTION_NAMES = {
     "get_object_y": "getObjectY",
     "get_random_number": "getRandomNumber",
     "is_any_of": "isAnyOf",
+    "is_actor_in_box": "isActorInBox",
     # Complex operations 
     "print_debug.begin": "printDebug.begin",
     "print_debug.msg": "printDebug.msg",

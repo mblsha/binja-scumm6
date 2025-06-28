@@ -26,6 +26,7 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
         "put_actor_at_object", # 3 params: actor_id, object_id, ?
         "face_actor",       # 1 param: direction
         "animate_actor",    # 1 param: animation
+        "is_actor_in_box",  # 2 params: actor_id, box_id
         # Script operations
         "start_script",     # Variable params
         "start_script_quick",# Variable params
