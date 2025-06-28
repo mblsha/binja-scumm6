@@ -966,6 +966,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] printLine.msg("IBM disk-based and full voice talkie CD-ROM versions available Summer 1993" + keepText())',
     ),
+    ScriptComparisonTestCase(
+        test_id="print_cursor_xy",
+        bytecode=bytes.fromhex("01A000012800B541"),
+        expected_descumm_output=dedent("""
+            [0000] (B5) printCursor.XY(160,40)
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] printCursor.XY(160, 40)',
+    ),
 ]
 
 
