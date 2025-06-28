@@ -9,7 +9,7 @@ from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
 
 from .opcodes import Instruction
 from .generic import VariableWriteOp, ControlFlowOp, IntrinsicOp
-from .smart_bases import SmartConditionalJump, FusibleMultiOperandMixin
+from .smart_bases import SmartConditionalJump, FusibleMultiOperandMixin, get_variable_name
 
 # Import the vars module to use the same LLIL generation logic
 from ... import vars
@@ -17,8 +17,15 @@ from ... import vars
 # Array ID to name mapping based on descumm
 SCUMM_ARRAY_NAMES = {
     110: "VAR_GUI_COLORS",  # 0x6E
+    230: "array230",  # 0xE6
     236: "array236",  # 0xEC - no descumm name known yet
-    24013: "VAR_PAUSE_MSG",  # 0x5DCD
+    24013: "VAR_PAUSE_MSG",  # 0x5DCD (CD5D in little-endian)
+    23245: "VAR_GAME_DISK_MSG",  # 0x5ACD (CD5A in little-endian)
+    23501: "VAR_OPEN_FAILED_MSG",  # 0x5BCD (CD5B in little-endian)
+    23757: "VAR_READ_ERROR_MSG",  # 0x5CCD (CD5C in little-endian)
+    24269: "VAR_SAVE_ERROR_MSG",  # 0x5ECD (CD5E in little-endian)
+    24525: "VAR_RESTART_MSG",  # 0x5FCD (CD5F in little-endian)
+    24781: "VAR_QUIT_MSG",  # 0x60CD (CD60 in little-endian)
     # Add more mappings as discovered
 }
 
@@ -30,10 +37,13 @@ class PushByteVar(Instruction):
 
     def render(self) -> List[Token]:
         var_id = self.op_details.body.data
+        # Handle signed byte interpretation
+        if var_id < 0:
+            var_id = var_id + 256
         return [
             TInstr("push_byte_var"),
             TSep("("),
-            TInt(f"var_{var_id}"),
+            TInt(get_variable_name(var_id)),
             TSep(")"),
         ]
 
@@ -59,7 +69,7 @@ class PushWordVar(Instruction):
         return [
             TInstr("push_word_var"),
             TSep("("),
-            TInt(f"var_{var_id}"),
+            TInt(get_variable_name(var_id)),
             TSep(")"),
         ]
 
@@ -132,10 +142,13 @@ class ByteVarInc(Instruction):
 
     def render(self) -> List[Token]:
         var_id = self.op_details.body.data
+        # Handle signed byte interpretation
+        if var_id < 0:
+            var_id = var_id + 256
         return [
             TInstr("byte_var_inc"),
             TSep("("),
-            TInt(f"var_{var_id}"),
+            TInt(get_variable_name(var_id)),
             TSep(")"),
         ]
 
@@ -156,7 +169,7 @@ class WordVarInc(Instruction):
         return [
             TInstr("word_var_inc"),
             TSep("("),
-            TInt(f"var_{var_id}"),
+            TInt(get_variable_name(var_id)),
             TSep(")"),
         ]
 
@@ -174,10 +187,13 @@ class ByteVarDec(Instruction):
 
     def render(self) -> List[Token]:
         var_id = self.op_details.body.data
+        # Handle signed byte interpretation
+        if var_id < 0:
+            var_id = var_id + 256
         return [
             TInstr("byte_var_dec"),
             TSep("("),
-            TInt(f"var_{var_id}"),
+            TInt(get_variable_name(var_id)),
             TSep(")"),
         ]
 
@@ -198,7 +214,7 @@ class WordVarDec(Instruction):
         return [
             TInstr("word_var_dec"),
             TSep("("),
-            TInt(f"var_{var_id}"),
+            TInt(get_variable_name(var_id)),
             TSep(")"),
         ]
 
@@ -442,7 +458,7 @@ class WordArrayWrite(FusibleMultiOperandMixin, Instruction):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(f"var_{operand.op_details.body.data}")]
+            return [TInt(get_variable_name(operand.op_details.body.data))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
         else:
@@ -513,10 +529,11 @@ class ByteArrayIndexedWrite(Instruction):
 
     def render(self) -> List[Token]:
         array_id = self.op_details.body.array
+        array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
         return [
             TInstr("byte_array_indexed_write"),
             TSep("("),
-            TInt(f"array_{array_id}"),
+            TInt(array_name),
             TSep(")"),
         ]
 
@@ -537,10 +554,11 @@ class WordArrayIndexedWrite(Instruction):
 
     def render(self) -> List[Token]:
         array_id = self.op_details.body.array
+        array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
         return [
             TInstr("word_array_indexed_write"),
             TSep("("),
-            TInt(f"array_{array_id}"),
+            TInt(array_name),
             TSep(")"),
         ]
 
@@ -677,7 +695,7 @@ class DimArray(FusibleMultiOperandMixin, Instruction):
         array_var = self.op_details.body.array
         
         tokens = [TInstr("dimArray"), TText(f".{display_subop}(")]
-        tokens.append(TText(f"var{array_var}"))
+        tokens.append(TText(get_variable_name(array_var)))
         
         if self.fused_operands:
             tokens.append(TText(", "))
@@ -1144,12 +1162,12 @@ class IfClassOfIs(FusibleMultiOperandMixin, Instruction):
                 if operand.op_details.body.type == Scumm6Opcodes.VarType.local:
                     return [TText(f"localvar{var_num}")]
                 else:
-                    return [TText(f"var_{var_num}")]
+                    return [TText(get_variable_name(var_num))]
             # Otherwise check if it's in the local variable range (0-15)
             elif 0 <= var_num < 16:  # First 16 are local variables
                 return [TText(f"localvar{var_num}")]
             else:
-                return [TText(f"var_{var_num}")]
+                return [TText(get_variable_name(var_num))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             value = operand.op_details.body.data if hasattr(operand.op_details.body, 'data') else 0
             return [TInt(str(value))]
@@ -1289,7 +1307,7 @@ class SaveRestoreVerbs(FusibleMultiOperandMixin, Instruction):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(f"var_{operand.op_details.body.data}")]
+            return [TInt(get_variable_name(operand.op_details.body.data))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
         elif operand.produces_result():
@@ -1373,7 +1391,7 @@ class PrintLine(FusibleMultiOperandMixin, Instruction):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(f"var_{operand.op_details.body.data}")]
+            return [TInt(get_variable_name(operand.op_details.body.data))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
         elif hasattr(operand, 'produces_result') and operand.produces_result():
@@ -1948,7 +1966,7 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(f"var_{operand.op_details.body.data}")]
+            return [TInt(get_variable_name(operand.op_details.body.data))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
         else:
@@ -2044,7 +2062,7 @@ class CursorCommand(FusibleMultiOperandMixin, Instruction):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(f"var_{operand.op_details.body.data}")]
+            return [TInt(get_variable_name(operand.op_details.body.data))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
         elif hasattr(operand, 'produces_result') and operand.produces_result():
@@ -2208,7 +2226,7 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(f"var_{operand.op_details.body.data}")]
+            return [TInt(get_variable_name(operand.op_details.body.data))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
         elif hasattr(operand, 'produces_result') and operand.produces_result():
@@ -2491,7 +2509,7 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             if hasattr(operand.op_details.body, 'data'):
-                return [TInt(f"var_{operand.op_details.body.data}")]
+                return [TInt(get_variable_name(operand.op_details.body.data))]
             else:
                 return [TInt("var_?")]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
@@ -2641,7 +2659,7 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             if hasattr(operand.op_details.body, 'data'):
-                return [TInt(f"var_{operand.op_details.body.data}")]
+                return [TInt(get_variable_name(operand.op_details.body.data))]
             else:
                 return [TInt("var_?")]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
@@ -2843,7 +2861,7 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(f"var_{operand.op_details.body.data}")]
+            return [TInt(get_variable_name(operand.op_details.body.data))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
         elif hasattr(operand, 'produces_result') and operand.produces_result():

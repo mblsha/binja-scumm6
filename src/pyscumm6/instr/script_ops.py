@@ -6,7 +6,7 @@ from binja_helpers.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction
 
 from .opcodes import Instruction
-from .smart_bases import SmartSemanticIntrinsicOp, SmartIntrinsicOp
+from .smart_bases import SmartSemanticIntrinsicOp, SmartIntrinsicOp, get_variable_name
 from .configs import SemanticIntrinsicConfig, IntrinsicConfig
 
 
@@ -380,7 +380,11 @@ class SoundKludge(SmartIntrinsicOp):
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             if hasattr(operand.op_details.body, 'data'):
-                return [TInt(f"var_{operand.op_details.body.data}")]
+                var_id = operand.op_details.body.data
+                # Handle signed byte interpretation for PushByteVar
+                if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
+                    var_id = var_id + 256
+                return [TInt(get_variable_name(var_id))]
             else:
                 return [TInt("var_?")]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:

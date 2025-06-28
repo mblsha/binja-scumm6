@@ -125,6 +125,36 @@ DESCUMM_FUNCTION_NAMES = {
 }
 
 
+def get_variable_name(var_num: int) -> str:
+    """Get the proper variable name for a given variable number.
+    
+    Returns the descumm-style name if it's a known system variable,
+    otherwise returns var_N format.
+    """
+    from ... import vars
+    
+    # Get the system variable mappings
+    var_mapping = vars.scumm_vars_inverse()
+    
+    if var_num in var_mapping:
+        # Convert from VAR_MACHINE_SPEED to proper descumm format
+        var_name = var_mapping[var_num]
+        # Remove VAR_ prefix and convert to camelCase
+        if var_name.startswith("VAR_"):
+            var_name = var_name[4:]
+        # Convert SNAKE_CASE to camelCase
+        parts = var_name.split('_')
+        if len(parts) > 1:
+            # First part lowercase, rest title case
+            var_name = parts[0].lower() + ''.join(p.title() for p in parts[1:])
+        else:
+            var_name = var_name.lower()
+        return var_name
+    else:
+        # For non-system variables, use var_N format
+        return f"var_{var_num}"
+
+
 class FusibleMultiOperandMixin:
     """
     Mixin class providing common fusion logic for instructions that consume multiple operands.
@@ -326,10 +356,23 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
         from binja_helpers.tokens import TInt, TText
         
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            # Variable push - extract var number
+            # Variable push - extract var number and type
             if hasattr(operand.op_details.body, 'data'):
                 data = operand.op_details.body.data
-                return [TInt(f"var_{data}")]
+                # Handle signed byte interpretation for PushByteVar
+                if operand.__class__.__name__ == 'PushByteVar' and data < 0:
+                    data = data + 256
+                
+                # Check if this is a local variable
+                if hasattr(operand.op_details.body, 'type'):
+                    var_type = operand.op_details.body.type
+                    if var_type == Scumm6Opcodes.VarType.local:
+                        return [TInt(f"localvar{data}")]
+                    elif var_type == Scumm6Opcodes.VarType.bitvar:
+                        return [TInt(f"bitvar{data}")]
+                
+                # System variable - use semantic name mapping
+                return [TInt(get_variable_name(data))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             # Constant push - extract value
             if hasattr(operand.op_details.body, 'data'):
@@ -403,7 +446,7 @@ class SmartVariableOp(Instruction):
         return [
             TInstr(self._name),
             TSep("("),
-            TInt(f"var_{var_id}"),
+            TInt(get_variable_name(var_id)),
             TSep(")"),
         ]
     
@@ -454,7 +497,20 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(f"var_{operand.op_details.body.data}")]
+            var_id = operand.op_details.body.data
+            # Handle signed byte interpretation for PushByteVar
+            if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
+                var_id = var_id + 256
+            # Check if this is a local variable
+            if hasattr(operand.op_details.body, 'type'):
+                var_type = operand.op_details.body.type
+                if var_type == Scumm6Opcodes.VarType.local:
+                    return [TInt(f"localvar{var_id}")]
+                elif var_type == Scumm6Opcodes.VarType.bitvar:
+                    return [TInt(f"bitvar{var_id}")]
+            
+            # System variable - use semantic name mapping
+            return [TInt(get_variable_name(var_id))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
         elif operand.produces_result():
@@ -588,7 +644,21 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             # For variables, wrap in parentheses to match descumm style
-            return [TText("("), TInt(f"var_{operand.op_details.body.data}"), TText(")")]
+            var_id = operand.op_details.body.data
+            # Handle signed byte interpretation for PushByteVar
+            if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
+                var_id = var_id + 256
+            
+            # Check if this is a local variable
+            if hasattr(operand.op_details.body, 'type'):
+                var_type = operand.op_details.body.type
+                if var_type == Scumm6Opcodes.VarType.local:
+                    return [TText("("), TInt(f"localvar{var_id}"), TText(")")]
+                elif var_type == Scumm6Opcodes.VarType.bitvar:
+                    return [TText("("), TInt(f"bitvar{var_id}"), TText(")")]
+            
+            # System variable - use semantic name mapping
+            return [TText("("), TInt(get_variable_name(var_id)), TText(")")]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             # Constants don't need parentheses
             return [TInt(str(operand.op_details.body.data))]
@@ -915,7 +985,20 @@ class SmartConditionalJump(ControlFlowOp):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(f"var_{operand.op_details.body.data}")]
+            var_id = operand.op_details.body.data
+            # Handle signed byte interpretation for PushByteVar
+            if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
+                var_id = var_id + 256
+            # Check if this is a local variable
+            if hasattr(operand.op_details.body, 'type'):
+                var_type = operand.op_details.body.type
+                if var_type == Scumm6Opcodes.VarType.local:
+                    return [TInt(f"localvar{var_id}")]
+                elif var_type == Scumm6Opcodes.VarType.bitvar:
+                    return [TInt(f"bitvar{var_id}")]
+            
+            # System variable - use semantic name mapping
+            return [TInt(get_variable_name(var_id))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
         elif hasattr(operand, 'render'):
@@ -1184,7 +1267,20 @@ class SmartComparisonOp(Instruction):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(f"var_{operand.op_details.body.data}")]
+            var_id = operand.op_details.body.data
+            # Handle signed byte interpretation for PushByteVar
+            if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
+                var_id = var_id + 256
+            # Check if this is a local variable
+            if hasattr(operand.op_details.body, 'type'):
+                var_type = operand.op_details.body.type
+                if var_type == Scumm6Opcodes.VarType.local:
+                    return [TInt(f"localvar{var_id}")]
+                elif var_type == Scumm6Opcodes.VarType.bitvar:
+                    return [TInt(f"bitvar{var_id}")]
+            
+            # System variable - use semantic name mapping
+            return [TInt(get_variable_name(var_id))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
         elif operand.produces_result():
@@ -1407,7 +1503,10 @@ class SmartArrayOp(Instruction):
             # Variable push - extract var number
             if hasattr(operand.op_details.body, 'data'):
                 data = operand.op_details.body.data
-                return [TInt(f"var_{data}")]
+                # Handle signed byte interpretation for PushByteVar
+                if operand.__class__.__name__ == 'PushByteVar' and data < 0:
+                    data = data + 256
+                return [TInt(get_variable_name(data))]
         else:
             # Constant push - extract value
             if hasattr(operand.op_details.body, 'data'):

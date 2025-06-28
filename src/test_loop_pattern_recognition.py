@@ -34,7 +34,7 @@ def test_simple_backward_jump_detection() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     assert "while" in text
-    assert "var_12" in text
+    assert "tmr2" in text
 
 
 def test_for_loop_pattern_detection() -> None:
@@ -60,7 +60,7 @@ def test_for_loop_pattern_detection() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     assert "for" in text
-    assert "var_5" in text
+    assert "override" in text
 
 
 def test_while_loop_pattern_detection() -> None:
@@ -85,7 +85,7 @@ def test_while_loop_pattern_detection() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     assert "while" in text
-    assert "var_8" in text
+    assert "numActor" in text
     assert "var_9" in text
 
 
@@ -195,7 +195,7 @@ def test_complex_comparison_loop() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     assert "for" in text
-    assert "var_0" in text
+    assert "keypress" in text
     assert "10" in text
 
 

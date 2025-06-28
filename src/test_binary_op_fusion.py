@@ -39,12 +39,12 @@ def test_add_fusion_with_constants() -> None:
 
 def test_sub_fusion_with_variables() -> None:
     """Test that sub fuses with two push_word_var operations."""
-    # push_word_var(var_5)
-    # push_word_var(var_3)
+    # push_word_var(var_5) - system variable VAR_OVERRIDE
+    # push_word_var(var_3) - system variable VAR_HAVE_MSG
     # sub
     bytecode = bytes([
-        0x03, 0x05, 0x40,  # push_word_var(var_5)
-        0x03, 0x03, 0x40,  # push_word_var(var_3)
+        0x03, 0x05, 0x00,  # push_word_var(var_5) - system variable
+        0x03, 0x03, 0x00,  # push_word_var(var_3) - system variable
         0x15               # sub
     ])
     
@@ -55,17 +55,17 @@ def test_sub_fusion_with_variables() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "((var_5) - (var_3))"
+    assert text == "((override) - (haveMsg))"
 
 
 def test_mul_fusion_with_same_variable() -> None:
     """Test that mul fuses when multiplying a variable by itself."""
-    # push_word_var(var_7)
-    # push_word_var(var_7)
+    # push_word_var(var_7) - system variable VAR_ME
+    # push_word_var(var_7) - system variable VAR_ME
     # mul
     bytecode = bytes([
-        0x03, 0x07, 0x40,  # push_word_var(var_7)
-        0x03, 0x07, 0x40,  # push_word_var(var_7)
+        0x03, 0x07, 0x00,  # push_word_var(var_7) - system variable
+        0x03, 0x07, 0x00,  # push_word_var(var_7) - system variable
         0x16               # mul
     ])
     
@@ -76,16 +76,16 @@ def test_mul_fusion_with_same_variable() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "((var_7) * (var_7))"
+    assert text == "((me) * (me))"
 
 
 def test_div_fusion_mixed_operands() -> None:
     """Test that div fuses with variable and constant."""
-    # push_word_var(var_10)
+    # push_word_var(var_10) - system variable VAR_CURRENTDRIVE
     # push_word(2)
     # div
     bytecode = bytes([
-        0x03, 0x0A, 0x40,  # push_word_var(var_10)
+        0x03, 0x0A, 0x00,  # push_word_var(var_10) - system variable
         0x01, 0x02, 0x00,  # push_word(2)
         0x17               # div
     ])
@@ -97,7 +97,7 @@ def test_div_fusion_mixed_operands() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "((var_10) / 2)"
+    assert text == "((currentdrive) / 2)"
 
 
 def test_partial_fusion_with_one_operand() -> None:

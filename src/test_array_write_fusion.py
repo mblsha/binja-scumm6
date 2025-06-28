@@ -58,7 +58,7 @@ fusion_test_cases = [
         expected_class="ByteArrayWrite",
         expected_fused_operands=2,
         expected_stack_pops=0,
-        expected_render_text="array_3[var_20] = var_5",  # Matches descumm: first push = index
+        expected_render_text="array_3[virtMouseX] = override",  # Matches descumm: first push = index
     ),
     FusionTestCase(
         test_id="array_write_partial",

@@ -54,7 +54,7 @@ fusion_test_cases = [
         expected_class="WriteWordVar",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="var_20 = 1000",
+        expected_render_text="virtMouseX = 1000",  # VAR_VIRT_MOUSE_X = 20
     ),
     FusionTestCase(
         test_id="write_from_var",
@@ -62,7 +62,7 @@ fusion_test_cases = [
         expected_class="WriteByteVar",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="var_? = var_5",
+        expected_render_text="var_? = override",  # VAR_OVERRIDE = 5
     ),
     FusionTestCase(
         test_id="word_from_byte",
@@ -70,7 +70,7 @@ fusion_test_cases = [
         expected_class="WriteWordVar",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="var_30 = 100",
+        expected_render_text="exitScript = 100",  # VAR_EXIT_SCRIPT = 30
     ),
     FusionTestCase(
         test_id="no_fusion_non_push",

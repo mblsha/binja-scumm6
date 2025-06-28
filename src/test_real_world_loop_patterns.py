@@ -41,7 +41,7 @@ def test_room8_scrp18_loop_pattern() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     assert "while" in text
-    assert "!var_12" in text  # Should show the negated condition for if_not
+    assert "!tmr2" in text  # Should show the negated condition for if_not
     assert "92 bytes" in text
 
 
@@ -70,7 +70,7 @@ def test_room8_local200_scaling_loop() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     assert "while" in text
-    assert "var_0" in text
+    assert "keypress" in text
 
 
 def test_multiple_backward_jumps_pattern() -> None:
@@ -153,7 +153,7 @@ def test_iff_loop_pattern() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     assert "while" in text
-    assert "var_3" in text
+    assert "haveMsg" in text
 
 
 def test_no_loop_detection_for_regular_conditionals() -> None:
@@ -195,7 +195,7 @@ def test_descumm_style_output_comparison() -> None:
     our_output = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     
     # Our output should be more semantic than raw bytecode
-    assert "while (!var_12)" in our_output
+    assert "while (!tmr2)" in our_output
     assert "bytes" in our_output  # Should include loop body size info
     
     # Compared to what raw disassembly would show:

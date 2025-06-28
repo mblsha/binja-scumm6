@@ -257,19 +257,28 @@ class VariableWriteOp(Instruction):
             if isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp):
                 # For write_byte_var which has a Kaitai mapping bug
                 # Extract the variable ID directly from the raw bytecode
-                var_id = self._extract_var_id_from_unknownop()
+                var_id_str = self._extract_var_id_from_unknownop()
                 var_prefix = "var"
+                tokens: List[Token] = []
+                # For UnknownOp, we can't determine the variable name
+                tokens.append(TInt(f"var_{var_id_str}"))
             else:
                 var_id = self.op_details.body.data
+                # Handle signed byte interpretation
+                if var_id < 0:
+                    var_id = var_id + 256
                 # Check if this is a bit variable
                 var_prefix = self._get_var_prefix()
+                
+                # Show as assignment: var_10 = 5 or localvar1 = 1 or bitvar327 = 1
+                tokens = []
+                if var_prefix == "var":
+                    # Use get_variable_name for system variables
+                    from .smart_bases import get_variable_name
+                    tokens.append(TInt(get_variable_name(var_id)))
+                else:
+                    tokens.append(TInt(f"{var_prefix}{var_id}"))
             
-            # Show as assignment: var_10 = 5 or localvar1 = 1 or bitvar327 = 1
-            tokens: List[Token] = []
-            if var_prefix == "var":
-                tokens.append(TInt(f"{var_prefix}_{var_id}"))
-            else:
-                tokens.append(TInt(f"{var_prefix}{var_id}"))
             tokens.append(TSep(" = "))
             tokens.extend(self._render_operand(self.fused_operands[0]))
             return tokens
@@ -280,22 +289,62 @@ class VariableWriteOp(Instruction):
             return [TInstr(self.instruction_name), TSep("("), TInstr("var_?"), TSep(")")]
         else:
             var_id = self.op_details.body.data
+            # Handle signed byte interpretation
+            if var_id < 0:
+                var_id = var_id + 256
             var_prefix = self._get_var_prefix()
             # Normal stack-based rendering
+            if var_prefix == "var":
+                # Use get_variable_name for system variables
+                from .smart_bases import get_variable_name
+                var_display = get_variable_name(var_id)
+            else:
+                var_display = f"{var_prefix}{var_id}"
             return [
                 TInstr(self.instruction_name),
                 TSep("("),
-                TInt(f"{var_prefix}_{var_id}" if var_prefix == "var" else f"{var_prefix}{var_id}"),
+                TInt(var_display),
                 TSep(")"),
             ]
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            # Variable push - extract var number
+            # Variable push - extract var number and type
             if hasattr(operand.op_details.body, 'data'):
                 var_num = operand.op_details.body.data
-                return [TInt(f"var_{var_num}")]
+                # Handle signed byte interpretation for PushByteVar
+                if operand.__class__.__name__ == 'PushByteVar' and var_num < 0:
+                    var_num = var_num + 256
+                
+                # Check if this is a local variable
+                if hasattr(operand.op_details.body, 'type'):
+                    var_type = operand.op_details.body.type
+                    if var_type == Scumm6Opcodes.VarType.local:
+                        return [TInt(f"localvar{var_num}")]
+                    elif var_type == Scumm6Opcodes.VarType.bitvar:
+                        return [TInt(f"bitvar{var_num}")]
+                
+                # System variable - use semantic name mapping
+                from ... import vars
+                var_mapping = vars.scumm_vars_inverse()
+                
+                if var_num in var_mapping:
+                    # Convert from VAR_MACHINE_SPEED to proper descumm format
+                    var_name = var_mapping[var_num]
+                    # Remove VAR_ prefix and convert to camelCase
+                    if var_name.startswith("VAR_"):
+                        var_name = var_name[4:]
+                    # Convert SNAKE_CASE to camelCase
+                    parts = var_name.split('_')
+                    if len(parts) > 1:
+                        # First part lowercase, rest title case
+                        var_name = parts[0].lower() + ''.join(p.title() for p in parts[1:])
+                    else:
+                        var_name = var_name.lower()
+                    return [TInt(var_name)]
+                else:
+                    return [TInt(f"var_{var_num}")]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             # Constant push - extract value
             if hasattr(operand.op_details.body, 'data'):

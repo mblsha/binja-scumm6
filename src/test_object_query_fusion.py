@@ -18,10 +18,10 @@ def render_tokens(tokens: List[Token]) -> str:
 
 def test_get_object_x_fusion() -> None:
     """Test that getObjectX fuses with push_word_var."""
-    # push_word_var(var_5)
+    # push_word_var(var_5) - system variable VAR_OVERRIDE
     # getObjectX
     bytecode = bytes([
-        0x03, 0x05, 0x40,  # push_word_var(var_5)
+        0x03, 0x05, 0x00,  # push_word_var(var_5) - system variable
         0x8D               # getObjectX
     ])
     
@@ -33,15 +33,15 @@ def test_get_object_x_fusion() -> None:
     assert instruction.stack_pop_count == 0  # No stack pops needed
     
     text = render_tokens(instruction.render())
-    assert text == "getObjectX(var_5)"
+    assert text == "getObjectX(override)"
 
 
 def test_get_object_y_fusion() -> None:
     """Test that getObjectY fuses with push_word_var."""
-    # push_word_var(var_10)
+    # push_word_var(var_10) - system variable VAR_CURRENTDRIVE
     # getObjectY
     bytecode = bytes([
-        0x03, 0x0A, 0x40,  # push_word_var(var_10)
+        0x03, 0x0A, 0x00,  # push_word_var(var_10) - system variable
         0x8E               # getObjectY
     ])
     
@@ -53,15 +53,15 @@ def test_get_object_y_fusion() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "getObjectY(var_10)"
+    assert text == "getObjectY(currentdrive)"
 
 
 def test_get_state_fusion() -> None:
     """Test that get_state fuses with push_word_var."""
-    # push_word_var(var_0)
+    # push_word_var(var_0) - system variable VAR_KEYPRESS
     # get_state
     bytecode = bytes([
-        0x03, 0x00, 0x40,  # push_word_var(var_0)
+        0x03, 0x00, 0x00,  # push_word_var(var_0) - system variable
         0x6F               # get_state (111 = 0x6F)
     ])
     
@@ -73,7 +73,7 @@ def test_get_state_fusion() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "get_state(var_0)"
+    assert text == "get_state(keypress)"
 
 
 def test_get_object_x_fusion_with_constant() -> None:
