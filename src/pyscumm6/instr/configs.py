@@ -236,7 +236,7 @@ INTRINSIC_CONFIGS: Dict[str, IntrinsicConfig] = {
     # Special Instructions with Custom Lift Logic
     "stop_object_code1": IntrinsicConfig(doc="Stop object code 1", special_lift="no_ret_lift"),
     "stop_object_code2": IntrinsicConfig(doc="Stop object code 2", special_lift="no_ret_lift"),
-    "cutscene": IntrinsicConfig(doc="Start cutscene", special_lift="cutscene_lift"),
+    "cutscene": IntrinsicConfig(doc="Start cutscene"),
 }
 
 # Variable Operations (4 classes -> config table)

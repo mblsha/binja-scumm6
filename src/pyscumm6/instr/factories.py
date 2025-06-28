@@ -227,4 +227,8 @@ def generate_all_instructions() -> Dict[str, Type[Instruction]]:
         script_ops.StartObject._config = SEMANTIC_CONFIGS["start_object"]
     registry["start_object"] = script_ops.StartObject
     
+    # Override cutscene with custom implementation
+    script_ops.Cutscene._config = INTRINSIC_CONFIGS["cutscene"]
+    registry["cutscene"] = script_ops.Cutscene
+    
     return registry

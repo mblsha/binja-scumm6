@@ -1020,6 +1020,21 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] printCursor.msg("Tentacle Amends" + newline() + "Constitution")',
     ),
+    ScriptComparisonTestCase(
+        test_id="begin_cutscene_with_args",
+        bytecode=bytes([
+            0x01, 0x0A, 0x00,  # push_word(10) - arg1
+            0x01, 0x14, 0x00,  # push_word(20) - arg2  
+            0x01, 0x1E, 0x00,  # push_word(30) - arg3
+            0x01, 0x03, 0x00,  # push_word(3)  - arg_count
+            0x68               # cutscene
+        ]),
+        expected_descumm_output=dedent("""
+            [0000] (68) beginCutscene([10,20,30])
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] beginCutscene([10, 20, 30])',
+    ),
 ]
 
 

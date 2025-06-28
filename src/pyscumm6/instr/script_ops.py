@@ -486,3 +486,136 @@ class SoundKludge(SmartIntrinsicOp):
             il.append(il.intrinsic([], "sound_kludge", params))
         else:
             super().lift(il, addr)
+
+
+class Cutscene(SmartIntrinsicOp):
+    """Cutscene with dynamic argument handling."""
+    
+    # Set class attributes that parent expects
+    _name = "cutscene"
+    _config: IntrinsicConfig  # Will be set by factory
+    
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+        self.fused_operands: List[Instruction] = []
+        self._arg_count: Optional[int] = None
+        
+    def fuse(self, previous: Instruction) -> Optional['Cutscene']:
+        """
+        Custom fusion for cutscene that handles:
+        1. Arg count 
+        2. Variable number of arguments based on arg count
+        
+        Stack order (LIFO): arg1, arg2, ..., argN, arg_count
+        Expected output: beginCutscene([arg1, arg2, ..., argN])
+        """
+        # If we don't have fused operands yet, we're looking for arg_count
+        if not self.fused_operands:
+            # First fusion should be arg_count
+            if not self._is_fusible_push(previous):
+                return None
+                
+            # Create initial fusion with arg_count
+            fused = copy.deepcopy(self)
+            fused.fused_operands = [previous]
+            fused._length = self._length + previous.length()
+            
+            # Extract arg_count
+            if previous.__class__.__name__ in ['PushByte', 'PushWord']:
+                fused._arg_count = previous.op_details.body.data
+            
+            return fused
+            
+        # If we have the arg_count, collect arguments
+        if self._arg_count is not None:
+            # Calculate how many arguments we've collected so far
+            # fused_operands[0] is arg_count, rest are arguments
+            current_arg_count = len(self.fused_operands) - 1
+            
+            if current_arg_count < self._arg_count:
+                # Still need more arguments
+                if not self._is_fusible_push(previous):
+                    return None
+                    
+                fused = copy.deepcopy(self)
+                fused.fused_operands = [previous] + self.fused_operands
+                fused._length = self._length + previous.length()
+                fused._arg_count = self._arg_count  # Preserve arg count
+                return fused
+        
+        # No more fusion possible
+        return None
+        
+    def render(self) -> List[Token]:
+        """Render in descumm style: beginCutscene([args])"""
+        from .smart_bases import DESCUMM_FUNCTION_NAMES
+        
+        display_name = DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
+        
+        if self.fused_operands and self._arg_count is not None and len(self.fused_operands) >= self._arg_count + 1:
+            # We have arg_count and arguments
+            # Order in fused_operands: arg1, arg2, ..., argN, arg_count (due to LIFO)
+            tokens = [TInstr(display_name), TSep("(")]
+            
+            # Arguments as array (skip arg_count which is at the end)
+            tokens.append(TSep("["))
+            # Arguments are from index 0 to self._arg_count-1 (arg_count is at the end)
+            for i in range(self._arg_count):
+                if i > 0:
+                    tokens.append(TSep(", "))
+                tokens.extend(self._render_operand(self.fused_operands[i]))
+            
+            tokens.append(TSep("]"))
+            tokens.append(TSep(")"))
+            return tokens
+        else:
+            # No fusion or incomplete fusion
+            return [TInstr(f"{display_name}()")]
+    
+    @property 
+    def stack_pop_count(self) -> int:
+        """Calculate stack pops based on fusion state."""
+        if self.fused_operands and self._arg_count is not None and len(self.fused_operands) >= self._arg_count + 1:
+            # We've fused everything
+            return 0
+        return self._config.pop_count if self._config else 0
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Generate LLIL for cutscene."""
+        if self.fused_operands and self._arg_count is not None and len(self.fused_operands) >= self._arg_count + 1:
+            # Create array of arguments (skip arg_count at the end)
+            params = [self._lift_operand(il, self.fused_operands[i]) for i in range(self._arg_count)]
+            
+            il.append(il.intrinsic([], self._name, params))
+        else:
+            super().lift(il, addr)
+    
+    def _is_fusible_push(self, instr: Instruction) -> bool:
+        """Check if instruction is a push that can be fused."""
+        return instr.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(get_variable_name(operand.op_details.body.data))]
+        else:
+            if hasattr(operand.op_details.body, 'data'):
+                return [TInt(str(operand.op_details.body.data))]
+            else:
+                return [TInt("?")]
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        from ... import vars
+        
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            # Variable push - use il_get_var
+            return vars.il_get_var(il, operand.op_details.body)
+        else:
+            # Constant push - use const
+            if hasattr(operand.op_details.body, 'data'):
+                value = operand.op_details.body.data
+                return il.const(4, value)
+        
+        # Fallback
+        return il.const(4, 0)
