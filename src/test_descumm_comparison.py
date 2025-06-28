@@ -1053,6 +1053,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] localvar0 = var7',
     ),
+    ScriptComparisonTestCase(
+        test_id="is_any_of_with_array_fusion",
+        bytecode=bytes.fromhex("030400012C00012D00012E00012F00013000013100013200013300013400013500013600013700013800013900013A00013B00011000AD5D0500"),
+        expected_descumm_output=dedent("""
+            [0000] (5D) if (isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59])) {
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] if ((isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]))) jump 3f',
+    ),
 ]
 
 

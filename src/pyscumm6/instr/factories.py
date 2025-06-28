@@ -71,6 +71,8 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
         "print_ego",        # Complex print operations
         # Verb operations
         "save_restore_verbs", # 3 params: slot1, slot2, slot3
+        # Utility operations with variable arguments
+        "is_any_of",        # Variable params: value, [array], count
     }
     
     # Choose base class based on whether instruction should support fusion
@@ -230,5 +232,9 @@ def generate_all_instructions() -> Dict[str, Type[Instruction]]:
     # Override cutscene with custom implementation
     script_ops.Cutscene._config = INTRINSIC_CONFIGS["cutscene"]
     registry["cutscene"] = script_ops.Cutscene
+    
+    # Override is_any_of with custom implementation
+    script_ops.IsAnyOf._config = INTRINSIC_CONFIGS["is_any_of"]
+    registry["is_any_of"] = script_ops.IsAnyOf
     
     return registry
