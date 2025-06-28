@@ -1939,3 +1939,178 @@ class SmartLoopIfNot(SmartLoopConditionalJump):
 class SmartLoopIff(SmartLoopConditionalJump):
     """If conditional jump with loop pattern recognition."""
     _is_if_not = False
+
+
+class SmartVariableArgumentIntrinsic(SmartIntrinsicOp):
+    """Base class for intrinsic operations with variable number of arguments.
+    
+    This class provides a unified pattern for instructions that:
+    1. Have a variable number of parameters determined by an arg_count
+    2. Follow the stack pattern: [fixed_params...], arg1, arg2, ..., argN, arg_count
+    3. Need to collect all parameters before rendering/lifting
+    
+    Subclasses should override:
+    - get_fixed_param_count(): Number of fixed parameters before variable args
+    - render_instruction(): Custom rendering logic
+    - get_instruction_name(): Display name for the instruction
+    """
+    
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+        self.fused_operands: List[Instruction] = []
+        self._arg_count: Optional[int] = None
+    
+    def get_fixed_param_count(self) -> int:
+        """Return the number of fixed parameters before variable arguments.
+        
+        Examples:
+        - startScriptQuick(script_id, [args...]): 1 fixed param (script_id)
+        - startScript(script_id, flags, [args...]): 2 fixed params
+        - isAnyOf(test_value, [values...]): 1 fixed param (test_value)  
+        - soundKludge([args...]): 0 fixed params
+        """
+        return 0
+    
+    def get_instruction_name(self) -> str:
+        """Get the display name for this instruction."""
+        return DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
+    
+    def _is_fusible_push(self, instr: Instruction) -> bool:
+        """Check if instruction is a push that can be fused."""
+        return instr.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']
+    
+    def _extract_arg_count(self, push_instr: Instruction) -> Optional[int]:
+        """Extract arg_count value from a push instruction."""
+        if push_instr.__class__.__name__ in ['PushByte', 'PushWord']:
+            return push_instr.op_details.body.data
+        return None
+    
+    def fuse(self, previous: Instruction) -> Optional['SmartVariableArgumentIntrinsic']:
+        """Generic fusion logic for variable argument instructions."""
+        # First fusion: collect arg_count
+        if not self.fused_operands:
+            if not self._is_fusible_push(previous):
+                return None
+                
+            fused = copy.deepcopy(self)
+            fused.fused_operands = [previous]
+            fused._length = self._length + previous.length()
+            fused._arg_count = self._extract_arg_count(previous)
+            return fused
+        
+        # If we have arg_count, collect arguments and fixed parameters
+        if self._arg_count is not None:
+            # Calculate how many operands we've collected (excluding arg_count)
+            current_operand_count = len(self.fused_operands) - 1
+            
+            # Total needed: variable args + fixed params
+            total_needed = self._arg_count + self.get_fixed_param_count()
+            
+            if current_operand_count < total_needed:
+                if not self._is_fusible_push(previous):
+                    return None
+                    
+                fused = copy.deepcopy(self)
+                fused.fused_operands = [previous] + self.fused_operands
+                fused._length = self._length + previous.length()
+                fused._arg_count = self._arg_count
+                return fused
+        
+        return None
+    
+    @property
+    def stack_pop_count(self) -> int:
+        """Calculate stack pops based on fusion state."""
+        if self.fused_operands and self._arg_count is not None:
+            total_needed = self._arg_count + self.get_fixed_param_count() + 1  # +1 for arg_count
+            if len(self.fused_operands) >= total_needed:
+                return 0  # Fully fused
+        return self._config.pop_count if self._config else 1
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(get_variable_name(operand.op_details.body.data))]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            if hasattr(operand.op_details.body, 'data'):
+                return [TInt(str(operand.op_details.body.data))]
+            else:
+                return [TInt("?")]
+        else:
+            return [TInt("operand")]
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        from ... import vars
+        
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return vars.il_get_var(il, operand.op_details.body)
+        else:
+            if hasattr(operand.op_details.body, 'data'):
+                value = operand.op_details.body.data
+                return il.const(4, value)
+        return il.const(4, 0)
+    
+    def render_instruction(self) -> List[Token]:
+        """Override this method to provide custom rendering logic.
+        
+        The base implementation provides a simple pattern for most cases.
+        Subclasses can override for complex rendering needs.
+        """
+        if not (self.fused_operands and self._arg_count is not None):
+            return [TInstr(f"{self.get_instruction_name()}(...)")]
+        
+        total_needed = self._arg_count + self.get_fixed_param_count() + 1
+        if len(self.fused_operands) < total_needed:
+            return [TInstr(f"{self.get_instruction_name()}(...)")]
+        
+        tokens = [TInstr(self.get_instruction_name()), TSep("(")]
+        
+        # Render fixed parameters first (they come first in LIFO order)
+        fixed_count = self.get_fixed_param_count()
+        for i in range(fixed_count):
+            if i > 0:
+                tokens.append(TSep(", "))
+            tokens.extend(self._render_operand(self.fused_operands[i]))
+        
+        # Add separator before variable args if we have fixed params
+        if fixed_count > 0 and self._arg_count > 0:
+            tokens.append(TSep(", "))
+        
+        # Render variable arguments as array
+        if self._arg_count > 0:
+            tokens.append(TSep("["))
+            for i in range(fixed_count, fixed_count + self._arg_count):
+                if i > fixed_count:
+                    tokens.append(TSep(", "))
+                tokens.extend(self._render_operand(self.fused_operands[i]))
+            tokens.append(TSep("]"))
+        
+        tokens.append(TSep(")"))
+        return tokens
+    
+    def render(self) -> List[Token]:
+        """Default render method - delegates to render_instruction()."""
+        return self.render_instruction()
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Generate LLIL for variable argument instruction."""
+        if self.fused_operands and self._arg_count is not None:
+            total_needed = self._arg_count + self.get_fixed_param_count() + 1
+            if len(self.fused_operands) >= total_needed:
+                # Create parameters: fixed params + variable args (skip arg_count)
+                params = []
+                param_count = self.get_fixed_param_count() + self._arg_count
+                for i in range(param_count):
+                    params.append(self._lift_operand(il, self.fused_operands[i]))
+                
+                # Generate intrinsic call
+                if self._config and self._config.push_count > 0:
+                    il.append(il.intrinsic([il.reg(4, "TEMP0")], self._name, params))
+                    il.append(il.push(4, il.reg(4, "TEMP0")))
+                else:
+                    il.append(il.intrinsic([], self._name, params))
+                return
+        
+        # Fallback to default lifting
+        super().lift(il, addr)
