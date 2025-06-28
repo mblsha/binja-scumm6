@@ -70,7 +70,7 @@ fusion_test_cases = [
         expected_class="SmartIfNot",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="if ((VAR_OVERRIDE > 10)) jump",
+        expected_render_text="unless ((VAR_OVERRIDE > 10)) jump",
     ),
     FusionTestCase(
         test_id="iff_jump",
@@ -94,7 +94,7 @@ fusion_test_cases = [
         expected_class="SmartIfNot",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="if ((0 != VAR_HAVE_MSG)) jump",
+        expected_render_text="unless ((0 != VAR_HAVE_MSG)) jump",
     ),
     FusionTestCase(
         test_id="le_ge",
@@ -118,7 +118,7 @@ fusion_test_cases = [
         expected_class="SmartIfNot",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="if (((5 + 3))) jump",
+        expected_render_text="unless (((5 + 3))) jump",
     ),
 ]
 

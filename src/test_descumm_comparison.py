@@ -299,34 +299,34 @@ script_test_cases = [
             [001D] push_word_var(VAR_MACHINE_SPEED)
             [0020] abs
             [0021] write_word_var(localvar6)
-            [0024] if ((localvar5 > localvar3)) jump 38
+            [0024] unless ((localvar5 > localvar3)) jump 38
             [002E] var_137 = 0
             [0034] stopScript(0)
-            [0038] if ((localvar6 > localvar4)) jump 4c
+            [0038] unless ((localvar6 > localvar4)) jump 4c
             [0042] var_137 = 0
             [0048] stopScript(0)
             [004C] localvar7 = ((localvar5) * (localvar5))
             [0056] localvar8 = ((localvar6) * (localvar6))
-            [0060] if ((localvar7 < 0)) jump 94
+            [0060] unless ((localvar7 < 0)) jump 94
             [006A] printDebug.begin()
             [006C] printDebug.msg("x2 value overflowing in ellipse check")
-            [0094] if ((localvar8 < 0)) jump c8
+            [0094] unless ((localvar8 < 0)) jump c8
             [009E] printDebug.begin()
             [00A0] printDebug.msg("y2 value overflowing in ellipse check")
             [00C8] localvar11 = 1
             [00CE] localvar12 = 0
-            [00D4] if ((localvar7 <= 4000)) jump eb
+            [00D4] unless ((localvar7 <= 4000)) jump eb
             [00DE] localvar7 = ((localvar7) * 4)
             [00E8] jump f5
             [00EB] localvar3 = ((localvar3) / 2)
-            [00F5] if ((localvar8 <= 4000)) jump 10c
+            [00F5] unless ((localvar8 <= 4000)) jump 10c
             [00FF] localvar8 = ((localvar8) * 4)
             [0109] jump 116
             [010C] localvar4 = ((localvar4) / 2)
             [0116] localvar11 = ((localvar11) * 4)
-            [0120] if ((localvar11 >= 64)) jump 130
+            [0120] unless ((localvar11 >= 64)) jump 130
             [012A] localvar12 = 1
-            [0130] while (!localvar12) { # 92 bytes
+            [0130] while (localvar12) { # 92 bytes
             [0136] unless ((localvar3 == 0)) jump 166
             [0140] localvar3 = 1
             [0146] printDebug.begin()
@@ -338,7 +338,7 @@ script_test_cases = [
             [0194] var_137 = ((((localvar7) / (((localvar3) * (localvar3))))) + (((localvar8) / (((localvar4) * (localvar4))))))
             [01AE] unless ((var_137 == 0)) jump 1be
             [01B8] var_137 = 1
-            [01BE] if ((var_137 > localvar11)) jump 1ce
+            [01BE] unless ((var_137 > localvar11)) jump 1ce
             [01C8] var_137 = 0
             [01CE] stopObjectCodeB()
         """).strip(),
@@ -369,7 +369,7 @@ script_test_cases = [
             [001A] stopObjectCodeA()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] unless ((isScriptRunning(137))) jump 1a
+            [0000] if ((isScriptRunning(137))) jump 1a
             [0008] startScriptQuick(93, [1])
             [0012] roomOps.setScreen(0, 200)
             [001A] stopObjectCodeA()
@@ -496,12 +496,12 @@ script_test_cases = [
             [00E8] stopObjectCodeB()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] unless ((!localvar0)) jump d
+            [0000] if ((localvar0)) jump d
             [0007] localvar0 = var7
-            [000D] if ((get_state(localvar0) != 1)) jump e8
-            [0018] if ((ifClassOfIs(localvar0,[6]))) jump 42
+            [000D] unless ((get_state(localvar0) != 1)) jump e8
+            [0018] unless ((ifClassOfIs(localvar0,[6]))) jump 42
             [0025] setState(localvar0, 1)
-            [002C] if ((!localvar1)) jump 39
+            [002C] unless ((localvar1)) jump 39
             [0032] setState(localvar1, 1)
             [0039] printDebug.begin()
             [003B] printDebug.msg(" ")
@@ -874,7 +874,7 @@ script_test_cases = [
             [0000] (5D) if (isScriptRunning(3)) {
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] if ((isScriptRunning(3))) jump 26',
+        expected_disasm_fusion_output='[0000] unless ((isScriptRunning(3))) jump 26',
     ),
     ScriptComparisonTestCase(
         test_id="complex_nested_expression",
@@ -892,7 +892,7 @@ script_test_cases = [
             [0000] (5D) if (!isScriptRunning(3)) {
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] unless ((isScriptRunning(3))) jump 18',
+        expected_disasm_fusion_output='[0000] if ((isScriptRunning(3))) jump 18',
     ),
     ScriptComparisonTestCase(
         test_id="save_restore_verbs_fusion",
@@ -937,7 +937,7 @@ script_test_cases = [
             [0000] (5D) if (ifClassOfIs(localvar1,[139])) {
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] if ((ifClassOfIs(localvar1,[139]))) jump 10',
+        expected_disasm_fusion_output='[0000] unless ((ifClassOfIs(localvar1,[139]))) jump 10',
     ),
     ScriptComparisonTestCase(
         test_id="draw_object_with_nested_expression",
@@ -1060,7 +1060,7 @@ script_test_cases = [
             [0000] (5D) if (isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59])) {
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] if ((isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]))) jump 5',
+        expected_disasm_fusion_output='[0000] unless ((isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]))) jump 5',
     ),
     ScriptComparisonTestCase(
         test_id="is_script_running_negated_conditional",
@@ -1069,7 +1069,7 @@ script_test_cases = [
             [0000] (5D) if (!isScriptRunning(3)) {
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] unless ((isScriptRunning(3))) jump 18',
+        expected_disasm_fusion_output='[0000] if ((isScriptRunning(3))) jump 18',
     ),
     ScriptComparisonTestCase(
         test_id="is_actor_in_box_fusion",

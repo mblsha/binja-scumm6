@@ -41,7 +41,7 @@ def test_room8_scrp18_loop_pattern() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     assert "while" in text
-    assert "!VAR_TMR_2" in text  # Should show the negated condition for if_not
+    assert "VAR_TMR_2" in text  # Should show the condition
     assert "92 bytes" in text
 
 
@@ -175,7 +175,7 @@ def test_no_loop_detection_for_regular_conditionals() -> None:
     
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
-    assert "if" in text
+    assert "unless" in text
     assert "while" not in text
     assert "for" not in text
 
@@ -195,7 +195,7 @@ def test_descumm_style_output_comparison() -> None:
     our_output = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     
     # Our output should be more semantic than raw bytecode
-    assert "while (!VAR_TMR_2)" in our_output
+    assert "while (VAR_TMR_2)" in our_output
     assert "bytes" in our_output  # Should include loop body size info
     
     # Compared to what raw disassembly would show:

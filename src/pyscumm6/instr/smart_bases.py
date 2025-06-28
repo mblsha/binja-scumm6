@@ -966,19 +966,21 @@ class SmartConditionalJump(ControlFlowOp):
         simple_push_ops = ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']
         return instr.__class__.__name__ in simple_push_ops
     
-    def _render_condition(self, condition_instr: Instruction) -> List[Token]:
+    def _render_condition(self, condition_instr: Instruction, negate: bool = False) -> List[Token]:
         """Render a fused condition (comparison or simple push) as readable condition."""
         # Check if this is a Nott instruction
         if condition_instr.__class__.__name__ == 'Nott':
-            tokens: List[Token] = []
-            tokens.append(TText("!"))
-            # Check if nott has fused operands
+            # Nott inverts the negation state
             if hasattr(condition_instr, 'fused_operands') and condition_instr.fused_operands:
-                # Render the operand that was fused with nott
-                tokens.extend(self._render_condition(condition_instr.fused_operands[0]))
+                # Render the inner condition with inverted negation
+                return self._render_condition(condition_instr.fused_operands[0], not negate)
             else:
+                # No inner condition, just show the negation
+                tokens: List[Token] = []
+                if not negate:
+                    tokens.append(TText("!"))
                 tokens.append(TText("condition"))
-            return tokens
+                return tokens
         
         # Check if this is a comparison with fused operands
         elif self._is_comparison_op(condition_instr) and hasattr(condition_instr, 'fused_operands') and len(condition_instr.fused_operands) >= 2:
@@ -1003,8 +1005,7 @@ class SmartConditionalJump(ControlFlowOp):
         # Check if this is a simple push (for simple truthiness test)
         elif condition_instr.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']:
             tokens = []
-            if self._is_if_not:
-                tokens.append(TText("!"))
+            # Don't add negation here - it's handled at the if/unless level
             tokens.extend(self._render_operand(condition_instr))
             return tokens
         
@@ -1047,29 +1048,20 @@ class SmartConditionalJump(ControlFlowOp):
             # Render as readable conditional in descumm style
             tokens: List[Token] = []
             
-            # Determine if we should use "unless" or "if" based on the comparison
-            use_unless = False
-            condition_to_render = None
-            if self._is_if_not and len(self.fused_operands) > 0:
-                condition = self.fused_operands[0]
-                # Special case: if_not + nott becomes "unless" without the negation
-                if condition.__class__.__name__ == 'Nott':
-                    use_unless = True
-                    # For unless, we want to render the inner condition without the !
-                    if hasattr(condition, 'fused_operands') and condition.fused_operands:
-                        condition_to_render = condition.fused_operands[0]
-                    else:
-                        condition_to_render = condition  # Fallback
-                # Use "unless" for equality comparisons with if_not (descumm style)
-                elif condition.__class__.__name__ == 'Eq':
-                    use_unless = True
-                    condition_to_render = condition
-                # For simple push operations (not comparisons), use "if" with negation
-                elif condition.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']:
-                    use_unless = False  # Use "if" for simple conditions
-                    condition_to_render = condition
-                else:
-                    condition_to_render = condition
+            # Simple approach based on user feedback:
+            # - if_not instruction = "unless"
+            # - iff instruction = "if"
+            # - Special case: if_not + nott = "if" (double negation)
+            
+            condition = self.fused_operands[0]
+            use_unless = self._is_if_not
+            
+            # Check for double-negation: if_not + nott = if
+            if self._is_if_not and condition.__class__.__name__ == 'Nott':
+                use_unless = False
+                # Get the inner condition (what Nott is negating)
+                if hasattr(condition, 'fused_operands') and condition.fused_operands:
+                    condition = condition.fused_operands[0]
             
             if use_unless:
                 tokens.append(TInstr("unless"))
@@ -1077,11 +1069,8 @@ class SmartConditionalJump(ControlFlowOp):
                 tokens.append(TInstr("if"))
             
             tokens.append(TText(" (("))
-            # Use the selected condition for rendering
-            if condition_to_render is not None:
-                tokens.extend(self._render_condition(condition_to_render))
-            else:
-                tokens.extend(self._render_condition(self.fused_operands[0]))
+            # Render the condition
+            tokens.extend(self._render_condition(condition))
             tokens.append(TText("))"))
             
             # Add jump target
