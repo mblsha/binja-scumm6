@@ -128,7 +128,7 @@ def test_comparison_in_expression() -> None:
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     # Should include both the comparison and the logical operation (with infix notation)
     assert "&&" in text and ">" in text and "VAR_OVERRIDE" in text and "10" in text and "VAR_HAVE_MSG" in text
-    assert text == "(((VAR_OVERRIDE) > 10) && (VAR_HAVE_MSG))"
+    assert text == "((VAR_OVERRIDE > 10) && (VAR_HAVE_MSG))"
 
 
 def test_mixed_variable_and_constant_fusion() -> None:

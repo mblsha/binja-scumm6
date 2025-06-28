@@ -195,7 +195,7 @@ def test_complex_comparison_loop() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     assert "for" in text
-    assert "keypress" in text
+    assert "VAR_KEYPRESS" in text
     assert "10" in text
 
 

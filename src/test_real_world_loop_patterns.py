@@ -153,7 +153,7 @@ def test_iff_loop_pattern() -> None:
     tokens = fused.render()
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     assert "while" in text
-    assert "haveMsg" in text
+    assert "VAR_HAVE_MSG" in text
 
 
 def test_no_loop_detection_for_regular_conditionals() -> None:

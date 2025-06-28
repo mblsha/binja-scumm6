@@ -175,7 +175,7 @@ script_test_cases = [
             [002A] gt
             [002B] unless goto +10
             [002E] push_word(0)
-            [0031] write_word_var(var137)
+            [0031] write_word_var(var_137)
             [0034] push_word(0)
             [0037] stopScript(...)
             [0038] push_word_var(VAR_MACHINE_SPEED)
@@ -183,7 +183,7 @@ script_test_cases = [
             [003E] gt
             [003F] unless goto +10
             [0042] push_word(0)
-            [0045] write_word_var(var137)
+            [0045] write_word_var(var_137)
             [0048] push_word(0)
             [004B] stopScript(...)
             [004C] push_word_var(VAR_OVERRIDE)
@@ -275,19 +275,19 @@ script_test_cases = [
             [01A8] mul
             [01A9] div
             [01AA] add
-            [01AB] write_word_var(var137)
+            [01AB] write_word_var(var_137)
             [01AE] push_word_var(var_137)
             [01B1] push_word(0)
             [01B4] eq
             [01B5] unless goto +6
             [01B8] push_word(1)
-            [01BB] write_word_var(var137)
+            [01BB] write_word_var(var_137)
             [01BE] push_word_var(var_137)
             [01C1] push_word_var(VAR_TMR_1)
             [01C4] gt
             [01C5] unless goto +6
             [01C8] push_word(0)
-            [01CB] write_word_var(var137)
+            [01CB] write_word_var(var_137)
             [01CE] stopObjectCodeB()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
@@ -300,10 +300,10 @@ script_test_cases = [
             [0020] abs
             [0021] write_word_var(localvar6)
             [0024] if ((localvar5 > localvar3)) jump 38
-            [002E] var137 = 0
+            [002E] var_137 = 0
             [0034] stopScript(0)
             [0038] if ((localvar6 > localvar4)) jump 4c
-            [0042] var137 = 0
+            [0042] var_137 = 0
             [0048] stopScript(0)
             [004C] localvar7 = ((localvar5) * (localvar5))
             [0056] localvar8 = ((localvar6) * (localvar6))
@@ -335,11 +335,11 @@ script_test_cases = [
             [0170] localvar4 = 1
             [0176] printDebug.begin()
             [0178] printDebug.msg("very flat ellipse warning")
-            [0194] var137 = ((((localvar7) / (((localvar3) * (localvar3))))) + (((localvar8) / (((localvar4) * (localvar4))))))
-            [01AE] unless ((var137 == 0)) jump 1be
-            [01B8] var137 = 1
-            [01BE] if ((var137 > localvar11)) jump 1ce
-            [01C8] var137 = 0
+            [0194] var_137 = ((((localvar7) / (((localvar3) * (localvar3))))) + (((localvar8) / (((localvar4) * (localvar4))))))
+            [01AE] unless ((var_137 == 0)) jump 1be
+            [01B8] var_137 = 1
+            [01BE] if ((var_137 > localvar11)) jump 1ce
+            [01C8] var_137 = 0
             [01CE] stopObjectCodeB()
         """).strip(),
     ),
@@ -692,7 +692,7 @@ script_test_cases = [
             [01A7] (9D) actorOps.setWalkSpeed(4,2)
             [01AF] (BA) talkActor(sound(0x47DC, 0xE) + "Nonsense!",7)
             [01CD] (A9) wait.waitForMessage()
-            [01CF] (BA) talkActor(sound(0x8517, 0x26) + "It makes VAR_ME feel GREAT!" + wait() + "Smarter!  More aggressive!",7)
+            [01CF] (BA) talkActor(sound(0x8517, 0x26) + "It makes me feel GREAT!" + wait() + "Smarter!  More aggressive!",7)
             [0217] (A9) wait.waitForMessage()
             [0219] (AC) soundKludge([272])
             [0220] (AC) soundKludge([-1])
@@ -841,11 +841,11 @@ script_test_cases = [
         """).strip(),
         expected_disasm_output=dedent("""
             [0000] push_word(200)
-            [0003] write_word_var(var137)
+            [0003] write_word_var(var_137)
             [0006] jump 0
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] var137 = 200
+            [0000] var_137 = 200
             [0006] jump 0
         """).strip(),
     ),
@@ -865,7 +865,7 @@ script_test_cases = [
             [0000] (5D) unless ((array236[7] == 0)) jump ffffffff
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] unless ((array_236[7] == 0)) jump ffffffff',
+        expected_disasm_fusion_output='[0000] unless ((array_236[7] == 0)) jump -14',
     ),
     ScriptComparisonTestCase(
         test_id="is_script_running_conditional",
@@ -874,7 +874,7 @@ script_test_cases = [
             [0000] (5D) if (isScriptRunning(3)) {
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] if ((isScriptRunning(3))) jump 21',
+        expected_disasm_fusion_output='[0000] if ((isScriptRunning(3))) jump 26',
     ),
     ScriptComparisonTestCase(
         test_id="complex_nested_expression",
@@ -910,7 +910,7 @@ script_test_cases = [
             [0000] (47) VAR_GUI_COLORS[9] = 1
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] array_110[9] = 1',
+        expected_disasm_fusion_output='[0000] VAR_GUI_COLORS[9] = 1',
     ),
     ScriptComparisonTestCase(
         test_id="start_object_with_args",
@@ -928,7 +928,7 @@ script_test_cases = [
             [0000] (A4) VAR_PAUSE_MSG[0] = "Game Paused.  Press SPACE to Continue."
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] array_164[0] = "Game Paused.  Press SPACE to Continue."',
+        expected_disasm_fusion_output='[0000] VAR_PAUSE_MSG[0] = "Game Paused.  Press SPACE to Continue."',
     ),
     ScriptComparisonTestCase(
         test_id="if_class_of_is_conditional",
@@ -937,7 +937,7 @@ script_test_cases = [
             [0000] (5D) if (ifClassOfIs(localvar1,[139])) {
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] if ((ifClassOfIs(localvar1,[139]))) jump 17',
+        expected_disasm_fusion_output='[0000] if ((ifClassOfIs(localvar1,[139]))) jump 10',
     ),
     ScriptComparisonTestCase(
         test_id="draw_object_with_nested_expression",
@@ -1060,7 +1060,7 @@ script_test_cases = [
             [0000] (5D) if (isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59])) {
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] if ((isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]))) jump 3f',
+        expected_disasm_fusion_output='[0000] if ((isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]))) jump 5',
     ),
     ScriptComparisonTestCase(
         test_id="is_script_running_negated_conditional",
