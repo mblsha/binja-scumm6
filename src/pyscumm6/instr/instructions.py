@@ -1407,6 +1407,10 @@ class PrintLine(FusibleMultiOperandMixin, Instruction):
                             if msg_tokens:
                                 msg_tokens.append(TText(" + "))
                             msg_tokens.append(TText("wait()"))
+                        elif special.code == 0x02:  # KeepText command
+                            if msg_tokens:
+                                msg_tokens.append(TText(" + "))
+                            msg_tokens.append(TText("keepText()"))
                         # Other special codes can be added here
                     elif 32 <= part.data <= 126:
                         # Text run - collect consecutive printable characters
@@ -2064,6 +2068,10 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
                             if msg_tokens:
                                 msg_tokens.append(TText(" + "))
                             msg_tokens.append(TText("wait()"))
+                        elif special.code == 0x02:  # KeepText command
+                            if msg_tokens:
+                                msg_tokens.append(TText(" + "))
+                            msg_tokens.append(TText("keepText()"))
                         # Other special codes can be added here
                     elif 32 <= part.data <= 126:
                         # Text run - collect consecutive printable characters
