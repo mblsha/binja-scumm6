@@ -131,7 +131,7 @@ INTRINSIC_CONFIGS: Dict[str, IntrinsicConfig] = {
     "get_object_y": IntrinsicConfig(pop_count=1, push_count=1, doc="Get object Y position"),
     "get_object_old_dir": IntrinsicConfig(pop_count=1, push_count=1, doc="Get object old direction"),
     "get_object_new_dir": IntrinsicConfig(pop_count=1, push_count=1, doc="Get object new direction"),
-    "pickup_object": IntrinsicConfig(pop_count=1, doc="Pick up object"),
+    "pickup_object": IntrinsicConfig(pop_count=2, doc="Pick up object"),
     "find_object": IntrinsicConfig(pop_count=2, push_count=1, doc="Find object"),
     "find_all_objects": IntrinsicConfig(push_count=1, doc="Find all objects"),
     "stamp_object": IntrinsicConfig(doc="Stamp object"),

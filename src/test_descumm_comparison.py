@@ -993,6 +993,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] dimArray.bit(var_240, 15)',
     ),
+    ScriptComparisonTestCase(
+        test_id="pickup_object_fusion",
+        bytecode=bytes([0x03, 0x00, 0x40, 0x03, 0x02, 0x40, 0x84]),
+        expected_descumm_output=dedent("""
+            [0000] (84) pickupObject(localvar0,localvar2)
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] pickupObject(localvar0, localvar2)',
+    ),
 ]
 
 

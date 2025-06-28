@@ -48,6 +48,7 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
         "set_state",        # 2 params: object, state
         "set_owner",        # 2 params: object, owner
         "set_class",        # 2 params: object, class
+        "pickup_object",    # 2 params: object, room
         # Room operations
         "load_room",        # 1 param: room_id
         "pan_camera_to",    # 1 param: x_position
