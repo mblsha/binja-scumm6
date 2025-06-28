@@ -975,6 +975,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] printCursor.XY(160, 40)',
     ),
+    ScriptComparisonTestCase(
+        test_id="print_system_msg",
+        bytecode=bytes.fromhex("B74B4E6F7420656E6F7567682066726565206D656D6F727920746F2072756E2064656D6F2E00"),
+        expected_descumm_output=dedent("""
+            [0000] (B7) printSystem.msg("Not enough free memory to run demo.")
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] printSystem.msg("Not enough free memory to run demo.")',
+    ),
 ]
 
 

@@ -193,7 +193,7 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.print_line: instructions.PrintLine,
     Scumm6Opcodes.OpType.print_text: instructions.PrintText,
     Scumm6Opcodes.OpType.print_debug: INSTRUCTION_REGISTRY["print_debug"],
-    Scumm6Opcodes.OpType.print_system: INSTRUCTION_REGISTRY["print_system"],
+    Scumm6Opcodes.OpType.print_system: instructions.PrintSystem,
     Scumm6Opcodes.OpType.print_actor: instructions.PrintActor,
     Scumm6Opcodes.OpType.print_ego: instructions.PrintEgo,
     Scumm6Opcodes.OpType.talk_actor: INSTRUCTION_REGISTRY["talk_actor"],
