@@ -948,6 +948,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] drawObject(733, (1 + (getRandomNumber(2))))',
     ),
+    ScriptComparisonTestCase(
+        test_id="print_cursor_msg",
+        bytecode=bytes.fromhex("B54B446179206F66207468652054656E7461636C6500"),
+        expected_descumm_output=dedent("""
+            [0000] (B5) printCursor.msg("Day of the Tentacle")
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] printCursor.msg("Day of the Tentacle")',
+    ),
 ]
 
 

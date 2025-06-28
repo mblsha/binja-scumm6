@@ -191,7 +191,7 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.save_restore_verbs: instructions.SaveRestoreVerbs,
     # --- Auto-Generated Dialog and Text Operations ---
     Scumm6Opcodes.OpType.print_line: instructions.PrintLine,
-    Scumm6Opcodes.OpType.print_text: INSTRUCTION_REGISTRY["print_text"],
+    Scumm6Opcodes.OpType.print_text: instructions.PrintText,
     Scumm6Opcodes.OpType.print_debug: INSTRUCTION_REGISTRY["print_debug"],
     Scumm6Opcodes.OpType.print_system: INSTRUCTION_REGISTRY["print_system"],
     Scumm6Opcodes.OpType.print_actor: instructions.PrintActor,
