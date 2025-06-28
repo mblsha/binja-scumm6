@@ -65,7 +65,7 @@ def parse_message_with_control_codes(message: Any) -> List[Token]:
                         volume = sound.v3
                         if msg_tokens:
                             msg_tokens.append(TText(" + "))
-                        msg_tokens.append(TText(f"sound(0x{sound_id:x}, 0x{volume:x})"))
+                        msg_tokens.append(TText(f"sound({hex(sound_id).upper().replace('X', 'x')}, {hex(volume).upper().replace('X', 'x')})"))
             elif special.code == 0x03:  # Wait command
                 if msg_tokens:
                     msg_tokens.append(TText(" + "))
@@ -1730,30 +1730,13 @@ class PrintDebug(Instruction):
             # This is a Print structure with a subop
             if (self.op_details.body.subop == Scumm6Opcodes.SubopType.textstring and 
                 isinstance(self.op_details.body.body, Scumm6Opcodes.Message)):
-                # Extract the actual message text
-                sound_commands, text = self._extract_message_text(self.op_details.body.body)
-                
-                tokens = [TInstr("printDebug"), TText(".msg(")]
-                
-                # Add sound commands and text
-                if sound_commands:
-                    # Add sound commands
-                    for i, sound_cmd in enumerate(sound_commands):
-                        if i > 0:
-                            tokens.extend([TText(" + ")])
-                        tokens.append(TInstr(sound_cmd))
-                    
-                    if text:
-                        tokens.extend([TText(" + "), TText(f'"{text}"')])
-                    else:
-                        # Just sound, add empty string
-                        tokens.extend([TText(" + "), TText('""')])
-                elif text:
-                    tokens.append(TText(f'"{text}"'))
-                else:
-                    # No text or sound
-                    tokens.append(TText('""'))
-                
+                # Use generic message parsing with full control code support
+                msg_tokens = parse_message_with_control_codes(self.op_details.body.body)
+                tokens = [
+                    TInstr("printDebug"),
+                    TText(".msg(")
+                ]
+                tokens.extend(msg_tokens)
                 tokens.append(TText(")"))
                 return tokens
             else:
@@ -1804,14 +1787,15 @@ class PrintSystem(Instruction):
             # Check if subop is 0x4B (75) which is textstring/msg
             if subop_value == 0x4B:
                 if isinstance(self.op_details.body.body, Scumm6Opcodes.Message):
-                    # Extract the message text
-                    text = self._extract_message_text(self.op_details.body.body)
-                    return [
+                    # Use generic message parsing with full control code support
+                    msg_tokens = parse_message_with_control_codes(self.op_details.body.body)
+                    tokens = [
                         TInstr("printSystem"),
-                        TText(".msg("),
-                        TText(f'"{text}"'),
-                        TText(")")
+                        TText(".msg(")
                     ]
+                    tokens.extend(msg_tokens)
+                    tokens.append(TText(")"))
+                    return tokens
                 else:
                     # No message body
                     return [TInstr("printSystem"), TText(".msg()")]
@@ -2065,28 +2049,14 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
         # Extract the message text from the bytecode
         from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
         
-        sound_commands: List[str] = []
-        text: str = ""
-        # Check if the body is a Message
-        if isinstance(self.op_details.body, Scumm6Opcodes.Message):
-            sound_commands, text = self._extract_message_text(self.op_details.body)
-        
         if self.fused_operands and len(self.fused_operands) >= 1:
             # We have the actor parameter fused
             tokens = [TInstr("talkActor"), TText("(")]
             
-            # Add sound commands and text
-            if sound_commands:
-                # Add sound commands
-                for i, sound_cmd in enumerate(sound_commands):
-                    if i > 0:
-                        tokens.extend([TText(" + ")])
-                    tokens.append(TInstr(sound_cmd))
-                
-                if text:
-                    tokens.extend([TText(" + "), TText(f'"{text}"')])
-            elif text:
-                tokens.append(TText(f'"{text}"'))
+            # Use generic message parsing with full control code support
+            if isinstance(self.op_details.body, Scumm6Opcodes.Message):
+                msg_tokens = parse_message_with_control_codes(self.op_details.body)
+                tokens.extend(msg_tokens)
             else:
                 tokens.append(TText("..."))
             
