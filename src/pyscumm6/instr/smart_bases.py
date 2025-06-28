@@ -453,12 +453,27 @@ class SmartVariableOp(Instruction):
 
     def render(self) -> List[Token]:
         var_id = self.op_details.body.data
-        return [
-            TInstr(self._name),
-            TSep("("),
-            TInt(get_variable_name(var_id)),
-            TSep(")"),
-        ]
+        var_name = get_variable_name(var_id)
+        
+        # Use C-style increment/decrement notation for better readability
+        if self._config.operation == "inc":
+            return [
+                TInt(var_name),
+                TInstr("++"),
+            ]
+        elif self._config.operation == "dec":
+            return [
+                TInt(var_name),
+                TInstr("--"),
+            ]
+        else:
+            # Fallback to function call style for other operations
+            return [
+                TInstr(self._name),
+                TSep("("),
+                TInt(var_name),
+                TSep(")"),
+            ]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         from ... import vars

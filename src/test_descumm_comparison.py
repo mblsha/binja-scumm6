@@ -1077,6 +1077,15 @@ script_test_cases = [
         # Note: descumm doesn't recognize is_actor_in_box opcode, so no expected_descumm_output
         expected_disasm_fusion_output='[0000] isActorInBox(5, 10)',
     ),
+    ScriptComparisonTestCase(
+        test_id="word_var_inc_fusion",
+        bytecode=bytes.fromhex("4F0540"),
+        expected_descumm_output=dedent("""
+            [0000] (4F) localvar5++
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] override++',
+    ),
 ]
 
 
