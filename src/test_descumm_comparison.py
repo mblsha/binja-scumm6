@@ -1011,6 +1011,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] printLine.msg("LucasArts Entertainment Company" + newline() + "Presents" + keepText())',
     ),
+    ScriptComparisonTestCase(
+        test_id="print_cursor_tentacle_amends",
+        bytecode=bytes.fromhex("B54B54656E7461636C6520416D656E6473FE01436F6E737469747574696F6E00"),
+        expected_descumm_output=dedent("""
+            [0000] (B5) printCursor.msg("Tentacle Amends" + newline() + "Constitution")
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] printCursor.msg("Tentacle Amends" + newline() + "Constitution")',
+    ),
 ]
 
 
