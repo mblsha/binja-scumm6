@@ -957,6 +957,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] printCursor.msg("Day of the Tentacle")',
     ),
+    ScriptComparisonTestCase(
+        test_id="print_line_msg_with_keep_text",
+        bytecode=bytes.fromhex("B44B49424D206469736B2D626173656420616E642066756C6C20766F6963652074616C6B69652043442D524F4D2076657273696F6E7320617661696C61626C652053756D6D65722031393933FF0200"),
+        expected_descumm_output=dedent("""
+            [0000] (B4) printLine.msg("IBM disk-based and full voice talkie CD-ROM versions available Summer 1993" + keepText())
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] printLine.msg("IBM disk-based and full voice talkie CD-ROM versions available Summer 1993" + keepText())',
+    ),
 ]
 
 
