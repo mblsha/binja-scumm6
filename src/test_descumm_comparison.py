@@ -1002,6 +1002,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] pickupObject(localvar0, localvar2)',
     ),
+    ScriptComparisonTestCase(
+        test_id="print_line_lucasarts_credits",
+        bytecode=bytes.fromhex("B44B4C756361734172747320456E7465727461696E6D656E7420436F6D70616E79FF0150726573656E7473FF0200"),
+        expected_descumm_output=dedent("""
+            [0000] (B4) printLine.msg("LucasArts Entertainment Company" + newline() + "Presents" + keepText())
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] printLine.msg("LucasArts Entertainment Company" + newline() + "Presents" + keepText())',
+    ),
 ]
 
 
