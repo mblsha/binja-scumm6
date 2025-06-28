@@ -617,6 +617,109 @@ class WordArrayDec(Instruction):
         il.append(il.unimplemented())
 
 
+class DimArray(FusibleMultiOperandMixin, Instruction):
+    """Dimension array operations with fusion support."""
+    
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+        self.fused_operands: List[Instruction] = []
+    
+    def _get_max_operands(self) -> int:
+        """Return the maximum number of operands this instruction can fuse."""
+        # DimArray operations take 1 parameter (the size)
+        return 1
+    
+    @property
+    def stack_pop_count(self) -> int:
+        """Return 0 when fully fused, otherwise 1."""
+        return max(0, 1 - len(self.fused_operands))
+    
+    def fuse(self, previous: Instruction) -> Optional['DimArray']:
+        """Use standard fusion logic from mixin."""
+        return self._standard_fuse(previous)  # type: ignore[return-value]
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            if hasattr(operand.op_details.body, 'data'):
+                return [TInt(str(operand.op_details.body.data))]
+            else:
+                return [TInt("?")]
+        else:
+            return operand.render()
+    
+    def render(self) -> List[Token]:
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        
+        # Get subop type
+        subop = self.op_details.body.subop
+        if isinstance(subop, int):
+            # Map int to enum
+            try:
+                subop = Scumm6Opcodes.SubopType(subop)
+            except ValueError:
+                pass
+        
+        # Map subop to descumm-style names
+        subop_map = {
+            "int_array": "int",
+            "bit_array": "bit",
+            "nibble_array": "nibble",
+            "byte_array": "byte",
+            "string_array": "string",
+            "undim_array": "undim",
+        }
+        
+        subop_name = subop.name if hasattr(subop, 'name') else f"subop_{subop}"
+        display_subop = subop_map.get(subop_name, subop_name)
+        
+        # Get array variable
+        array_var = self.op_details.body.array
+        
+        tokens = [TInstr("dimArray"), TText(f".{display_subop}(")]
+        tokens.append(TText(f"var{array_var}"))
+        
+        if self.fused_operands:
+            tokens.append(TText(", "))
+            tokens.extend(self._render_operand(self.fused_operands[0]))
+        else:
+            tokens.append(TText(", ..."))
+        
+        tokens.append(TText(")"))
+        return tokens
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Generate LLIL for dimArray operations."""
+        if self.fused_operands:
+            # Use fused operand
+            size_expr = self._lift_operand(il, self.fused_operands[0])
+        else:
+            # Pop from stack
+            size_expr = il.pop(4)
+        
+        # Get array variable and subop
+        array_var = self.op_details.body.array
+        subop = self.op_details.body.subop
+        if hasattr(subop, 'name'):
+            subop_name = subop.name
+        else:
+            subop_name = f"subop_{subop}"
+        
+        # Generate intrinsic call
+        il.append(il.intrinsic([], f"dim_array.{subop_name}", [il.const(4, array_var), size_expr]))
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            if hasattr(operand.op_details.body, 'data'):
+                return il.const(4, operand.op_details.body.data)
+            else:
+                return il.const(4, 0)
+        else:
+            # For complex operands, use placeholder
+            return il.const(4, 0)
+
+
 class Iff(ControlFlowOp):
 
     def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:

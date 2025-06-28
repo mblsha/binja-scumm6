@@ -984,6 +984,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] printSystem.msg("Not enough free memory to run demo.")',
     ),
+    ScriptComparisonTestCase(
+        test_id="dim_array_bit",
+        bytecode=bytes.fromhex("010F00BCC8F000"),
+        expected_descumm_output=dedent("""
+            [0000] (BC) dimArray.bit(var240,15)
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] dimArray.bit(var240, 15)',
+    ),
 ]
 
 

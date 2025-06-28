@@ -213,7 +213,7 @@ INTRINSIC_CONFIGS: Dict[str, IntrinsicConfig] = {
     "is_actor_in_box": IntrinsicConfig(pop_count=2, push_count=1, doc="Check if actor in box"),
     
     # Array Management
-    "dim_array": IntrinsicConfig(doc="Dimension array"),
+    # dim_array: Custom implementation in instructions.py
     "dim2dim_array": IntrinsicConfig(doc="2D dimension array"),
     
     # Kernel Operations

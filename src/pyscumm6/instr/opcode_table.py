@@ -182,7 +182,7 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.start_object: script_ops.StartObject,
     Scumm6Opcodes.OpType.start_object_quick: INSTRUCTION_REGISTRY["start_object_quick"],
     # --- Auto-Generated Array Management Operations ---
-    Scumm6Opcodes.OpType.dim_array: INSTRUCTION_REGISTRY["dim_array"],
+    Scumm6Opcodes.OpType.dim_array: instructions.DimArray,
     Scumm6Opcodes.OpType.dim2dim_array: INSTRUCTION_REGISTRY["dim2dim_array"],
     # --- Auto-Generated Kernel Operations ---
     Scumm6Opcodes.OpType.kernel_get_functions: INSTRUCTION_REGISTRY["kernel_get_functions"],
