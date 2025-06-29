@@ -112,18 +112,17 @@ def safe_token_text(tokens: List[Any]) -> str:
     return ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
 
 
-def run_descumm_on_bytecode(descumm_path: Path, bytecode: bytes) -> str:
+def run_descumm_on_bytecode(descumm_path: Path, bytecode: bytes, literal_mode: bool = True) -> str:
     """Execute descumm on bytecode and return cleaned output.
-    
-    Uses literal mode (-l flag) to disable prettification for easier comparison
-    with pyscumm6 output.
     
     Args:
         descumm_path: Path to the descumm executable
         bytecode: SCUMM6 bytecode to disassemble
+        literal_mode: Whether to use literal mode (-l flag) to disable prettification.
+                     Default is True for easier comparison with pyscumm6 output.
         
     Returns:
-        Cleaned descumm output as string (in literal mode)
+        Cleaned descumm output as string
     """
     # Add SCRP header to bytecode for proper parsing
     header = b'SCRP'
@@ -135,8 +134,14 @@ def run_descumm_on_bytecode(descumm_path: Path, bytecode: bytes) -> str:
         tmp_file_path = tmp_file.name
 
     try:
+        # Build command line with or without literal mode flag
+        cmd = [str(descumm_path), "-6"]
+        if literal_mode:
+            cmd.append("-l")
+        cmd.append(tmp_file_path)
+        
         result = subprocess.run(
-            [str(descumm_path), "-6", "-l", tmp_file_path],
+            cmd,
             capture_output=True,
             text=True,
             check=False  # Don't raise exception on non-zero exit

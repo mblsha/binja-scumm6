@@ -149,6 +149,7 @@
             display: flex;
             flex-direction: column;
             border-right: 1px solid #444;
+            min-width: 250px;
         }
         
         .diff-panel:last-child {
@@ -161,6 +162,10 @@
             border-bottom: 1px solid #444;
             font-weight: bold;
             text-align: center;
+        }
+        
+        .panel-header.prettified {
+            background: #555;
         }
         
         .panel-header.reference {
@@ -473,7 +478,14 @@
             
             <div class="diff-panels" id="diffPanels">
                 <div class="diff-panel">
-                    <div class="panel-header reference">descumm (reference)</div>
+                    <div class="panel-header prettified">descumm (prettified)</div>
+                    <div class="panel-content" id="prettifiedPanel">
+                        <div class="loading">Select a script to compare</div>
+                    </div>
+                </div>
+                
+                <div class="diff-panel">
+                    <div class="panel-header reference">descumm (literal)</div>
                     <div class="panel-content" id="descummPanel">
                         <div class="loading">Select a script to compare</div>
                     </div>
@@ -574,6 +586,7 @@
         const diffHeader = document.getElementById('diffHeader');
         const currentScriptEl = document.getElementById('currentScript');
         const matchStatus = document.getElementById('matchStatus');
+        const prettifiedPanel = document.getElementById('prettifiedPanel');
         const descummPanel = document.getElementById('descummPanel');
         const fusedPanel = document.getElementById('fusedPanel');
         const rawPanel = document.getElementById('rawPanel');
@@ -703,6 +716,7 @@
             diffHeader.style.display = 'flex';
             
             // Show loading state
+            prettifiedPanel.innerHTML = '<div class="loading">Loading...</div>';
             descummPanel.innerHTML = '<div class="loading">Loading...</div>';
             fusedPanel.innerHTML = '<div class="loading">Loading...</div>';
             rawPanel.innerHTML = '<div class="loading">Loading...</div>';
@@ -746,6 +760,7 @@
         // Show error
         function showError(message) {
             const errorHtml = `<div class="error">${message}</div>`;
+            prettifiedPanel.innerHTML = errorHtml;
             descummPanel.innerHTML = errorHtml;
             fusedPanel.innerHTML = errorHtml;
             rawPanel.innerHTML = errorHtml;
@@ -762,6 +777,7 @@
             
             // Parse lines
             const descummLines = data.descumm_output.split('\n');
+            const prettifiedLines = data.prettified_output ? data.prettified_output.split('\n') : [];
             const fusedLines = data.fused_output.split('\n');
             
             // Create a map of fused line indices to match info
@@ -824,7 +840,20 @@
                 }
             });
             
+            // Display prettified output with addresses wrapped
+            let prettifiedHtml = '';
+            if (prettifiedLines.length > 0) {
+                prettifiedLines.forEach(line => {
+                    if (line.trim()) {
+                        prettifiedHtml += `<div>${wrapAddresses(escapeHtml(line))}</div>`;
+                    } else {
+                        prettifiedHtml += `<div>${escapeHtml(line)}</div>`;
+                    }
+                });
+            }
+            
             // Update panels
+            prettifiedPanel.innerHTML = prettifiedHtml || wrapAddresses(escapeHtml(data.prettified_output || 'No prettified output available'));
             descummPanel.innerHTML = descummHtml || wrapAddresses(escapeHtml(data.descumm_output));
             fusedPanel.innerHTML = fusedHtml || wrapAddresses(escapeHtml(data.fused_output));
             rawPanel.innerHTML = rawHtml || wrapAddresses(escapeHtml(data.raw_output));
@@ -871,7 +900,7 @@
         
         // Setup address hover highlighting
         function setupAddressHighlighting() {
-            const panels = [descummPanel, fusedPanel, rawPanel];
+            const panels = [prettifiedPanel, descummPanel, fusedPanel, rawPanel];
             
             // Remove any existing listeners
             panels.forEach(panel => {
@@ -891,7 +920,7 @@
             if (!e.target.classList.contains('address-hover')) return;
             
             const address = e.target.dataset.address;
-            const panels = [descummPanel, fusedPanel, rawPanel];
+            const panels = [prettifiedPanel, descummPanel, fusedPanel, rawPanel];
             
             // Highlight corresponding addresses in all panels
             panels.forEach(panel => {
@@ -906,8 +935,8 @@
                 highlightFusionSpan(address);
             }
             
-            // If hovering in descumm panel, highlight corresponding fused instructions
-            if (e.target.closest('#descummPanel')) {
+            // If hovering in descumm panel or prettified panel, highlight corresponding fused instructions
+            if (e.target.closest('#descummPanel') || e.target.closest('#prettifiedPanel')) {
                 highlightCorrespondingFusedInstructions(address);
             }
             
@@ -1030,7 +1059,7 @@
         
         // Synchronize scrolling between panels
         function synchronizeScrolling() {
-            const panels = [descummPanel, fusedPanel, rawPanel];
+            const panels = [prettifiedPanel, descummPanel, fusedPanel, rawPanel];
             let syncing = false;
             
             panels.forEach(panel => {
@@ -1137,7 +1166,7 @@
         
         // Make disassembly lines clickable
         function makeDisassemblyLinesClickable() {
-            const panels = [descummPanel, fusedPanel, rawPanel];
+            const panels = [prettifiedPanel, descummPanel, fusedPanel, rawPanel];
             
             panels.forEach((panel, panelIndex) => {
                 // Find all address spans that were wrapped
@@ -1270,6 +1299,7 @@
             const allBytes = bytecodeHex.split(' ');
             
             // Find the next descumm address after the current one
+            // Check both prettified and descumm panels since they should have the same addresses
             const descummAddresses = descummPanel.querySelectorAll('[data-address]');
             let nextDescummAddr = null;
             let foundCurrent = false;
@@ -1370,10 +1400,10 @@
                     deleteNoteBtn.style.display = 'inline-block';
                 } else {
                     currentNoteId = null;
-                    // Extract bytecode - check if we clicked on descumm panel
+                    // Extract bytecode - check if we clicked on descumm or prettified panel
                     let bytecodeToExtract = '';
                     
-                    if (panelIndex === 0) { // Descumm panel
+                    if (panelIndex === 0 || panelIndex === 1) { // Prettified or Descumm panel
                         // Extract bytecode for all highlighted raw instructions
                         bytecodeToExtract = extractBytecodeForDescummAddress(address, window.currentBytecodeHex);
                     } else {
@@ -1391,7 +1421,7 @@
                 currentNoteId = null;
                 // Same logic for error case
                 let bytecodeToExtract = '';
-                if (panelIndex === 0) { // Descumm panel
+                if (panelIndex === 0 || panelIndex === 1) { // Prettified or Descumm panel
                     bytecodeToExtract = extractBytecodeForDescummAddress(address, window.currentBytecodeHex);
                 } else {
                     bytecodeToExtract = extractBytecodeForAddress(address, window.currentBytecodeHex);
@@ -1493,7 +1523,7 @@
             
             // Extract original bytecode based on panel type
             let originalBytecode = '';
-            if (currentAnalysisData.panel_index === 0) { // Descumm panel
+            if (currentAnalysisData.panel_index === 0 || currentAnalysisData.panel_index === 1) { // Prettified or Descumm panel
                 originalBytecode = extractBytecodeForDescummAddress(currentAnalysisData.address, window.currentBytecodeHex);
             } else {
                 originalBytecode = extractBytecodeForAddress(currentAnalysisData.address, window.currentBytecodeHex);
@@ -1665,7 +1695,7 @@
                 
                 try {
                     // First remove all existing note indicators and classes
-                    const panels = [descummPanel, fusedPanel, rawPanel];
+                    const panels = [prettifiedPanel, descummPanel, fusedPanel, rawPanel];
                     panels.forEach(panel => {
                         const existingIndicators = panel.querySelectorAll('.note-indicator');
                         existingIndicators.forEach(indicator => indicator.remove());

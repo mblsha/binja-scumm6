@@ -44,6 +44,7 @@ class ScriptComparison:
     """Results of comparing a single script."""
     name: str
     descumm_output: str
+    prettified_output: str  # New field for prettified descumm output
     fused_output: str
     raw_output: str
     is_match: bool
@@ -143,10 +144,13 @@ class DataProvider:
         # Extract bytecode
         bytecode = self.bsc6_data[script.start:script.end]
 
-        # Generate all three outputs
+        # Generate all outputs
         fusion_spans = []
         try:
-            descumm_output = run_descumm_on_bytecode(self.descumm_path, bytecode)
+            # Literal mode for comparison
+            descumm_output = run_descumm_on_bytecode(self.descumm_path, bytecode, literal_mode=True)
+            # Prettified mode for viewing
+            prettified_output = run_descumm_on_bytecode(self.descumm_path, bytecode, literal_mode=False)
             fused_output, fusion_spans = run_scumm6_disassembler_with_fusion_details(bytecode, script.start)
             raw_output = run_scumm6_disassembler(bytecode, script.start)
             
@@ -158,6 +162,7 @@ class DataProvider:
         except Exception as e:
             # Handle errors gracefully
             descumm_output = f"Error: {str(e)}"
+            prettified_output = f"Error: {str(e)}"
             fused_output = f"Error: {str(e)}"
             raw_output = f"Error: {str(e)}"
 
@@ -170,6 +175,7 @@ class DataProvider:
         comparison = ScriptComparison(
             name=script.name,
             descumm_output=descumm_output,
+            prettified_output=prettified_output,
             fused_output=fused_output,
             raw_output=raw_output,
             is_match=is_match,
@@ -440,7 +446,8 @@ def disassemble_bytecode():
 
         # Run disassemblers
         try:
-            descumm_output = run_descumm_on_bytecode(data_provider.descumm_path, bytecode)
+            descumm_output = run_descumm_on_bytecode(data_provider.descumm_path, bytecode, literal_mode=True)
+            prettified_output = run_descumm_on_bytecode(data_provider.descumm_path, bytecode, literal_mode=False)
             fused_output, _ = run_scumm6_disassembler_with_fusion_details(bytecode, 0)
             raw_output = run_scumm6_disassembler(bytecode, 0)
         except Exception as e:
@@ -448,6 +455,7 @@ def disassemble_bytecode():
 
         return jsonify({
             'descumm_output': descumm_output,
+            'prettified_output': prettified_output,
             'fused_output': fused_output,
             'raw_output': raw_output
         })

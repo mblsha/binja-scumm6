@@ -98,58 +98,47 @@ script_test_cases = [
             [000B] (43) localvar6 = (getObjectY(localvar0) - localvar2)
             [0016] (43) localvar5 = abs(localvar5)
             [001D] (43) localvar6 = abs(localvar6)
-            [0024] (5D) if (localvar5 > localvar3) {
-            [002E] (43)   var137 = 0
-            [0034] (7C)   stopScript(0)
-            [0038] (**) }
-            [0038] (5D) if (localvar6 > localvar4) {
-            [0042] (43)   var137 = 0
-            [0048] (7C)   stopScript(0)
-            [004C] (**) }
+            [0024] (5D) unless ((localvar5 > localvar3)) jump 38
+            [002E] (43) var137 = 0
+            [0034] (7C) stopScript(0)
+            [0038] (5D) unless ((localvar6 > localvar4)) jump 4c
+            [0042] (43) var137 = 0
+            [0048] (7C) stopScript(0)
             [004C] (43) localvar7 = (localvar5 * localvar5)
             [0056] (43) localvar8 = (localvar6 * localvar6)
-            [0060] (5D) if (localvar7 < 0) {
-            [006A] (B6)   printDebug.begin()
-            [006C] (B6)   printDebug.msg("x2 value overflowing in ellipse check")
-            [0094] (**) }
-            [0094] (5D) if (localvar8 < 0) {
-            [009E] (B6)   printDebug.begin()
-            [00A0] (B6)   printDebug.msg("y2 value overflowing in ellipse check")
-            [00C8] (**) }
+            [0060] (5D) unless ((localvar7 < 0)) jump 94
+            [006A] (B6) printDebug.begin()
+            [006C] (B6) printDebug.msg("x2 value overflowing in ellipse check")
+            [0094] (5D) unless ((localvar8 < 0)) jump c8
+            [009E] (B6) printDebug.begin()
+            [00A0] (B6) printDebug.msg("y2 value overflowing in ellipse check")
             [00C8] (43) localvar11 = 1
             [00CE] (43) localvar12 = 0
-            [00D4] (5D) if (localvar7 <= 4000) {
-            [00DE] (43)   localvar7 = (localvar7 * 4)
-            [00E8] (73) } else {
-            [00EB] (43)   localvar3 = (localvar3 / 2)
-            [00F5] (**) }
-            [00F5] (5D) if (localvar8 <= 4000) {
-            [00FF] (43)   localvar8 = (localvar8 * 4)
-            [0109] (73) } else {
-            [010C] (43)   localvar4 = (localvar4 / 2)
-            [0116] (**) }
+            [00D4] (5D) unless ((localvar7 <= 4000)) jump eb
+            [00DE] (43) localvar7 = (localvar7 * 4)
+            [00E8] (73) jump f5
+            [00EB] (43) localvar3 = (localvar3 / 2)
+            [00F5] (5D) unless ((localvar8 <= 4000)) jump 10c
+            [00FF] (43) localvar8 = (localvar8 * 4)
+            [0109] (73) jump 116
+            [010C] (43) localvar4 = (localvar4 / 2)
             [0116] (43) localvar11 = (localvar11 * 4)
-            [0120] (5D) if (localvar11 >= 64) {
-            [012A] (43)   localvar12 = 1
-            [0130] (**) }
-            [0130] (5D) unless (localvar12) jump d4
-            [0136] (5D) if (localvar3 == 0) {
-            [0140] (43)   localvar3 = 1
-            [0146] (B6)   printDebug.begin()
-            [0148] (B6)   printDebug.msg("very skinny ellipse warning")
-            [0166] (**) }
-            [0166] (5D) if (localvar4 == 0) {
-            [0170] (43)   localvar4 = 1
-            [0176] (B6)   printDebug.begin()
-            [0178] (B6)   printDebug.msg("very flat ellipse warning")
-            [0194] (**) }
+            [0120] (5D) unless ((localvar11 >= 64)) jump 130
+            [012A] (43) localvar12 = 1
+            [0130] (5D) unless ((localvar12)) jump d4
+            [0136] (5D) unless ((localvar3 == 0)) jump 166
+            [0140] (43) localvar3 = 1
+            [0146] (B6) printDebug.begin()
+            [0148] (B6) printDebug.msg("very skinny ellipse warning")
+            [0166] (5D) unless ((localvar4 == 0)) jump 194
+            [0170] (43) localvar4 = 1
+            [0176] (B6) printDebug.begin()
+            [0178] (B6) printDebug.msg("very flat ellipse warning")
             [0194] (43) var137 = ((localvar7 / (localvar3 * localvar3)) + (localvar8 / (localvar4 * localvar4)))
-            [01AE] (5D) if (var137 == 0) {
-            [01B8] (43)   var137 = 1
-            [01BE] (**) }
-            [01BE] (5D) if (var137 > localvar11) {
-            [01C8] (43)   var137 = 0
-            [01CE] (**) }
+            [01AE] (5D) unless ((var137 == 0)) jump 1be
+            [01B8] (43) var137 = 1
+            [01BE] (5D) unless ((var137 > localvar11)) jump 1ce
+            [01C8] (43) var137 = 0
             [01CE] (66) stopObjectCodeB()
             END
         """).strip(),
@@ -347,10 +336,9 @@ script_test_cases = [
         test_id="room11_enter_initialization",
         script_name="room11_enter",
         expected_descumm_output=dedent("""
-            [0000] (5D) if (!isScriptRunning(137)) {
-            [0008] (5F)   startScriptQuick(93,[1])
-            [0012] (9C)   roomOps.setScreen(0,200)
-            [001A] (**) }
+            [0000] (5D) unless ((!isScriptRunning(137))) jump 1a
+            [0008] (5F) startScriptQuick(93,[1])
+            [0012] (9C) roomOps.setScreen(0,200)
             [001A] (65) stopObjectCodeA()
             END
         """).strip(),
@@ -414,30 +402,27 @@ script_test_cases = [
         test_id="room8_scrp15_door_locked",
         script_name="room8_scrp15",
         expected_descumm_output=dedent("""
-            [0000] (5D) if (!localvar0) {
-            [0007] (43)   localvar0 = var7
-            [000D] (**) }
-            [000D] (5D) if (getState(localvar0) != 1) {
-            [0018] (5D)   if (ifClassOfIs(localvar0,[6])) {
-            [0025] (70)     setState(localvar0,1)
-            [002C] (5D)     if (localvar1) {
-            [0032] (70)       setState(localvar1,1)
-            [0039] (**)     }
-            [0039] (B6)     printDebug.begin()
-            [003B] (B6)     printDebug.msg(" ")
-            [003F] (73)   } else {
-            [0042] (0C)     dup[1] = VAR_EGO
-            [0046] (5D)     if (dup[1] == 3) {
-            [004D] (BA)       talkActor("Hmm.  This door appears to be locked.",3)
-            [0078] (5D)     } else if (dup[1] == 1) {
-            [0083] (BA)       talkActor("Hmm.  This door appears to be locked.",1)
-            [00AE] (5D)     } else if (dup[1] == 2) {
-            [00B9] (BA)       talkActor("Hmm.  This door appears to be locked.",2)
-            [00E4] (73)       /* jump e8; */
-            [00E7] (**)     }
-            [00E7] (**)   }
-            [00E8] (**) }
-            [00E8] (66) stopObjectCodeB()
+            [0000] (5D) unless ((!localvar0)) jump d
+            [0007] (43) localvar0 = var7
+            [000D] (5D) unless ((getState(localvar0) != 1)) jump e8
+            [0018] (5D) unless ((ifClassOfIs(localvar0,[6]))) jump 42
+            [0025] (70) setState(localvar0,1)
+            [002C] (5D) unless ((localvar1)) jump 39
+            [0032] (70) setState(localvar1,1)
+            [0039] (B6) printDebug.begin()
+            [003B] (B6) printDebug.msg(" ")
+            [003F] (73) jump e8
+            [0042] (0C) dup[1] = VAR_EGO
+            [0046] (5D) unless ((dup[1] == 3)) jump 7b
+            [004D] (BA) talkActor("Hmm.  This door appears to be locked.",3)
+            [0078] (73) jump e8
+            [007B] (5D) unless ((dup[1] == 1)) jump b1
+            [0083] (BA) talkActor("Hmm.  This door appears to be locked.",1)
+            [00AE] (73) jump e8
+            [00B1] (5D) unless ((dup[1] == 2)) jump e7
+            [00B9] (BA) talkActor("Hmm.  This door appears to be locked.",2)
+            [00E4] (73) /* jump e8; */
+            [00E7] (66) stopObjectCodeB()
             END
         """).strip(),
         expected_disasm_output=dedent("""
@@ -666,7 +651,7 @@ script_test_cases = [
             [00DC] (BA) talkActor(sound(0x8, 0xE) + "I don't think you should drink that^",6)
             [0115] (A9) wait.waitForMessage()
             [0117] (6C) breakHere()
-            [0118] (5D) unless (bitvar327) jump 117
+            [0118] (5D) unless ((bitvar327)) jump 117
             [011E] (82) animateActor(7,250)
             [0125] (9D) actorOps.setCurActor(7)
             [012A] (9D) actorOps.setCostume(7)
@@ -871,7 +856,7 @@ script_test_cases = [
         test_id="is_script_running_conditional",
         bytecode=bytes.fromhex("0103008B5D1A00"),
         expected_descumm_output=dedent("""
-            [0000] (5D) if (isScriptRunning(3)) {
+            [0000] (5D) unless ((isScriptRunning(3))) jump 21
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] unless ((isScriptRunning(3))) jump 26',
@@ -889,7 +874,7 @@ script_test_cases = [
         test_id="is_script_running_negated",
         bytecode=bytes.fromhex("0103008B0D5D1200"),
         expected_descumm_output=dedent("""
-            [0000] (5D) if (!isScriptRunning(3)) {
+            [0000] (5D) unless ((!isScriptRunning(3))) jump 1a
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] if ((isScriptRunning(3))) jump 18',
@@ -934,7 +919,7 @@ script_test_cases = [
         test_id="if_class_of_is_conditional",
         bytecode=bytes.fromhex("030140018B000101006D5D0A00"),
         expected_descumm_output=dedent("""
-            [0000] (5D) if (ifClassOfIs(localvar1,[139])) {
+            [0000] (5D) unless ((ifClassOfIs(localvar1,[139]))) jump 17
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] unless ((ifClassOfIs(localvar1,[139]))) jump 10',
@@ -1057,7 +1042,7 @@ script_test_cases = [
         test_id="is_any_of_with_array_fusion",
         bytecode=bytes.fromhex("030400012C00012D00012E00012F00013000013100013200013300013400013500013600013700013800013900013A00013B00011000AD5D0500"),
         expected_descumm_output=dedent("""
-            [0000] (5D) if (isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59])) {
+            [0000] (5D) unless ((isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]))) jump 3f
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] unless ((isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]))) jump 5',
@@ -1066,7 +1051,7 @@ script_test_cases = [
         test_id="is_script_running_negated_conditional",
         bytecode=bytes.fromhex("0103008B0D5D1200"),
         expected_descumm_output=dedent("""
-            [0000] (5D) if (!isScriptRunning(3)) {
+            [0000] (5D) unless ((!isScriptRunning(3))) jump 1a
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] if ((isScriptRunning(3))) jump 18',
