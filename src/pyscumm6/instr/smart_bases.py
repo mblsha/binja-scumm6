@@ -919,6 +919,34 @@ class SmartUnaryOp(Instruction):
         fused.fused_operands.append(previous)
         fused._length = self._length + previous.length()
         return fused
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            var_id = operand.op_details.body.data
+            # Handle signed byte interpretation for PushByteVar
+            if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
+                var_id = var_id + 256
+            # Check if this is a local variable
+            if hasattr(operand.op_details.body, 'type'):
+                var_type = operand.op_details.body.type
+                if var_type == Scumm6Opcodes.VarType.local:
+                    return [TInt(f"localvar{var_id}")]
+                elif var_type == Scumm6Opcodes.VarType.bitvar:
+                    return [TInt(f"bitvar{var_id}")]
+            # Use descumm-style variable names
+            return [TInt(get_variable_name(var_id))]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return [TInt(str(operand.op_details.body.data))]
+        elif hasattr(operand, 'produces_result') and operand.produces_result():
+            # Nested expression with parentheses
+            tokens: List[Token] = []
+            tokens.append(TText("("))
+            tokens.extend(operand.render())
+            tokens.append(TText(")"))
+            return tokens
+        else:
+            return [TText("operand")]
 
     def render(self, as_operand: bool = False) -> List[Token]:
         display_name = self._config.display_name or self._name
@@ -931,12 +959,16 @@ class SmartUnaryOp(Instruction):
             # Don't render anything here - the conditional will handle it
             return []
         
+        # If we have fused operands, render as a function call
+        if self.fused_operands:
+            tokens: List[Token] = [TInstr(mapped_name), TText("(")]
+            tokens.extend(self._render_operand(self.fused_operands[0]))
+            tokens.append(TText(")"))
+            return tokens
+        
         return [TInstr(mapped_name)]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
-            f"Expected NoData body, got {type(self.op_details.body)}"
-        
         # Get the operand value
         if self.fused_operands:
             # Use fused operand

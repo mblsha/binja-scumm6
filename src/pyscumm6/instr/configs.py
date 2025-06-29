@@ -284,6 +284,7 @@ STACK_CONFIGS: Dict[str, StackConfig] = {
     "land": StackConfig("and_expr", "land", doc="Logical AND"),
     "lor": StackConfig("or_expr", "lor", doc="Logical OR"),
     "nott": StackConfig("nott", is_unary=True, doc="Logical NOT"),
+    "abs": StackConfig("abs", is_unary=True, doc="Absolute value"),
     "eq": StackConfig("compare_equal", "eq", is_comparison=True, doc="Equal"),
     "neq": StackConfig("compare_not_equal", "neq", is_comparison=True, doc="Not equal"),
     "gt": StackConfig("compare_signed_greater_than", "gt", is_comparison=True, doc="Greater than"),

@@ -282,12 +282,8 @@ script_test_cases = [
         expected_disasm_fusion_output=dedent("""
             [0000] localvar5 = (getObjectX(localvar0) - localvar1)
             [000B] localvar6 = (getObjectY(localvar0) - localvar2)
-            [0016] push_word_var(VAR_OVERRIDE)
-            [0019] abs
-            [001A] write_word_var(localvar5)
-            [001D] push_word_var(VAR_MACHINE_SPEED)
-            [0020] abs
-            [0021] write_word_var(localvar6)
+            [0016] localvar5 = abs(localvar5)
+            [001D] localvar6 = abs(localvar6)
             [0024] unless ((localvar5 > localvar3)) jump 38
             [002E] var137 = 0
             [0034] stopScript(0)
@@ -1133,6 +1129,15 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] cursorCommand.charsetColors([0, 6, 2])',
+    ),
+    ScriptComparisonTestCase(
+        test_id="localvar_abs_assignment",
+        bytecode=bytes.fromhex("030540C4430540"),
+        expected_descumm_output=dedent("""
+            [0000] (43) localvar5 = abs(localvar5)
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] localvar5 = abs(localvar5)',
     ),
     ScriptComparisonTestCase(
         test_id="print_system_color_fusion",

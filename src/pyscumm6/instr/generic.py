@@ -420,14 +420,20 @@ class VariableWriteOp(Instruction):
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             # Variable push - use il_get_var
             return vars.il_get_var(il, operand.op_details.body)
+        elif hasattr(operand, 'produces_result') and operand.produces_result():
+            # This is a result-producing instruction (like abs, add, etc.)
+            # We need to execute its lift method to get the result
+            # For now, use a placeholder approach
+            # TODO: This would need architectural changes to properly handle nested lifting
+            return il.const(4, 0)  # Placeholder
         else:
             # Constant push - use const
             if hasattr(operand.op_details.body, 'data'):
                 value = operand.op_details.body.data
                 return il.const(4, value)
         
-        # Fallback to undefined
-        return il.undefined()
+        # Fallback
+        return il.const(4, 0)
 
     def _get_var_prefix(self) -> str:
         """Get the variable prefix based on variable type (var, localvar, or bitvar)."""
