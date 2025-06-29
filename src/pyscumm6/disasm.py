@@ -114,7 +114,7 @@ def decode(data: bytes, addr: int) -> Optional[Instruction]:
         return None
 
 
-def decode_with_fusion(data: bytes, addr: int) -> Optional[Instruction]:
+def decode_with_fusion(data: bytes, addr: int, enable_loop_detection: bool = True) -> Optional[Instruction]:
     """
     Decodes a single (potentially fused) instruction from a byte stream.
     This function applies instruction fusion for contexts like LLIL lifting.
@@ -122,6 +122,7 @@ def decode_with_fusion(data: bytes, addr: int) -> Optional[Instruction]:
     Args:
         data: Raw instruction bytes
         addr: Address of the instruction
+        enable_loop_detection: Whether to apply loop pattern recognition
         
     Returns:
         Instruction object (potentially fused) or None if decoding failed
@@ -135,8 +136,8 @@ def decode_with_fusion(data: bytes, addr: int) -> Optional[Instruction]:
         for instr, _ in fused_iterator:
             last_instruction = instr
         
-        # Apply loop pattern recognition as final step
-        if last_instruction:
+        # Apply loop pattern recognition as final step (if enabled)
+        if last_instruction and enable_loop_detection:
             last_instruction = _apply_loop_detection(last_instruction, addr)
             
         return last_instruction
@@ -144,7 +145,7 @@ def decode_with_fusion(data: bytes, addr: int) -> Optional[Instruction]:
         return None
 
 
-def decode_with_fusion_incremental(data: bytes, addr: int) -> Optional[Instruction]:
+def decode_with_fusion_incremental(data: bytes, addr: int, enable_loop_detection: bool = True) -> Optional[Instruction]:
     """
     Decodes a single instruction with fusion, suitable for incremental parsing.
     Returns the first (complete) instruction for step-by-step disassembly.
@@ -152,6 +153,7 @@ def decode_with_fusion_incremental(data: bytes, addr: int) -> Optional[Instructi
     Args:
         data: Raw instruction bytes
         addr: Address of the instruction
+        enable_loop_detection: Whether to apply loop pattern recognition
         
     Returns:
         First instruction object (potentially fused) or None if decoding failed
@@ -161,9 +163,12 @@ def decode_with_fusion_incremental(data: bytes, addr: int) -> Optional[Instructi
     # For incremental parsing, we want the first complete result
     try:
         for instr, _ in fused_iterator:
-            # Apply loop pattern recognition as final step
-            enhanced_instr = _apply_loop_detection(instr, addr)
-            return enhanced_instr
+            # Apply loop pattern recognition as final step (if enabled)
+            if enable_loop_detection:
+                enhanced_instr = _apply_loop_detection(instr, addr)
+                return enhanced_instr
+            else:
+                return instr
         
         return None
     except StopIteration:

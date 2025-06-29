@@ -315,7 +315,7 @@ script_test_cases = [
             [0116] localvar11 = (localvar11 * 4)
             [0120] unless ((localvar11 >= 64)) jump 130
             [012A] localvar12 = 1
-            [0130] while (localvar12) { # 92 bytes
+            [0130] unless ((localvar12)) jump d4
             [0136] unless ((localvar3 == 0)) jump 166
             [0140] localvar3 = 1
             [0146] printDebug.begin()

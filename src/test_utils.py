@@ -193,12 +193,13 @@ def run_scumm6_disassembler(bytecode: bytes, start_addr: int) -> str:
     return '\n'.join(output_lines)
 
 
-def run_scumm6_disassembler_with_fusion(bytecode: bytes, start_addr: int) -> str:
+def run_scumm6_disassembler_with_fusion(bytecode: bytes, start_addr: int, enable_loop_detection: bool = False) -> str:
     """Execute SCUMM6 disassembler with instruction fusion and return formatted output.
     
     Args:
         bytecode: SCUMM6 bytecode to disassemble
         start_addr: Starting address for disassembly
+        enable_loop_detection: Whether to enable loop pattern recognition (default False for descumm compatibility)
         
     Returns:
         Formatted disassembly output with fusion as string
@@ -212,8 +213,8 @@ def run_scumm6_disassembler_with_fusion(bytecode: bytes, start_addr: int) -> str
         addr = start_addr + offset
         remaining_data = bytecode[offset:]
 
-        # Use fusion-enabled decoder
-        instruction = decode_with_fusion_incremental(remaining_data, addr)
+        # Use fusion-enabled decoder with optional loop detection
+        instruction = decode_with_fusion_incremental(remaining_data, addr, enable_loop_detection)
         if instruction is None:
             break
 
@@ -228,12 +229,13 @@ def run_scumm6_disassembler_with_fusion(bytecode: bytes, start_addr: int) -> str
     return '\n'.join(output_lines)
 
 
-def run_scumm6_disassembler_with_fusion_details(bytecode: bytes, start_addr: int) -> Tuple[str, List[Dict[str, Any]]]:
+def run_scumm6_disassembler_with_fusion_details(bytecode: bytes, start_addr: int, enable_loop_detection: bool = False) -> Tuple[str, List[Dict[str, Any]]]:
     """Execute new SCUMM6 disassembler with fusion and return disassembly text with fusion details.
     
     Args:
         bytecode: SCUMM6 bytecode to disassemble
         start_addr: Starting address for disassembly
+        enable_loop_detection: Whether to enable loop pattern recognition (default False for descumm compatibility)
         
     Returns:
         Tuple of (disassembly_text, fusion_spans) where fusion_spans is a list of dicts
@@ -249,8 +251,8 @@ def run_scumm6_disassembler_with_fusion_details(bytecode: bytes, start_addr: int
         addr = start_addr + offset
         remaining_data = bytecode[offset:]
 
-        # Use fusion-enabled decoder
-        instruction = decode_with_fusion_incremental(remaining_data, addr)
+        # Use fusion-enabled decoder with optional loop detection
+        instruction = decode_with_fusion_incremental(remaining_data, addr, enable_loop_detection)
         if instruction is None:
             break
 
@@ -302,9 +304,11 @@ def run_scumm6_llil_generation(bytecode: bytes, start_addr: int, use_fusion: boo
         List of (offset, llil_operation) tuples
     """
     if use_fusion:
-        from .pyscumm6.disasm import decode_with_fusion_incremental as decode_func
+        from .pyscumm6.disasm import decode_with_fusion_incremental
+        decode_func = lambda data, addr: decode_with_fusion_incremental(data, addr, enable_loop_detection=False)
     else:
-        from .pyscumm6.disasm import decode as decode_func
+        from .pyscumm6.disasm import decode
+        decode_func = decode
     
     llil_operations = []
     offset = 0
