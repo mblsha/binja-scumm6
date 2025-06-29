@@ -164,7 +164,7 @@ script_test_cases = [
             [002A] gt
             [002B] unless goto +10
             [002E] push_word(0)
-            [0031] write_word_var(var_137)
+            [0031] write_word_var(var137)
             [0034] push_word(0)
             [0037] stopScript()
             [0038] push_word_var(VAR_MACHINE_SPEED)
@@ -172,7 +172,7 @@ script_test_cases = [
             [003E] gt
             [003F] unless goto +10
             [0042] push_word(0)
-            [0045] write_word_var(var_137)
+            [0045] write_word_var(var137)
             [0048] push_word(0)
             [004B] stopScript()
             [004C] push_word_var(VAR_OVERRIDE)
@@ -264,19 +264,19 @@ script_test_cases = [
             [01A8] mul
             [01A9] div
             [01AA] add
-            [01AB] write_word_var(var_137)
-            [01AE] push_word_var(var_137)
+            [01AB] write_word_var(var137)
+            [01AE] push_word_var(var137)
             [01B1] push_word(0)
             [01B4] eq
             [01B5] unless goto +6
             [01B8] push_word(1)
-            [01BB] write_word_var(var_137)
-            [01BE] push_word_var(var_137)
+            [01BB] write_word_var(var137)
+            [01BE] push_word_var(var137)
             [01C1] push_word_var(VAR_TMR_1)
             [01C4] gt
             [01C5] unless goto +6
             [01C8] push_word(0)
-            [01CB] write_word_var(var_137)
+            [01CB] write_word_var(var137)
             [01CE] stopObjectCodeB()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
@@ -289,10 +289,10 @@ script_test_cases = [
             [0020] abs
             [0021] write_word_var(localvar6)
             [0024] unless ((localvar5 > localvar3)) jump 38
-            [002E] var_137 = 0
+            [002E] var137 = 0
             [0034] stopScript(0)
             [0038] unless ((localvar6 > localvar4)) jump 4c
-            [0042] var_137 = 0
+            [0042] var137 = 0
             [0048] stopScript(0)
             [004C] localvar7 = (localvar5 * localvar5)
             [0056] localvar8 = (localvar6 * localvar6)
