@@ -120,6 +120,7 @@ DESCUMM_FUNCTION_NAMES = {
     "room_ops.room_savegame": "roomOps.saveLoadRoom",
     # Cursor commands
     "cursor_command": "cursorCommand",
+    "cursorCommand.userputOff": "cursorCommand.userPutOff",
     # Verb operations subcommands
     "verb_ops.verb_init": "verbOps.setCurVerb",
     "verb_ops.verb_new": "verbOps.init",
