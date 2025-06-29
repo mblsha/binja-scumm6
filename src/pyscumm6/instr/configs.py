@@ -1,7 +1,22 @@
 """Metadata-driven instruction configurations."""
 
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Literal
+
+# Render pattern types
+RenderPattern = Literal[
+    "simple",           # Just the instruction name
+    "function",         # name()
+    "function_params",  # name(param1, param2, ...)
+    "assignment",       # var_x = value
+    "array_access",     # array_x[index]
+    "array_assign",     # array_x[index] = value
+    "infix",           # left op right (e.g., a + b)
+    "prefix",          # op operand (e.g., ++var)
+    "postfix",         # operand op (e.g., var++)
+    "complex",         # name.subop()
+    "custom"           # Use custom render method
+]
 
 # ============================================================================
 # CONFIGURATION HELPER FUNCTIONS - For concise config creation
@@ -30,6 +45,7 @@ class IntrinsicConfig:
     push_count: int = 0
     doc: str = ""
     special_lift: Optional[str] = None  # Name of special lift method
+    render_pattern: RenderPattern = "function"  # Default pattern for intrinsics
 
 @dataclass  
 class VariableConfig:
@@ -37,6 +53,7 @@ class VariableConfig:
     var_type: str  # "byte" or "word"
     operation: str  # "inc", "dec", "read", "write"
     doc: str = ""
+    render_pattern: RenderPattern = "custom"  # Variables need custom rendering
 
 @dataclass
 class ArrayConfig:
@@ -45,12 +62,14 @@ class ArrayConfig:
     operation: str     # "read", "write", "inc", "dec"
     indexed: bool = False
     doc: str = ""
+    render_pattern: RenderPattern = "custom"  # Arrays need custom rendering
 
 @dataclass
 class ComplexConfig:
     """Configuration for complex operations with sub-commands."""
     body_type_name: str  # e.g., "ActorOps", "VerbOps"
     doc: str = ""
+    render_pattern: RenderPattern = "complex"  # Default for complex ops
 
 @dataclass
 class StackConfig:
@@ -60,6 +79,7 @@ class StackConfig:
     is_comparison: bool = False
     is_unary: bool = False
     doc: str = ""
+    render_pattern: RenderPattern = "custom"  # Stack ops vary widely
 
 @dataclass
 class SemanticIntrinsicConfig(IntrinsicConfig):

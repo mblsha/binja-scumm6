@@ -320,13 +320,35 @@ class SmartIntrinsicOp(Instruction):
         return self._config.push_count > 0
     
     def render(self, as_operand: bool = False) -> List[Token]:
-        # Use descumm-style function names for better semantic clarity
+        # Use configuration-driven rendering if available
+        if hasattr(self._config, 'render_pattern'):
+            return self._render_from_config(as_operand)
+        
+        # Default behavior
+        from .helpers import apply_descumm_function_name
+        display_name = apply_descumm_function_name(self._name)
+        return [TInstr(f"{display_name}()")]
+    
+    def _render_from_config(self, as_operand: bool = False) -> List[Token]:
+        """Render instruction based on configuration pattern."""
         from .helpers import apply_descumm_function_name
         display_name = apply_descumm_function_name(self._name)
         
-        # Add parentheses for function call syntax consistency
-        # For descumm literal compatibility, always show () instead of (...)
-        return [TInstr(f"{display_name}()")]
+        pattern = self._config.render_pattern
+        
+        if pattern == "simple":
+            return [TInstr(display_name)]
+        elif pattern == "function":
+            return [TInstr(f"{display_name}()")]
+        elif pattern == "function_params":
+            # This would need fused operands or parameters from config
+            tokens = [TInstr(display_name), TSep("(")]
+            # Add parameter rendering logic here if needed
+            tokens.append(TSep(")"))
+            return tokens
+        else:
+            # Fallback to default
+            return [TInstr(f"{display_name}()")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         # Handle special lift cases
