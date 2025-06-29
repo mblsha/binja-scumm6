@@ -73,7 +73,7 @@ def test_get_state_fusion() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "get_state(var0)"
+    assert text == "getState(var0)"
 
 
 def test_get_object_x_fusion_with_constant() -> None:

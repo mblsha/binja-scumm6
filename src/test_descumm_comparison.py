@@ -432,7 +432,7 @@ script_test_cases = [
             [0007] push_word_var(VAR_ME)
             [000A] write_word_var(localvar0)
             [000D] push_word_var(VAR_KEYPRESS)
-            [0010] get_state()
+            [0010] getState()
             [0011] push_word(1)
             [0014] neq
             [0015] unless goto +208
@@ -483,7 +483,7 @@ script_test_cases = [
         expected_disasm_fusion_output=dedent("""
             [0000] unless ((!localvar0)) jump d
             [0007] localvar0 = var7
-            [000D] unless ((get_state(localvar0) != 1)) jump e8
+            [000D] unless ((getState(localvar0) != 1)) jump e8
             [0018] unless ((ifClassOfIs(localvar0, [6]))) jump 42
             [0025] setState(localvar0, 1)
             [002C] unless ((localvar1)) jump 39

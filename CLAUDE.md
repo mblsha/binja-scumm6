@@ -1642,3 +1642,220 @@ mypy --explicit-package-bases src/
 # Mock Binary Ninja (for CI/testing)
 FORCE_BINJA_MOCK=1 mypy --explicit-package-bases src/
 ```
+
+## Non-Obvious Implementation Insights
+
+This section captures critical insights that are not immediately obvious from code inspection but are essential for successful plugin development.
+
+### Kaitai Parsing Edge Cases and Workarounds
+
+#### 1. Enum vs Raw Integer Parsing
+**Problem**: Kaitai parsers sometimes return raw integers instead of enum objects, particularly for opcodes like 0xFF.
+
+**Discovery**: In `scumm6_opcodes.ksy`, the mapping `255: endd` is parsed as a raw string instead of properly handling the `end` operation.
+
+**Solution Pattern**:
+```python
+# Always handle both enum and raw integer cases
+def process_subop(self, subop: Any) -> str:
+    if isinstance(subop, int):
+        try:
+            subop = MyEnumType(subop)
+        except ValueError:
+            return f"unknown_{subop}"
+    return subop.name
+```
+
+**Critical Insight**: Add mappings for both correct and incorrect Kaitai parsing:
+```python
+DESCUMM_FUNCTION_NAMES = {
+    "print_system.end": "printSystem.end",      # Correct mapping
+    "print_system.endd": "printSystem.end",     # Handle Kaitai typo
+}
+```
+
+#### 2. Complex Operation Subop Mapping Requirements
+**Problem**: Complex operations like `PrintSystem` don't automatically apply function name mappings.
+
+**Discovery**: Each complex operation class needs explicit mapping application in its `render()` method.
+
+**Solution**: 
+```python
+# Apply descumm function name mapping in render method
+from .smart_bases import DESCUMM_FUNCTION_NAMES
+display_name = f"print_system.{subop_name}"
+display_name = DESCUMM_FUNCTION_NAMES.get(display_name, display_name)
+
+# Extract subop part for display
+if "." in display_name:
+    subop_display = display_name.split(".", 1)[1]
+```
+
+**Key Insight**: The global mapping system doesn't automatically apply to dynamically constructed operation names.
+
+### Fusion System Architecture Insights
+
+#### 1. FUSIBLE_INSTRUCTIONS Configuration is Critical
+**Problem**: Instructions can render fusion correctly but fail to generate proper LLIL.
+
+**Root Cause**: The `FUSIBLE_INSTRUCTIONS` set in `factories.py` determines whether an instruction gets fusion capabilities at the base class level.
+
+**Solution**: Always add new fusible instructions to both:
+1. `DESCUMM_FUNCTION_NAMES` for display
+2. `FUSIBLE_INSTRUCTIONS` for fusion capability
+
+**Critical Pattern**:
+```python
+# In factories.py
+FUSIBLE_INSTRUCTIONS = {
+    "get_actor_anim_counter",  # Must be here for fusion to work
+    # ... other instructions
+}
+
+# In smart_bases.py  
+DESCUMM_FUNCTION_NAMES = {
+    "get_actor_anim_counter": "getActorAnimCounter1",  # Must be here for naming
+    # ... other mappings
+}
+```
+
+#### 2. Base Class Selection Determines Fusion Behavior
+**Discovery**: The factory system chooses between `SmartIntrinsicOp` (no fusion) and `SmartFusibleIntrinsic` (fusion support) based on the `FUSIBLE_INSTRUCTIONS` set.
+
+**Implication**: You cannot add fusion to an instruction by modifying the instruction class alone - it must be configured at the factory level.
+
+**Debugging Tip**: If fusion isn't working, check if the instruction name is in `FUSIBLE_INSTRUCTIONS` before investigating the fusion logic.
+
+### Descumm Compatibility Patterns
+
+#### 1. Function Name Patterns Follow Strict Rules
+**Discovery**: Descumm uses consistent camelCase patterns that must be followed exactly:
+
+- **Objects**: `getObjectX`, `getObjectY`, `getObjectDir` (not `getObjectOldDir`)
+- **Actors**: `getActorScaleX`, `getActorAnimCounter1` (note the "1" suffix)
+- **Distances**: `getDistObjObj` (abbreviated form)
+- **Cursor Commands**: Soft variants use "soft" prefix: `softCursorOff`, `softUserputOn`
+
+**Critical Insight**: These are not arbitrary names - they match descumm's exact output and must be preserved for compatibility.
+
+#### 2. Cursor Command Naming Conventions
+**Pattern Discovery**: Cursor commands follow a specific soft/hard naming pattern:
+- Hard commands: `cursorOff`, `userPutOff` 
+- Soft commands: `softCursorOff`, `softUserputOff`
+- The "soft" prefix applies to the entire operation name
+
+**Implementation Rule**: Always add both "on" and "off" variants when implementing cursor command mappings.
+
+### Testing and Validation Insights
+
+#### 1. Real Game Data Reveals Hidden Patterns
+**Key Discovery**: Using `DOTTDEMO.bsc6` real game scripts reveals edge cases that synthetic tests miss.
+
+**Critical Examples**:
+- Kaitai parsing inconsistencies only appear with certain bytecode sequences
+- Parameter ordering issues only manifest with multi-parameter operations
+- Variable naming edge cases occur with specific variable ID ranges
+
+**Best Practice**: Always validate changes against real game scripts, not just unit tests.
+
+#### 2. Hard-Coded Bytecode Tests Are More Reliable
+**Problem**: Tests using script names can break when script extraction logic changes.
+
+**Solution**: Use hard-coded bytecode for critical test cases:
+```python
+ScriptComparisonTestCase(
+    test_id="print_system_color_fusion",
+    bytecode=bytes.fromhex("0005B742"),  # Explicit, reliable
+    # vs script_name="some_script"  # Can break if extraction changes
+)
+```
+
+**Insight**: Hard-coded bytecode provides test stability and makes test intent explicit.
+
+#### 3. MyPy Error Patterns Predict Runtime Issues
+**Discovery**: Specific mypy error patterns correlate with runtime stability problems:
+
+- `[assignment]` errors often indicate incorrect stub definitions
+- `[unused-ignore]` indicates code improvements made the ignore obsolete
+- `[unreachable]` reveals dead code that should be removed
+
+**Rule**: Fix mypy errors by improving code, not by adding ignores.
+
+### Performance and Scalability Insights
+
+#### 1. Function Name Mapping Lookup Performance
+**Discovery**: The `DESCUMM_FUNCTION_NAMES` dictionary is accessed frequently during rendering.
+
+**Optimization**: The current O(1) lookup is efficient, but consider caching for very hot paths if needed.
+
+**Measurement**: With 173 tests and 50+ mappings, lookup performance is not currently a bottleneck.
+
+#### 2. Fusion Memory Usage Patterns
+**Insight**: Fused instructions create object trees that consume more memory than flat sequences.
+
+**Trade-off**: Better decompilation quality vs. increased memory usage.
+
+**Monitoring**: Track memory usage with complex real-world scripts to detect pathological cases.
+
+### Integration and Deployment Insights
+
+#### 1. Binary Ninja Plugin Loading Order Matters
+**Discovery**: Plugin initialization order can affect LLIL generation if other plugins modify the same architecture.
+
+**Best Practice**: Make the plugin as self-contained as possible to avoid conflicts.
+
+#### 2. Mock vs Real Binary Ninja Testing Requirements
+**Critical Insight**: Both environments must be tested because they can reveal different issues:
+
+- **Mock environment**: Reveals type errors and logic issues
+- **Real environment**: Reveals Binary Ninja integration problems and performance issues
+
+**Implementation**: The test runner automatically tests both environments to catch all issue categories.
+
+### Architecture Decision Rationale
+
+#### 1. Why Separate decode() and decode_with_fusion()
+**Decision**: Keep fusion and non-fusion decoders separate rather than having one configurable decoder.
+
+**Rationale**: 
+- Different use cases need different optimizations
+- Fusion adds complexity that's not always needed
+- Easier to debug and test separately
+- Better performance for non-fusion cases
+
+#### 2. Why Global DESCUMM_FUNCTION_NAMES Dictionary
+**Decision**: Use a single global mapping instead of per-class mappings.
+
+**Rationale**:
+- Single source of truth prevents inconsistencies
+- Easier to maintain and update
+- Allows for systematic validation of coverage
+- Enables bulk operations (e.g., "show all unmapped functions")
+
+**Trade-off**: Slight coupling between classes, but much better maintainability.
+
+### Future Development Guidelines
+
+#### 1. Adding New Function Mappings
+**Process**:
+1. Add to `DESCUMM_FUNCTION_NAMES` dictionary
+2. Add to `FUSIBLE_INSTRUCTIONS` if it takes parameters
+3. Add test case with hard-coded bytecode
+4. Validate against real game scripts
+
+#### 2. Debugging Fusion Issues
+**Systematic Approach**:
+1. Check if instruction is in `FUSIBLE_INSTRUCTIONS`
+2. Verify base class selection in factory
+3. Test with simple bytecode sequences first
+4. Compare `decode()` vs `decode_with_fusion()` outputs
+5. Validate LLIL generation separately
+
+#### 3. Performance Optimization Priorities
+**Order of Investigation**:
+1. LLIL generation efficiency (most impact on Binary Ninja)
+2. Fusion algorithm complexity (affects large scripts)
+3. Memory usage patterns (affects long-running analysis)
+4. Function name lookup performance (usually not a bottleneck)
+
+These insights represent the accumulated knowledge from implementing 50+ function mappings, debugging complex fusion edge cases, and achieving descumm-level compatibility across multiple instruction types.

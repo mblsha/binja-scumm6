@@ -71,6 +71,7 @@ DESCUMM_FUNCTION_NAMES = {
     "get_object_x": "getObjectX",
     "get_object_y": "getObjectY",
     "get_object_old_dir": "getObjectDir",
+    "get_state": "getState",
     "get_random_number": "getRandomNumber",
     "dist_object_object": "getDistObjObj",
     "is_any_of": "isAnyOf",
