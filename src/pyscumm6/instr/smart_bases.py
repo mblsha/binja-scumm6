@@ -26,6 +26,7 @@ DESCUMM_FUNCTION_NAMES = {
     "animate_actor": "animateActor",
     "walk_actor_to": "walkActorTo",
     "cutscene": "beginCutscene",
+    "end_cutscene": "endCutscene",
     "put_actor_at_xy": "putActorInXY",
     "put_actor_in_xy": "putActorInXY",
     "face_actor": "faceActor",
