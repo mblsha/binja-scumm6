@@ -120,7 +120,7 @@ DESCUMM_FUNCTION_NAMES = {
     "verb_ops.verb_color": "verbOps.setColor",
     "verb_ops.verb_hicolor": "verbOps.setHiColor",
     "verb_ops.verb_redraw": "verbOps.redraw",
-    "verb_ops.verb_dim": "verbOps.dim",
+    "verb_ops.verb_dim": "verbOps.setDimmed",
     "verb_ops.verb_key": "verbOps.setKey",
     "verb_ops.verb_center": "verbOps.setCenter",
     "verb_ops.verb_name_str": "verbOps.setNameStr",
