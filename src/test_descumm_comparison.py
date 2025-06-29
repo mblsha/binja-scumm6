@@ -324,11 +324,11 @@ script_test_cases = [
             [0170] localvar4 = 1
             [0176] printDebug.begin()
             [0178] printDebug.msg("very flat ellipse warning")
-            [0194] var_137 = ((localvar7 / (localvar3 * localvar3)) + (localvar8 / (localvar4 * localvar4)))
-            [01AE] unless ((var_137 == 0)) jump 1be
-            [01B8] var_137 = 1
-            [01BE] unless ((var_137 > localvar11)) jump 1ce
-            [01C8] var_137 = 0
+            [0194] var137 = ((localvar7 / (localvar3 * localvar3)) + (localvar8 / (localvar4 * localvar4)))
+            [01AE] unless ((var137 == 0)) jump 1be
+            [01B8] var137 = 1
+            [01BE] unless ((var137 > localvar11)) jump 1ce
+            [01C8] var137 = 0
             [01CE] stopObjectCodeB()
         """).strip(),
     ),
@@ -484,7 +484,7 @@ script_test_cases = [
             [0000] unless ((!localvar0)) jump d
             [0007] localvar0 = var7
             [000D] unless ((get_state(localvar0) != 1)) jump e8
-            [0018] unless ((ifClassOfIs(localvar0,[6]))) jump 42
+            [0018] unless ((ifClassOfIs(localvar0, [6]))) jump 42
             [0025] setState(localvar0, 1)
             [002C] unless ((localvar1)) jump 39
             [0032] setState(localvar1, 1)
@@ -826,11 +826,11 @@ script_test_cases = [
         """).strip(),
         expected_disasm_output=dedent("""
             [0000] push_word(200)
-            [0003] write_word_var(var_137)
+            [0003] write_word_var(var137)
             [0006] jump 0
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] var_137 = 200
+            [0000] var137 = 200
             [0006] jump 0
         """).strip(),
     ),
@@ -922,7 +922,7 @@ script_test_cases = [
             [0000] (5D) unless ((ifClassOfIs(localvar1,[139]))) jump 17
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] unless ((ifClassOfIs(localvar1,[139]))) jump 10',
+        expected_disasm_fusion_output='[0000] unless ((ifClassOfIs(localvar1, [139]))) jump 10',
     ),
     ScriptComparisonTestCase(
         test_id="draw_object_with_nested_expression",
@@ -1045,7 +1045,7 @@ script_test_cases = [
             [0000] (5D) unless ((isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]))) jump 3f
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] unless ((isAnyOf(VAR_ROOM,[44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]))) jump 5',
+        expected_disasm_fusion_output='[0000] unless ((isAnyOf(VAR_ROOM,[44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59]))) jump 5',
     ),
     ScriptComparisonTestCase(
         test_id="is_script_running_negated_conditional",

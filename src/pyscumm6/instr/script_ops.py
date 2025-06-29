@@ -96,7 +96,7 @@ class StartScriptQuick(SmartSemanticIntrinsicOp):
             # Script ID (first in fused_operands due to LIFO)
             script_id_op = self.fused_operands[0]
             tokens.extend(self._render_operand(script_id_op))
-            tokens.append(TSep(","))
+            tokens.append(TSep(", "))
             
             # Arguments as array
             tokens.append(TSep("["))
@@ -104,7 +104,7 @@ class StartScriptQuick(SmartSemanticIntrinsicOp):
             # The last element is arg_count which we skip
             for i in range(1, self._arg_count + 1):
                 if i > 1:
-                    tokens.append(TSep(","))
+                    tokens.append(TSep(", "))
                 tokens.extend(self._render_operand(self.fused_operands[i]))
             tokens.append(TSep("]"))
             
@@ -200,18 +200,18 @@ class StartScript(SmartSemanticIntrinsicOp):
             
             # script_id (first in fused_operands due to LIFO)
             tokens.extend(self._render_operand(self.fused_operands[0]))
-            tokens.append(TSep(","))
+            tokens.append(TSep(", "))
             
             # flags (second)
             tokens.extend(self._render_operand(self.fused_operands[1]))
-            tokens.append(TSep(","))
+            tokens.append(TSep(", "))
             
             # Arguments array
             tokens.append(TSep("["))
             # Arguments are from index 2 to 2+arg_count (exclusive of arg_count itself)
             for i in range(2, 2 + self._arg_count):
                 if i > 2:
-                    tokens.append(TSep(","))
+                    tokens.append(TSep(", "))
                 tokens.extend(self._render_operand(self.fused_operands[i]))
             tokens.append(TSep("]"))
             
@@ -306,7 +306,7 @@ class StartObject(SmartSemanticIntrinsicOp):
                 
                 # Object ID (first due to LIFO)
                 tokens.extend(self._render_operand(self.fused_operands[0]))
-                tokens.append(TSep(","))
+                tokens.append(TSep(", "))
                 
                 # Script (variable)
                 script_op = self.fused_operands[1]
@@ -319,18 +319,18 @@ class StartObject(SmartSemanticIntrinsicOp):
                         tokens.extend(self._render_operand(script_op))
                 else:
                     tokens.extend(self._render_operand(script_op))
-                tokens.append(TSep(","))
+                tokens.append(TSep(", "))
                 
                 # Entrypoint
                 tokens.extend(self._render_operand(self.fused_operands[2]))
-                tokens.append(TSep(","))
+                tokens.append(TSep(", "))
                 
                 # Arguments array
                 tokens.append(TSep("["))
                 # Arguments are from index 3 to 3+arg_count (exclusive of arg_count itself)
                 for i in range(3, 3 + self._arg_count):
                     if i > 3:
-                        tokens.append(TSep(","))
+                        tokens.append(TSep(", "))
                     tokens.extend(self._render_operand(self.fused_operands[i]))
                 tokens.append(TSep("]"))
                 
@@ -454,7 +454,7 @@ class IsAnyOf(SmartVariableArgumentIntrinsic):
         tokens.append(TSep("["))
         for i in range(1, self._arg_count + 1):
             if i > 1:
-                tokens.append(TSep(","))  # No space after comma
+                tokens.append(TSep(", "))  # No space after comma
             tokens.extend(self._render_operand(self.fused_operands[i]))
         tokens.append(TSep("]"))
         
