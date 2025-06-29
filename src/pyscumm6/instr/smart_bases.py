@@ -129,6 +129,7 @@ DESCUMM_FUNCTION_NAMES = {
     "cursorCommand.userputOn": "cursorCommand.userPutOn",
     "cursorCommand.userputOff": "cursorCommand.userPutOff",
     "cursorCommand.off": "cursorCommand.cursorOff",
+    "cursorCommand.softOff": "cursorCommand.softCursorOff",
     # Verb operations subcommands
     "verb_ops.verb_init": "verbOps.setCurVerb",
     "verb_ops.verb_new": "verbOps.init",
