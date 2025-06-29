@@ -108,6 +108,7 @@ DESCUMM_FUNCTION_NAMES = {
     "room_ops.room_intensity": "roomOps.darkenPalette",
     "room_ops.rgb_room_intensity": "roomOps.darkenPalette",
     "room_ops.room_fade": "roomOps.screenEffect",
+    "room_ops.room_new_palette": "roomOps.setPalette",
     # Cursor commands
     "cursor_command": "cursorCommand",
     # Verb operations subcommands
