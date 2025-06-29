@@ -1,7 +1,7 @@
 """New decoder implementation using object-oriented instruction classes."""
 
 from typing import Optional, Iterator, Tuple, List
-from kaitaistruct import KaitaiStream, KaitaiStructError
+from kaitaistruct import KaitaiStream, KaitaiStructError  # type: ignore[import-untyped]
 from io import BytesIO
 import logging
 
