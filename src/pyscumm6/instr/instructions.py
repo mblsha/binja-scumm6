@@ -2340,14 +2340,16 @@ class CursorCommand(FusibleMultiOperandMixin, Instruction):
         if hasattr(subop_body, "pop_list") and subop_body.pop_list:
             # For list operations, we need to get the count from the stack
             # This is a special case where we need to look at previous instructions
-            # For now, return a reasonable default for charsetColors (3 params)
             if self.op_details.body.subop.name == "charset_color":
                 # The last fused operand should be the count
                 if self.fused_operands and len(self.fused_operands) > 0:
                     last_operand = self.fused_operands[-1]
                     if hasattr(last_operand.op_details.body, 'data'):
-                        return int(last_operand.op_details.body.data)
-                return 4  # Default: count + 3 colors
+                        # Return count + 1 to include the count parameter itself
+                        return int(last_operand.op_details.body.data) + 1
+                # If no fused operands, we need to allow fusion to start
+                # Return a reasonable maximum to allow initial fusion
+                return 10  # Allow up to 10 operands until we know the actual count
             return 0
         
         return getattr(subop_body, "pop_count", 0)
@@ -2416,14 +2418,28 @@ class CursorCommand(FusibleMultiOperandMixin, Instruction):
                         tokens.append(TText("["))
                         # Show the actual values (all operands except the last one)
                         value_operands = self.fused_operands[:-1]
-                        for i, operand in enumerate(value_operands[:count]):
+                        # Use min to handle cases where we have fewer operands than expected
+                        actual_count = min(count, len(value_operands))
+                        for i, operand in enumerate(value_operands[:actual_count]):
+                            if i > 0:
+                                tokens.append(TSep(", "))
+                            tokens.extend(self._render_operand(operand))
+                        # Add ellipsis if we expect more parameters than we have
+                        if count > len(value_operands):
+                            if len(value_operands) > 0:
+                                tokens.append(TSep(", "))
+                            tokens.append(TText("..."))
+                        tokens.append(TText("]"))
+                    else:
+                        # Fallback if we can't extract count
+                        tokens.append(TText("["))
+                        # Show all values except the last (count) operand
+                        value_operands = self.fused_operands[:-1]
+                        for i, operand in enumerate(value_operands):
                             if i > 0:
                                 tokens.append(TSep(", "))
                             tokens.extend(self._render_operand(operand))
                         tokens.append(TText("]"))
-                    else:
-                        # Fallback if we can't extract count
-                        tokens.append(TText("[..."))
                 else:
                     tokens.append(TText("[]"))
             else:

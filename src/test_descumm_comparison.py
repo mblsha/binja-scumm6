@@ -1126,6 +1126,15 @@ script_test_cases = [
         expected_disasm_fusion_output='[0000] cursorCommand.cursorOff()',
     ),
     ScriptComparisonTestCase(
+        test_id="cursor_command_charset_colors",
+        bytecode=bytes.fromhex("0100000106000102000103006B9D"),
+        expected_descumm_output=dedent("""
+            [0000] (6B) cursorCommand.charsetColors([0,6,2])
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] cursorCommand.charsetColors([0, 6, 2])',
+    ),
+    ScriptComparisonTestCase(
         test_id="print_system_color_fusion",
         bytecode=bytes.fromhex("0005B742"),
         expected_descumm_output=dedent("""
