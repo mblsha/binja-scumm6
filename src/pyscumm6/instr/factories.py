@@ -88,7 +88,7 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
         _config = config
         __doc__ = config.doc
         
-        def render(self) -> List[Token]:
+        def render(self, as_operand: bool = False) -> List[Token]:
             return super().render()  # type: ignore[no-any-return]
     
     GeneratedIntrinsicOp.__name__ = name.title().replace("_", "")
@@ -167,7 +167,7 @@ def create_semantic_intrinsic_instruction(name: str, config: SemanticIntrinsicCo
         _config = config
         __doc__ = config.doc
         
-        def render(self) -> List[Token]:
+        def render(self, as_operand: bool = False) -> List[Token]:
             return super().render()
     
     GeneratedSemanticIntrinsicOp.__name__ = name.title().replace("_", "")

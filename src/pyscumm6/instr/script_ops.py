@@ -86,7 +86,7 @@ class StartScriptQuick(SmartSemanticIntrinsicOp):
         # No more fusion possible
         return None
         
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         """Render in descumm style: startScriptQuick(script_id, [args])"""
         if self.fused_operands and self._arg_count is not None and len(self.fused_operands) >= self._arg_count + 2:
             # We have script_id, arg_count, and arguments
@@ -192,7 +192,7 @@ class StartScript(SmartSemanticIntrinsicOp):
         
         return None
         
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         """Render as: startScript(script_id, flags, [arg1, arg2, ...])"""
         if self.fused_operands and self._arg_count is not None and len(self.fused_operands) >= self._arg_count + 3:
             # We have all operands: script_id, flags, args..., arg_count
@@ -295,7 +295,7 @@ class StartObject(SmartSemanticIntrinsicOp):
         # No more fusion possible
         return None
         
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         """Render in descumm style: startObject(object_id, script, entrypoint, [args])"""
         if self.fused_operands and self._arg_count is not None:
             total_needed = 3 + self._arg_count + 1

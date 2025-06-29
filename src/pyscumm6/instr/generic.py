@@ -9,7 +9,7 @@ from binaryninja.enums import BranchType
 from binaryninja import InstructionInfo
 
 from .opcodes import Instruction
-from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[import-untyped]
 
 
 def make_push_constant_instruction(
@@ -20,7 +20,7 @@ def make_push_constant_instruction(
     """Factory to create a class for instructions that push a constant."""
 
     class PushConstant(Instruction):
-        def render(self) -> List[Token]:
+        def render(self, as_operand: bool = False) -> List[Token]:
             value = self.op_details.body.data
             return [TInstr(name), TSep("("), TInt(str(value)), TSep(")")]
 
@@ -49,7 +49,7 @@ def make_intrinsic_instruction(
         def stack_pop_count(self) -> int:
             return pop_count
 
-        def render(self) -> List[Token]:
+        def render(self, as_operand: bool = False) -> List[Token]:
             from .smart_bases import DESCUMM_FUNCTION_NAMES
             display_name = DESCUMM_FUNCTION_NAMES.get(name, name)
             return [TInstr(display_name)]
@@ -82,7 +82,7 @@ class BinaryStackOp(Instruction):
         """The name of the LowLevelILFunction method to call (e.g., 'add', 'sub')."""
         pass
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         # Map IL operation names to instruction display names
         name_map = {
             'add': 'add',
@@ -127,7 +127,7 @@ class UnaryStackOp(Instruction):
         """Whether this operation needs to compare with zero (for logical NOT)."""
         return False
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         # Map IL operation names to instruction display names
         name_map = {
             'nott': 'nott'  # Keep as is for logical NOT
@@ -162,7 +162,7 @@ class ComparisonStackOp(Instruction):
         """The name of the LowLevelILFunction comparison method to call."""
         pass
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         # Map IL operation names to instruction display names
         name_map = {
             'compare_equal': 'eq',
@@ -250,7 +250,7 @@ class VariableWriteOp(Instruction):
         """The expected Kaitai struct body type."""
         pass
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         # Check for fusion first, before UnknownOp case
         if self.fused_operands:
             # For fused operands, we need to extract the variable ID
@@ -479,7 +479,7 @@ class IntrinsicOp(Instruction):
         else:
             return 0
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         """Default rendering just shows the intrinsic name."""
         return [TInstr(self.intrinsic_name)]
     

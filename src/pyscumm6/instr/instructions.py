@@ -5,7 +5,7 @@ import copy
 from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName, InstructionInfo
-from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+from ...scumm6_opcodes import Scumm6Opcodes
 
 from .opcodes import Instruction
 from .generic import VariableWriteOp, ControlFlowOp, IntrinsicOp
@@ -108,7 +108,7 @@ def parse_message_with_control_codes(message: Any) -> List[Token]:
 
 class PushByteVar(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         var_id = self.op_details.body.data
         # Handle signed byte interpretation
         if var_id < 0:
@@ -137,7 +137,7 @@ class PushByteVar(Instruction):
 
 class PushWordVar(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         var_id = self.op_details.body.data
         return [
             TInstr("push_word_var"),
@@ -159,7 +159,7 @@ class Dup(Instruction):
     def stack_pop_count(self) -> int:
         return 1
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         return [TInstr("dup")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -181,7 +181,7 @@ class Dup(Instruction):
 
 class Band(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         return [TInstr("band")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -197,7 +197,7 @@ class Band(Instruction):
 
 class Bor(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         return [TInstr("bor")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -213,7 +213,7 @@ class Bor(Instruction):
 
 class ByteVarInc(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         var_id = self.op_details.body.data
         # Handle signed byte interpretation
         if var_id < 0:
@@ -237,7 +237,7 @@ class ByteVarInc(Instruction):
 
 class WordVarInc(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         var_id = self.op_details.body.data
         return [
             TInstr("word_var_inc"),
@@ -258,7 +258,7 @@ class WordVarInc(Instruction):
 
 class ByteVarDec(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         var_id = self.op_details.body.data
         # Handle signed byte interpretation
         if var_id < 0:
@@ -282,7 +282,7 @@ class ByteVarDec(Instruction):
 
 class WordVarDec(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         var_id = self.op_details.body.data
         return [
             TInstr("word_var_dec"),
@@ -306,7 +306,7 @@ class WordVarDec(Instruction):
 
 class Dummy(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         return [TInstr("dummy")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -324,7 +324,7 @@ class Dummy(Instruction):
 
 class PickOneOf(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         return [TInstr("pick_one_of")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -339,7 +339,7 @@ class PickOneOf(Instruction):
 
 class PickOneOfDefault(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         return [TInstr("pick_one_of_default")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -354,7 +354,7 @@ class PickOneOfDefault(Instruction):
 
 class Shuffle(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         return [TInstr("shuffle")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -369,7 +369,7 @@ class Shuffle(Instruction):
 
 class ByteArrayRead(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
         return [
@@ -405,7 +405,7 @@ class WriteWordVar(VariableWriteOp):
 
 class WordArrayRead(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
         return [
@@ -431,7 +431,7 @@ class WordArrayRead(Instruction):
 
 class ByteArrayIndexedRead(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
         return [
@@ -457,7 +457,7 @@ class ByteArrayIndexedRead(Instruction):
 
 class WordArrayIndexedRead(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
         return [
@@ -483,7 +483,7 @@ class WordArrayIndexedRead(Instruction):
 
 class ByteArrayWrite(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
         return [
@@ -537,7 +537,7 @@ class WordArrayWrite(FusibleMultiOperandMixin, Instruction):
         else:
             return [TText("operand")]
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
         
@@ -600,7 +600,7 @@ class WordArrayWrite(FusibleMultiOperandMixin, Instruction):
 
 class ByteArrayIndexedWrite(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
         return [
@@ -625,7 +625,7 @@ class ByteArrayIndexedWrite(Instruction):
 
 class WordArrayIndexedWrite(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
         return [
@@ -650,7 +650,7 @@ class WordArrayIndexedWrite(Instruction):
 
 class ByteArrayInc(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         return [TInstr("byte_array_inc")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -665,7 +665,7 @@ class ByteArrayInc(Instruction):
 
 class WordArrayInc(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         return [TInstr("word_array_inc")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -680,7 +680,7 @@ class WordArrayInc(Instruction):
 
 class ByteArrayDec(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         return [TInstr("byte_array_dec")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -695,7 +695,7 @@ class ByteArrayDec(Instruction):
 
 class WordArrayDec(Instruction):
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         return [TInstr("word_array_dec")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -739,8 +739,8 @@ class DimArray(FusibleMultiOperandMixin, Instruction):
         else:
             return operand.render()
     
-    def render(self) -> List[Token]:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+    def render(self, as_operand: bool = False) -> List[Token]:
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         # Get subop type
         subop = self.op_details.body.subop
@@ -820,7 +820,7 @@ class Iff(ControlFlowOp):
     def stack_pop_count(self) -> int:
         return 1
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
         
         # Display absolute address like descumm if we have the current address
@@ -899,7 +899,7 @@ class IfNot(ControlFlowOp):
     def stack_pop_count(self) -> int:
         return 1
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
         
         # Display absolute address like descumm if we have the current address
@@ -993,7 +993,7 @@ class Jump(ControlFlowOp):
     def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
         super().__init__(kaitai_op, length, addr)
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         jump_offset = self.op_details.body.jump_offset
         
         # Display absolute address like descumm if we have the current address
@@ -1190,7 +1190,7 @@ class IfClassOfIs(FusibleMultiOperandMixin, Instruction):
         # With full fusion, pops nothing
         return max(0, 3 - len(self.fused_operands))
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         if self.fused_operands and len(self.fused_operands) >= 2:
             # We have at least object and class fused
             tokens: List[Token] = []
@@ -1231,7 +1231,7 @@ class IfClassOfIs(FusibleMultiOperandMixin, Instruction):
             var_num = operand.op_details.body.data if hasattr(operand.op_details.body, 'data') else 0
             # Check if it's explicitly marked as a local variable type
             if hasattr(operand.op_details.body, 'type'):
-                from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+                from ...scumm6_opcodes import Scumm6Opcodes
                 if operand.op_details.body.type == Scumm6Opcodes.VarType.local:
                     return [TText(f"localvar{var_num}")]
                 else:
@@ -1403,7 +1403,7 @@ class SaveRestoreVerbs(FusibleMultiOperandMixin, Instruction):
         else:
             return il.const(4, 0)  # Placeholder
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         # Get sub-operation byte
         
         # The body should be CallFuncPop3Byte which has a param field
@@ -1509,8 +1509,8 @@ class PrintLine(FusibleMultiOperandMixin, Instruction):
         fused_count = len(self.fused_operands)
         return max(0, max_operands - fused_count)
     
-    def render(self) -> List[Token]:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+    def render(self, as_operand: bool = False) -> List[Token]:
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         # Handle both enum and int subop types
         if hasattr(self.op_details.body.subop, 'name'):
@@ -1724,9 +1724,9 @@ class PrintDebug(Instruction):
         # Return sound commands and text separately
         return sound_commands, ''.join(text_chars)
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         # Check if this instruction contains a message
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         if hasattr(self.op_details.body, 'subop') and hasattr(self.op_details.body, 'body'):
             # This is a Print structure with a subop
@@ -1775,8 +1775,8 @@ class PrintSystem(Instruction):
         
         return ''.join(text_chars)
     
-    def render(self) -> List[Token]:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+    def render(self, as_operand: bool = False) -> List[Token]:
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         if hasattr(self.op_details.body, 'subop') and hasattr(self.op_details.body, 'body'):
             # This is a Print structure with a subop
@@ -1907,8 +1907,8 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
         else:
             return operand.render()
     
-    def render(self) -> List[Token]:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+    def render(self, as_operand: bool = False) -> List[Token]:
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         if hasattr(self.op_details.body, 'subop') and hasattr(self.op_details.body, 'body'):
             # This is a Print structure with a subop
@@ -2076,9 +2076,9 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
         """Check if instruction is a push that can be fused."""
         return instr.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         # Extract the message text from the bytecode
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         if self.fused_operands and len(self.fused_operands) >= 1:
             # We have the actor parameter fused
@@ -2199,8 +2199,8 @@ class CursorCommand(FusibleMultiOperandMixin, Instruction):
         fused_count = len(self.fused_operands)
         return max(0, max_operands - fused_count)
     
-    def render(self) -> List[Token]:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+    def render(self, as_operand: bool = False) -> List[Token]:
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         subop_name = self.op_details.body.subop.name
         
@@ -2353,8 +2353,8 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
         fused_count = len(self.fused_operands)
         return max(0, max_operands - fused_count)
     
-    def render(self) -> List[Token]:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+    def render(self, as_operand: bool = False) -> List[Token]:
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         subop_name = self.op_details.body.subop.name
         
@@ -2502,7 +2502,7 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
 class PrintEgo(PrintActor):
     """Print ego dialog operations - same as PrintActor but for ego."""
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         # Get tokens from parent class
         tokens = super().render()
         # Replace printActor with printEgo
@@ -2553,9 +2553,9 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
         fused_count = len(self.fused_operands)
         return max(0, max_operands - fused_count)
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         from .smart_bases import DESCUMM_FUNCTION_NAMES
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         subop_name = self.op_details.body.subop.name
         full_name = f"actor_ops.{subop_name}"
@@ -2605,7 +2605,7 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
             return [TText("operand")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.ActorOps), \
@@ -2700,9 +2700,9 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
         
         return ''.join(text_parts)
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         from .smart_bases import DESCUMM_FUNCTION_NAMES
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         subop_name = self.op_details.body.subop.name
         full_name = f"verb_ops.{subop_name}"
@@ -2755,7 +2755,7 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
             return [TText("operand")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.VerbOps), \
@@ -2873,7 +2873,7 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
         fused_count = len(self.fused_operands)
         return max(0, max_operands - fused_count)
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         
         # Handle both enum and integer subop types
         if hasattr(self.op_details.body.subop, 'name'):
@@ -2970,7 +2970,7 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
             return il.const(4, 0)
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.ArrayOps), \
@@ -3021,12 +3021,12 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
 class RoomOps(Instruction):
     """Room operations with various sub-commands."""
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         subop_name = self.op_details.body.subop.name
         return [TInstr(f"room_ops.{subop_name}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.RoomOps), \
@@ -3056,12 +3056,12 @@ class RoomOps(Instruction):
 class SystemOps(Instruction):
     """System operations with various sub-commands."""
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         subop_name = self.op_details.body.subop.name
         return [TInstr(f"system_ops.{subop_name}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.SystemOps), \
@@ -3091,12 +3091,12 @@ class SystemOps(Instruction):
 class ResourceRoutines(Instruction):
     """Resource management operations with various sub-commands."""
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         subop_name = self.op_details.body.subop.name
         return [TInstr(f"resource_routines.{subop_name}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.ResourceRoutines), \

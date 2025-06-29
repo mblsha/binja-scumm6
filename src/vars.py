@@ -1,7 +1,7 @@
 from binja_helpers import binja_api  # noqa: F401
 from binaryninja import RegisterName, lowlevelil
 
-from .scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+from .scumm6_opcodes import Scumm6Opcodes  # type: ignore[import-untyped]
 from functools import lru_cache
 
 from typing import Dict, NamedTuple, Optional, Any

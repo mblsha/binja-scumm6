@@ -10,7 +10,7 @@ from .opcodes import Instruction
 from .generic import ControlFlowOp
 from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
                      SemanticIntrinsicConfig)
-from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[import-untyped]
 
 # Descumm-style function name mapping for improved semantic clarity
 DESCUMM_FUNCTION_NAMES = {
@@ -276,7 +276,7 @@ class SmartIntrinsicOp(Instruction):
         """Check if this intrinsic produces a result that can be consumed by other instructions."""
         return self._config.push_count > 0
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         # Use descumm-style function names for better semantic clarity
         display_name = DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
         
@@ -348,7 +348,7 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
             return max(0, self._config.pop_count - len(self.fused_operands))
         return super().stack_pop_count
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         """Render the instruction, showing fused operands if available."""
         # Use descumm-style function names for better semantic clarity
         display_name = DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
@@ -462,7 +462,7 @@ class SmartVariableOp(Instruction):
         """Number of values this instruction pops from the stack."""
         return 0
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         var_id = self.op_details.body.data
         var_name = get_variable_name(var_id)
         
@@ -573,12 +573,12 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
         else:
             return il.const(4, 0)  # Placeholder
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         subop = self.op_details.body.subop
         
         # Ensure subop is an enum member, not an int
         if isinstance(subop, int):
-            from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+            from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[import-untyped]
             try:
                 subop = Scumm6Opcodes.SubopType(subop)
             except ValueError:
@@ -609,7 +609,7 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
             return [TInstr(f"{display_name}()")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[import-untyped]
         
         # Get the expected body type dynamically
         expected_type = getattr(Scumm6Opcodes, self._config.body_type_name)
@@ -881,7 +881,7 @@ class SmartUnaryOp(Instruction):
         fused._length = self._length + previous.length()
         return fused
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         display_name = self._config.display_name or self._name
         # Apply descumm-style function name mapping
         mapped_name = DESCUMM_FUNCTION_NAMES.get(display_name, display_name)
@@ -1060,7 +1060,7 @@ class SmartConditionalJump(ControlFlowOp):
         else:
             return [TText("operand")]
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         if self.fused_operands:
             # Render as readable conditional in descumm style
             tokens: List[Token] = []
@@ -1370,7 +1370,7 @@ class SmartComparisonOp(Instruction):
         else:
             return il.const(4, 0)  # Fallback
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         if self.fused_operands and len(self.fused_operands) == 2:
             # Render as comparison with operands: left op right
             tokens: List[Token] = []
@@ -1490,7 +1490,7 @@ class SmartArrayOp(Instruction):
             return base_count
         return 0
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         if hasattr(self.op_details.body, 'array'):
             array_id = self.op_details.body.array
             
@@ -1680,7 +1680,7 @@ class SmartSemanticIntrinsicOp(SmartFusibleIntrinsic):
         
         return self._config.pop_count
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         """Render in descumm-style function call format."""
         if self.fused_operands:
             return self._render_fused_semantic_call()
@@ -1934,7 +1934,7 @@ class SmartLoopConditionalJump(SmartConditionalJump):
         self.detected_loop = SmartLoopDetector.detect_loop_pattern(self, address)
         return self.detected_loop is not None
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         """Enhanced rendering that shows loop patterns when detected."""
         if self.detected_loop:
             return self._render_loop_pattern()
@@ -2143,7 +2143,7 @@ class SmartVariableArgumentIntrinsic(SmartIntrinsicOp):
         tokens.append(TSep(")"))
         return tokens
     
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         """Default render method - delegates to render_instruction()."""
         return self.render_instruction()
     
