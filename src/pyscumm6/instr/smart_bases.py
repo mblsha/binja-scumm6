@@ -320,7 +320,8 @@ class SmartIntrinsicOp(Instruction):
     
     def render(self, as_operand: bool = False) -> List[Token]:
         # Use descumm-style function names for better semantic clarity
-        display_name = DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
+        from .helpers import apply_descumm_function_name
+        display_name = apply_descumm_function_name(self._name)
         
         # Add parentheses for function call syntax consistency
         # For descumm literal compatibility, always show () instead of (...)
@@ -389,7 +390,8 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
     def render(self, as_operand: bool = False) -> List[Token]:
         """Render the instruction, showing fused operands if available."""
         # Use descumm-style function names for better semantic clarity
-        display_name = DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
+        from .helpers import apply_descumm_function_name
+        display_name = apply_descumm_function_name(self._name)
         
         if self.fused_operands:
             # Function-call style: drawObject(100, 200)
@@ -410,38 +412,8 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        from binja_helpers.tokens import TInt, TText
-        
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            # Variable push - extract var number and type
-            if hasattr(operand.op_details.body, 'data'):
-                data = operand.op_details.body.data
-                # Handle signed byte interpretation for PushByteVar
-                if operand.__class__.__name__ == 'PushByteVar' and data < 0:
-                    data = data + 256
-                
-                # Check if this is a local variable
-                if hasattr(operand.op_details.body, 'type'):
-                    var_type = operand.op_details.body.type
-                    if var_type == Scumm6Opcodes.VarType.local:
-                        return [TInt(f"localvar{data}")]
-                    elif var_type == Scumm6Opcodes.VarType.bitvar:
-                        return [TInt(f"bitvar{data}")]
-                
-                # System variable - use semantic name mapping
-                return [TInt(get_variable_name(data, use_raw_names=True))]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            # Constant push - extract value
-            if hasattr(operand.op_details.body, 'data'):
-                value = operand.op_details.body.data
-                return [TInt(str(value))]
-        elif hasattr(operand, 'produces_result') and operand.produces_result():
-            # This is a result-producing instruction (like Add with fused operands)
-            # Just render it directly
-            return operand.render()
-        
-        # Fallback
-        return [TText("?")]
+        from .helpers import render_operand
+        return render_operand(operand)
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         """Lift the instruction, using fused operands if available."""
@@ -472,19 +444,8 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
-        from ... import vars
-        
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            # Variable push - use il_get_var
-            return vars.il_get_var(il, operand.op_details.body)
-        else:
-            # Constant push - use const
-            if hasattr(operand.op_details.body, 'data'):
-                value = operand.op_details.body.data
-                return il.const(4, value)
-        
-        # Fallback to undefined
-        return il.undefined()
+        from .helpers import lift_operand
+        return lift_operand(il, operand)
 
 
 class SmartVariableOp(Instruction):
@@ -568,46 +529,14 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            var_id = operand.op_details.body.data
-            # Handle signed byte interpretation for PushByteVar
-            if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
-                var_id = var_id + 256
-            # Check if this is a local variable
-            if hasattr(operand.op_details.body, 'type'):
-                var_type = operand.op_details.body.type
-                if var_type == Scumm6Opcodes.VarType.local:
-                    return [TInt(f"localvar{var_id}")]
-                elif var_type == Scumm6Opcodes.VarType.bitvar:
-                    return [TInt(f"bitvar{var_id}")]
-            
-            # System variable - use semantic name mapping
-            return [TInt(get_variable_name(var_id))]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return [TInt(str(operand.op_details.body.data))]
-        elif operand.produces_result():
-            # This is a result-producing instruction (like a fused expression)
-            # Render it as a nested expression with parentheses
-            tokens: List[Token] = []
-            tokens.append(TText("("))
-            tokens.extend(operand.render())
-            tokens.append(TText(")"))
-            return tokens
-        else:
-            return [TText("operand")]
+        from .helpers import render_operand_with_parens
+        # SmartComplexOp uses parentheses for nested expressions
+        return render_operand_with_parens(operand)
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return il.reg(4, f"var_{operand.op_details.body.data}")
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return il.const(4, operand.op_details.body.data)
-        elif operand.produces_result():
-            # Complex case: would need to execute operand's lift method
-            # For now, use placeholder - future enhancement needed
-            return il.const(4, 0)  # Placeholder
-        else:
-            return il.const(4, 0)  # Placeholder
+        from .helpers import lift_operand
+        return lift_operand(il, operand)
 
     def render(self, as_operand: bool = False) -> List[Token]:
         subop = self.op_details.body.subop
@@ -625,7 +554,8 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
         full_name = f"{self._name}.{subop_name}"
         
         # Apply descumm-style function name mapping
-        display_name = DESCUMM_FUNCTION_NAMES.get(full_name, full_name)
+        from .helpers import apply_descumm_function_name
+        display_name = apply_descumm_function_name(full_name)
         
         # Handle fused operands and/or hardcoded parameters
         if self.fused_operands or hasattr(self.op_details.body.body, 'param'):
@@ -721,68 +651,19 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            # Variables don't need extra parentheses in descumm style
-            var_id = operand.op_details.body.data
-            # Handle signed byte interpretation for PushByteVar
-            if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
-                var_id = var_id + 256
-            
-            # Check if this is a local variable
-            if hasattr(operand.op_details.body, 'type'):
-                var_type = operand.op_details.body.type
-                if var_type == Scumm6Opcodes.VarType.local:
-                    return [TInt(f"localvar{var_id}")]
-                elif var_type == Scumm6Opcodes.VarType.bitvar:
-                    return [TInt(f"bitvar{var_id}")]
-            
-            # System variable - use semantic name mapping
-            return [TInt(get_variable_name(var_id))]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            # Constants don't need parentheses
-            return [TInt(str(operand.op_details.body.data))]
-        elif operand.produces_result():
-            # This is a result-producing instruction (like a fused expression)
-            # Add parentheses for operations that need grouping when used as operands
-            if operand.__class__.__name__ in ['Sub', 'Mul', 'Div']:
-                # Subtraction, multiplication and division need parentheses when used as operands
-                tokens: List[Token] = []
-                tokens.append(TText("("))
-                # Check if render method supports as_operand parameter
-                try:
-                    tokens.extend(operand.render(as_operand=True))
-                except TypeError:
-                    tokens.extend(operand.render())
-                tokens.append(TText(")"))
-                return tokens
-            else:
-                # Addition doesn't need extra parentheses in most contexts
-                try:
-                    return operand.render(as_operand=True)
-                except TypeError:
-                    return operand.render()
-        else:
-            return [TText("operand")]
+        from .helpers import render_operand_smart_binary
+        return render_operand_smart_binary(operand, as_operand=True)
 
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return il.reg(4, f"var_{operand.op_details.body.data}")
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return il.const(4, operand.op_details.body.data)
-        elif operand.produces_result():
-            # This is a result-producing instruction - we need to generate its IL
-            # For now, use a placeholder. In a real implementation, we would
-            # need to execute the instruction's lift method and capture its result
-            # This is complex and might require significant architectural changes
-            return il.const(4, 0)  # Placeholder
-        else:
-            return il.const(4, 0)  # Fallback
+        from .helpers import lift_operand
+        return lift_operand(il, operand)
 
     def render(self, as_operand: bool = False) -> List[Token]:
         display_name = self._config.display_name or self._name
         # Apply descumm-style function name mapping
-        mapped_name = DESCUMM_FUNCTION_NAMES.get(display_name, display_name)
+        from .helpers import apply_descumm_function_name
+        mapped_name = apply_descumm_function_name(display_name)
         
         # If we have fused operands, render in infix style for arithmetic operations
         if self.fused_operands and len(self.fused_operands) == 2:
@@ -926,36 +807,14 @@ class SmartUnaryOp(Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            var_id = operand.op_details.body.data
-            # Handle signed byte interpretation for PushByteVar
-            if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
-                var_id = var_id + 256
-            # Check if this is a local variable
-            if hasattr(operand.op_details.body, 'type'):
-                var_type = operand.op_details.body.type
-                if var_type == Scumm6Opcodes.VarType.local:
-                    return [TInt(f"localvar{var_id}")]
-                elif var_type == Scumm6Opcodes.VarType.bitvar:
-                    return [TInt(f"bitvar{var_id}")]
-            # Use descumm-style variable names
-            return [TInt(get_variable_name(var_id))]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return [TInt(str(operand.op_details.body.data))]
-        elif hasattr(operand, 'produces_result') and operand.produces_result():
-            # Nested expression with parentheses
-            tokens: List[Token] = []
-            tokens.append(TText("("))
-            tokens.extend(operand.render())
-            tokens.append(TText(")"))
-            return tokens
-        else:
-            return [TText("operand")]
+        from .helpers import render_operand_with_parens
+        return render_operand_with_parens(operand)
 
     def render(self, as_operand: bool = False) -> List[Token]:
         display_name = self._config.display_name or self._name
         # Apply descumm-style function name mapping
-        mapped_name = DESCUMM_FUNCTION_NAMES.get(display_name, display_name)
+        from .helpers import apply_descumm_function_name
+        mapped_name = apply_descumm_function_name(display_name)
         
         # For nott with fused operands, we don't show the instruction name
         # because it will be rendered as part of the conditional
@@ -1112,28 +971,11 @@ class SmartConditionalJump(ControlFlowOp):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            var_id = operand.op_details.body.data
-            # Handle signed byte interpretation for PushByteVar
-            if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
-                var_id = var_id + 256
-            # Check if this is a local variable
-            if hasattr(operand.op_details.body, 'type'):
-                var_type = operand.op_details.body.type
-                if var_type == Scumm6Opcodes.VarType.local:
-                    return [TInt(f"localvar{var_id}")]
-                elif var_type == Scumm6Opcodes.VarType.bitvar:
-                    return [TInt(f"bitvar{var_id}")]
-            
-            # System variable - use semantic name mapping
-            return [TInt(get_variable_name(var_id))]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return [TInt(str(operand.op_details.body.data))]
-        elif hasattr(operand, 'render'):
-            # For complex operands that have their own render method (like array reads)
+        from .helpers import render_operand
+        # Special case: this class wants to call render() on complex operands
+        if hasattr(operand, 'render') and operand.__class__.__name__ not in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']:
             return operand.render()
-        else:
-            return [TText("operand")]
+        return render_operand(operand)
     
     def render(self, as_operand: bool = False) -> List[Token]:
         if self.fused_operands:

@@ -62,7 +62,7 @@ class TestFunctionCallFusion:
             0x61               # draw_object
         ])
         
-        assert_fusion_result(bytecode, "DrawObject", 2, "drawObject(var10, 100)")
+        assert_fusion_result(bytecode, "DrawObject", 2, "drawObject(VAR_CURRENTDRIVE, 100)")
     
     def test_put_actor_at_xy_fusion(self) -> None:
         """Test fusion with 4-parameter function."""
@@ -97,4 +97,4 @@ class TestFunctionCallFusion:
             0x7E               # walk_actor_to
         ])
         
-        assert_fusion_result(bytecode, "WalkActorTo", 3, "walkActorTo(var5, 10, var7)")
+        assert_fusion_result(bytecode, "WalkActorTo", 3, "walkActorTo(VAR_OVERRIDE, 10, VAR_ME)")

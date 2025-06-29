@@ -50,8 +50,8 @@ def make_intrinsic_instruction(
             return pop_count
 
         def render(self, as_operand: bool = False) -> List[Token]:
-            from .smart_bases import DESCUMM_FUNCTION_NAMES
-            display_name = DESCUMM_FUNCTION_NAMES.get(name, name)
+            from .helpers import apply_descumm_function_name
+            display_name = apply_descumm_function_name(name)
             return [TInstr(display_name)]
 
         def lift(self, il: LowLevelILFunction, addr: int) -> None:

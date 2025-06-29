@@ -1943,9 +1943,9 @@ class PrintSystem(FusibleMultiOperandMixin, Instruction):
                         return tokens
                     
                     # Apply descumm function name mapping
-                    from .smart_bases import DESCUMM_FUNCTION_NAMES
+                    from .helpers import apply_descumm_function_name
                     display_name = f"print_system.{subop_name}"
-                    display_name = DESCUMM_FUNCTION_NAMES.get(display_name, display_name)
+                    display_name = apply_descumm_function_name(display_name)
                     
                     # Extract just the subop part if it was mapped
                     if "." in display_name:
@@ -2128,9 +2128,9 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
                 if hasattr(self.op_details.body.subop, 'name'):
                     subop_name = self.op_details.body.subop.name
                     # Apply descumm function name mapping
-                    from .smart_bases import DESCUMM_FUNCTION_NAMES
+                    from .helpers import apply_descumm_function_name
                     full_name = f"print_text.{subop_name}"
-                    mapped_name = DESCUMM_FUNCTION_NAMES.get(full_name, full_name)
+                    mapped_name = apply_descumm_function_name(full_name)
                     
                     # If mapped, return the mapped name
                     if mapped_name != full_name:
@@ -2401,8 +2401,8 @@ class CursorCommand(FusibleMultiOperandMixin, Instruction):
         display_name = f"cursorCommand.{display_subop}"
         
         # Apply descumm function name mapping if available
-        from .smart_bases import DESCUMM_FUNCTION_NAMES
-        display_name = DESCUMM_FUNCTION_NAMES.get(display_name, display_name)
+        from .helpers import apply_descumm_function_name
+        display_name = apply_descumm_function_name(display_name)
         
         tokens: List[Token] = [TInstr(display_name)]
         
@@ -2747,12 +2747,12 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
         return max(0, max_operands - fused_count)
     
     def render(self, as_operand: bool = False) -> List[Token]:
-        from .smart_bases import DESCUMM_FUNCTION_NAMES
         from ...scumm6_opcodes import Scumm6Opcodes
         
         subop_name = self.op_details.body.subop.name
         full_name = f"actor_ops.{subop_name}"
-        display_name = DESCUMM_FUNCTION_NAMES.get(full_name, full_name)
+        from .helpers import apply_descumm_function_name
+        display_name = apply_descumm_function_name(full_name)
         
         tokens: List[Token] = [TInstr(display_name)]
         
@@ -2894,12 +2894,12 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
         return ''.join(text_parts)
     
     def render(self, as_operand: bool = False) -> List[Token]:
-        from .smart_bases import DESCUMM_FUNCTION_NAMES
         from ...scumm6_opcodes import Scumm6Opcodes
         
         subop_name = self.op_details.body.subop.name
         full_name = f"verb_ops.{subop_name}"
-        display_name = DESCUMM_FUNCTION_NAMES.get(full_name, full_name)
+        from .helpers import apply_descumm_function_name
+        display_name = apply_descumm_function_name(full_name)
         
         tokens: List[Token] = [TInstr(display_name)]
         
