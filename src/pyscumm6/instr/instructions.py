@@ -1842,8 +1842,49 @@ class PrintDebug(Instruction):
         il.append(il.intrinsic([], "print_debug", []))
 
 
-class PrintSystem(Instruction):
+class PrintSystem(FusibleMultiOperandMixin, Instruction):
     """Print system message with msg subop support."""
+    
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+        self.fused_operands: List[Instruction] = []
+    
+    def _get_max_operands(self) -> int:
+        """Return the maximum number of operands this instruction can fuse."""
+        if hasattr(self.op_details.body, 'subop'):
+            subop_value = self.op_details.body.subop
+            if hasattr(subop_value, 'value'):
+                subop_value = subop_value.value
+            elif hasattr(subop_value, 'name'):
+                # Handle enum - check if it's the color subop
+                if subop_value.name == 'color':
+                    return 1
+            
+            # Check numeric value for color subop (0x42 = 66)
+            if subop_value == 0x42:
+                return 1  # Color value
+        
+        return 0  # Default: no fusion for other subops
+    
+    @property
+    def stack_pop_count(self) -> int:
+        """Return remaining pops needed after fusion."""
+        max_operands = self._get_max_operands()
+        fused_count = len(self.fused_operands)
+        return max(0, max_operands - fused_count)
+    
+    def fuse(self, previous: Instruction) -> Optional['PrintSystem']:
+        """Fuse with previous push instructions."""
+        return self._standard_fuse(previous)  # type: ignore[return-value]
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return [TInt(str(operand.op_details.body.data))]
+        elif operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(get_variable_name(operand.op_details.body.data))]
+        else:
+            return [TText("operand")]
     
     def _extract_message_text(self, message: Any) -> str:
         """Extract text from a SCUMM6 Message object."""
@@ -1890,6 +1931,17 @@ class PrintSystem(Instruction):
                 # Other subops - use generic rendering
                 if hasattr(self.op_details.body.subop, 'name'):
                     subop_name = self.op_details.body.subop.name
+                    
+                    # Handle color subop with fusion
+                    if subop_name == 'color' and self.fused_operands:
+                        tokens = [TInstr("printSystem"), TText(".color(")]
+                        for i, operand in enumerate(self.fused_operands):
+                            if i > 0:
+                                tokens.append(TSep(", "))
+                            tokens.extend(self._render_operand(operand))
+                        tokens.append(TText(")"))
+                        return tokens
+                    
                     return [TInstr("printSystem"), TText(f".{subop_name}()")]
         
         # Fallback for simple print_system without subop
@@ -1897,6 +1949,22 @@ class PrintSystem(Instruction):
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         # For LLIL, treat as a simple intrinsic
+        if self.fused_operands and hasattr(self.op_details.body, 'subop'):
+            subop_value = self.op_details.body.subop
+            if hasattr(subop_value, 'name') and subop_value.name == 'color':
+                # Use fused operands for color subop
+                params = []
+                for operand in self.fused_operands:
+                    if operand.__class__.__name__ in ['PushByte', 'PushWord']:
+                        params.append(il.const(4, operand.op_details.body.data))
+                    elif operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+                        params.append(il.reg(4, f"var_{operand.op_details.body.data}"))
+                    else:
+                        params.append(il.const(4, 0))  # Fallback
+                il.append(il.intrinsic([], "print_system.color", params))
+                return
+        
+        # Default: pop from stack
         il.append(il.intrinsic([], "print_system", []))
 
 

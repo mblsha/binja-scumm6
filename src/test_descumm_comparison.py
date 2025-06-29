@@ -1125,6 +1125,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] cursorCommand.cursorOff()',
     ),
+    ScriptComparisonTestCase(
+        test_id="print_system_color_fusion",
+        bytecode=bytes.fromhex("0005B742"),
+        expected_descumm_output=dedent("""
+            [0000] (B7) printSystem.color(5)
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] printSystem.color(5)',
+    ),
 ]
 
 
