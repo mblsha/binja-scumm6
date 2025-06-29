@@ -11,6 +11,7 @@ from .generic import ControlFlowOp
 from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
                      SemanticIntrinsicConfig)
 from ...scumm6_opcodes import Scumm6Opcodes
+from .decorators import OperandRenderingMixin, OperandLiftingMixin
 
 # Descumm-style function name mapping for improved semantic clarity
 DESCUMM_FUNCTION_NAMES = {
@@ -372,7 +373,7 @@ class SmartIntrinsicOp(Instruction):
         il.append(il.intrinsic([], self._name, params))
 
 
-class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
+class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandRenderingMixin, OperandLiftingMixin):
     """Intrinsic operation that supports instruction fusion for function-call style rendering."""
     
     def fuse(self, previous: Instruction) -> Optional['SmartFusibleIntrinsic']:
@@ -410,11 +411,6 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
             # For descumm literal compatibility, always show () instead of (...)
             return [TInstr(f"{display_name}()")]
     
-    def _render_operand(self, operand: Instruction) -> List[Token]:
-        """Render a fused operand appropriately."""
-        from .helpers import render_operand
-        return render_operand(operand)
-    
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         """Lift the instruction, using fused operands if available."""
         if self.fused_operands:
@@ -441,11 +437,6 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
         else:
             # Use parent implementation
             super().lift(il, addr)
-    
-    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
-        """Lift a fused operand to IL expression."""
-        from .helpers import lift_operand
-        return lift_operand(il, operand)
 
 
 class SmartVariableOp(Instruction):
@@ -501,7 +492,7 @@ class SmartVariableOp(Instruction):
             decremented_value = il.sub(4, current_value, il.const(4, 1))
             il.append(vars.il_set_var(il, self.op_details.body, decremented_value))
 
-class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
+class SmartComplexOp(FusibleMultiOperandMixin, Instruction, OperandRenderingMixin, OperandLiftingMixin):
     """Unified complex operation handler."""
     
     _name: str
@@ -529,14 +520,8 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        from .helpers import render_operand_with_parens
-        # SmartComplexOp uses parentheses for nested expressions
-        return render_operand_with_parens(operand)
-    
-    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
-        """Lift a fused operand to IL expression."""
-        from .helpers import lift_operand
-        return lift_operand(il, operand)
+        # Override to use parentheses variant for SmartComplexOp
+        return self._render_operand_with_parens(operand)
 
     def render(self, as_operand: bool = False) -> List[Token]:
         subop = self.op_details.body.subop
@@ -625,7 +610,7 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
             il.append(il.intrinsic([], intrinsic_name, params))
 
 # Smart stack operation base classes
-class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
+class SmartBinaryOp(Instruction, FusibleMultiOperandMixin, OperandRenderingMixin, OperandLiftingMixin):
     """Self-configuring binary stack operation."""
     
     _name: str
@@ -651,13 +636,8 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        from .helpers import render_operand_smart_binary
-        return render_operand_smart_binary(operand, as_operand=True)
-
-    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
-        """Lift a fused operand to IL expression."""
-        from .helpers import lift_operand
-        return lift_operand(il, operand)
+        # Override to use the smart binary variant
+        return self._render_operand_smart_binary(operand, as_operand=True)
 
     def render(self, as_operand: bool = False) -> List[Token]:
         display_name = self._config.display_name or self._name
@@ -769,7 +749,7 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
         result = il_func(4, op1, op2)
         il.append(il.push(4, result))
 
-class SmartUnaryOp(Instruction):
+class SmartUnaryOp(Instruction, OperandRenderingMixin, OperandLiftingMixin):
     """Self-configuring unary stack operation."""
     
     _name: str
@@ -807,8 +787,8 @@ class SmartUnaryOp(Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        from .helpers import render_operand_with_parens
-        return render_operand_with_parens(operand)
+        # Override to use parentheses variant
+        return self._render_operand_with_parens(operand)
 
     def render(self, as_operand: bool = False) -> List[Token]:
         display_name = self._config.display_name or self._name
