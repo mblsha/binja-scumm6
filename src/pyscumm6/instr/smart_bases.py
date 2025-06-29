@@ -591,14 +591,23 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
         # Apply descumm-style function name mapping
         display_name = DESCUMM_FUNCTION_NAMES.get(full_name, full_name)
         
-        # Handle fused operands
-        if self.fused_operands:
+        # Handle fused operands and/or hardcoded parameters
+        if self.fused_operands or hasattr(self.op_details.body.body, 'param'):
             tokens = [TInstr(display_name), TSep("(")]
-            # Render operands in push order (not reversed)
-            for i, operand in enumerate(self.fused_operands):
-                if i > 0:
+            param_count = 0
+            
+            # First, add any hardcoded parameter from the instruction body
+            if hasattr(self.op_details.body.body, 'param'):
+                tokens.append(TInt(str(self.op_details.body.body.param)))
+                param_count += 1
+            
+            # Then add fused operands in push order (not reversed)
+            for operand in self.fused_operands:
+                if param_count > 0:
                     tokens.append(TSep(", "))
                 tokens.extend(self._render_operand(operand))
+                param_count += 1
+                
             tokens.append(TSep(")"))
             return tokens
         

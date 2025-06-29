@@ -1080,6 +1080,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] localvar1 = (20 + (VAR_SOUNDRESULT - ((VAR_SOUNDRESULT / 4) * 4)))',
     ),
+    ScriptComparisonTestCase(
+        test_id="wait_for_actor_fusion",
+        bytecode=bytes.fromhex("010100A9A8F9FF"),
+        expected_descumm_output=dedent("""
+            [0000] (A9) wait.waitForActor(-7,1)
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] wait.waitForActor(-7, 1)',
+    ),
 ]
 
 
