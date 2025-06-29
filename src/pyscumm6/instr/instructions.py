@@ -2124,10 +2124,19 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
                     tokens.append(TText("(...)"))
                 return tokens
             else:
-                # Other subops - use generic rendering
+                # Other subops - use generic rendering with descumm mapping
                 if hasattr(self.op_details.body.subop, 'name'):
                     subop_name = self.op_details.body.subop.name
-                    return [TInstr("printText"), TText(f".{subop_name}()")]
+                    # Apply descumm function name mapping
+                    from .smart_bases import DESCUMM_FUNCTION_NAMES
+                    full_name = f"print_text.{subop_name}"
+                    mapped_name = DESCUMM_FUNCTION_NAMES.get(full_name, full_name)
+                    
+                    # If mapped, return the mapped name
+                    if mapped_name != full_name:
+                        return [TInstr(mapped_name), TText("()")]
+                    else:
+                        return [TInstr("printText"), TText(f".{subop_name}()")]
         
         # Fallback for simple print_text without subop
         return [TInstr("printText")]

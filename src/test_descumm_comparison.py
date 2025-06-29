@@ -1140,6 +1140,15 @@ script_test_cases = [
         expected_disasm_fusion_output='[0000] localvar5 = abs(localvar5)',
     ),
     ScriptComparisonTestCase(
+        test_id="print_cursor_begin",
+        bytecode=bytes.fromhex("B5FE"),
+        expected_descumm_output=dedent("""
+            [0000] (B5) printCursor.begin()
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] printCursor.begin()',
+    ),
+    ScriptComparisonTestCase(
         test_id="print_system_color_fusion",
         bytecode=bytes.fromhex("0005B742"),
         expected_descumm_output=dedent("""
