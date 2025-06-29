@@ -41,6 +41,7 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
         "get_object_y",     # 1 param: object_id -> y position
         "get_object_old_dir", # 1 param: object_id -> old direction
         "get_object_new_dir", # 1 param: object_id -> new direction
+        "dist_object_object", # 1 param: object_id -> distance to object
         "get_state",        # 1 param: object_id -> state
         # Actor query operations
         "get_actor_scale_x", # 1 param: actor_id -> scale X

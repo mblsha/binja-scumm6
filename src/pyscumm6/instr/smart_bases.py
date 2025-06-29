@@ -72,6 +72,7 @@ DESCUMM_FUNCTION_NAMES = {
     "get_object_y": "getObjectY",
     "get_object_old_dir": "getObjectDir",
     "get_random_number": "getRandomNumber",
+    "dist_object_object": "getDistObjObj",
     "is_any_of": "isAnyOf",
     "is_actor_in_box": "isActorInBox",
     # Actor intrinsics
