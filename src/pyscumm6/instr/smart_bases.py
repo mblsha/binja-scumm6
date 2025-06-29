@@ -148,6 +148,8 @@ DESCUMM_FUNCTION_NAMES = {
     "verb_ops.verb_load_string2": "verbOps.loadString",
     "verb_ops.verb_assign": "verbOps.assign",
     "verb_ops.set_verb_object": "verbOps.setVerbObject",
+    # Resource routines subcommands
+    "resource_routines.load_costume": "resourceRoutines.loadCostume",
 }
 
 
