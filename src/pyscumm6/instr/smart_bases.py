@@ -111,7 +111,7 @@ DESCUMM_FUNCTION_NAMES = {
     "cursor_command": "cursorCommand",
     # Verb operations subcommands
     "verb_ops.verb_init": "verbOps.init",
-    "verb_ops.verb_new": "verbOps.new",
+    "verb_ops.verb_new": "verbOps.init",
     "verb_ops.verb_delete": "verbOps.delete",
     "verb_ops.verb_name": "verbOps.loadString",
     "verb_ops.verb_at": "verbOps.at",
