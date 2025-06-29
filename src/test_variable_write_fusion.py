@@ -54,7 +54,7 @@ fusion_test_cases = [
         expected_class="WriteWordVar",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="var20 = 1000",  # VAR_VIRT_MOUSE_X = 20, assignments use raw var names
+        expected_render_text="VAR_VIRT_MOUSE_X = 1000",  # VAR_VIRT_MOUSE_X = 20, now shows semantic names
     ),
     FusionTestCase(
         test_id="write_from_var",
@@ -70,7 +70,7 @@ fusion_test_cases = [
         expected_class="WriteWordVar",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="var30 = 100",  # VAR_EXIT_SCRIPT = 30, assignments use raw var names
+        expected_render_text="VAR_EXIT_SCRIPT = 100",  # VAR_EXIT_SCRIPT = 30, now shows semantic names
     ),
     FusionTestCase(
         test_id="no_fusion_non_push",

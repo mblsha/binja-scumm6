@@ -273,9 +273,17 @@ class VariableWriteOp(Instruction):
                 # Show as assignment: var_10 = 5 or localvar1 = 1 or bitvar327 = 1
                 tokens = []
                 if var_prefix == "var":
-                    # For variable assignments to local variables, descumm uses raw variable names (var7 not VAR_ME)
+                    # Check if this is a system variable that should show its semantic name
                     from .smart_bases import get_variable_name
-                    tokens.append(TInt(get_variable_name(var_id, use_raw_names=True)))
+                    from ... import vars
+                    var_mapping = vars.scumm_vars_inverse()
+                    
+                    if var_id in var_mapping:
+                        # For system variables, show semantic name (VAR_VERB_SCRIPT not var32)
+                        tokens.append(TInt(var_mapping[var_id]))
+                    else:
+                        # For non-system variables, use raw names
+                        tokens.append(TInt(get_variable_name(var_id, use_raw_names=True)))
                 else:
                     tokens.append(TInt(f"{var_prefix}{var_id}"))
             
@@ -306,9 +314,17 @@ class VariableWriteOp(Instruction):
             var_prefix = self._get_var_prefix()
             # Normal stack-based rendering
             if var_prefix == "var":
-                # For stack-based write operations, use raw variable names
+                # Check if this is a system variable
                 from .smart_bases import get_variable_name
-                var_display = get_variable_name(var_id, use_raw_names=True)
+                from ... import vars
+                var_mapping = vars.scumm_vars_inverse()
+                
+                if var_id in var_mapping:
+                    # For system variables, show semantic name
+                    var_display = var_mapping[var_id]
+                else:
+                    # For non-system variables, use raw names
+                    var_display = get_variable_name(var_id, use_raw_names=True)
             else:
                 var_display = f"{var_prefix}{var_id}"
             return [

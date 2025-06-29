@@ -1107,6 +1107,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] var144 = VAR_WALKTO_OBJ',
     ),
+    ScriptComparisonTestCase(
+        test_id="system_variable_constant_assignment",
+        bytecode=bytes.fromhex("010200432000"),
+        expected_descumm_output=dedent("""
+            [0000] (43) VAR_VERB_SCRIPT = 2
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] VAR_VERB_SCRIPT = 2',
+    ),
 ]
 
 
