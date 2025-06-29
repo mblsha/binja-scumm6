@@ -1942,7 +1942,18 @@ class PrintSystem(FusibleMultiOperandMixin, Instruction):
                         tokens.append(TText(")"))
                         return tokens
                     
-                    return [TInstr("printSystem"), TText(f".{subop_name}()")]
+                    # Apply descumm function name mapping
+                    from .smart_bases import DESCUMM_FUNCTION_NAMES
+                    display_name = f"print_system.{subop_name}"
+                    display_name = DESCUMM_FUNCTION_NAMES.get(display_name, display_name)
+                    
+                    # Extract just the subop part if it was mapped
+                    if "." in display_name:
+                        subop_display = display_name.split(".", 1)[1]
+                    else:
+                        subop_display = subop_name
+                    
+                    return [TInstr("printSystem"), TText(f".{subop_display}()")]
         
         # Fallback for simple print_system without subop
         return [TInstr("printSystem")]

@@ -89,6 +89,8 @@ DESCUMM_FUNCTION_NAMES = {
     "print_line.clipped": "printLine.right",  # descumm uses "right" for clipped
     "print_line.end": "printLine.end",
     "print_system.baseop": "printSystem.begin",
+    "print_system.end": "printSystem.end",
+    "print_system.endd": "printSystem.end",  # Kaitai parsing generates 'endd' instead of 'end'
     "room_ops.room_screen": "roomOps.setScreen",
     # Actor operations subcommands
     "actor_ops.set_current_actor": "actorOps.setCurActor",
