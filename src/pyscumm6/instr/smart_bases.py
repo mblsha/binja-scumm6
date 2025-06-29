@@ -2143,17 +2143,16 @@ class SmartVariableArgumentIntrinsic(SmartIntrinsicOp):
             tokens.extend(self._render_operand(self.fused_operands[i]))
         
         # Add separator before variable args if we have fixed params
-        if fixed_count > 0 and self._arg_count > 0:
-            tokens.append(TSep(","))
+        if fixed_count > 0:
+            tokens.append(TSep(", "))
         
-        # Render variable arguments as array
-        if self._arg_count > 0:
-            tokens.append(TSep("["))
-            for i in range(fixed_count, fixed_count + self._arg_count):
-                if i > fixed_count:
-                    tokens.append(TSep(", "))
-                tokens.extend(self._render_operand(self.fused_operands[i]))
-            tokens.append(TSep("]"))
+        # Render variable arguments as array (even if empty for descumm compatibility)
+        tokens.append(TSep("["))
+        for i in range(fixed_count, fixed_count + self._arg_count):
+            if i > fixed_count:
+                tokens.append(TSep(", "))
+            tokens.extend(self._render_operand(self.fused_operands[i]))
+        tokens.append(TSep("]"))
         
         tokens.append(TSep(")"))
         return tokens
