@@ -970,17 +970,16 @@ class SmartConditionalJump(ControlFlowOp):
         """Render a fused condition (comparison or simple push) as readable condition."""
         # Check if this is a Nott instruction
         if condition_instr.__class__.__name__ == 'Nott':
-            # Nott inverts the negation state
+            # For descumm compatibility, always show the '!' for Nott
+            tokens: List[Token] = []
+            tokens.append(TText("!"))
             if hasattr(condition_instr, 'fused_operands') and condition_instr.fused_operands:
-                # Render the inner condition with inverted negation
-                return self._render_condition(condition_instr.fused_operands[0], not negate)
+                # Render the inner condition
+                tokens.extend(self._render_condition(condition_instr.fused_operands[0]))
             else:
-                # No inner condition, just show the negation
-                tokens: List[Token] = []
-                if not negate:
-                    tokens.append(TText("!"))
+                # No inner condition, just show "condition"
                 tokens.append(TText("condition"))
-                return tokens
+            return tokens
         
         # Check if this is a comparison with fused operands
         elif self._is_comparison_op(condition_instr) and hasattr(condition_instr, 'fused_operands') and len(condition_instr.fused_operands) >= 2:
@@ -1051,17 +1050,14 @@ class SmartConditionalJump(ControlFlowOp):
             # Simple approach based on user feedback:
             # - if_not instruction = "unless"
             # - iff instruction = "if"
-            # - Special case: if_not + nott = "if" (double negation)
+            # - Do NOT simplify double negation (if_not + nott) - keep it as is for descumm compatibility
             
             condition = self.fused_operands[0]
             use_unless = self._is_if_not
             
-            # Check for double-negation: if_not + nott = if
-            if self._is_if_not and condition.__class__.__name__ == 'Nott':
-                use_unless = False
-                # Get the inner condition (what Nott is negating)
-                if hasattr(condition, 'fused_operands') and condition.fused_operands:
-                    condition = condition.fused_operands[0]
+            # Keep the logic simple - no special handling for double negation
+            # Descumm shows: unless ((!isScriptRunning(...)))
+            # Not: if ((isScriptRunning(...)))
             
             if use_unless:
                 tokens.append(TInstr("unless"))
