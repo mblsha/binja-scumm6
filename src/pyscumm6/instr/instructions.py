@@ -1628,6 +1628,7 @@ class PrintLine(FusibleMultiOperandMixin, Instruction):
             "at": "XY",  # Alternative name for XY
             "endd": "end",  # Map endd to end
             "right": "right",
+            "clipped": "right",  # descumm uses "right" for clipped
         }
         
         # Use the mapped name or fall back to original
