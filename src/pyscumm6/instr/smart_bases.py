@@ -71,6 +71,8 @@ DESCUMM_FUNCTION_NAMES = {
     "get_random_number": "getRandomNumber",
     "is_any_of": "isAnyOf",
     "is_actor_in_box": "isActorInBox",
+    # Actor intrinsics
+    "get_actor_scale_x": "getActorScaleX",
     # Complex operations 
     "print_debug.begin": "printDebug.begin",
     "print_debug.msg": "printDebug.msg",

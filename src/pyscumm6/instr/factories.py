@@ -42,6 +42,8 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
         "get_object_old_dir", # 1 param: object_id -> old direction
         "get_object_new_dir", # 1 param: object_id -> new direction
         "get_state",        # 1 param: object_id -> state
+        # Actor query operations
+        "get_actor_scale_x", # 1 param: actor_id -> scale X
         # Random number operations
         "get_random_number", # 1 param: max_value -> random result
         "get_random_number_range", # 2 params: min, max -> random result

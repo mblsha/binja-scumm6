@@ -1089,6 +1089,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] wait.waitForActor(-7, 1)',
     ),
+    ScriptComparisonTestCase(
+        test_id="variable_assignment_with_expression",
+        bytecode=bytes.fromhex("010B00AA01030017430340"),
+        expected_descumm_output=dedent("""
+            [0000] (43) localvar3 = (getActorScaleX(11) / 3)
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] localvar3 = (getActorScaleX(11) / 3)',
+    ),
 ]
 
 
