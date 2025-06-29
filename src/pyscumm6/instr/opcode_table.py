@@ -1,7 +1,7 @@
 """Opcode-to-class mapping for SCUMM6 instructions."""
 
 from typing import Dict, Type
-from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+from ...scumm6_opcodes import Scumm6Opcodes
 from .opcodes import Instruction
 from . import instructions, script_ops
 from .generic import make_push_constant_instruction, make_intrinsic_instruction

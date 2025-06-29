@@ -86,7 +86,7 @@ def test_while_loop_pattern_detection() -> None:
     text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
     assert "while" in text
     assert "VAR_NUM_ACTOR" in text
-    assert "var_9" in text
+    assert "var9" in text
 
 
 def test_forward_jump_no_loop_detection() -> None:

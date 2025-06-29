@@ -481,11 +481,71 @@ class WordArrayIndexedRead(Instruction):
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
 
 
-class ByteArrayWrite(Instruction):
+class ByteArrayWrite(FusibleMultiOperandMixin, Instruction):
+    """Byte array write with fusion support and descumm-style names."""
+    
+    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
+        super().__init__(kaitai_op, length, addr)
+        self.fused_operands: List['Instruction'] = []
+    
+    @property
+    def stack_pop_count(self) -> int:
+        """Number of values this instruction pops from the stack."""
+        if self.fused_operands:
+            return 0  # Fused instructions handle their own operands
+        return 2  # byte_array_write pops index and value
+    
+    def _get_max_operands(self) -> int:
+        """Return the maximum number of operands this instruction can fuse."""
+        return 2  # array write takes 2 parameters: index and value
+    
+    def fuse(self, previous: Instruction) -> Optional['ByteArrayWrite']:
+        """Attempt to fuse with previous instruction."""
+        return cast(Optional['ByteArrayWrite'], self._standard_fuse(previous))
+    
+    def _render_operand(self, operand: Instruction) -> List[Token]:
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(get_variable_name(operand.op_details.body.data, use_raw_names=True))]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return [TInt(str(operand.op_details.body.data))]
+        else:
+            return [TText("operand")]
 
     def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
+        
+        if self.fused_operands:
+            # With fusion: show as assignment
+            # IMPORTANT: The fusion order and descumm semantics require:
+            # fused_operands[0] = first pushed = index
+            # fused_operands[1] = last pushed = value
+            # This produces the correct descumm output: array[index] = value
+            if len(self.fused_operands) == 2:
+                index_operand = self.fused_operands[0]  # First pushed = index
+                value_operand = self.fused_operands[1]  # Last pushed = value
+                
+                tokens: List[Token] = []
+                tokens.append(TText(array_name))
+                tokens.append(TSep("["))
+                tokens.extend(self._render_operand(index_operand))
+                tokens.append(TSep("] = "))
+                tokens.extend(self._render_operand(value_operand))
+                return tokens
+            elif len(self.fused_operands) == 1:
+                # Partial fusion - we have one operand but need two
+                # Show as array[?, operand] or array[operand, ?] depending on position
+                tokens = []
+                tokens.append(TText(array_name))
+                tokens.append(TSep("["))
+                tokens.append(TText("?"))
+                tokens.append(TSep(", "))
+                tokens.extend(self._render_operand(self.fused_operands[0]))
+                tokens.append(TSep("]"))
+                return tokens
+        
+        # Without fusion: show function call style
         return [
             TInstr("byte_array_write"),
             TSep("("),
@@ -497,13 +557,31 @@ class ByteArrayWrite(Instruction):
         assert isinstance(self.op_details.body, Scumm6Opcodes.ByteArrayWrite), \
             f"Expected ByteArrayWrite body, got {type(self.op_details.body)}"
 
-        # Generate intrinsic call - pops value and base, pushes result
-        il.append(il.intrinsic(
-            [il.reg(4, LLIL_TEMP(0))],  # output
-            IntrinsicName("byte_array_write"),  # intrinsic name
-            [il.pop(4), il.pop(4)]  # parameters: pop value and base from stack
-        ))
+        if self.fused_operands:
+            # Use fused operands
+            params = [self._lift_operand(il, op) for op in self.fused_operands]
+            il.append(il.intrinsic(
+                [il.reg(4, LLIL_TEMP(0))],
+                IntrinsicName("byte_array_write"),
+                params
+            ))
+        else:
+            # Generate intrinsic call - pops value and base, pushes result
+            il.append(il.intrinsic(
+                [il.reg(4, LLIL_TEMP(0))],  # output
+                IntrinsicName("byte_array_write"),  # intrinsic name
+                [il.pop(4), il.pop(4)]  # parameters: pop value and base from stack
+            ))
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+    
+    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return il.reg(4, f"var_{operand.op_details.body.data}")
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return il.const(4, operand.op_details.body.data)
+        else:
+            return il.const(4, 0)  # Placeholder
 
 
 class WordArrayWrite(FusibleMultiOperandMixin, Instruction):
@@ -531,7 +609,7 @@ class WordArrayWrite(FusibleMultiOperandMixin, Instruction):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(get_variable_name(operand.op_details.body.data))]
+            return [TInt(get_variable_name(operand.op_details.body.data, use_raw_names=True))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return [TInt(str(operand.op_details.body.data))]
         else:

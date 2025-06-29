@@ -7,7 +7,7 @@ across test files and provide consistent testing infrastructure.
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from typing import List, Any, Tuple, Dict
+from typing import List, Any, Tuple, Dict, Optional
 import subprocess
 import tempfile
 from pathlib import Path
@@ -19,6 +19,7 @@ from binaryninja.enums import BranchType
 from .scumm6 import Scumm6, LastBV
 from .test_mocks import MockScumm6BinaryView
 from .pyscumm6.disasm import decode_with_fusion
+from .pyscumm6.instr.opcodes import Instruction
 
 
 def assert_fusion_result(
@@ -337,7 +338,8 @@ def run_scumm6_llil_generation(bytecode: bytes, start_addr: int, use_fusion: boo
     """
     if use_fusion:
         from .pyscumm6.disasm import decode_with_fusion_incremental
-        decode_func = lambda data, addr: decode_with_fusion_incremental(data, addr, enable_loop_detection=False)
+        def decode_func(data: bytes, addr: int) -> Optional[Instruction]:
+            return decode_with_fusion_incremental(data, addr, enable_loop_detection=False)
     else:
         from .pyscumm6.disasm import decode
         decode_func = decode

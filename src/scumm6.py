@@ -22,7 +22,7 @@ from binaryninja.enums import (
 )
 from binaryninja import lowlevelil
 
-from .scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+from .scumm6_opcodes import Scumm6Opcodes
 
 from .sorted_list import SortedList
 
@@ -64,7 +64,7 @@ class LastBV:
 
 # FIXME: create a fake memory segment for all the function names,
 # so that cross-references will work
-class Scumm6(Architecture):
+class Scumm6(Architecture):  # type: ignore[misc]
     name = "SCUMM6"
     address_size = 4
     default_int_size = 4

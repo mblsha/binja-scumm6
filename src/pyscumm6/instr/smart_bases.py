@@ -10,7 +10,7 @@ from .opcodes import Instruction
 from .generic import ControlFlowOp
 from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
                      SemanticIntrinsicConfig)
-from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[import-untyped]
+from ...scumm6_opcodes import Scumm6Opcodes
 
 # Descumm-style function name mapping for improved semantic clarity
 DESCUMM_FUNCTION_NAMES = {
@@ -393,7 +393,7 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
                         return [TInt(f"bitvar{data}")]
                 
                 # System variable - use semantic name mapping
-                return [TInt(get_variable_name(data))]
+                return [TInt(get_variable_name(data, use_raw_names=True))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             # Constant push - extract value
             if hasattr(operand.op_details.body, 'data'):
@@ -578,7 +578,7 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
         
         # Ensure subop is an enum member, not an int
         if isinstance(subop, int):
-            from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[import-untyped]
+            from ...scumm6_opcodes import Scumm6Opcodes
             try:
                 subop = Scumm6Opcodes.SubopType(subop)
             except ValueError:
@@ -607,7 +607,7 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
         return [TInstr(f"{display_name}()")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[import-untyped]
+        from ...scumm6_opcodes import Scumm6Opcodes
         
         # Get the expected body type dynamically
         expected_type = getattr(Scumm6Opcodes, self._config.body_type_name)
@@ -1567,7 +1567,7 @@ class SmartArrayOp(Instruction):
                 # Handle signed byte interpretation for PushByteVar
                 if operand.__class__.__name__ == 'PushByteVar' and data < 0:
                     data = data + 256
-                return [TInt(get_variable_name(data))]
+                return [TInt(get_variable_name(data, use_raw_names=True))]
         else:
             # Constant push - extract value
             if hasattr(operand.op_details.body, 'data'):
@@ -2031,7 +2031,7 @@ class SmartVariableArgumentIntrinsic(SmartIntrinsicOp):
     def _extract_arg_count(self, push_instr: Instruction) -> Optional[int]:
         """Extract arg_count value from a push instruction."""
         if push_instr.__class__.__name__ in ['PushByte', 'PushWord']:
-            return push_instr.op_details.body.data
+            return int(push_instr.op_details.body.data)
         return None
     
     def fuse(self, previous: Instruction) -> Optional['SmartVariableArgumentIntrinsic']:

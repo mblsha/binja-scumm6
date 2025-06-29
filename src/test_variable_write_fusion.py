@@ -102,7 +102,7 @@ fusion_test_cases = [
         expected_class="WriteWordVar",
         expected_fused_operands=1,
         expected_stack_pops=0,
-        expected_render_text="var_255 = -1",
+        expected_render_text="var255 = -1",
     ),
 ]
 

@@ -9,7 +9,7 @@ from binaryninja.enums import BranchType
 from binaryninja import InstructionInfo
 
 from .opcodes import Instruction
-from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[import-untyped]
+from ...scumm6_opcodes import Scumm6Opcodes
 
 
 def make_push_constant_instruction(
@@ -273,9 +273,9 @@ class VariableWriteOp(Instruction):
                 # Show as assignment: var_10 = 5 or localvar1 = 1 or bitvar327 = 1
                 tokens = []
                 if var_prefix == "var":
-                    # For assignments, use system variable names when available (like VAR_ROOM)
+                    # For variable assignments to local variables, descumm uses raw variable names (var7 not VAR_ME)
                     from .smart_bases import get_variable_name
-                    tokens.append(TInt(get_variable_name(var_id, use_raw_names=False, use_var_prefix=True)))
+                    tokens.append(TInt(get_variable_name(var_id, use_raw_names=True)))
                 else:
                     tokens.append(TInt(f"{var_prefix}{var_id}"))
             
@@ -306,9 +306,9 @@ class VariableWriteOp(Instruction):
             var_prefix = self._get_var_prefix()
             # Normal stack-based rendering
             if var_prefix == "var":
-                # For assignments, use system variable names when available (like VAR_ROOM)
+                # For stack-based write operations, use raw variable names
                 from .smart_bases import get_variable_name
-                var_display = get_variable_name(var_id, use_raw_names=False, use_var_prefix=True)
+                var_display = get_variable_name(var_id, use_raw_names=True)
             else:
                 var_display = f"{var_prefix}{var_id}"
             return [

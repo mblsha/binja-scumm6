@@ -33,7 +33,7 @@ def test_get_object_x_fusion() -> None:
     assert instruction.stack_pop_count == 0  # No stack pops needed
     
     text = render_tokens(instruction.render())
-    assert text == "getObjectX(VAR_OVERRIDE)"
+    assert text == "getObjectX(var5)"
 
 
 def test_get_object_y_fusion() -> None:
@@ -53,7 +53,7 @@ def test_get_object_y_fusion() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "getObjectY(VAR_CURRENTDRIVE)"
+    assert text == "getObjectY(var10)"
 
 
 def test_get_state_fusion() -> None:
@@ -73,7 +73,7 @@ def test_get_state_fusion() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "get_state(VAR_KEYPRESS)"
+    assert text == "get_state(var0)"
 
 
 def test_get_object_x_fusion_with_constant() -> None:

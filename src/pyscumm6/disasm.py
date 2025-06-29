@@ -1,12 +1,12 @@
 """New decoder implementation using object-oriented instruction classes."""
 
 from typing import Optional, Iterator, Tuple, List
-from kaitaistruct import KaitaiStream, KaitaiStructError  # type: ignore[import-untyped]
+from kaitaistruct import KaitaiStream, KaitaiStructError
 from io import BytesIO
 import logging
 
 # Import the Kaitai-generated parser
-from ..scumm6_opcodes import Scumm6Opcodes  # type: ignore[attr-defined]
+from ..scumm6_opcodes import Scumm6Opcodes
 
 # Import your new instruction infrastructure
 from .instr.opcodes import Instruction

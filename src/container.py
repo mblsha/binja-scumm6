@@ -7,8 +7,8 @@ for use with the Binary Ninja view and analysis tools.
 from binja_helpers import binja_api  # noqa: F401
 from binaryninja.enums import SegmentFlag, SectionSemantics
 
-from kaitaistruct import KaitaiStream, BytesIO  # type: ignore[import-untyped]
-from .scumm6_container import Scumm6Container  # type: ignore[attr-defined]
+from kaitaistruct import KaitaiStream, BytesIO
+from .scumm6_container import Scumm6Container
 from .sorted_list import SortedList
 
 from typing import Any, Dict, List, Tuple, Optional, NamedTuple
