@@ -88,6 +88,7 @@ DESCUMM_FUNCTION_NAMES = {
     "print_line.overhead": "printLine.overhead",
     "print_line.clipped": "printLine.right",  # descumm uses "right" for clipped
     "print_line.end": "printLine.end",
+    "print_system.baseop": "printSystem.begin",
     "room_ops.room_screen": "roomOps.setScreen",
     # Actor operations subcommands
     "actor_ops.set_current_actor": "actorOps.setCurActor",
