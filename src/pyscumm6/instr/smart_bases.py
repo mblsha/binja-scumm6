@@ -25,6 +25,7 @@ DESCUMM_FUNCTION_NAMES = {
     "draw_object_at": "drawObjectAt",
     "animate_actor": "animateActor",
     "walk_actor_to": "walkActorTo",
+    "walk_actor_to_obj": "walkActorToObj",
     "cutscene": "beginCutscene",
     "end_cutscene": "endCutscene",
     "put_actor_at_xy": "putActorInXY",
