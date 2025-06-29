@@ -115,20 +115,28 @@ def safe_token_text(tokens: List[Any]) -> str:
 def run_descumm_on_bytecode(descumm_path: Path, bytecode: bytes) -> str:
     """Execute descumm on bytecode and return cleaned output.
     
+    Uses literal mode (-l flag) to disable prettification for easier comparison
+    with pyscumm6 output.
+    
     Args:
         descumm_path: Path to the descumm executable
         bytecode: SCUMM6 bytecode to disassemble
         
     Returns:
-        Cleaned descumm output as string
+        Cleaned descumm output as string (in literal mode)
     """
+    # Add SCRP header to bytecode for proper parsing
+    header = b'SCRP'
+    size = len(bytecode).to_bytes(4, byteorder='big')
+    full_data = header + size + bytecode
+    
     with tempfile.NamedTemporaryFile(mode='wb', delete=False) as tmp_file:
-        tmp_file.write(bytecode)
+        tmp_file.write(full_data)
         tmp_file_path = tmp_file.name
 
     try:
         result = subprocess.run(
-            [str(descumm_path), "-6", "-u", tmp_file_path],
+            [str(descumm_path), "-6", "-l", tmp_file_path],
             capture_output=True,
             text=True,
             check=False  # Don't raise exception on non-zero exit
