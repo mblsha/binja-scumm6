@@ -154,7 +154,7 @@ DESCUMM_FUNCTION_NAMES = {
     "verb_ops.verb_init_2": "verbOps.init",
     "verb_ops.verb_end": "verbOps.end",
     "verb_ops.endd": "verbOps.redraw",  # endd is actually redraw in descumm
-    "verb_ops.verb_dimcolor": "verbOps.dimColor",  # Missing mapping
+    "verb_ops.verb_dimcolor": "verbOps.setDimColor",
     "verb_ops.verb_load_string": "verbOps.loadString",
     "verb_ops.save_verbs": "verbOps.saveVerbs",
     "verb_ops.restore_verbs": "verbOps.restoreVerbs",
