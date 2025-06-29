@@ -344,16 +344,16 @@ script_test_cases = [
         """).strip(),
         expected_disasm_output=dedent("""
             [0000] push_word(137)
-            [0003] isScriptRunning(...)
+            [0003] isScriptRunning()
             [0004] nott
             [0005] unless goto +18
             [0008] push_word(93)
             [000B] push_word(1)
             [000E] push_word(1)
-            [0011] startScriptQuick(...)
+            [0011] startScriptQuick()
             [0012] push_word(0)
             [0015] push_word(200)
-            [0018] roomOps.setScreen(...)
+            [0018] roomOps.setScreen()
             [001A] stopObjectCodeA()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
@@ -432,7 +432,7 @@ script_test_cases = [
             [0007] push_word_var(VAR_ME)
             [000A] write_word_var(localvar0)
             [000D] push_word_var(VAR_KEYPRESS)
-            [0010] get_state(...)
+            [0010] get_state()
             [0011] push_word(1)
             [0014] neq
             [0015] unless goto +208
@@ -443,12 +443,12 @@ script_test_cases = [
             [0022] unless goto +29
             [0025] push_word_var(VAR_KEYPRESS)
             [0028] push_word(1)
-            [002B] setState(...)
+            [002B] setState()
             [002C] push_word_var(VAR_EGO)
             [002F] unless goto +7
             [0032] push_word_var(VAR_EGO)
             [0035] push_word(1)
-            [0038] setState(...)
+            [0038] setState()
             [0039] printDebug.begin()
             [003B] printDebug.msg(" ")
             [003F] jump e8
@@ -600,7 +600,7 @@ script_test_cases = [
             [0006] push_word(22)
             [0009] push_word(33)
             [000C] push_word(3)
-            [000F] startScriptQuick(...)
+            [000F] startScriptQuick()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
             [0000] startScriptQuick(93, [11, 22, 33])
@@ -976,7 +976,7 @@ script_test_cases = [
             [0000] (BC) dimArray.bit(var240,15)
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] dimArray.bit(var_240, 15)',
+        expected_disasm_fusion_output='[0000] dimArray.bit(var240, 15)',
     ),
     ScriptComparisonTestCase(
         test_id="pickup_object_fusion",

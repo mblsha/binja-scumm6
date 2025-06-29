@@ -718,7 +718,7 @@
                 let matchesStatus = true;
                 switch(statusFilter) {
                     case 'matches':
-                        matchesStatus = s.processed && s.is_match;
+                        matchesStatus = s.processed && s.is_match && s.match_score === 1.0;
                         break;
                     case 'differences':
                         matchesStatus = s.processed && !s.is_match;
