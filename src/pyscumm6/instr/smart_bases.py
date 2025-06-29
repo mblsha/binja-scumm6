@@ -75,6 +75,7 @@ DESCUMM_FUNCTION_NAMES = {
     "is_actor_in_box": "isActorInBox",
     # Actor intrinsics
     "get_actor_scale_x": "getActorScaleX",
+    "get_actor_room": "getActorRoom",
     # Complex operations 
     "print_debug.begin": "printDebug.begin",
     "print_debug.msg": "printDebug.msg",
