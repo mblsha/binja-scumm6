@@ -45,6 +45,7 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
         # Actor query operations
         "get_actor_scale_x", # 1 param: actor_id -> scale X
         "get_actor_room",   # 1 param: actor_id -> room number
+        "get_actor_anim_counter", # 1 param: actor_id -> animation counter
         # Random number operations
         "get_random_number", # 1 param: max_value -> random result
         "get_random_number_range", # 2 params: min, max -> random result

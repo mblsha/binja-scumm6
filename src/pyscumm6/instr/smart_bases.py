@@ -76,6 +76,7 @@ DESCUMM_FUNCTION_NAMES = {
     # Actor intrinsics
     "get_actor_scale_x": "getActorScaleX",
     "get_actor_room": "getActorRoom",
+    "get_actor_anim_counter": "getActorAnimCounter1",
     # Complex operations 
     "print_debug.begin": "printDebug.begin",
     "print_debug.msg": "printDebug.msg",
