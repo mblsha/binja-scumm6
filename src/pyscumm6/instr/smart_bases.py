@@ -157,6 +157,8 @@ DESCUMM_FUNCTION_NAMES = {
     "verb_ops.set_verb_object": "verbOps.setVerbObject",
     # Resource routines subcommands
     "resource_routines.load_costume": "resourceRoutines.loadCostume",
+    # System operations subcommands
+    "system_ops.quit": "systemOps.shutDown",
 }
 
 
