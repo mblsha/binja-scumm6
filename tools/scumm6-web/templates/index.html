@@ -64,6 +64,35 @@
             border-radius: 4px;
         }
         
+        .filter-box {
+            padding: 0 1rem 1rem 1rem;
+            border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-box label {
+            font-size: 0.9rem;
+            color: #aaa;
+            white-space: nowrap;
+        }
+        
+        .filter-box select {
+            flex: 1;
+            padding: 0.4rem;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .filter-box select:focus {
+            outline: none;
+            border-color: #0178d4;
+        }
+        
         .stats {
             padding: 1rem;
             background: #2d2d2d;
@@ -458,6 +487,16 @@
                 <input type="text" id="searchInput" placeholder="Search scripts..." />
             </div>
             
+            <div class="filter-box">
+                <label for="statusFilter">Filter:</label>
+                <select id="statusFilter">
+                    <option value="all">All</option>
+                    <option value="matches">Perfect matches</option>
+                    <option value="differences">Has differences</option>
+                    <option value="unprocessed">Not processed</option>
+                </select>
+            </div>
+            
             <div class="stats" id="stats">
                 Loading...
             </div>
@@ -581,6 +620,7 @@
         
         // Elements
         const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
         const scriptList = document.getElementById('scriptList');
         const stats = document.getElementById('stats');
         const diffHeader = document.getElementById('diffHeader');
@@ -592,6 +632,13 @@
         const rawPanel = document.getElementById('rawPanel');
         const progressBar = document.getElementById('progressBar');
         const refreshBtn = document.getElementById('refreshBtn');
+        
+        // Helper function to refresh script list with current filters
+        function refreshScriptList() {
+            const textFilter = searchInput.value;
+            const statusFilterValue = statusFilter.value;
+            renderScriptList(textFilter, statusFilterValue);
+        }
         
         // Natural sort function for script names
         function naturalSort(a, b) {
@@ -651,7 +698,7 @@
                 scripts = data.scripts;
                 // Apply natural sort to ensure room1, room2, ..., room10, room11 ordering
                 scripts.sort(naturalSort);
-                renderScriptList();
+                refreshScriptList();
                 updateStats();
                 
                 // Process all scripts in background
@@ -662,10 +709,31 @@
         }
         
         // Render script list
-        function renderScriptList(filter = '') {
-            const filtered = scripts.filter(s => 
-                s.name.toLowerCase().includes(filter.toLowerCase())
-            );
+        function renderScriptList(textFilter = '', statusFilter = 'all') {
+            const filtered = scripts.filter(s => {
+                // Apply text filter
+                const matchesText = s.name.toLowerCase().includes(textFilter.toLowerCase());
+                
+                // Apply status filter
+                let matchesStatus = true;
+                switch(statusFilter) {
+                    case 'matches':
+                        matchesStatus = s.processed && s.is_match;
+                        break;
+                    case 'differences':
+                        matchesStatus = s.processed && !s.is_match;
+                        break;
+                    case 'unprocessed':
+                        matchesStatus = !s.processed;
+                        break;
+                    case 'all':
+                    default:
+                        matchesStatus = true;
+                        break;
+                }
+                
+                return matchesText && matchesStatus;
+            });
             
             scriptList.innerHTML = filtered.map(script => {
                 const statusIcon = script.processed ? 
@@ -745,7 +813,7 @@
                     script.processed = true;
                     script.is_match = data.is_match;
                     script.match_score = data.match_score;
-                    renderScriptList(searchInput.value);
+                    refreshScriptList();
                     updateStats();
                 }
                 
@@ -1105,7 +1173,7 @@
                             
                             // Update UI every 5 scripts
                             if (processedCount % 5 === 0) {
-                                renderScriptList(searchInput.value);
+                                refreshScriptList();
                                 updateStats();
                             }
                         }
@@ -1116,7 +1184,7 @@
             }
             
             // Final update
-            renderScriptList(searchInput.value);
+            refreshScriptList();
             updateStats();
             progressBar.style.transform = 'scaleX(1)';
             setTimeout(() => progressBar.style.display = 'none', 1000);
@@ -1124,7 +1192,12 @@
         
         // Search functionality
         searchInput.addEventListener('input', (e) => {
-            renderScriptList(e.target.value);
+            refreshScriptList();
+        });
+        
+        // Status filter functionality
+        statusFilter.addEventListener('change', (e) => {
+            refreshScriptList();
         });
         
         // Refresh button

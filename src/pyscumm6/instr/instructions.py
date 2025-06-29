@@ -1430,7 +1430,7 @@ class SaveRestoreVerbs(FusibleMultiOperandMixin, Instruction):
             # Render operands in push order (not reversed)
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
-                    tokens.append(TSep(", "))
+                    tokens.append(TSep(","))
                 tokens.extend(self._render_operand(operand))
             tokens.append(TSep(")"))
             return tokens
@@ -1647,7 +1647,7 @@ class PrintLine(FusibleMultiOperandMixin, Instruction):
             if self.fused_operands and len(self.fused_operands) >= 2:
                 tokens.append(TText("("))
                 tokens.extend(self._render_operand(self.fused_operands[0]))
-                tokens.append(TSep(", "))
+                tokens.append(TSep(","))
                 tokens.extend(self._render_operand(self.fused_operands[1]))
                 tokens.append(TText(")"))
             else:
@@ -1657,7 +1657,7 @@ class PrintLine(FusibleMultiOperandMixin, Instruction):
             tokens.append(TText("("))
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
-                    tokens.append(TSep(", "))
+                    tokens.append(TSep(","))
                 tokens.extend(self._render_operand(operand))
             tokens.append(TText(")"))
         else:
@@ -2092,7 +2092,7 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
                 tokens.append(TText("..."))
             
             # Add the actor parameter
-            tokens.extend([TSep(", ")])
+            tokens.extend([TSep(",")])
             tokens.extend(self._render_operand(self.fused_operands[0]))
             tokens.append(TText(")"))
             return tokens
@@ -2250,7 +2250,7 @@ class CursorCommand(FusibleMultiOperandMixin, Instruction):
                         value_operands = self.fused_operands[:-1]
                         for i, operand in enumerate(value_operands[:count]):
                             if i > 0:
-                                tokens.append(TSep(", "))
+                                tokens.append(TSep(","))
                             tokens.extend(self._render_operand(operand))
                         tokens.append(TText("]"))
                     else:
@@ -2266,7 +2266,7 @@ class CursorCommand(FusibleMultiOperandMixin, Instruction):
             tokens.append(TText("("))
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
-                    tokens.append(TSep(", "))
+                    tokens.append(TSep(","))
                 tokens.extend(self._render_operand(operand))
             tokens.append(TText(")"))
         else:
@@ -2470,7 +2470,7 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
             tokens.append(TText("("))
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
-                    tokens.append(TSep(", "))
+                    tokens.append(TSep(","))
                 tokens.extend(self._render_operand(operand))
             tokens.append(TText(")"))
         else:
@@ -2579,7 +2579,7 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
             tokens.append(TText("("))
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
-                    tokens.append(TSep(", "))
+                    tokens.append(TSep(","))
                 tokens.extend(self._render_operand(operand))
             tokens.append(TText(")"))
         else:
@@ -2726,7 +2726,7 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
             tokens.append(TText("("))
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
-                    tokens.append(TSep(", "))
+                    tokens.append(TSep(","))
                 tokens.extend(self._render_operand(operand))
             tokens.append(TText(")"))
         elif getattr(subop_body, "pop_count", 0) > 0:

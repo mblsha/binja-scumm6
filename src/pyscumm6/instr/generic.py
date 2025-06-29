@@ -273,9 +273,9 @@ class VariableWriteOp(Instruction):
                 # Show as assignment: var_10 = 5 or localvar1 = 1 or bitvar327 = 1
                 tokens = []
                 if var_prefix == "var":
-                    # For assignments, use raw variable names to match descumm style
+                    # For assignments, use system variable names when available (like VAR_ROOM)
                     from .smart_bases import get_variable_name
-                    tokens.append(TInt(get_variable_name(var_id, use_raw_names=True)))
+                    tokens.append(TInt(get_variable_name(var_id, use_raw_names=False, use_var_prefix=True)))
                 else:
                     tokens.append(TInt(f"{var_prefix}{var_id}"))
             
@@ -306,9 +306,9 @@ class VariableWriteOp(Instruction):
             var_prefix = self._get_var_prefix()
             # Normal stack-based rendering
             if var_prefix == "var":
-                # For assignments, use raw variable names to match descumm style
+                # For assignments, use system variable names when available (like VAR_ROOM)
                 from .smart_bases import get_variable_name
-                var_display = get_variable_name(var_id, use_raw_names=True)
+                var_display = get_variable_name(var_id, use_raw_names=False, use_var_prefix=True)
             else:
                 var_display = f"{var_prefix}{var_id}"
             return [
@@ -336,8 +336,7 @@ class VariableWriteOp(Instruction):
                     elif var_type == Scumm6Opcodes.VarType.bitvar:
                         return [TInt(f"bitvar{var_num}")]
                 
-                # For variable assignments, use raw variable names to match descumm style
-                # (descumm shows "var7" not "me" for variable-to-variable assignments)
+                # For variable assignments to local variables, descumm uses raw variable names (var7 not VAR_ME)
                 from .smart_bases import get_variable_name
                 return [TInt(get_variable_name(var_num, use_raw_names=True))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:

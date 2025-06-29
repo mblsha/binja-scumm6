@@ -144,12 +144,12 @@ script_test_cases = [
         """).strip(),
         expected_disasm_output=dedent("""
             [0000] push_word_var(VAR_KEYPRESS)
-            [0003] getObjectX(...)
+            [0003] getObjectX()
             [0004] push_word_var(VAR_EGO)
             [0007] sub
             [0008] write_word_var(localvar5)
             [000B] push_word_var(VAR_KEYPRESS)
-            [000E] getObjectY(...)
+            [000E] getObjectY()
             [000F] push_word_var(VAR_CAMERA_POS_X)
             [0012] sub
             [0013] write_word_var(localvar6)
@@ -166,7 +166,7 @@ script_test_cases = [
             [002E] push_word(0)
             [0031] write_word_var(var_137)
             [0034] push_word(0)
-            [0037] stopScript(...)
+            [0037] stopScript()
             [0038] push_word_var(VAR_MACHINE_SPEED)
             [003B] push_word_var(VAR_ROOM)
             [003E] gt
@@ -174,7 +174,7 @@ script_test_cases = [
             [0042] push_word(0)
             [0045] write_word_var(var_137)
             [0048] push_word(0)
-            [004B] stopScript(...)
+            [004B] stopScript()
             [004C] push_word_var(VAR_OVERRIDE)
             [004F] push_word_var(VAR_OVERRIDE)
             [0052] mul

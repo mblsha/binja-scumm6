@@ -73,6 +73,14 @@ DESCUMM_FUNCTION_NAMES = {
     "print_debug.begin": "printDebug.begin",
     "print_debug.msg": "printDebug.msg",
     "print_text.color": "printCursor.color",
+    # Print line subcommands
+    "print_line.begin": "printLine.begin",
+    "print_line.color": "printLine.color",
+    "print_line.xy": "printLine.XY",
+    "print_line.center": "printLine.center",
+    "print_line.overhead": "printLine.overhead",
+    "print_line.clipped": "printLine.right",  # descumm uses "right" for clipped
+    "print_line.end": "printLine.end",
     "room_ops.room_screen": "roomOps.setScreen",
     # Actor operations subcommands
     "actor_ops.set_current_actor": "actorOps.setCurActor",
@@ -145,9 +153,7 @@ def get_variable_name(var_num: int, use_raw_names: bool = False, use_var_prefix:
     
     # If requested, always use raw variable names (matches descumm for assignments)
     if use_raw_names:
-        # For non-system variables, still use var_ prefix to match our disassembly style
-        if var_num not in vars.scumm_vars_inverse():
-            return f"var_{var_num}"
+        # For descumm literal compatibility, use varN format (no underscore)
         return f"var{var_num}"
     
     # Get the system variable mappings
@@ -172,8 +178,8 @@ def get_variable_name(var_num: int, use_raw_names: bool = False, use_var_prefix:
                 var_name = var_name.lower()
             return var_name
     else:
-        # For non-system variables, use var_N format
-        return f"var_{var_num}"
+        # For non-system variables, use varN format (descumm literal compatibility)
+        return f"var{var_num}"
 
 
 class FusibleMultiOperandMixin:
@@ -281,12 +287,8 @@ class SmartIntrinsicOp(Instruction):
         display_name = DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
         
         # Add parentheses for function call syntax consistency
-        if self._config.pop_count > 0 or self._config.push_count > 0:
-            # Function with parameters/returns - use parentheses
-            return [TInstr(f"{display_name}(...)")]
-        else:
-            # Simple function call - use parentheses 
-            return [TInstr(f"{display_name}()")]
+        # For descumm literal compatibility, always show () instead of (...)
+        return [TInstr(f"{display_name}()")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         # Handle special lift cases
@@ -360,17 +362,15 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
             # Add operands in correct order (reverse of fusion order)
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
-                    tokens.append(TSep(", "))
+                    tokens.append(TSep(","))
                 tokens.extend(self._render_operand(operand))
             
             tokens.append(TSep(")"))
             return tokens
         else:
             # Normal rendering with parentheses
-            if self._config.pop_count > 0 or self._config.push_count > 0:
-                return [TInstr(f"{display_name}(...)")]
-            else:
-                return [TInstr(f"{display_name}()")]
+            # For descumm literal compatibility, always show () instead of (...)
+            return [TInstr(f"{display_name}()")]
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
@@ -597,16 +597,14 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
             # Render operands in push order (not reversed)
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
-                    tokens.append(TSep(", "))
+                    tokens.append(TSep(","))
                 tokens.extend(self._render_operand(operand))
             tokens.append(TSep(")"))
             return tokens
         
-        # Add parentheses for function call syntax consistency
-        if hasattr(self.op_details.body.body, "pop_count") and self.op_details.body.body.pop_count > 0:
-            return [TInstr(f"{display_name}(...)")]
-        else:
-            return [TInstr(f"{display_name}()")]
+        # Add parentheses for function call syntax consistency  
+        # For descumm literal compatibility, always show () instead of (...)
+        return [TInstr(f"{display_name}()")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         from ...scumm6_opcodes import Scumm6Opcodes  # type: ignore[import-untyped]
@@ -1692,11 +1690,8 @@ class SmartSemanticIntrinsicOp(SmartFusibleIntrinsic):
         # Use descumm-style naming for semantic operations too
         display_name = DESCUMM_FUNCTION_NAMES.get(self._config.semantic_name, self._config.semantic_name)
         
-        # Use consistent ellipsis notation for all operations with parameters
-        if self._config.pop_count > 0 or self._config.push_count > 0:
-            return [TInstr(f"{display_name}(...)")]
-        else:
-            return [TInstr(f"{display_name}()")]
+        # For descumm literal compatibility, always show () instead of (...)
+        return [TInstr(f"{display_name}()")]
     
     def _render_fused_semantic_call(self) -> List[Token]:
         """Render semantic function call with fused operands."""
@@ -1707,7 +1702,7 @@ class SmartSemanticIntrinsicOp(SmartFusibleIntrinsic):
         # Add fused operands as actual parameters
         for i, operand in enumerate(self.fused_operands):
             if i > 0:
-                tokens.append(TSep(", "))
+                tokens.append(TSep(","))
             tokens.extend(self._render_operand(operand))
         
         tokens.append(TSep(")"))
@@ -2112,11 +2107,11 @@ class SmartVariableArgumentIntrinsic(SmartIntrinsicOp):
         Subclasses can override for complex rendering needs.
         """
         if not (self.fused_operands and self._arg_count is not None):
-            return [TInstr(f"{self.get_instruction_name()}(...)")]
+            return [TInstr(f"{self.get_instruction_name()}()")]
         
         total_needed = self._arg_count + self.get_fixed_param_count() + 1
         if len(self.fused_operands) < total_needed:
-            return [TInstr(f"{self.get_instruction_name()}(...)")]
+            return [TInstr(f"{self.get_instruction_name()}()")]
         
         tokens = [TInstr(self.get_instruction_name()), TSep("(")]
         
@@ -2124,19 +2119,19 @@ class SmartVariableArgumentIntrinsic(SmartIntrinsicOp):
         fixed_count = self.get_fixed_param_count()
         for i in range(fixed_count):
             if i > 0:
-                tokens.append(TSep(", "))
+                tokens.append(TSep(","))
             tokens.extend(self._render_operand(self.fused_operands[i]))
         
         # Add separator before variable args if we have fixed params
         if fixed_count > 0 and self._arg_count > 0:
-            tokens.append(TSep(", "))
+            tokens.append(TSep(","))
         
         # Render variable arguments as array
         if self._arg_count > 0:
             tokens.append(TSep("["))
             for i in range(fixed_count, fixed_count + self._arg_count):
                 if i > fixed_count:
-                    tokens.append(TSep(", "))
+                    tokens.append(TSep(","))
                 tokens.extend(self._render_operand(self.fused_operands[i]))
             tokens.append(TSep("]"))
         
