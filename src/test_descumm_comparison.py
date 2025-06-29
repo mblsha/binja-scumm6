@@ -1116,6 +1116,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] VAR_VERB_SCRIPT = 2',
     ),
+    ScriptComparisonTestCase(
+        test_id="cursor_command_cursor_off",
+        bytecode=bytes.fromhex("6B91"),
+        expected_descumm_output=dedent("""
+            [0000] (6B) cursorCommand.cursorOff()
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] cursorCommand.cursorOff()',
+    ),
 ]
 
 

@@ -2310,6 +2310,10 @@ class CursorCommand(FusibleMultiOperandMixin, Instruction):
         display_subop = subop_map.get(subop_name, subop_name)
         display_name = f"cursorCommand.{display_subop}"
         
+        # Apply descumm function name mapping if available
+        from .smart_bases import DESCUMM_FUNCTION_NAMES
+        display_name = DESCUMM_FUNCTION_NAMES.get(display_name, display_name)
+        
         tokens: List[Token] = [TInstr(display_name)]
         
         # Check for specific body types
