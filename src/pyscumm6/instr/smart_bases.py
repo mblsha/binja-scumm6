@@ -168,6 +168,7 @@ DESCUMM_FUNCTION_NAMES = {
     # Resource routines subcommands
     "resource_routines.load_costume": "resourceRoutines.loadCostume",
     # System operations subcommands
+    "system_ops.restart": "systemOps.restartGame",
     "system_ops.quit": "systemOps.shutDown",
 }
 
