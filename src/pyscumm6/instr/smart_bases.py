@@ -84,6 +84,7 @@ DESCUMM_FUNCTION_NAMES = {
     "print_debug.begin": "printDebug.begin",
     "print_debug.msg": "printDebug.msg",
     "print_text.baseop": "printCursor.begin",
+    "print_text.center": "printCursor.center",
     "print_text.color": "printCursor.color",
     # Print line subcommands
     "print_line.begin": "printLine.begin",
