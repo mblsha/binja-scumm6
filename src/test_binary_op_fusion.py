@@ -55,7 +55,7 @@ def test_sub_fusion_with_variables() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "((VAR_OVERRIDE) - (VAR_HAVE_MSG))"
+    assert text == "(VAR_OVERRIDE - VAR_HAVE_MSG)"
 
 
 def test_mul_fusion_with_same_variable() -> None:
@@ -76,7 +76,7 @@ def test_mul_fusion_with_same_variable() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "((VAR_ME) * (VAR_ME))"
+    assert text == "(VAR_ME * VAR_ME)"
 
 
 def test_div_fusion_mixed_operands() -> None:
@@ -97,7 +97,7 @@ def test_div_fusion_mixed_operands() -> None:
     assert instruction.stack_pop_count == 0
     
     text = render_tokens(instruction.render())
-    assert text == "((VAR_CURRENTDRIVE) / 2)"
+    assert text == "(VAR_CURRENTDRIVE / 2)"
 
 
 def test_partial_fusion_with_one_operand() -> None:

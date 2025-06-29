@@ -39,9 +39,13 @@ class Instruction(ABC):
         return 0
 
     @abstractmethod
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         """
         Generate disassembly text tokens for this instruction.
+        
+        Args:
+            as_operand: True if this instruction is being rendered as an operand
+                       to another instruction (affects parentheses usage)
         
         Returns:
             List of tokens representing the disassembled instruction

@@ -678,7 +678,7 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            # For variables, wrap in parentheses to match descumm style
+            # Variables don't need extra parentheses in descumm style
             var_id = operand.op_details.body.data
             # Handle signed byte interpretation for PushByteVar
             if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
@@ -688,23 +688,35 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
             if hasattr(operand.op_details.body, 'type'):
                 var_type = operand.op_details.body.type
                 if var_type == Scumm6Opcodes.VarType.local:
-                    return [TText("("), TInt(f"localvar{var_id}"), TText(")")]
+                    return [TInt(f"localvar{var_id}")]
                 elif var_type == Scumm6Opcodes.VarType.bitvar:
-                    return [TText("("), TInt(f"bitvar{var_id}"), TText(")")]
+                    return [TInt(f"bitvar{var_id}")]
             
             # System variable - use semantic name mapping
-            return [TText("("), TInt(get_variable_name(var_id)), TText(")")]
+            return [TInt(get_variable_name(var_id))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             # Constants don't need parentheses
             return [TInt(str(operand.op_details.body.data))]
         elif operand.produces_result():
             # This is a result-producing instruction (like a fused expression)
-            # Render it as a nested expression
-            tokens: List[Token] = []
-            tokens.append(TText("("))
-            tokens.extend(operand.render())
-            tokens.append(TText(")"))
-            return tokens
+            # Add parentheses for operations that need grouping when used as operands
+            if operand.__class__.__name__ in ['Sub', 'Mul', 'Div']:
+                # Subtraction, multiplication and division need parentheses when used as operands
+                tokens: List[Token] = []
+                tokens.append(TText("("))
+                # Check if render method supports as_operand parameter
+                try:
+                    tokens.extend(operand.render(as_operand=True))
+                except TypeError:
+                    tokens.extend(operand.render())
+                tokens.append(TText(")"))
+                return tokens
+            else:
+                # Addition doesn't need extra parentheses in most contexts
+                try:
+                    return operand.render(as_operand=True)
+                except TypeError:
+                    return operand.render()
         else:
             return [TText("operand")]
 
@@ -723,7 +735,7 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
         else:
             return il.const(4, 0)  # Fallback
 
-    def render(self) -> List[Token]:
+    def render(self, as_operand: bool = False) -> List[Token]:
         display_name = self._config.display_name or self._name
         # Apply descumm-style function name mapping
         mapped_name = DESCUMM_FUNCTION_NAMES.get(display_name, display_name)
@@ -741,9 +753,12 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
             }
             
             if self._name in infix_operators:
-                # Render as infix: (operand1 + operand2)
+                # Render as infix
                 tokens: List[Token] = []
-                tokens.append(TSep("("))
+                
+                # Add outer parentheses for standalone expressions or when needed as operand
+                if not as_operand:
+                    tokens.append(TSep("("))
                 
                 # Left operand (first pushed, so fused_operands[0])
                 tokens.extend(self._render_operand(self.fused_operands[0]))
@@ -755,7 +770,9 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin):
                 # Right operand (second pushed, so fused_operands[1])
                 tokens.extend(self._render_operand(self.fused_operands[1]))
                 
-                tokens.append(TSep(")"))
+                if not as_operand:
+                    tokens.append(TSep(")"))
+                
                 return tokens
         
         # If we have fused operands but not 2, or not an infix operation, use function call style

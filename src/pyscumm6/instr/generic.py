@@ -280,7 +280,18 @@ class VariableWriteOp(Instruction):
                     tokens.append(TInt(f"{var_prefix}{var_id}"))
             
             tokens.append(TSep(" = "))
-            tokens.extend(self._render_operand(self.fused_operands[0]))
+            # For complex expressions, wrap in parentheses
+            operand = self.fused_operands[0]
+            if operand.produces_result() and operand.__class__.__name__ in ['Add', 'Sub', 'Mul', 'Div']:
+                tokens.append(TSep("("))
+                # Render as operand to avoid double parentheses from SmartBinaryOp
+                try:
+                    tokens.extend(operand.render(as_operand=True))
+                except TypeError:
+                    tokens.extend(self._render_operand(operand))
+                tokens.append(TSep(")"))
+            else:
+                tokens.extend(self._render_operand(operand))
             return tokens
         
         # Handle potential UnknownOp case for write_byte_var due to Kaitai bug

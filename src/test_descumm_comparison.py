@@ -868,7 +868,7 @@ script_test_cases = [
             [0000] (43) localvar1 = (20 + (VAR_SOUNDRESULT - ((VAR_SOUNDRESULT / 4) * 4)))
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] localvar1 = (20 + (((VAR_SOUNDRESULT) - (((((VAR_SOUNDRESULT) / 4)) * 4)))))',
+        expected_disasm_fusion_output='[0000] localvar1 = (20 + (VAR_SOUNDRESULT - ((VAR_SOUNDRESULT / 4) * 4)))',
     ),
     ScriptComparisonTestCase(
         test_id="is_script_running_negated",
@@ -931,7 +931,7 @@ script_test_cases = [
             [0000] (61) drawObject(733,(1 + getRandomNumber(2)))
             END
         """).strip(),
-        expected_disasm_fusion_output='[0000] drawObject(733, (1 + (getRandomNumber(2))))',
+        expected_disasm_fusion_output='[0000] drawObject(733, (1 + getRandomNumber(2)))',
     ),
     ScriptComparisonTestCase(
         test_id="print_cursor_msg",
@@ -1070,6 +1070,15 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] VAR_OVERRIDE++',
+    ),
+    ScriptComparisonTestCase(
+        test_id="complex_nested_expression_fusion",
+        bytecode=bytes.fromhex("01140003380003380001040017010400161514430140"),
+        expected_descumm_output=dedent("""
+            [0000] (43) localvar1 = (20 + (VAR_SOUNDRESULT - ((VAR_SOUNDRESULT / 4) * 4)))
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] localvar1 = (20 + (VAR_SOUNDRESULT - ((VAR_SOUNDRESULT / 4) * 4)))',
     ),
 ]
 
