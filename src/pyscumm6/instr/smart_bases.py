@@ -341,11 +341,37 @@ class SmartIntrinsicOp(Instruction):
         elif pattern == "function":
             return [TInstr(f"{display_name}()")]
         elif pattern == "function_params":
-            # This would need fused operands or parameters from config
+            # Render with parameters from fused operands
             tokens = [TInstr(display_name), TSep("(")]
-            # Add parameter rendering logic here if needed
+            
+            if hasattr(self, 'fused_operands') and self.fused_operands:
+                for i, operand in enumerate(self.fused_operands):
+                    if i > 0:
+                        tokens.extend([TSep(","), TSep(" ")])
+                    if hasattr(self, '_render_operand'):
+                        tokens.extend(self._render_operand(operand))
+                    else:
+                        tokens.append(TText(str(operand)))
+                
+                # If we still need more operands from stack
+                remaining = self._config.pop_count - len(self.fused_operands)
+                if remaining > 0:
+                    if self.fused_operands:
+                        tokens.extend([TSep(","), TSep(" ")])
+                    tokens.append(TInstr("..."))
+            else:
+                # No fused operands, show ellipsis for stack parameters
+                if self._config.pop_count > 0:
+                    tokens.append(TInstr("..."))
+            
             tokens.append(TSep(")"))
             return tokens
+        elif pattern == "complex":
+            # For complex operations with suboperations
+            if hasattr(self, 'subop_name'):
+                return [TInstr(f"{display_name}.{self.subop_name}()")]
+            else:
+                return [TInstr(f"{display_name}()")]
         else:
             # Fallback to default
             return [TInstr(f"{display_name}()")]
@@ -662,6 +688,10 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin, OperandRenderingMixin
         return self._render_operand_smart_binary(operand, as_operand=True)
 
     def render(self, as_operand: bool = False) -> List[Token]:
+        # Check for configuration-driven rendering
+        if hasattr(self._config, 'render_pattern') and self._config.render_pattern != "custom":
+            return self._render_from_config(as_operand)
+        
         display_name = self._config.display_name or self._name
         # Apply descumm-style function name mapping
         from .helpers import apply_descumm_function_name
@@ -725,6 +755,20 @@ class SmartBinaryOp(Instruction, FusibleMultiOperandMixin, OperandRenderingMixin
         else:
             # Standard rendering
             return [TInstr(mapped_name)]
+    
+    def _render_from_config(self, as_operand: bool = False) -> List[Token]:
+        """Render instruction based on configuration pattern."""
+        from .helpers import apply_descumm_function_name
+        display_name = self._config.display_name or self._name
+        display_name = apply_descumm_function_name(display_name)
+        
+        if self._config.render_pattern == "simple":
+            return [TInstr(display_name)]
+        elif self._config.render_pattern == "function":
+            return [TInstr(f"{display_name}()")]
+        else:
+            # Fallback to default behavior
+            return [TInstr(display_name)]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         assert isinstance(self.op_details.body, Scumm6Opcodes.NoData), \
@@ -813,6 +857,10 @@ class SmartUnaryOp(Instruction, OperandRenderingMixin, OperandLiftingMixin):
         return self._render_operand_with_parens(operand)
 
     def render(self, as_operand: bool = False) -> List[Token]:
+        # Check for configuration-driven rendering
+        if hasattr(self._config, 'render_pattern') and self._config.render_pattern != "custom":
+            return self._render_from_config(as_operand)
+        
         display_name = self._config.display_name or self._name
         # Apply descumm-style function name mapping
         from .helpers import apply_descumm_function_name
@@ -832,6 +880,20 @@ class SmartUnaryOp(Instruction, OperandRenderingMixin, OperandLiftingMixin):
             return tokens
         
         return [TInstr(mapped_name)]
+    
+    def _render_from_config(self, as_operand: bool = False) -> List[Token]:
+        """Render instruction based on configuration pattern."""
+        from .helpers import apply_descumm_function_name
+        display_name = self._config.display_name or self._name
+        display_name = apply_descumm_function_name(display_name)
+        
+        if self._config.render_pattern == "simple":
+            return [TInstr(display_name)]
+        elif self._config.render_pattern == "function":
+            return [TInstr(f"{display_name}()")]
+        else:
+            # Fallback to default behavior
+            return [TInstr(display_name)]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         # Get the operand value

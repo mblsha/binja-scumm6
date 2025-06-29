@@ -311,6 +311,10 @@ STACK_CONFIGS: Dict[str, StackConfig] = {
     "lt": StackConfig("compare_signed_less_than", "lt", is_comparison=True, doc="Less than"),
     "le": StackConfig("compare_signed_less_equal", "le", is_comparison=True, doc="Less than or equal"),
     "ge": StackConfig("compare_signed_greater_equal", "ge", is_comparison=True, doc="Greater than or equal"),
+    # Simple stack operations
+    "dup": StackConfig("dup", doc="Duplicate top stack value", render_pattern="simple"),
+    "band": StackConfig("band", doc="Bitwise AND", render_pattern="simple"),
+    "bor": StackConfig("bor", doc="Bitwise OR", render_pattern="simple"),
 }
 
 # ============================================================================
