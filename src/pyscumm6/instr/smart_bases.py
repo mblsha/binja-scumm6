@@ -17,6 +17,7 @@ DESCUMM_FUNCTION_NAMES = {
     "stop_object_code1": "stopObjectCodeA",
     "stop_object_code2": "stopObjectCodeB", 
     "stop_script": "stopScript",
+    "stop_sentence": "stopSentence",
     "start_script": "startScript",
     "start_script_quick": "startScriptQuick",
     "start_script_quick2": "startScriptQuick2",
