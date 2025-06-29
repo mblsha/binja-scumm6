@@ -362,7 +362,7 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin):
             # Add operands in correct order (reverse of fusion order)
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
-                    tokens.append(TSep(","))
+                    tokens.append(TSep(", "))
                 tokens.extend(self._render_operand(operand))
             
             tokens.append(TSep(")"))
@@ -597,7 +597,7 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction):
             # Render operands in push order (not reversed)
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
-                    tokens.append(TSep(","))
+                    tokens.append(TSep(", "))
                 tokens.extend(self._render_operand(operand))
             tokens.append(TSep(")"))
             return tokens
@@ -2131,7 +2131,7 @@ class SmartVariableArgumentIntrinsic(SmartIntrinsicOp):
             tokens.append(TSep("["))
             for i in range(fixed_count, fixed_count + self._arg_count):
                 if i > fixed_count:
-                    tokens.append(TSep(","))
+                    tokens.append(TSep(", "))
                 tokens.extend(self._render_operand(self.fused_operands[i]))
             tokens.append(TSep("]"))
         
