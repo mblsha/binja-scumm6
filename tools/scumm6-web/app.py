@@ -201,7 +201,14 @@ class DataProvider:
         # Normalize variable names
         line = re.sub(r'localvar(\d+)', r'var_\1', line)
 
-        # Normalize spacing
+        # Normalize all spacing, including around commas and within parentheses
+        # First, remove spaces around commas
+        line = re.sub(r'\s*,\s*', ',', line)
+        # Remove spaces after opening parentheses and brackets
+        line = re.sub(r'([(\[])\s+', r'\1', line)
+        # Remove spaces before closing parentheses and brackets
+        line = re.sub(r'\s+([)\]])', r'\1', line)
+        # Normalize remaining spaces to single spaces
         line = ' '.join(line.split())
 
         return line.strip()
