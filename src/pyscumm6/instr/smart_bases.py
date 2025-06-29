@@ -83,6 +83,7 @@ DESCUMM_FUNCTION_NAMES = {
     # Complex operations 
     "print_debug.begin": "printDebug.begin",
     "print_debug.msg": "printDebug.msg",
+    "print_text.baseop": "printCursor.begin",
     "print_text.color": "printCursor.color",
     # Print line subcommands
     "print_line.begin": "printLine.begin",
