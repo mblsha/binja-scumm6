@@ -75,7 +75,7 @@ class TestFunctionCallFusion:
             0x7F               # put_actor_at_xy
         ])
         
-        assert_fusion_result(bytecode, "PutActorAtXy", 4, "putActorAtXY(1, 100, 200, 0)")
+        assert_fusion_result(bytecode, "PutActorAtXy", 4, "putActorInXY(1, 100, 200, 0)")
     
     def test_no_fusion_without_pushes(self) -> None:
         """Test that functions don't fuse with non-push instructions."""

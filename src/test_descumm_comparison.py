@@ -280,8 +280,8 @@ script_test_cases = [
             [01CE] stopObjectCodeB()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
-            [0000] localvar5 = ((getObjectX(localvar0)) - (localvar1))
-            [000B] localvar6 = ((getObjectY(localvar0)) - (localvar2))
+            [0000] localvar5 = (getObjectX(localvar0) - localvar1)
+            [000B] localvar6 = (getObjectY(localvar0) - localvar2)
             [0016] push_word_var(VAR_OVERRIDE)
             [0019] abs
             [001A] write_word_var(localvar5)
@@ -294,8 +294,8 @@ script_test_cases = [
             [0038] unless ((localvar6 > localvar4)) jump 4c
             [0042] var_137 = 0
             [0048] stopScript(0)
-            [004C] localvar7 = ((localvar5) * (localvar5))
-            [0056] localvar8 = ((localvar6) * (localvar6))
+            [004C] localvar7 = (localvar5 * localvar5)
+            [0056] localvar8 = (localvar6 * localvar6)
             [0060] unless ((localvar7 < 0)) jump 94
             [006A] printDebug.begin()
             [006C] printDebug.msg("x2 value overflowing in ellipse check")
@@ -305,14 +305,14 @@ script_test_cases = [
             [00C8] localvar11 = 1
             [00CE] localvar12 = 0
             [00D4] unless ((localvar7 <= 4000)) jump eb
-            [00DE] localvar7 = ((localvar7) * 4)
+            [00DE] localvar7 = (localvar7 * 4)
             [00E8] jump f5
-            [00EB] localvar3 = ((localvar3) / 2)
+            [00EB] localvar3 = (localvar3 / 2)
             [00F5] unless ((localvar8 <= 4000)) jump 10c
-            [00FF] localvar8 = ((localvar8) * 4)
+            [00FF] localvar8 = (localvar8 * 4)
             [0109] jump 116
-            [010C] localvar4 = ((localvar4) / 2)
-            [0116] localvar11 = ((localvar11) * 4)
+            [010C] localvar4 = (localvar4 / 2)
+            [0116] localvar11 = (localvar11 * 4)
             [0120] unless ((localvar11 >= 64)) jump 130
             [012A] localvar12 = 1
             [0130] while (localvar12) { # 92 bytes
@@ -324,7 +324,7 @@ script_test_cases = [
             [0170] localvar4 = 1
             [0176] printDebug.begin()
             [0178] printDebug.msg("very flat ellipse warning")
-            [0194] var_137 = ((((localvar7) / (((localvar3) * (localvar3))))) + (((localvar8) / (((localvar4) * (localvar4))))))
+            [0194] var_137 = ((localvar7 / (localvar3 * localvar3)) + (localvar8 / (localvar4 * localvar4)))
             [01AE] unless ((var_137 == 0)) jump 1be
             [01B8] var_137 = 1
             [01BE] unless ((var_137 > localvar11)) jump 1ce
