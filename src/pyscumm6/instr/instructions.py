@@ -1739,8 +1739,14 @@ class PrintLine(FusibleMultiOperandMixin, Instruction):
                 tokens.extend(self._render_operand(operand))
             tokens.append(TText(")"))
         else:
-            # No fused operands, show (...)
-            tokens.append(TText("(...)"))
+            # No fused operands - check if this operation expects parameters
+            max_operands = self._get_max_operands()
+            if max_operands > 0:
+                # Operation expects parameters but none are fused
+                tokens.append(TText("(...)"))
+            else:
+                # Operation takes no parameters
+                tokens.append(TText("()"))
         
         return tokens
     
