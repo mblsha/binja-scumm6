@@ -101,6 +101,9 @@ DESCUMM_FUNCTION_NAMES = {
     "actor_ops.scale": "actorOps.setScale",
     "actor_ops.palette": "actorOps.setPalette",
     "actor_ops.actor_width": "actorOps.setWidth",
+    "actor_ops.walk_animation": "actorOps.setWalkFrame",
+    "actor_ops.stand_animation": "actorOps.setStandFrame",
+    "actor_ops.talk_animation": "actorOps.setTalkFrame",
     # Wait operation subcommands
     "wait.wait_for_message": "wait.waitForMessage",
     "wait.wait_for_actor": "wait.waitForActor",
