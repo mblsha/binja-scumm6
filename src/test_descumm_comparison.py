@@ -1098,6 +1098,15 @@ script_test_cases = [
         """).strip(),
         expected_disasm_fusion_output='[0000] localvar3 = (getActorScaleX(11) / 3)',
     ),
+    ScriptComparisonTestCase(
+        test_id="variable_to_variable_assignment",
+        bytecode=bytes.fromhex("032600439000"),
+        expected_descumm_output=dedent("""
+            [0000] (43) var144 = VAR_WALKTO_OBJ
+            END
+        """).strip(),
+        expected_disasm_fusion_output='[0000] var144 = VAR_WALKTO_OBJ',
+    ),
 ]
 
 

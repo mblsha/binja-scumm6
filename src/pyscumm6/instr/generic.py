@@ -336,9 +336,30 @@ class VariableWriteOp(Instruction):
                     elif var_type == Scumm6Opcodes.VarType.bitvar:
                         return [TInt(f"bitvar{var_num}")]
                 
-                # For variable assignments to local variables, descumm uses raw variable names (var7 not VAR_ME)
-                from .smart_bases import get_variable_name
-                return [TInt(get_variable_name(var_num, use_raw_names=True))]
+                # Check if destination is a local variable or special case
+                dest_is_local = False
+                if hasattr(self, 'op_details') and hasattr(self.op_details, 'body'):
+                    if hasattr(self.op_details.body, 'type'):
+                        dest_is_local = (self.op_details.body.type == Scumm6Opcodes.VarType.local)
+                    elif isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp):
+                        # UnknownOp case (write_byte_var) - use raw names
+                        dest_is_local = True
+                
+                # For assignments to local variables, use raw names
+                # For regular variable assignments, check if source is a system variable
+                if dest_is_local:
+                    from .smart_bases import get_variable_name
+                    return [TInt(get_variable_name(var_num, use_raw_names=True))]
+                else:
+                    # For regular variable assignments, show semantic names for system variables
+                    from .smart_bases import get_variable_name
+                    from ... import vars
+                    var_mapping = vars.scumm_vars_inverse()
+                    
+                    if var_num in var_mapping:
+                        return [TInt(var_mapping[var_num])]
+                    else:
+                        return [TInt(get_variable_name(var_num, use_raw_names=True))]
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             # Constant push - extract value
             if hasattr(operand.op_details.body, 'data'):
