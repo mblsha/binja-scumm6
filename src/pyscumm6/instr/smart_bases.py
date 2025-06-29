@@ -47,6 +47,7 @@ DESCUMM_FUNCTION_NAMES = {
     "breakHere": "breakHere",
     "delay": "delay",
     "delay_frames": "delayFrames",
+    "delay_seconds": "delaySeconds",
     "dim_array": "dimArray",
     "dim2dim_array": "dim2dimArray",
     "freeze_unfreeze": "freezeUnfreeze",
