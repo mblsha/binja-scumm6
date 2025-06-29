@@ -421,7 +421,7 @@ script_test_cases = [
             [00AE] (73) jump e8
             [00B1] (5D) unless ((dup[1] == 2)) jump e7
             [00B9] (BA) talkActor("Hmm.  This door appears to be locked.",2)
-            [00E4] (73) /* jump e8; */
+            [00E4] (73) jump e8
             [00E7] (66) stopObjectCodeB()
             END
         """).strip(),

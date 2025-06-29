@@ -112,6 +112,33 @@ def safe_token_text(tokens: List[Any]) -> str:
     return ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
 
 
+def _clean_literal_mode_jumps(output: str) -> str:
+    """
+    Clean up descumm literal mode output by removing C-style comment wrappers from jump statements.
+    
+    Transforms:
+        [00E4] (73) /* jump e8; */
+    Into:
+        [00E4] (73) jump e8
+    
+    Args:
+        output: Raw descumm output
+        
+    Returns:
+        Cleaned output with comment wrappers removed from jumps
+    """
+    import re
+    
+    # Pattern to match C-style comment wrappers around jump statements
+    # Matches: /* jump xxx; */ or /* jump xxx */
+    jump_comment_pattern = r'/\*\s*(jump\s+[a-fA-F0-9]+)\s*;?\s*\*/'
+    
+    # Replace comment-wrapped jumps with clean jump statements
+    cleaned_output = re.sub(jump_comment_pattern, r'\1', output)
+    
+    return cleaned_output
+
+
 def run_descumm_on_bytecode(descumm_path: Path, bytecode: bytes, literal_mode: bool = True) -> str:
     """Execute descumm on bytecode and return cleaned output.
     
@@ -151,6 +178,11 @@ def run_descumm_on_bytecode(descumm_path: Path, bytecode: bytes, literal_mode: b
         if result.returncode != 0 and result.stderr:
             # Include stderr information if there was an error
             output = f"{output}\n<!-- descumm stderr: {result.stderr.strip()} -->"
+        
+        # Post-process literal mode output to remove C-style comment wrappers from jumps
+        if literal_mode:
+            output = _clean_literal_mode_jumps(output)
+        
         return output
     finally:
         os.unlink(tmp_file_path)
