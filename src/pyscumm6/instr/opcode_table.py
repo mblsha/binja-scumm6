@@ -21,9 +21,7 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.abs: make_intrinsic_instruction(
         "abs", Scumm6Opcodes.CallFuncPop1Push, pop_count=1, push_count=1
     ),
-    Scumm6Opcodes.OpType.break_here: make_intrinsic_instruction(
-        "break_here", Scumm6Opcodes.NoData, pop_count=0, push_count=0
-    ),
+    Scumm6Opcodes.OpType.break_here: INSTRUCTION_REGISTRY["break_here"],
     Scumm6Opcodes.OpType.pop1: make_intrinsic_instruction(
         "pop1", Scumm6Opcodes.CallFuncPop1, pop_count=1, push_count=0
     ),
