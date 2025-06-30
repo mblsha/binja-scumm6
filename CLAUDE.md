@@ -409,6 +409,102 @@ def test_instruction_stability():
 
 This proactive testing approach catches stability issues before they reach production.
 
+## Testing the Plugin in Binary Ninja
+
+### Installing and Loading the Plugin
+
+1. **Plugin Location**: The plugin should be installed in Binary Ninja's plugin directory:
+   ```
+   ~/Library/Application Support/Binary Ninja/plugins/scumm6/
+   ```
+
+2. **Restart Binary Ninja**: Use the provided restart scripts for quick testing:
+   ```bash
+   cd scripts
+   ./binja_restart_monitor.py ../DOTTDEMO.bsc6
+   # or
+   ./binja_restart_advanced.py -b ~/Applications/Binary\ Ninja.app ../DOTTDEMO.bsc6
+   ```
+
+3. **Verify Plugin Loading**: Check Binary Ninja's log window for plugin loading messages
+   - View → Show Log
+   - Look for "SCUMM6" related messages
+
+### Testing Plugin Functionality
+
+1. **Open a SCUMM6 File**: 
+   - Use File → Open and select `DOTTDEMO.bsc6`
+   - The plugin should automatically recognize the format
+
+2. **Check Architecture**:
+   - Look at the architecture dropdown in the UI
+   - Should show "Scumm6", "Scumm6Legacy", or "Scumm6New" options
+
+3. **Verify Disassembly**:
+   - Navigate to different scripts/rooms
+   - Check that instructions are properly decoded
+   - Verify fusion is working (complex expressions instead of individual stack ops)
+
+### Binary Ninja MCP Integration
+
+The `binary_ninja_mcp` tool provides remote control capabilities for Binary Ninja:
+
+1. **Installation**: Follow the MCP setup instructions in the Binary Ninja documentation
+
+2. **Available MCP Functions**:
+   - `mcp__binary_ninja_mcp__list_methods` - List all functions in the binary
+   - `mcp__binary_ninja_mcp__decompile_function` - Get decompiled C code
+   - `mcp__binary_ninja_mcp__rename_function` - Rename functions
+   - `mcp__binary_ninja_mcp__set_comment` - Add comments to addresses
+   - `mcp__binary_ninja_mcp__get_binary_status` - Check analysis status
+   - And many more (see full list in CLAUDE.md tool definitions)
+
+3. **Usage Example**:
+   ```python
+   # List all SCUMM6 functions/scripts
+   result = mcp__binary_ninja_mcp__list_methods(limit=100)
+   
+   # Decompile a specific room script
+   code = mcp__binary_ninja_mcp__decompile_function(name="room8_scrp18")
+   
+   # Add analysis comments
+   mcp__binary_ninja_mcp__set_comment(
+       address="0x1000", 
+       comment="Start of collision detection routine"
+   )
+   ```
+
+### Common Testing Scenarios
+
+1. **Instruction Fusion Verification**:
+   - Look for assignments like `var_10 = 5` instead of separate push/write operations
+   - Check function calls show parameters: `startScript(93, [11, 22, 33])`
+
+2. **Jump Address Display**:
+   - Verify jumps show absolute addresses: `jump 8d892`
+   - Check that address normalization works in the web tool
+
+3. **Function Name Compatibility**:
+   - Ensure descumm-style names appear: `stopObjectCodeA()`, `getObjectX()`
+   - Verify camelCase formatting matches descumm output
+
+### Troubleshooting Plugin Issues
+
+1. **Plugin Not Loading**:
+   - Check Binary Ninja's Python console for errors
+   - Verify `__init__.py` is present and correct
+   - Ensure all dependencies are available
+
+2. **Incorrect Disassembly**:
+   - Compare with descumm output using the web tool
+   - Check if fusion is enabled/disabled appropriately
+   - Verify the correct architecture variant is selected
+
+3. **Performance Issues**:
+   - Large scripts may take time to analyze
+   - Use the web tool to compare specific problematic sections
+   - Check Binary Ninja's analysis log for errors
+
 ## Architecture Overview
 
 ### Decoder Selection System
