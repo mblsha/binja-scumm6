@@ -923,6 +923,13 @@ class SmartUnaryOp(Instruction, OperandRenderingMixin, OperandLiftingMixin):
             # Special case for logical NOT - compare with zero
             comp_res = il.compare_equal(4, il.reg(4, LLIL_TEMP(0)), il.const(4, 0))
             il.append(il.push(4, comp_res))
+        elif self._name == "abs":
+            # Special case for abs - use intrinsic since LLIL doesn't have native abs
+            # This will show as an intrinsic call in the decompiler
+            value = il.reg(4, LLIL_TEMP(0))
+            result = il.intrinsic([il.reg(4, LLIL_TEMP(1))], "abs", [value])
+            il.append(result)
+            il.append(il.push(4, il.reg(4, LLIL_TEMP(1))))
         else:
             # Get the operation from the il object
             il_func = getattr(il, self._config.il_op_name)

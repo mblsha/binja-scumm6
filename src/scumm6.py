@@ -104,6 +104,7 @@ class Scumm6(Architecture):  # type: ignore[misc]
 
     intrinsics = (
         {op.name: IntrinsicInfo(inputs=[], outputs=[]) for op in OpType}
+        | {"abs": IntrinsicInfo(inputs=[], outputs=[])}
         | {
             f"dim_array.{subop.name}": IntrinsicInfo(inputs=[], outputs=[])
             for subop in SubopType
