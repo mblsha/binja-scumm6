@@ -70,6 +70,11 @@ class Scumm6(Architecture):  # type: ignore[misc]
     default_int_size = 4
     max_instr_length = 256
     endianness = Endianness.LittleEndian
+    
+    # Fusion settings - can be overridden by subclasses or modified at runtime
+    enable_fusion_in_disassembly = False
+    enable_fusion_in_llil = False
+    
     regs = {
         RegisterName("sp"): RegisterInfo(
             RegisterName("sp"), 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth
@@ -206,9 +211,12 @@ class Scumm6(Architecture):  # type: ignore[misc]
     def get_instruction_text(
         self, data: bytes, addr: int
     ) -> Optional[Tuple[List[InstructionTextToken], int]]:
-        # Use new decoder WITHOUT fusion for display
-        # This preserves instruction-level granularity in the UI
-        new_instr = new_decode(data, addr)
+        # Use decoder with or without fusion based on setting
+        if self.enable_fusion_in_disassembly:
+            new_instr = decode_with_fusion(data, addr)
+        else:
+            new_instr = new_decode(data, addr)
+            
         if new_instr is None:
             return None
 
@@ -232,14 +240,16 @@ class Scumm6(Architecture):  # type: ignore[misc]
     def get_instruction_low_level_il(
         self, data: bytes, addr: int, il: lowlevelil.LowLevelILFunction
     ) -> Optional[int]:
-        # Use new decoder with fusion for LLIL generation
-        # This enables instruction fusion for better semantic understanding
-        new_instr = decode_with_fusion(data, addr)
+        # Use decoder with or without fusion based on setting
+        if self.enable_fusion_in_llil:
+            new_instr = decode_with_fusion(data, addr)
+        else:
+            new_instr = new_decode(data, addr)
+            
         if new_instr is None:
             return None
 
         # Generate LLIL using new instruction's lift method
-        # Fused instructions will produce cleaner, more semantic LLIL
         new_instr.lift(il, addr)
 
         # Return the instruction length
