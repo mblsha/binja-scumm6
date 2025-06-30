@@ -2808,8 +2808,18 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
         subop = self.op_details.body.subop
         subop_body = self.op_details.body.body
         
-        # Construct intrinsic name
-        intrinsic_name = f"actor_ops.{subop.name}"
+        # Handle case where subop is an int instead of enum
+        if isinstance(subop, int):
+            try:
+                subop = Scumm6Opcodes.SubopType(subop)
+            except ValueError:
+                # If the int value is not a valid enum member, use a generic name
+                intrinsic_name = f"actor_ops.unknown_{subop}"
+            else:
+                intrinsic_name = f"actor_ops.{subop.name}"
+        else:
+            # Construct intrinsic name
+            intrinsic_name = f"actor_ops.{subop.name}"
         
         # Handle parameters based on subop_body attributes
         pop_count = getattr(subop_body, "pop_count", 0)
@@ -2958,8 +2968,18 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
         subop = self.op_details.body.subop
         subop_body = self.op_details.body.body
         
-        # Construct intrinsic name
-        intrinsic_name = f"verb_ops.{subop.name}"
+        # Handle case where subop is an int instead of enum
+        if isinstance(subop, int):
+            try:
+                subop = Scumm6Opcodes.SubopType(subop)
+            except ValueError:
+                # If the int value is not a valid enum member, use a generic name
+                intrinsic_name = f"verb_ops.unknown_{subop}"
+            else:
+                intrinsic_name = f"verb_ops.{subop.name}"
+        else:
+            # Construct intrinsic name
+            intrinsic_name = f"verb_ops.{subop.name}"
         
         # Handle parameters based on subop_body attributes
         pop_count = getattr(subop_body, "pop_count", 0)
@@ -3229,8 +3249,18 @@ class RoomOps(Instruction):
         subop = self.op_details.body.subop
         subop_body = self.op_details.body.body
         
-        # Construct intrinsic name
-        intrinsic_name = f"room_ops.{subop.name}"
+        # Handle case where subop is an int instead of enum
+        if isinstance(subop, int):
+            try:
+                subop = Scumm6Opcodes.SubopType(subop)
+            except ValueError:
+                # If the int value is not a valid enum member, use a generic name
+                intrinsic_name = f"room_ops.unknown_{subop}"
+            else:
+                intrinsic_name = f"room_ops.{subop.name}"
+        else:
+            # Construct intrinsic name
+            intrinsic_name = f"room_ops.{subop.name}"
         
         # Handle parameters based on subop_body attributes
         pop_count = getattr(subop_body, "pop_count", 0)
@@ -3264,8 +3294,18 @@ class SystemOps(Instruction):
         subop = self.op_details.body.subop
         subop_body = self.op_details.body.body
         
-        # Construct intrinsic name
-        intrinsic_name = f"system_ops.{subop.name}"
+        # Handle case where subop is an int instead of enum
+        if isinstance(subop, int):
+            try:
+                subop = Scumm6Opcodes.SubopType(subop)
+            except ValueError:
+                # If the int value is not a valid enum member, use a generic name
+                intrinsic_name = f"system_ops.unknown_{subop}"
+            else:
+                intrinsic_name = f"system_ops.{subop.name}"
+        else:
+            # Construct intrinsic name
+            intrinsic_name = f"system_ops.{subop.name}"
         
         # Handle parameters based on subop_body attributes
         pop_count = getattr(subop_body, "pop_count", 0)
@@ -3299,8 +3339,18 @@ class ResourceRoutines(Instruction):
         subop = self.op_details.body.subop
         subop_body = self.op_details.body.body
         
-        # Construct intrinsic name
-        intrinsic_name = f"resource_routines.{subop.name}"
+        # Handle case where subop is an int instead of enum
+        if isinstance(subop, int):
+            try:
+                subop = Scumm6Opcodes.SubopType(subop)
+            except ValueError:
+                # If the int value is not a valid enum member, use a generic name
+                intrinsic_name = f"resource_routines.unknown_{subop}"
+            else:
+                intrinsic_name = f"resource_routines.{subop.name}"
+        else:
+            # Construct intrinsic name
+            intrinsic_name = f"resource_routines.{subop.name}"
         
         # Handle parameters based on subop_body attributes
         pop_count = getattr(subop_body, "pop_count", 0)
