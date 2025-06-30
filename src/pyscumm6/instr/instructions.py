@@ -30,6 +30,33 @@ SCUMM_ARRAY_NAMES = {
 }
 
 
+def handle_unknown_subop_lift(il: LowLevelILFunction, subop: Any, base_name: str) -> Tuple[str, bool]:
+    """
+    Handle subop conversion for lift methods. Returns (intrinsic_name, is_unknown).
+    
+    Args:
+        il: The IL function (not used but kept for consistency)
+        subop: The subop value (may be int or enum)
+        base_name: Base name for the intrinsic (e.g., "actor_ops", "verb_ops")
+        
+    Returns:
+        Tuple of (intrinsic_name, is_unknown_subop)
+    """
+    from ...scumm6_opcodes import Scumm6Opcodes
+    
+    if isinstance(subop, int):
+        try:
+            subop = Scumm6Opcodes.SubopType(subop)
+        except ValueError:
+            # If the int value is not a valid enum member, mark as unknown
+            return f"{base_name}.unknown_{subop}", True
+        else:
+            return f"{base_name}.{subop.name}", False
+    else:
+        # Already an enum
+        return f"{base_name}.{subop.name}", False
+
+
 def parse_message_with_control_codes(message: Any) -> List[Token]:
     """
     Generic function to parse SCUMM6 Message objects with full control code support.
@@ -2809,17 +2836,7 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
         subop_body = self.op_details.body.body
         
         # Handle case where subop is an int instead of enum
-        if isinstance(subop, int):
-            try:
-                subop = Scumm6Opcodes.SubopType(subop)
-            except ValueError:
-                # If the int value is not a valid enum member, use a generic name
-                intrinsic_name = f"actor_ops.unknown_{subop}"
-            else:
-                intrinsic_name = f"actor_ops.{subop.name}"
-        else:
-            # Construct intrinsic name
-            intrinsic_name = f"actor_ops.{subop.name}"
+        intrinsic_name, unknown_subop = handle_unknown_subop_lift(il, subop, "actor_ops")
         
         # Handle parameters based on subop_body attributes
         pop_count = getattr(subop_body, "pop_count", 0)
@@ -2839,11 +2856,23 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
             # Pop all arguments from stack
             params = [il.pop(4) for _ in range(pop_count)]
         
-        if push_count > 0:
-            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
-            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        # If unknown subop, generate unimplemented instead of intrinsic
+        if unknown_subop:
+            # Pop all parameters to maintain stack balance
+            for _ in range(len(params)):
+                pass  # Already popped above
+            # Generate unimplemented
+            il.append(il.unimplemented())
+            # Push dummy value if needed
+            if push_count > 0:
+                il.append(il.push(4, il.const(4, 0)))
         else:
-            il.append(il.intrinsic([], intrinsic_name, params))
+            # Normal intrinsic handling
+            if push_count > 0:
+                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+            else:
+                il.append(il.intrinsic([], intrinsic_name, params))
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
@@ -2969,17 +2998,7 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
         subop_body = self.op_details.body.body
         
         # Handle case where subop is an int instead of enum
-        if isinstance(subop, int):
-            try:
-                subop = Scumm6Opcodes.SubopType(subop)
-            except ValueError:
-                # If the int value is not a valid enum member, use a generic name
-                intrinsic_name = f"verb_ops.unknown_{subop}"
-            else:
-                intrinsic_name = f"verb_ops.{subop.name}"
-        else:
-            # Construct intrinsic name
-            intrinsic_name = f"verb_ops.{subop.name}"
+        intrinsic_name, unknown_subop = handle_unknown_subop_lift(il, subop, "verb_ops")
         
         # Handle parameters based on subop_body attributes
         pop_count = getattr(subop_body, "pop_count", 0)
@@ -2999,11 +3018,20 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
             # Pop arguments normally
             params = [il.pop(4) for _ in range(pop_count)]
         
-        if push_count > 0:
-            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
-            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        # If unknown subop, generate unimplemented instead of intrinsic
+        if unknown_subop:
+            # Generate unimplemented
+            il.append(il.unimplemented())
+            # Push dummy value if needed
+            if push_count > 0:
+                il.append(il.push(4, il.const(4, 0)))
         else:
-            il.append(il.intrinsic([], intrinsic_name, params))
+            # Normal intrinsic handling
+            if push_count > 0:
+                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+            else:
+                il.append(il.intrinsic([], intrinsic_name, params))
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
@@ -3193,18 +3221,8 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
         subop = self.op_details.body.subop
         subop_body = self.op_details.body.body
         
-        # Construct intrinsic name
-        if hasattr(subop, 'name'):
-            intrinsic_name = f"array_ops.{subop.name}"
-        else:
-            # Map integer subop values to names
-            subop_int_map = {
-                0x00: "assign_string",
-                # Add more mappings as needed
-            }
-            subop_value = subop
-            subop_name = subop_int_map.get(subop_value, f"unknown_{subop_value}")
-            intrinsic_name = f"array_ops.{subop_name}"
+        # Handle case where subop is an int instead of enum
+        intrinsic_name, unknown_subop = handle_unknown_subop_lift(il, subop, "array_ops")
         
         # Handle parameters based on subop_body attributes
         pop_count = getattr(subop_body, "pop_count", 0)
@@ -3224,11 +3242,20 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
             # Pop arguments normally
             params = [il.pop(4) for _ in range(pop_count)]
         
-        if push_count > 0:
-            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
-            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        # If unknown subop, generate unimplemented instead of intrinsic
+        if unknown_subop:
+            # Generate unimplemented
+            il.append(il.unimplemented())
+            # Push dummy value if needed
+            if push_count > 0:
+                il.append(il.push(4, il.const(4, 0)))
         else:
-            il.append(il.intrinsic([], intrinsic_name, params))
+            # Normal intrinsic handling
+            if push_count > 0:
+                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+            else:
+                il.append(il.intrinsic([], intrinsic_name, params))
 
 
 class RoomOps(Instruction):
@@ -3250,17 +3277,7 @@ class RoomOps(Instruction):
         subop_body = self.op_details.body.body
         
         # Handle case where subop is an int instead of enum
-        if isinstance(subop, int):
-            try:
-                subop = Scumm6Opcodes.SubopType(subop)
-            except ValueError:
-                # If the int value is not a valid enum member, use a generic name
-                intrinsic_name = f"room_ops.unknown_{subop}"
-            else:
-                intrinsic_name = f"room_ops.{subop.name}"
-        else:
-            # Construct intrinsic name
-            intrinsic_name = f"room_ops.{subop.name}"
+        intrinsic_name, unknown_subop = handle_unknown_subop_lift(il, subop, "room_ops")
         
         # Handle parameters based on subop_body attributes
         pop_count = getattr(subop_body, "pop_count", 0)
@@ -3269,11 +3286,20 @@ class RoomOps(Instruction):
         # Pop arguments and call intrinsic
         params = [il.pop(4) for _ in range(pop_count)]
         
-        if push_count > 0:
-            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
-            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        # If unknown subop, generate unimplemented instead of intrinsic
+        if unknown_subop:
+            # Generate unimplemented
+            il.append(il.unimplemented())
+            # Push dummy value if needed
+            if push_count > 0:
+                il.append(il.push(4, il.const(4, 0)))
         else:
-            il.append(il.intrinsic([], intrinsic_name, params))
+            # Normal intrinsic handling
+            if push_count > 0:
+                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+            else:
+                il.append(il.intrinsic([], intrinsic_name, params))
 
 
 class SystemOps(Instruction):
@@ -3295,17 +3321,7 @@ class SystemOps(Instruction):
         subop_body = self.op_details.body.body
         
         # Handle case where subop is an int instead of enum
-        if isinstance(subop, int):
-            try:
-                subop = Scumm6Opcodes.SubopType(subop)
-            except ValueError:
-                # If the int value is not a valid enum member, use a generic name
-                intrinsic_name = f"system_ops.unknown_{subop}"
-            else:
-                intrinsic_name = f"system_ops.{subop.name}"
-        else:
-            # Construct intrinsic name
-            intrinsic_name = f"system_ops.{subop.name}"
+        intrinsic_name, unknown_subop = handle_unknown_subop_lift(il, subop, "system_ops")
         
         # Handle parameters based on subop_body attributes
         pop_count = getattr(subop_body, "pop_count", 0)
@@ -3314,11 +3330,20 @@ class SystemOps(Instruction):
         # Pop arguments and call intrinsic
         params = [il.pop(4) for _ in range(pop_count)]
         
-        if push_count > 0:
-            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
-            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        # If unknown subop, generate unimplemented instead of intrinsic
+        if unknown_subop:
+            # Generate unimplemented
+            il.append(il.unimplemented())
+            # Push dummy value if needed
+            if push_count > 0:
+                il.append(il.push(4, il.const(4, 0)))
         else:
-            il.append(il.intrinsic([], intrinsic_name, params))
+            # Normal intrinsic handling
+            if push_count > 0:
+                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+            else:
+                il.append(il.intrinsic([], intrinsic_name, params))
 
 
 class ResourceRoutines(Instruction):
@@ -3340,17 +3365,7 @@ class ResourceRoutines(Instruction):
         subop_body = self.op_details.body.body
         
         # Handle case where subop is an int instead of enum
-        if isinstance(subop, int):
-            try:
-                subop = Scumm6Opcodes.SubopType(subop)
-            except ValueError:
-                # If the int value is not a valid enum member, use a generic name
-                intrinsic_name = f"resource_routines.unknown_{subop}"
-            else:
-                intrinsic_name = f"resource_routines.{subop.name}"
-        else:
-            # Construct intrinsic name
-            intrinsic_name = f"resource_routines.{subop.name}"
+        intrinsic_name, unknown_subop = handle_unknown_subop_lift(il, subop, "resource_routines")
         
         # Handle parameters based on subop_body attributes
         pop_count = getattr(subop_body, "pop_count", 0)
@@ -3359,8 +3374,17 @@ class ResourceRoutines(Instruction):
         # Pop arguments and call intrinsic
         params = [il.pop(4) for _ in range(pop_count)]
         
-        if push_count > 0:
-            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
-            il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+        # If unknown subop, generate unimplemented instead of intrinsic
+        if unknown_subop:
+            # Generate unimplemented
+            il.append(il.unimplemented())
+            # Push dummy value if needed
+            if push_count > 0:
+                il.append(il.push(4, il.const(4, 0)))
         else:
-            il.append(il.intrinsic([], intrinsic_name, params))
+            # Normal intrinsic handling
+            if push_count > 0:
+                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+            else:
+                il.append(il.intrinsic([], intrinsic_name, params))
