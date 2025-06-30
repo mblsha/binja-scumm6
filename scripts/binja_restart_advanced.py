@@ -172,7 +172,7 @@ class BinaryNinjaAdvancedController(cli.Application):
                             return True
             
             return False
-        except:
+        except Exception:
             return False
     
     def _get_window_name(self) -> Optional[str]:
@@ -186,7 +186,7 @@ class BinaryNinjaAdvancedController(cli.Application):
             
             if result.returncode == 0:
                 return result.stdout.strip()
-        except:
+        except Exception:
             pass
         
         return None
@@ -282,7 +282,7 @@ else:
         if self.stabilization_time > 0:
             self.log(f"Waiting {self.stabilization_time}s for stabilization...")
             time.sleep(self.stabilization_time)
-            print(f"✓ Stabilization wait complete")
+            print("✓ Stabilization wait complete")
         
         return True
     
@@ -334,7 +334,7 @@ else:
                         "osascript", "-e",
                         'tell application "Binary Ninja" to activate'
                     ], capture_output=True)
-                except:
+                except Exception:
                     pass
                 
                 print(f"\n✓ Success! Total time: {self.elapsed_time():.1f}s")

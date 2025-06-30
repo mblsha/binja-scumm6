@@ -80,7 +80,7 @@ class BinaryNinjaRestartMonitor(cli.Application):
                             return True
             
             return False
-        except:
+        except Exception:
             return False
     
     def kill_binja(self) -> bool:
@@ -115,7 +115,7 @@ class BinaryNinjaRestartMonitor(cli.Application):
                     if not self.is_binja_running():
                         self.log("Binary Ninja quit gracefully")
                         return True
-            except:
+            except Exception:
                 pass
         
         if self.is_binja_running():
@@ -165,7 +165,7 @@ class BinaryNinjaRestartMonitor(cli.Application):
                         # If no file specified, any window is good
                         print(f"✓ Window opened: {window_name}")
                         return True
-            except:
+            except Exception:
                 pass
             
             time.sleep(0.5)
@@ -182,7 +182,7 @@ class BinaryNinjaRestartMonitor(cli.Application):
         """Additional wait time to ensure file is loaded."""
         self.log(f"Waiting {self.extra_wait}s for file to fully load...", always=True)
         time.sleep(self.extra_wait)
-        print(f"✓ File loading wait complete")
+        print("✓ File loading wait complete")
         return True
     
     def main(self, file_path: str = None):
@@ -194,7 +194,7 @@ class BinaryNinjaRestartMonitor(cli.Application):
         
         file_name = Path(file_path).name if file_path else None
         
-        print(f"Binary Ninja Restart")
+        print("Binary Ninja Restart")
         if file_path:
             print(f"File: {file_path}")
         else:
