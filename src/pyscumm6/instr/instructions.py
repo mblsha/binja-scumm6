@@ -1306,12 +1306,10 @@ class IfClassOfIs(FusibleMultiOperandMixin, Instruction):
             # With LIFO fusion: fused_operands[0] is object (last fused), [1] is class, [2] is count (first fused)
             if len(self.fused_operands) >= 3:
                 # Full fusion - show object
-                # print(f"DEBUG: Rendering object operand: {self.fused_operands[0].__class__.__name__}")
                 tokens.extend(self._render_operand(self.fused_operands[0]))
                 tokens.append(TSep(", "))
                 tokens.append(TSep("["))
                 # Show class ID
-                # print(f"DEBUG: Rendering class operand: {self.fused_operands[1].__class__.__name__}")
                 tokens.extend(self._render_operand(self.fused_operands[1]))
                 tokens.append(TSep("]"))
             else:
@@ -1329,9 +1327,6 @@ class IfClassOfIs(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        # Debug print to verify this method is being called
-        # print(f"IfClassOfIs._render_operand called with {operand.__class__.__name__}")
-        
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             var_num = operand.op_details.body.data if hasattr(operand.op_details.body, 'data') else 0
             # Check if it's explicitly marked as a local variable type
