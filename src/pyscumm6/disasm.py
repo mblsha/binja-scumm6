@@ -21,34 +21,10 @@ def _iter_decode(data: bytes, addr: int) -> Iterator[Tuple[Instruction, int]]:
         if not remaining_data:
             break
 
-        # Special case for opcode 0xFF (end instruction)
-        if remaining_data[0] == 0xFF:
-            from .instr.endd import Endd
-            # Create a minimal kaitai_op object for compatibility
-            class FakeOp:
-                id = None
-                body = None
-            fake_op = FakeOp()
-            instr = Endd(kaitai_op=fake_op, length=1, addr=addr + offset)
-            yield instr, addr + offset
-            offset += 1
-            continue
-
         try:
             ks = KaitaiStream(BytesIO(remaining_data))
             parsed_op = Scumm6Opcodes(ks).op
         except (KaitaiStructError, EOFError) as exc:
-            # Check if this is the end instruction that Kaitai couldn't parse
-            if remaining_data[0] == 0xFF:
-                from .instr.endd import Endd
-                class FakeOp:
-                    id = None
-                    body = None
-                fake_op = FakeOp()
-                instr = Endd(kaitai_op=fake_op, length=1, addr=addr + offset)
-                yield instr, addr + offset
-                offset += 1
-                continue
             logging.debug(
                 "Failed to parse opcode at 0x%x: %s", addr + offset, exc
             )
