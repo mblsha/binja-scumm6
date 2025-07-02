@@ -29,7 +29,7 @@ from .sorted_list import SortedList
 from . import vars
 
 # Import new decoder
-from .pyscumm6.disasm import decode as new_decode, decode_with_fusion
+from .pyscumm6.disasm import decode as new_decode, decode_with_fusion_incremental
 
 OpType = Scumm6Opcodes.OpType
 VarType = Scumm6Opcodes.VarType
@@ -224,7 +224,7 @@ class Scumm6(Architecture):  # type: ignore[misc]
     ) -> Optional[Tuple[List[InstructionTextToken], int]]:
         # Use decoder with or without fusion based on setting
         if self.enable_fusion_in_disassembly:
-            new_instr = decode_with_fusion(data, addr)
+            new_instr = decode_with_fusion_incremental(data, addr)
         else:
             new_instr = new_decode(data, addr)
             
@@ -253,7 +253,7 @@ class Scumm6(Architecture):  # type: ignore[misc]
     ) -> Optional[int]:
         # Use decoder with or without fusion based on setting
         if self.enable_fusion_in_llil:
-            new_instr = decode_with_fusion(data, addr)
+            new_instr = decode_with_fusion_incremental(data, addr)
         else:
             new_instr = new_decode(data, addr)
             
