@@ -1510,14 +1510,10 @@ class SaveRestoreVerbs(FusibleMultiOperandMixin, Instruction):
         subop_byte = self.op_details.body.param if hasattr(self.op_details.body, 'param') else 0
         
         # Map sub-operation byte to descumm-style names
-        # Handle both signed and unsigned interpretation
-        # 0x8D = 141 unsigned = -115 signed
         subop_names = {
             1: "saveVerbs",
-            -115: "saveVerbs",  # 0x8D as signed byte
-            141: "saveVerbs",   # 0x8D as unsigned byte
-            -114: "restoreVerbs",  # 0x8E as signed byte
-            142: "restoreVerbs",   # 0x8E as unsigned byte
+            141: "saveVerbs",    # 0x8D
+            142: "restoreVerbs", # 0x8E
             # Add more mappings as we discover them
         }
         
@@ -1540,9 +1536,17 @@ class SaveRestoreVerbs(FusibleMultiOperandMixin, Instruction):
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         
-        # Get sub-operation byte
+        # Get sub-operation byte (now unsigned)
         subop_byte = self.op_details.body.param if hasattr(self.op_details.body, 'param') else 0
-        intrinsic_name = f"save_restore_verbs.subop_{subop_byte}"
+        
+        # Map sub-operation byte to descumm-style intrinsic names
+        subop_intrinsics = {
+            1: "save_restore_verbs.saveVerbs",
+            141: "save_restore_verbs.saveVerbs",    # 0x8D
+            142: "save_restore_verbs.restoreVerbs", # 0x8E
+        }
+        
+        intrinsic_name = subop_intrinsics.get(subop_byte, f"save_restore_verbs.subop_{subop_byte}")
         
         if self.fused_operands:
             # Use fused operands directly

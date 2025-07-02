@@ -1,7 +1,7 @@
 # This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
 
 import kaitaistruct
-from kaitaistruct import KaitaiStruct, KaitaiStream
+from kaitaistruct import KaitaiStruct, KaitaiStream, BytesIO
 from enum import Enum
 
 
@@ -635,7 +635,7 @@ class Scumm6Opcodes(KaitaiStruct):
 
         def _read(self):
             self.call_func = self._io.read_bytes(0)
-            self.param = self._io.read_s1()
+            self.param = self._io.read_u1()
 
         @property
         def pop_count(self):

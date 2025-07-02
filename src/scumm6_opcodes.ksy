@@ -949,7 +949,7 @@ types:
       - id: call_func
         size: 0
       - id: param
-        type: s1
+        type: u1
     instances:
         pop_count:
           value: 3

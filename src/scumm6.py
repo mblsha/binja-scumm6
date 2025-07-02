@@ -165,6 +165,16 @@ class Scumm6(Architecture):  # type: ignore[misc]
             f"print_ego.{subop.name}": IntrinsicInfo(inputs=[], outputs=[])
             for subop in SubopType
         }
+        | {
+            # Add save_restore_verbs intrinsics - both known and dynamic subop_N patterns
+            "save_restore_verbs.saveVerbs": IntrinsicInfo(inputs=[], outputs=[]),
+            "save_restore_verbs.restoreVerbs": IntrinsicInfo(inputs=[], outputs=[]),
+        }
+        | {
+            # Add dynamic subop patterns for save_restore_verbs (0-255 to cover all unsigned byte values)
+            f"save_restore_verbs.subop_{i}": IntrinsicInfo(inputs=[], outputs=[])
+            for i in range(256)
+        }
     )
 
     # FIXME: attach this state to the view?
