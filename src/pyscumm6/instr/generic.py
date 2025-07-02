@@ -469,9 +469,10 @@ class ControlFlowOp(Instruction):
         
         # Add branches based on instruction type
         if self.is_conditional():
-            # Only add TrueBranch (when jump is taken)
-            # FalseBranch (fall-through) is implicit - execution continues to next instruction
+            # Add both branches for conditional jumps
             info.add_branch(BranchType.TrueBranch, target_addr)
+            # Add explicit FalseBranch for fallthrough
+            info.add_branch(BranchType.FalseBranch, addr + info.length)
         else:
             info.add_branch(BranchType.UnconditionalBranch, target_addr)
     
