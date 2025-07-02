@@ -72,7 +72,7 @@ class Scumm6(Architecture):  # type: ignore[misc]
     endianness = Endianness.LittleEndian
     
     # Fusion settings - can be overridden by subclasses or modified at runtime
-    enable_fusion_in_disassembly = False
+    enable_fusion_in_disassembly = True
     enable_fusion_in_llil = True
     
     regs = {
