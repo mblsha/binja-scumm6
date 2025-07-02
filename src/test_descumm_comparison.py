@@ -44,6 +44,7 @@ from src.test_utils import (
     collect_branches_from_architecture
 )
 from src.address_normalization import normalize_jump_addresses
+from src.test_mocks import MockScumm6BinaryView, MockLastBV
 
 # Configure SCUMM6-specific LLIL size suffixes
 set_size_lookup(
@@ -1229,18 +1230,10 @@ script_test_cases = [
             (0x0002, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
         ],
         expected_llil_fusion=[
-            # Enhanced LLIL with SmartMessageIntrinsic: string pointer in TEMP100 (fusion enabled)
-            # Note: In fusion mode, the push operation is consumed by the fused instruction
-            # String pointer - in tests without BinaryView, falls back to synthetic address
-            # 0x80000000 base + hash of message content
-            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST_PTR.4', ops=[0x800099eb])])),
+            # Enhanced LLIL with SmartMessageIntrinsic: string lookup in BSTR segment
+            # With mocked BinaryView, finds "It makes me feel GREAT!" at 0x102bc9
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST_PTR.4', ops=[0x102bc9])])),
             (0x0000, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST.4', ops=[7])])),
-            # 
-            # This enhanced LLIL provides:
-            # 1. String pointer in TEMP100 register (TEMP100+ range avoids conflicts)  
-            # 2. Message content preserved for decompilation analysis
-            # 3. Better semantic representation of the instruction
-            # 4. No separate PUSH operation needed - the actor ID is handled by fusion
         ],
     ),
 ]
@@ -1291,11 +1284,33 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
         start_addr = script_info.start
 
     # 2. Execute all disassemblers and LLIL generation
-    descumm_output = run_descumm_on_bytecode(test_environment.descumm_path, bytecode)
-    disasm_output = run_scumm6_disassembler(bytecode, start_addr)
-    disasm_fusion_output = run_scumm6_disassembler_with_fusion(bytecode, start_addr)
-    llil_operations = run_scumm6_llil_generation(bytecode, start_addr, use_fusion=False)
-    llil_fusion_operations = run_scumm6_llil_generation(bytecode, start_addr, use_fusion=True)
+    
+    # Set up mock BinaryView for talk_actor_enhanced_visualization test
+    if case.test_id == "talk_actor_enhanced_visualization":
+        # Create a mock state with BSTR data containing our strings
+        mock_state = State()
+        mock_state.bstr = {
+            "It makes me feel GREAT!": 0x102bc9,
+            "Smarter!  More aggressive!": 0x102be1,
+        }
+        mock_view = MockScumm6BinaryView(state=mock_state)
+        
+        # Temporarily replace LastBV with our mock
+        import src.scumm6
+        original_LastBV = src.scumm6.LastBV
+        src.scumm6.LastBV = MockLastBV  # type: ignore[misc]
+        MockLastBV.set(mock_view)
+    
+    try:
+        descumm_output = run_descumm_on_bytecode(test_environment.descumm_path, bytecode)
+        disasm_output = run_scumm6_disassembler(bytecode, start_addr)
+        disasm_fusion_output = run_scumm6_disassembler_with_fusion(bytecode, start_addr)
+        llil_operations = run_scumm6_llil_generation(bytecode, start_addr, use_fusion=False)
+        llil_fusion_operations = run_scumm6_llil_generation(bytecode, start_addr, use_fusion=True)
+    finally:
+        # Restore original LastBV if we mocked it
+        if case.test_id == "talk_actor_enhanced_visualization":
+            src.scumm6.LastBV = original_LastBV  # type: ignore[misc]
     
     # Normalize addresses if script starts at non-zero address
     # This makes jump addresses more readable (e.g., "jump f5" instead of "jump 8d892")

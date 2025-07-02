@@ -2320,14 +2320,13 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
                             if string_addr:
                                 break
             except Exception:
-                pass  # Fallback to synthetic address
+                pass  # Continue to check if we found a string
             
-            # Fallback: use a synthetic address in high memory
+            # If string not found, this is a bug - return unimplemented
             if string_addr is None:
-                STRING_SEGMENT_BASE = 0x80000000
-                # Use hash of message for uniqueness
-                message_hash = hash(self._extract_message_text()) & 0xFFFF
-                string_addr = STRING_SEGMENT_BASE + message_hash
+                il.append(il.unimplemented())
+                return
+            
             # Use TEMP100+ to avoid collision with other temporary registers
             temp_reg_id = 100 + (addr % 100)  # Generate unique temp reg ID from address
             temp_string_reg = il.reg(4, f"TEMP{temp_reg_id}")

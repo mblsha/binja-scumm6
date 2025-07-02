@@ -1,5 +1,6 @@
 """SCUMM6-specific mock classes for testing."""
 
+import threading
 from typing import Optional, Dict, Any
 from binja_helpers.mock_binaryview import MockBinaryView
 
@@ -32,17 +33,21 @@ def clear_mock_views() -> None:
 
 
 # Patch the LastBV class for testing
+
 class MockLastBV:
     """Mock LastBV for testing state-dependent operations."""
     
     _current_view: Optional[MockScumm6BinaryView] = None
+    _lock = threading.Lock()
     
     @classmethod
     def get(cls) -> Optional[MockScumm6BinaryView]:
         """Get the current mock view."""
-        return cls._current_view
+        with cls._lock:
+            return cls._current_view
     
     @classmethod
     def set(cls, view: Optional[MockScumm6BinaryView]) -> None:
         """Set the current mock view."""
-        cls._current_view = view
+        with cls._lock:
+            cls._current_view = view
