@@ -1231,7 +1231,9 @@ script_test_cases = [
         expected_llil_fusion=[
             # Enhanced LLIL with SmartMessageIntrinsic: string pointer in TEMP100 (fusion enabled)
             # Note: In fusion mode, the push operation is consumed by the fused instruction
-            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST_PTR.4', ops=[0x0003])])),
+            # String pointer - in tests without BinaryView, falls back to synthetic address
+            # 0x80000000 base + hash of message content
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST_PTR.4', ops=[0x800099eb])])),
             (0x0000, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST.4', ops=[7])])),
             # 
             # This enhanced LLIL provides:

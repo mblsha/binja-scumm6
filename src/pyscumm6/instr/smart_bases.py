@@ -2284,10 +2284,50 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
         if self.fused_operands:
             # Enhanced LLIL: Create string pointer and use fused operands
             
-            # Create a temporary register to hold the string pointer
-            # The string data starts right after the opcode (at addr + 1)
-            # For talk_actor with fusion, the address is where the original push_byte was
-            string_addr = addr + 3  # Points to where message data starts in bytecode
+            # Try to find the string in the BSTR segment
+            string_addr = None
+            
+            # Get the Binary View to access string mappings
+            try:
+                from ...scumm6 import LastBV
+                bv = LastBV.get()
+                
+                if bv and hasattr(bv, 'state') and hasattr(bv.state, 'bstr'):
+                    # Extract just the text parts from the message (no control codes)
+                    message_text = self._extract_message_text()
+                    
+                    # Try to find matching strings in BSTR
+                    # First, try to extract individual text segments
+                    text_parts = []
+                    for part in message_text.split(' + '):
+                        part = part.strip()
+                        if part.startswith('"') and part.endswith('"'):
+                            text_parts.append(part[1:-1])  # Remove quotes
+                    
+                    # Look for the longest text part in BSTR
+                    for text in sorted(text_parts, key=len, reverse=True):
+                        if text in bv.state.bstr:
+                            string_addr = bv.state.bstr[text]
+                            break
+                    
+                    # If not found, try to find a string containing our text
+                    if string_addr is None:
+                        for bstr_text, bstr_addr in bv.state.bstr.items():
+                            for text in text_parts:
+                                if text and text in bstr_text:
+                                    string_addr = bstr_addr
+                                    break
+                            if string_addr:
+                                break
+            except Exception:
+                pass  # Fallback to synthetic address
+            
+            # Fallback: use a synthetic address in high memory
+            if string_addr is None:
+                STRING_SEGMENT_BASE = 0x80000000
+                # Use hash of message for uniqueness
+                message_hash = hash(self._extract_message_text()) & 0xFFFF
+                string_addr = STRING_SEGMENT_BASE + message_hash
             # Use TEMP100+ to avoid collision with other temporary registers
             temp_reg_id = 100 + (addr % 100)  # Generate unique temp reg ID from address
             temp_string_reg = il.reg(4, f"TEMP{temp_reg_id}")
