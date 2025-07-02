@@ -162,7 +162,7 @@ script_test_cases = [
             [0024] push_word_var(VAR_OVERRIDE)
             [0027] push_word_var(VAR_HAVE_MSG)
             [002A] gt
-            [002B] unless goto +10
+            [002B] unless ((pop())) goto +10
             [002E] push_word(0)
             [0031] write_word_var(var137)
             [0034] push_word(0)
@@ -170,7 +170,7 @@ script_test_cases = [
             [0038] push_word_var(VAR_MACHINE_SPEED)
             [003B] push_word_var(VAR_ROOM)
             [003E] gt
-            [003F] unless goto +10
+            [003F] unless ((pop())) goto +10
             [0042] push_word(0)
             [0045] write_word_var(var137)
             [0048] push_word(0)
@@ -186,13 +186,13 @@ script_test_cases = [
             [0060] push_word_var(VAR_ME)
             [0063] push_word(0)
             [0066] lt
-            [0067] unless goto +42
+            [0067] unless ((pop())) goto +42
             [006A] printDebug.begin()
             [006C] printDebug.msg("x2 value overflowing in ellipse check")
             [0094] push_word_var(VAR_NUM_ACTOR)
             [0097] push_word(0)
             [009A] lt
-            [009B] unless goto +42
+            [009B] unless ((pop())) goto +42
             [009E] printDebug.begin()
             [00A0] printDebug.msg("y2 value overflowing in ellipse check")
             [00C8] push_word(1)
@@ -202,7 +202,7 @@ script_test_cases = [
             [00D4] push_word_var(VAR_ME)
             [00D7] push_word(4000)
             [00DA] le
-            [00DB] unless goto +13
+            [00DB] unless ((pop())) goto +13
             [00DE] push_word_var(VAR_ME)
             [00E1] push_word(4)
             [00E4] mul
@@ -215,7 +215,7 @@ script_test_cases = [
             [00F5] push_word_var(VAR_NUM_ACTOR)
             [00F8] push_word(4000)
             [00FB] le
-            [00FC] unless goto +13
+            [00FC] unless ((pop())) goto +13
             [00FF] push_word_var(VAR_NUM_ACTOR)
             [0102] push_word(4)
             [0105] mul
@@ -232,15 +232,15 @@ script_test_cases = [
             [0120] push_word_var(VAR_TMR_1)
             [0123] push_word(64)
             [0126] ge
-            [0127] unless goto +6
+            [0127] unless ((pop())) goto +6
             [012A] push_word(1)
             [012D] write_word_var(localvar12)
             [0130] push_word_var(VAR_TMR_2)
-            [0133] unless goto -98
+            [0133] unless ((pop())) goto -98
             [0136] push_word_var(VAR_HAVE_MSG)
             [0139] push_word(0)
             [013C] eq
-            [013D] unless goto +38
+            [013D] unless ((pop())) goto +38
             [0140] push_word(1)
             [0143] write_word_var(localvar3)
             [0146] printDebug.begin()
@@ -248,7 +248,7 @@ script_test_cases = [
             [0166] push_word_var(VAR_ROOM)
             [0169] push_word(0)
             [016C] eq
-            [016D] unless goto +36
+            [016D] unless ((pop())) goto +36
             [0170] push_word(1)
             [0173] write_word_var(localvar4)
             [0176] printDebug.begin()
@@ -268,13 +268,13 @@ script_test_cases = [
             [01AE] push_word_var(var137)
             [01B1] push_word(0)
             [01B4] eq
-            [01B5] unless goto +6
+            [01B5] unless ((pop())) goto +6
             [01B8] push_word(1)
             [01BB] write_word_var(var137)
             [01BE] push_word_var(var137)
             [01C1] push_word_var(VAR_TMR_1)
             [01C4] gt
-            [01C5] unless goto +6
+            [01C5] unless ((pop())) goto +6
             [01C8] push_word(0)
             [01CB] write_word_var(var137)
             [01CE] stopObjectCodeB()
@@ -342,7 +342,7 @@ script_test_cases = [
             [0000] push_word(137)
             [0003] isScriptRunning()
             [0004] nott
-            [0005] unless goto +18
+            [0005] unless ((pop())) goto +18
             [0008] push_word(93)
             [000B] push_word(1)
             [000E] push_word(1)
@@ -358,7 +358,7 @@ script_test_cases = [
             [0012] roomOps.setScreen(0, 200)
             [001A] stopObjectCodeA()
         """).strip(),
-        expected_branches=[(0x05, (BranchType.TrueBranch, 0x1A))],
+        expected_branches=[(0x05, (BranchType.TrueBranch, 0x1A)), (0x05, (BranchType.FalseBranch, 0x08))],
         expected_llil=[
             (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[137])])),
             (0x0003, mintrinsic('is_script_running', outputs=[mreg('TEMP0')], params=[MockLLIL(op='POP.4', ops=[])])),
@@ -424,24 +424,24 @@ script_test_cases = [
         expected_disasm_output=dedent("""
             [0000] push_word_var(VAR_KEYPRESS)
             [0003] nott
-            [0004] unless goto +6
+            [0004] unless ((pop())) goto +6
             [0007] push_word_var(VAR_ME)
             [000A] write_word_var(localvar0)
             [000D] push_word_var(VAR_KEYPRESS)
             [0010] getState()
             [0011] push_word(1)
             [0014] neq
-            [0015] unless goto +208
+            [0015] unless ((pop())) goto +208
             [0018] push_word_var(VAR_KEYPRESS)
             [001B] push_word(6)
             [001E] push_word(1)
             [0021] if_class_of_is
-            [0022] unless goto +29
+            [0022] unless ((pop())) goto +29
             [0025] push_word_var(VAR_KEYPRESS)
             [0028] push_word(1)
             [002B] setState()
             [002C] push_word_var(VAR_EGO)
-            [002F] unless goto +7
+            [002F] unless ((pop())) goto +7
             [0032] push_word_var(VAR_EGO)
             [0035] push_word(1)
             [0038] setState()
@@ -452,7 +452,7 @@ script_test_cases = [
             [0045] dup
             [0046] push_word(3)
             [0049] eq
-            [004A] unless goto +46
+            [004A] unless ((pop())) goto +46
             [004D] pop1
             [004E] push_word(3)
             [0051] talkActor()
@@ -460,7 +460,7 @@ script_test_cases = [
             [007B] dup
             [007C] push_word(1)
             [007F] eq
-            [0080] unless goto +46
+            [0080] unless ((pop())) goto +46
             [0083] pop1
             [0084] push_word(1)
             [0087] talkActor()
@@ -468,7 +468,7 @@ script_test_cases = [
             [00B1] dup
             [00B2] push_word(2)
             [00B5] eq
-            [00B6] unless goto +46
+            [00B6] unless ((pop())) goto +46
             [00B9] pop1
             [00BA] push_word(2)
             [00BD] talkActor()
@@ -713,17 +713,17 @@ script_test_cases = [
     ScriptComparisonTestCase(
         test_id="instruction_info_unless_positive",
         bytecode=bytes([0x5D, 0x12, 0x00]),
-        expected_branches=[(0x0, (BranchType.TrueBranch, 0x15))],
+        expected_branches=[(0x0, (BranchType.TrueBranch, 0x15)), (0x0, (BranchType.FalseBranch, 0x3))],
     ),
     ScriptComparisonTestCase(
         test_id="instruction_info_unless_negative",
         bytecode=bytes([0x5D, 0x9E, 0xFF]),
-        expected_branches=[(0x0, (BranchType.TrueBranch, -95))],
+        expected_branches=[(0x0, (BranchType.TrueBranch, -95)), (0x0, (BranchType.FalseBranch, 0x3))],
     ),
     ScriptComparisonTestCase(
         test_id="instruction_info_if_positive",
         bytecode=bytes([0x5C, 0x0A, 0x00]),
-        expected_branches=[(0x0, (BranchType.TrueBranch, 0x0D))],
+        expected_branches=[(0x0, (BranchType.TrueBranch, 0x0D)), (0x0, (BranchType.FalseBranch, 0x3))],
     ),
     ScriptComparisonTestCase(
         test_id="instruction_info_unconditional",
