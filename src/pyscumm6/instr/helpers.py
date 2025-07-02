@@ -4,7 +4,7 @@ This module consolidates common patterns used across instruction classes
 to reduce code duplication while maintaining the exact same behavior.
 """
 
-from typing import List, Any, TYPE_CHECKING
+from typing import List, Any, TYPE_CHECKING, Union
 from binja_helpers.tokens import Token, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction
 
@@ -186,3 +186,23 @@ def apply_descumm_function_name(name: str) -> str:
     """
     from .smart_bases import DESCUMM_FUNCTION_NAMES
     return DESCUMM_FUNCTION_NAMES.get(name, name)
+
+
+def get_subop_name(subop: Union[int, Any]) -> str:
+    """
+    Get the name of a subop, handling both enum objects and raw integers.
+    
+    Kaitai sometimes returns subop as an integer instead of an enum object,
+    especially for unknown or edge case values. This function handles both cases.
+    
+    Args:
+        subop: Either an enum object with a 'name' attribute or an integer
+        
+    Returns:
+        The subop name string (e.g., "room_screen" or "subop_123" for unknowns)
+    """
+    if isinstance(subop, int):
+        return f"subop_{subop}"
+    else:
+        # Assume it's an enum object with a name attribute
+        return subop.name

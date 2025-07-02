@@ -10,6 +10,7 @@ from ...scumm6_opcodes import Scumm6Opcodes
 from .opcodes import Instruction
 from .generic import VariableWriteOp, ControlFlowOp, IntrinsicOp
 from .smart_bases import SmartConditionalJump, FusibleMultiOperandMixin, get_variable_name
+from .helpers import get_subop_name
 
 # Import the vars module to use the same LLIL generation logic
 from ... import vars
@@ -1618,7 +1619,7 @@ class PrintLine(FusibleMultiOperandMixin, Instruction):
         
         # Handle both enum and int subop types
         if hasattr(self.op_details.body.subop, 'name'):
-            subop_name = self.op_details.body.subop.name
+            subop_name = get_subop_name(self.op_details.body.subop)
         else:
             # Map integer subop values to names
             subop_int_map = {
@@ -1854,7 +1855,7 @@ class PrintDebug(Instruction):
                 return tokens
             else:
                 # Handle other subops like begin(), end(), etc.
-                subop_name = self.op_details.body.subop.name
+                subop_name = get_subop_name(self.op_details.body.subop)
                 # Map baseop to begin to match descumm format
                 if subop_name == "baseop":
                     subop_name = "begin"
@@ -1956,7 +1957,7 @@ class PrintSystem(FusibleMultiOperandMixin, Instruction):
             else:
                 # Other subops - use generic rendering
                 if hasattr(self.op_details.body.subop, 'name'):
-                    subop_name = self.op_details.body.subop.name
+                    subop_name = get_subop_name(self.op_details.body.subop)
                     
                     # Handle color subop with fusion
                     if subop_name == 'color' and self.fused_operands:
@@ -2152,7 +2153,7 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
             else:
                 # Other subops - use generic rendering with descumm mapping
                 if hasattr(self.op_details.body.subop, 'name'):
-                    subop_name = self.op_details.body.subop.name
+                    subop_name = get_subop_name(self.op_details.body.subop)
                     # Apply descumm function name mapping
                     from .helpers import apply_descumm_function_name
                     full_name = f"print_text.{subop_name}"
@@ -2403,7 +2404,7 @@ class CursorCommand(FusibleMultiOperandMixin, Instruction):
     def render(self, as_operand: bool = False) -> List[Token]:
         from ...scumm6_opcodes import Scumm6Opcodes
         
-        subop_name = self.op_details.body.subop.name
+        subop_name = get_subop_name(self.op_details.body.subop)
         
         # Map subop names to descumm-style names
         subop_map = {
@@ -2575,7 +2576,7 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
     def render(self, as_operand: bool = False) -> List[Token]:
         from ...scumm6_opcodes import Scumm6Opcodes
         
-        subop_name = self.op_details.body.subop.name
+        subop_name = get_subop_name(self.op_details.body.subop)
         
         # Map subop names to descumm-style names
         subop_map = {
@@ -2775,7 +2776,8 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
     def render(self, as_operand: bool = False) -> List[Token]:
         from ...scumm6_opcodes import Scumm6Opcodes
         
-        subop_name = self.op_details.body.subop.name
+        # Handle cases where subop is an int instead of enum
+        subop_name = get_subop_name(self.op_details.body.subop)
         full_name = f"actor_ops.{subop_name}"
         from .helpers import apply_descumm_function_name
         display_name = apply_descumm_function_name(full_name)
@@ -2934,7 +2936,7 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
     def render(self, as_operand: bool = False) -> List[Token]:
         from ...scumm6_opcodes import Scumm6Opcodes
         
-        subop_name = self.op_details.body.subop.name
+        subop_name = get_subop_name(self.op_details.body.subop)
         full_name = f"verb_ops.{subop_name}"
         from .helpers import apply_descumm_function_name
         display_name = apply_descumm_function_name(full_name)
@@ -3086,7 +3088,7 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
         """Return the maximum number of operands based on subop."""
         # Handle both enum and integer subop types
         if hasattr(self.op_details.body.subop, 'name'):
-            subop_name = self.op_details.body.subop.name
+            subop_name = get_subop_name(self.op_details.body.subop)
         else:
             # Map integer subop values to names
             subop_int_map = {
@@ -3117,7 +3119,7 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
         
         # Handle both enum and integer subop types
         if hasattr(self.op_details.body.subop, 'name'):
-            subop_name = self.op_details.body.subop.name
+            subop_name = get_subop_name(self.op_details.body.subop)
         else:
             # Map integer subop values to names
             subop_int_map = {
@@ -3261,7 +3263,7 @@ class RoomOps(Instruction):
     """Room operations with various sub-commands."""
     
     def render(self, as_operand: bool = False) -> List[Token]:
-        subop_name = self.op_details.body.subop.name
+        subop_name = get_subop_name(self.op_details.body.subop)
         return [TInstr(f"room_ops.{subop_name}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -3305,7 +3307,7 @@ class SystemOps(Instruction):
     """System operations with various sub-commands."""
     
     def render(self, as_operand: bool = False) -> List[Token]:
-        subop_name = self.op_details.body.subop.name
+        subop_name = get_subop_name(self.op_details.body.subop)
         return [TInstr(f"system_ops.{subop_name}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -3349,7 +3351,7 @@ class ResourceRoutines(Instruction):
     """Resource management operations with various sub-commands."""
     
     def render(self, as_operand: bool = False) -> List[Token]:
-        subop_name = self.op_details.body.subop.name
+        subop_name = get_subop_name(self.op_details.body.subop)
         return [TInstr(f"resource_routines.{subop_name}")]
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
