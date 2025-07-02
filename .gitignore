@@ -5,6 +5,8 @@ _scripts
 *.egg-info
 .claude
 tools/scumm6-web/analysis_notes.json
+scripts/cli.py
+binaryninja-api
 
 *.code-workspace
 Session.vim
