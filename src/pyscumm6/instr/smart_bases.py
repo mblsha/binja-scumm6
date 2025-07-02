@@ -2285,8 +2285,9 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
             # Enhanced LLIL: Create string pointer and use fused operands
             
             # Create a temporary register to hold the string pointer
-            # Using the instruction address as the base for the string "address"
-            string_addr = addr + 0x1000  # Offset to avoid collision with real addresses
+            # The string data starts right after the opcode (at addr + 1)
+            # For talk_actor with fusion, the address is where the original push_byte was
+            string_addr = addr + 3  # Points to where message data starts in bytecode
             # Use TEMP100+ to avoid collision with other temporary registers
             temp_reg_id = 100 + (addr % 100)  # Generate unique temp reg ID from address
             temp_string_reg = il.reg(4, f"TEMP{temp_reg_id}")
@@ -2294,8 +2295,12 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
             # Set the temp register to point to the string
             il.append(il.set_reg(4, temp_string_reg, il.const_pointer(4, string_addr)))
             
-            # Call the intrinsic with the string pointer
+            # Build parameters: string pointer + fused operands (e.g., actor ID)
             params = [temp_string_reg]
+            
+            # Add fused operands (e.g., actor ID for talk_actor)
+            for operand in self.fused_operands:
+                params.append(self._lift_operand(il, operand))
             
             # Check if this instruction produces a result
             if self._config and self._config.push_count > 0:

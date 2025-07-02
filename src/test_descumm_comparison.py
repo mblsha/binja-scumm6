@@ -1231,8 +1231,8 @@ script_test_cases = [
         expected_llil_fusion=[
             # Enhanced LLIL with SmartMessageIntrinsic: string pointer in TEMP100 (fusion enabled)
             # Note: In fusion mode, the push operation is consumed by the fused instruction
-            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST_PTR.4', ops=[0x1000])])),
-            (0x0000, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')])])),
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST_PTR.4', ops=[0x0003])])),
+            (0x0000, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST.4', ops=[7])])),
             # 
             # This enhanced LLIL provides:
             # 1. String pointer in TEMP100 register (TEMP100+ range avoids conflicts)  
