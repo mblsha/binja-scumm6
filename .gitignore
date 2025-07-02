@@ -39,3 +39,6 @@ script_inventory.txt
 simple_script_analysis_report.md
 test_suite_plan.md
 
+# Utility scripts
+scripts/show_instruction_info.py
+

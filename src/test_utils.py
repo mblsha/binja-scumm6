@@ -480,7 +480,11 @@ def collect_branches_from_architecture(arch: Any, bytecode: bytes, start_addr: i
 
         for branch_type, absolute_target in instruction_branches:
             # Convert absolute target to relative target (relative to script start)
-            relative_target = absolute_target - start_addr
+            # FunctionReturn branches have None as target
+            if absolute_target is None:
+                relative_target = None
+            else:
+                relative_target = absolute_target - start_addr
             branches.append((offset, (branch_type, relative_target)))
 
         offset += info.length

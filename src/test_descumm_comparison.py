@@ -358,7 +358,7 @@ script_test_cases = [
             [0012] roomOps.setScreen(0, 200)
             [001A] stopObjectCodeA()
         """).strip(),
-        expected_branches=[(0x05, (BranchType.TrueBranch, 0x1A)), (0x05, (BranchType.FalseBranch, 0x08))],
+        expected_branches=[(0x05, (BranchType.TrueBranch, 0x1A)), (0x05, (BranchType.FalseBranch, 0x08)), (0x1A, (BranchType.FunctionReturn, None))],
         expected_llil=[
             (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[137])])),
             (0x0003, mintrinsic('is_script_running', outputs=[mreg('TEMP0')], params=[MockLLIL(op='POP.4', ops=[])])),

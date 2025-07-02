@@ -376,6 +376,17 @@ class SmartIntrinsicOp(Instruction):
             # Fallback to default
             return [TInstr(f"{display_name}()")]
     
+    def analyze(self, info: 'InstructionInfo', addr: int) -> None:
+        """Set instruction analysis info."""
+        info.length = self._length
+        
+        # Check if this is a terminating instruction (stop_object_code1/2)
+        if self._config.special_lift == "no_ret_lift":
+            # This instruction doesn't return - mark as FunctionReturn
+            # This tells Binary Ninja that execution stops here (like a return statement)
+            from binaryninja.enums import BranchType
+            info.add_branch(BranchType.FunctionReturn)
+    
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         # Handle special lift cases
         if self._config.special_lift:

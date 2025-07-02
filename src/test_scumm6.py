@@ -76,7 +76,9 @@ test_cases = [
         test_id="stop_object_code",
         data=b"\x65",
         expected_length=1,
-        expected_mock_branches=[],
+        expected_mock_branches=[
+            (BranchType.FunctionReturn, None),  # Indicates execution stops here
+        ],
     ),
     InfoTestCase(
         test_id="iff_positive_offset",
