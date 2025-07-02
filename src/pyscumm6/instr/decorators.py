@@ -144,7 +144,7 @@ class StandardStackPopMixin:
         """Number of values this instruction pops from the stack."""
         # Default implementation - can be overridden
         if hasattr(self, '_config') and hasattr(self._config, 'pop_count'):
-            base_count = self._config.pop_count  # type: ignore[attr-defined]
+            base_count = self._config.pop_count
         else:
             base_count = 0
         
@@ -161,5 +161,5 @@ class ProducesResultMixin:
         """Check if this instruction produces a result that can be consumed by other instructions."""
         # Default implementation based on push_count
         if hasattr(self, '_config') and hasattr(self._config, 'push_count'):
-            return self._config.push_count > 0  # type: ignore[attr-defined]
+            return self._config.push_count > 0
         return True  # Conservative default for operations

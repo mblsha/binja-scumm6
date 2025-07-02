@@ -446,7 +446,7 @@ def _check_no_unimplemented_recursive(llil_op: MockLLIL, script_name: str, test_
             _check_no_unimplemented_recursive(nested_op, script_name, test_type, offset)
 
 
-def collect_branches_from_architecture(arch: Any, bytecode: bytes, start_addr: int) -> List[Tuple[int, Tuple[BranchType, int]]]:
+def collect_branches_from_architecture(arch: Any, bytecode: bytes, start_addr: int) -> List[Tuple[int, Tuple[BranchType, Optional[int]]]]:
     """Generic function to collect branch information from any SCUMM6 architecture.
 
     Args:

@@ -1,10 +1,13 @@
 """Smart base classes for generated instruction types."""
 
-from typing import List, Optional, Any, NamedTuple, cast
+from typing import List, Optional, Any, NamedTuple, cast, TYPE_CHECKING
 from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName
 import copy
+
+if TYPE_CHECKING:
+    from binaryninja import InstructionInfo
 
 from .opcodes import Instruction
 from .generic import ControlFlowOp

@@ -205,4 +205,4 @@ def get_subop_name(subop: Union[int, Any]) -> str:
         return f"subop_{subop}"
     else:
         # Assume it's an enum object with a name attribute
-        return subop.name
+        return str(subop.name)

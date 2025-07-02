@@ -75,7 +75,7 @@ class ScriptComparisonTestCase:
     expected_descumm_output: Optional[str] = None
     expected_disasm_output: Optional[str] = None
     expected_disasm_fusion_output: Optional[str] = None  # Output with instruction fusion enabled
-    expected_branches: Optional[List[Tuple[int, Tuple[BranchType, int]]]] = None  # List of (relative_addr, (branch_type, relative_target_addr))
+    expected_branches: Optional[List[Tuple[int, Tuple[BranchType, Optional[int]]]]] = None  # List of (relative_addr, (branch_type, relative_target_addr))
     expected_llil: Optional[List[Tuple[int, MockLLIL]]] = None  # List of (relative_addr, llil_operation) for regular disassembly
     expected_llil_fusion: Optional[List[Tuple[int, MockLLIL]]] = None  # List of (relative_addr, llil_operation) for fusion-enabled disassembly
 
