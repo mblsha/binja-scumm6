@@ -73,6 +73,8 @@ FUSIBLE_INSTRUCTIONS = {
     # Print operations
     "print_actor",      # Complex print operations
     "print_ego",        # Complex print operations
+    "talk_actor",       # Message-based intrinsic with fusion support
+    "talk_ego",         # Message-based intrinsic with fusion support
     # Verb operations
     "save_restore_verbs", # 3 params: slot1, slot2, slot3
     # Utility operations with variable arguments
@@ -112,8 +114,30 @@ def create_instruction(name: str, config: Any, base_class: Type[Instruction]) ->
 
 def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Instruction]:
     """Create an intrinsic instruction class from configuration."""
-    # Choose base class based on whether instruction should support fusion
-    base_class: Type[Instruction] = SmartFusibleIntrinsic if name in FUSIBLE_INSTRUCTIONS else SmartIntrinsicOp
+    # List of instructions that have embedded message data
+    MESSAGE_INSTRUCTIONS: set[str] = {
+        "talk_actor",  # Enable enhanced LLIL with string pointers
+        # "talk_ego",  # Disabled for now to avoid breaking tests
+        # Not including print_ego for now to avoid breaking tests
+    }
+    
+    # Choose base class based on instruction characteristics
+    if name in MESSAGE_INSTRUCTIONS and name in FUSIBLE_INSTRUCTIONS:
+        # Instructions that need both message handling AND fusion (like talk_actor)
+        # SmartMessageIntrinsic now inherits from fusion mixins, so it can handle both
+        from .smart_bases import SmartMessageIntrinsic
+        base_class: Type[Instruction] = SmartMessageIntrinsic
+    elif name in MESSAGE_INSTRUCTIONS:
+        # Use SmartMessageIntrinsic for instructions with embedded messages only
+        from .smart_bases import SmartMessageIntrinsic
+        base_class = SmartMessageIntrinsic
+    elif name in FUSIBLE_INSTRUCTIONS:
+        # Use SmartFusibleIntrinsic for fusible instructions only
+        base_class = SmartFusibleIntrinsic
+    else:
+        # Default to SmartIntrinsicOp
+        base_class = SmartIntrinsicOp
+    
     return create_instruction(name, config, base_class)
 
 def create_variable_instruction(name: str, config: VariableConfig) -> Type[Instruction]:
@@ -174,7 +198,7 @@ def generate_all_instructions() -> Dict[str, Type[Instruction]]:
     # Add custom instruction implementations
     from . import instructions
     registry["print_debug"] = instructions.PrintDebug
-    registry["talk_actor"] = instructions.TalkActor
+    # registry["talk_actor"] = instructions.TalkActor  # Now using auto-generated SmartMessageIntrinsic
     
     # Override start_script_quick with custom implementation
     from . import script_ops

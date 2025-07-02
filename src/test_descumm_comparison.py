@@ -393,13 +393,8 @@ script_test_cases = [
         test_id="room2_enter_output_verification",
         script_name="room2_enter",
         expected_disasm_output=dedent("""
-            [0000] push_word(1)
-            [0003] push_word(201)
-            [0006] push_word(0)
-            [0009] startScript()
-            [000A] push_word(5)
-            [000D] push_word(0)
-            [0010] startScriptQuick()
+            [0000] startScript(1, 201, [])
+            [000A] startScriptQuick(5, [])
             [0011] stopObjectCodeA()
         """).strip(),
         expected_disasm_fusion_output=dedent("""
@@ -1196,6 +1191,50 @@ script_test_cases = [
             END
         """).strip(),
         expected_disasm_fusion_output='[0000] printSystem.end()',
+    ),
+    ScriptComparisonTestCase(
+        test_id="talk_actor_enhanced_visualization",
+        bytecode=bytes([
+            0x00, 0x07,  # push_byte(7) - actor ID
+            0xBA,        # talk_actor opcode
+            # Sound control codes based on the pattern from talk_actor_with_sound test
+            0xFF, 0x0A, 0x17, 0x85,  # sound command with ID 0x8517 (little-endian)
+            0xFF, 0x0A, 0x00, 0x00,  # sound command continuation
+            0xFF, 0x0A, 0x26, 0x00,  # sound command with volume 0x26
+            0xFF, 0x0A, 0x00, 0x00,  # sound command continuation
+            # "It makes me feel GREAT!"
+            0x49, 0x74, 0x20, 0x6D, 0x61, 0x6B, 0x65, 0x73, 0x20, 0x6D, 0x65, 0x20, 0x66, 0x65, 0x65, 0x6C, 0x20, 0x47, 0x52, 0x45, 0x41, 0x54, 0x21,
+            0xFF, 0x03,  # wait() command
+            # "Smarter!  More aggressive!"
+            0x53, 0x6D, 0x61, 0x72, 0x74, 0x65, 0x72, 0x21, 0x20, 0x20, 0x4D, 0x6F, 0x72, 0x65, 0x20, 0x61, 0x67, 0x67, 0x72, 0x65, 0x73, 0x73, 0x69, 0x76, 0x65, 0x21,
+            0x00,        # message terminator
+        ]),
+        expected_descumm_output=dedent("""
+            [0000] (BA) talkActor(sound(0x8517, 0x26) + "It makes me feel GREAT!" + wait() + "Smarter!  More aggressive!",7)
+            END
+        """).strip(),
+        expected_disasm_output=dedent("""
+            [0000] push_byte(7)
+            [0002] talkActor()
+        """).strip(),
+        expected_disasm_fusion_output='[0000] talkActor(sound(0x8517, 0x26) + "It makes me feel GREAT!" + wait() + "Smarter!  More aggressive!", 7)',
+        expected_llil=[
+            # Non-fused LLIL: separate push and intrinsic (no string pointer)
+            (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[7])])),
+            (0x0002, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
+        ],
+        expected_llil_fusion=[
+            # Enhanced LLIL with SmartMessageIntrinsic: string pointer in TEMP100 (fusion enabled)
+            # Note: In fusion mode, the push operation is consumed by the fused instruction
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST_PTR.4', ops=[0x1000])])),
+            (0x0000, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')])])),
+            # 
+            # This enhanced LLIL provides:
+            # 1. String pointer in TEMP100 register (TEMP100+ range avoids conflicts)  
+            # 2. Message content preserved for decompilation analysis
+            # 3. Better semantic representation of the instruction
+            # 4. No separate PUSH operation needed - the actor ID is handled by fusion
+        ],
     ),
 ]
 

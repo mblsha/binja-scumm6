@@ -248,8 +248,8 @@ INTRINSIC_CONFIGS: Dict[str, IntrinsicConfig] = {
     # print_system: Custom implementation in instructions.py
     "print_actor": IntrinsicConfig(doc="Print actor dialog"),
     "print_ego": IntrinsicConfig(doc="Print ego dialog"),
-    "talk_actor": IntrinsicConfig(doc="Talk actor"),
-    "talk_ego": IntrinsicConfig(doc="Talk ego"),
+    "talk_actor": IntrinsicConfig(doc="Talk actor", pop_count=1),
+    "talk_ego": IntrinsicConfig(doc="Talk ego", pop_count=0),
     "stop_sentence": IntrinsicConfig(doc="Stop sentence"),
     "stop_talking": IntrinsicConfig(doc="Stop talking"),
     

@@ -2174,3 +2174,131 @@ class SmartVariableArgumentIntrinsic(SmartIntrinsicOp):
         
         # Fallback to default lifting
         super().lift(il, addr)
+
+
+class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandRenderingMixin, OperandLiftingMixin):
+    """Base class for intrinsic operations that contain message data.
+    
+    This class handles intrinsics like talk_ego that have embedded message strings
+    and also supports fusion with parameter instructions for function-call style rendering.
+    It extracts the message and passes a string pointer to the intrinsic in LLIL.
+    """
+    
+    def fuse(self, previous: Instruction) -> Optional['SmartMessageIntrinsic']:
+        """Attempt to fuse with the previous instruction using standard fusion logic."""
+        return cast(Optional['SmartMessageIntrinsic'], self._standard_fuse(previous))
+    
+    @property
+    def stack_pop_count(self) -> int:
+        """Number of values this instruction pops from the stack."""
+        # If we have fused operands, we pop fewer from the stack
+        pop_count = getattr(self._config, 'pop_count', 0) if self._config else 0
+        return max(0, pop_count - len(self.fused_operands))
+    
+    def render(self, as_operand: bool = False) -> List[Token]:
+        """Render the message intrinsic with fusion support."""
+        # Extract message text first
+        message_text = self._extract_message_text()
+        
+        # Get the function name with descumm mapping
+        display_name = DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
+        
+        # Handle fusion rendering
+        if self.fused_operands:
+            # Fused version: talkActor("message", actor_id)
+            tokens = [TInstr(display_name), TText("(")]
+            
+            # Add message text first (already includes quotes)
+            tokens.append(TText(message_text))
+            
+            # Add fused operands (usually the actor ID)
+            for i, operand in enumerate(self.fused_operands):
+                tokens.append(TText(", "))
+                tokens.extend(self._render_operand(operand))
+            
+            tokens.append(TText(")"))
+            return tokens
+        else:
+            # Non-fused version: just the function name
+            return [TInstr(f"{display_name}()")]
+    
+    def _extract_message_text(self) -> str:
+        """Extract readable message text from the instruction."""
+        from ...scumm6_opcodes import Scumm6Opcodes
+        
+        if not (hasattr(self.op_details, 'body') and isinstance(self.op_details.body, Scumm6Opcodes.Message)):
+            return ""
+        
+        # Extract message with proper formatting
+        try:
+            result_parts = []
+            current_text = ""
+            
+            for part in self.op_details.body.parts:
+                if hasattr(part, 'data') and part.data != 0:
+                    if part.data == 0xFF and hasattr(part, 'content'):
+                        # Control code found - finalize current text and add control code
+                        if current_text:
+                            result_parts.append(f'"{current_text}"')
+                            current_text = ""
+                        
+                        if hasattr(part.content, 'code'):
+                            if part.content.code == 0x03:  # wait() command
+                                result_parts.append('wait()')
+                            elif part.content.code == 0x0a:  # sound command
+                                # Parse sound parameters from the payload
+                                if hasattr(part.content, 'payload'):
+                                    sound = part.content.payload
+                                    if hasattr(sound, 'value1') and hasattr(sound, 'v3'):
+                                        sound_id = sound.value1
+                                        volume = sound.v3
+                                        result_parts.append(f'sound({hex(sound_id)}, {hex(volume)})')
+                                    else:
+                                        result_parts.append('sound(?)')
+                                else:
+                                    result_parts.append('sound(?)')
+                    elif 32 <= part.data <= 126:  # Printable ASCII
+                        current_text += chr(part.data)
+                else:
+                    # End of message or invalid data
+                    break
+            
+            # Add any remaining text
+            if current_text:
+                result_parts.append(f'"{current_text}"')
+            
+            # Join with " + " separator like descumm
+            return ' + '.join(result_parts)
+        except Exception:
+            return '""'
+    
+    def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        """Generate LLIL with string pointer for message-based intrinsics (only when fused)."""
+        
+        # Only generate enhanced LLIL if this instruction has been fused
+        if self.fused_operands:
+            # Enhanced LLIL: Create string pointer and use fused operands
+            from ...scumm6_opcodes import Scumm6Opcodes
+            
+            # Create a temporary register to hold the string pointer
+            # Using the instruction address as the base for the string "address"
+            string_addr = addr + 0x1000  # Offset to avoid collision with real addresses
+            # Use TEMP100+ to avoid collision with other temporary registers
+            temp_reg_id = 100 + (addr % 100)  # Generate unique temp reg ID from address
+            temp_string_reg = il.reg(4, f"TEMP{temp_reg_id}")
+            
+            # Set the temp register to point to the string
+            il.append(il.set_reg(4, temp_string_reg, il.const_pointer(4, string_addr)))
+            
+            # Call the intrinsic with the string pointer
+            params = [temp_string_reg]
+            
+            # Check if this instruction produces a result
+            if self._config and self._config.push_count > 0:
+                il.append(il.intrinsic([il.reg(4, "TEMP0")], self._name, params))
+                il.append(il.push(4, il.reg(4, "TEMP0")))
+            else:
+                il.append(il.intrinsic([], self._name, params))
+        else:
+            # Standard LLIL: Fall back to normal intrinsic behavior (pop from stack)
+            super().lift(il, addr)

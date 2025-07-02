@@ -200,6 +200,8 @@ def run_scumm6_disassembler(bytecode: bytes, start_addr: int) -> str:
         Formatted disassembly output as string
     """
     arch = Scumm6()
+    # Disable fusion for regular disassembly to match test expectations
+    arch.enable_fusion_in_disassembly = False
     view = MockScumm6BinaryView()
     view.write_memory(start_addr, bytecode)
     LastBV.set(view)
