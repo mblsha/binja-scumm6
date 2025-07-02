@@ -1116,20 +1116,28 @@ class SmartConditionalJump(ControlFlowOp):
             
             return tokens
         else:
-            # Normal rendering
+            # Normal rendering - show that condition comes from stack
             jump_offset = self.op_details.body.jump_offset
             if self._is_if_not:
                 instr_name = "unless"
             else:
                 instr_name = "if"
             
+            tokens = []
+            tokens.append(TInstr(instr_name))
+            tokens.append(TText(" (("))
+            tokens.append(TText("pop()"))  # Show that condition is popped from stack
+            tokens.append(TText(")) "))
+            
             if jump_offset == 0:
                 # Handle zero offset as 'self'
-                return [TInstr(instr_name), TText(" "), TInstr("goto"), TText(" "), TInstr("self")]
+                tokens.extend([TInstr("goto"), TText(" "), TInstr("self")])
             elif jump_offset > 0:
-                return [TInstr(f"{instr_name} goto +{jump_offset}")]
+                tokens.extend([TInstr("goto"), TText(" "), TInstr(f"+{jump_offset}")])
             else:
-                return [TInstr(f"{instr_name} goto {jump_offset}")]
+                tokens.extend([TInstr("goto"), TText(" "), TInstr(str(jump_offset))])
+            
+            return tokens
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         if self.fused_operands:

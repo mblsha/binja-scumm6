@@ -2292,8 +2292,18 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
             tokens.append(TText(")"))
             return tokens
         else:
-            # No fusion - show simple form
-            return [TInstr("talkActor"), TText("()")]
+            # No fusion - still show the message content
+            tokens = [TInstr("talkActor"), TText("(")]
+            
+            # Use generic message parsing with full control code support
+            if isinstance(self.op_details.body, Scumm6Opcodes.Message):
+                msg_tokens = parse_message_with_control_codes(self.op_details.body)
+                tokens.extend(msg_tokens)
+            else:
+                tokens.append(TText("..."))
+            
+            tokens.append(TText(")"))
+            return tokens
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         if self.fused_operands and len(self.fused_operands) >= 1:
