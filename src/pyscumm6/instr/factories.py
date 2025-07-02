@@ -117,7 +117,7 @@ def create_intrinsic_instruction(name: str, config: IntrinsicConfig) -> Type[Ins
     # List of instructions that have embedded message data
     MESSAGE_INSTRUCTIONS: set[str] = {
         "talk_actor",  # Enable enhanced LLIL with string pointers
-        # "talk_ego",  # Disabled for now to avoid breaking tests
+        "talk_ego",    # Enable enhanced LLIL with string pointers
         # Not including print_ego for now to avoid breaking tests
     }
     

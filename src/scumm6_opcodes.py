@@ -1,5 +1,4 @@
 # This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
-# type: ignore
 
 import kaitaistruct
 from kaitaistruct import KaitaiStruct, KaitaiStream
@@ -2095,6 +2094,8 @@ class Scumm6Opcodes(KaitaiStruct):
                 self.body = Scumm6Opcodes.CallFuncPop4(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.word_var_dec:
                 self.body = Scumm6Opcodes.WordVarData(self._io, self, self._root)
+            elif _on == Scumm6Opcodes.OpType.talk_ego:
+                self.body = Scumm6Opcodes.Message(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.dist_object_pt:
                 self.body = Scumm6Opcodes.CallFuncPop3Push(self._io, self, self._root)
             elif _on == Scumm6Opcodes.OpType.array_ops:

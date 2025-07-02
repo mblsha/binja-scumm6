@@ -463,7 +463,7 @@ types:
             # then interpreter?
             'op_type::talk_actor': message
             # need to push(VAR_EGO)
-            # 'op_type::talk_ego': message
+            'op_type::talk_ego': message
 
             'op_type::dim_array': dim_array
             # 'op_type::dummy': no_data

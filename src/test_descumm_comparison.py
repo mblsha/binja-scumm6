@@ -393,8 +393,13 @@ script_test_cases = [
         test_id="room2_enter_output_verification",
         script_name="room2_enter",
         expected_disasm_output=dedent("""
-            [0000] startScript(1, 201, [])
-            [000A] startScriptQuick(5, [])
+            [0000] push_word(1)
+            [0003] push_word(201)
+            [0006] push_word(0)
+            [0009] startScript()
+            [000A] push_word(5)
+            [000D] push_word(0)
+            [0010] startScriptQuick()
             [0011] stopObjectCodeA()
         """).strip(),
         expected_disasm_fusion_output=dedent("""

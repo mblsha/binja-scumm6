@@ -2219,7 +2219,12 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
             tokens.append(TText(")"))
             return tokens
         else:
-            # Non-fused version: just the function name
+            # Non-fused version: show message for instructions that don't take parameters
+            if self._config and self._config.pop_count == 0:
+                # No parameters expected, show message content
+                if message_text and message_text != '""':
+                    return [TInstr(display_name), TText("("), TText(message_text), TText(")")]
+            # Default: just the function name
             return [TInstr(f"{display_name}()")]
     
     def _extract_message_text(self) -> str:
@@ -2252,7 +2257,7 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
                                     if hasattr(sound, 'value1') and hasattr(sound, 'v3'):
                                         sound_id = sound.value1
                                         volume = sound.v3
-                                        result_parts.append(f'sound({hex(sound_id)}, {hex(volume)})')
+                                        result_parts.append(f'sound({hex(sound_id).upper().replace("X", "x")}, {hex(volume).upper().replace("X", "x")})')
                                     else:
                                         result_parts.append('sound(?)')
                                 else:
@@ -2278,7 +2283,6 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
         # Only generate enhanced LLIL if this instruction has been fused
         if self.fused_operands:
             # Enhanced LLIL: Create string pointer and use fused operands
-            from ...scumm6_opcodes import Scumm6Opcodes
             
             # Create a temporary register to hold the string pointer
             # Using the instruction address as the base for the string "address"
