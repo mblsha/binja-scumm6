@@ -392,7 +392,38 @@ script_test_cases = [
     ScriptComparisonTestCase(
         test_id="room2_enter_output_verification",
         script_name="room2_enter",
-        # No expected outputs - just verify all disassemblers produce output
+        expected_disasm_output=dedent("""
+            [0000] push_word(1)
+            [0003] push_word(201)
+            [0006] push_word(0)
+            [0009] startScript()
+            [000A] push_word(5)
+            [000D] push_word(0)
+            [0010] startScriptQuick()
+            [0011] stopObjectCodeA()
+        """).strip(),
+        expected_disasm_fusion_output=dedent("""
+            [0000] startScript(1, 201, [])
+            [000A] startScriptQuick(5, [])
+            [0011] stopObjectCodeA()
+        """).strip(),
+        expected_llil=[
+            (0x0000, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[1])])),
+            (0x0003, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[201])])),
+            (0x0006, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[0])])),
+            (0x0009, mintrinsic('start_script', outputs=[], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
+            (0x000A, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[5])])),
+            (0x000D, MockLLIL(op='PUSH.4', ops=[MockLLIL(op='CONST.4', ops=[0])])),
+            (0x0010, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='POP.4', ops=[]), MockLLIL(op='POP.4', ops=[])])),
+            (0x0011, mintrinsic('stop_object_code1', outputs=[], params=[])),
+            (0x0011, MockLLIL(op='NORET', ops=[])),
+        ],
+        expected_llil_fusion=[
+            (0x0000, mintrinsic('start_script', outputs=[], params=[MockLLIL(op='CONST.4', ops=[1]), MockLLIL(op='CONST.4', ops=[201])])),
+            (0x000A, mintrinsic('start_script_quick', outputs=[], params=[MockLLIL(op='CONST.4', ops=[5])])),
+            (0x0011, mintrinsic('stop_object_code1', outputs=[], params=[])),
+            (0x0011, MockLLIL(op='NORET', ops=[])),
+        ],
     ),
     ScriptComparisonTestCase(
         test_id="room8_scrp15_door_locked",
