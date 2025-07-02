@@ -2166,8 +2166,8 @@ class SmartVariableArgumentIntrinsic(SmartIntrinsicOp):
                 
                 # Generate intrinsic call
                 if self._config and self._config.push_count > 0:
-                    il.append(il.intrinsic([il.reg(4, "TEMP0")], self._name, params))
-                    il.append(il.push(4, il.reg(4, "TEMP0")))
+                    il.append(il.intrinsic([LLIL_TEMP(0)], self._name, params))
+                    il.append(il.push(4, LLIL_TEMP(0)))
                 else:
                     il.append(il.intrinsic([], self._name, params))
                 return
@@ -2327,15 +2327,15 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
                 il.append(il.unimplemented())
                 return
             
-            # Use TEMP100+ to avoid collision with other temporary registers
-            temp_reg_id = 100 + (addr % 100)  # Generate unique temp reg ID from address
-            temp_string_reg = il.reg(4, f"TEMP{temp_reg_id}")
+            # Use TEMP register by index
+            # Binary Ninja expects LLIL_TEMP(index) where index is an integer
+            temp_reg_index = 100 + (addr % 100)  # Generate unique temp reg index from address
             
             # Set the temp register to point to the string
-            il.append(il.set_reg(4, temp_string_reg, il.const_pointer(4, string_addr)))
+            il.append(il.set_reg(4, LLIL_TEMP(temp_reg_index), il.const_pointer(4, string_addr)))
             
             # Build parameters: string pointer + fused operands (e.g., actor ID)
-            params = [temp_string_reg]
+            params = [il.reg(4, LLIL_TEMP(temp_reg_index))]
             
             # Add fused operands (e.g., actor ID for talk_actor)
             for operand in self.fused_operands:
@@ -2343,8 +2343,8 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
             
             # Check if this instruction produces a result
             if self._config and self._config.push_count > 0:
-                il.append(il.intrinsic([il.reg(4, "TEMP0")], self._name, params))
-                il.append(il.push(4, il.reg(4, "TEMP0")))
+                il.append(il.intrinsic([LLIL_TEMP(0)], self._name, params))
+                il.append(il.push(4, LLIL_TEMP(0)))
             else:
                 il.append(il.intrinsic([], self._name, params))
         else:
