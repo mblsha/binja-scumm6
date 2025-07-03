@@ -161,5 +161,5 @@ class ProducesResultMixin:
         """Check if this instruction produces a result that can be consumed by other instructions."""
         # Default implementation based on push_count
         if hasattr(self, '_config') and hasattr(self._config, 'push_count'):
-            return self._config.push_count > 0
+            return bool(self._config.push_count > 0)
         return True  # Conservative default for operations

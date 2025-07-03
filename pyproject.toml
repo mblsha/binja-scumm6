@@ -32,9 +32,10 @@ source = ["src"]
 extend-exclude = ["scummvm-tools", "scripts/run_pytest_direct.py", "scripts/run_pytest.py"]
 
 [tool.mypy]
+ignore_missing_imports = true
 exclude = [
-    "src/scumm6_opcodes\\.py",  # Auto-generated from Kaitai
-    "src/scumm6_container\\.py",  # Auto-generated from Kaitai
+    "scumm6_opcodes\\.py",  # Auto-generated from Kaitai
+    "scumm6_container\\.py",  # Auto-generated from Kaitai
     "scripts/run_pytest_direct\\.py",
     "scripts/run_pytest\\.py",
 ]

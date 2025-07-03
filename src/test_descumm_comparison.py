@@ -1298,7 +1298,7 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
         # Temporarily replace LastBV with our mock
         import src.scumm6
         original_LastBV = src.scumm6.LastBV
-        src.scumm6.LastBV = MockLastBV  # type: ignore[misc]
+        src.scumm6.LastBV = MockLastBV  # type: ignore[assignment,misc]
         MockLastBV.set(mock_view)
     
     try:
