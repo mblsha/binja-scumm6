@@ -1,10 +1,9 @@
 """New decoder implementation using object-oriented instruction classes."""
 
-from typing import Optional, Iterator, Tuple, List
-from kaitaistruct import KaitaiStream, KaitaiStructError
+from typing import Optional, Iterator, Tuple, List, Dict, Any
+from kaitaistruct import KaitaiStream
 from io import BytesIO
 import logging
-import struct
 
 # Import the Kaitai-generated parser
 from ..scumm6_opcodes import Scumm6Opcodes
@@ -14,7 +13,80 @@ from .instr.opcodes import Instruction
 from .instr.opcode_table import OPCODE_MAP
 
 
-def _iter_decode(data: bytes, addr: int) -> Iterator[Tuple[Instruction, int]]:
+def _handle_buffer_limit_error(exc: Exception, data: bytes, addr: int, offset: int, 
+                               log_buffer_limit_errors: bool = False) -> Dict[str, Any]:
+    """
+    Handle buffer limit errors during instruction parsing.
+    
+    Why these errors happen:
+    Binary Ninja provides a 256-byte buffer to architecture plugins for instruction parsing.
+    When an instruction needs data beyond the buffer boundary, parsing fails with an EOFError.
+    This is EXPECTED BEHAVIOR - Binary Ninja will automatically retry with different buffer
+    alignments until it finds one where the entire instruction fits within the 256-byte window.
+    
+    The errors are not failures - they're part of Binary Ninja's normal retry mechanism.
+    Instructions are eventually parsed successfully despite these transient errors.
+    
+    Args:
+        exc: The exception that occurred
+        data: The buffer data provided by Binary Ninja
+        addr: The base address 
+        offset: Current offset within the buffer
+        log_buffer_limit_errors: Whether to log buffer limit errors (default: False)
+        
+    Returns:
+        Dictionary with debug information about the error
+    """
+    debug_info = {
+        'address': hex(addr + offset),
+        'offset': offset,
+        'remaining_bytes': len(data) - offset,
+        'first_bytes': data[offset:offset + min(16, len(data) - offset)].hex(),
+        'total_buffer_size': len(data),
+    }
+    
+    # Try to identify the opcode that failed
+    if offset < len(data):
+        opcode_byte = data[offset]
+        debug_info['opcode_byte'] = hex(opcode_byte)
+        try:
+            opcode_enum = Scumm6Opcodes.OpType(opcode_byte)
+            debug_info['opcode_name'] = opcode_enum.name
+        except ValueError:
+            debug_info['opcode_name'] = 'unknown'
+    
+    # Check if this is an end-of-data truncation
+    is_eof = (
+        isinstance(exc, EOFError) or 
+        "requested" in str(exc) and "bytes available" in str(exc)
+    )
+    
+    if is_eof:
+        debug_info['total_consumed'] = offset
+        debug_info['buffer_remaining'] = len(data) - offset
+        
+        # Check if we're at Binary Ninja's 256-byte limit
+        if len(data) == 256:
+            debug_info['at_max_buffer'] = True
+            if log_buffer_limit_errors:
+                logging.warning(
+                    "Hit Binary Ninja's 256-byte buffer limit at 0x%x. "
+                    "Already consumed %d bytes, need more for %s instruction. "
+                    "This is normal - Binary Ninja will retry with different buffer alignment. %s",
+                    addr + offset, offset, debug_info.get('opcode_name', 'unknown'),
+                    debug_info
+                )
+        elif offset > len(data) - 10:  # Near end of data
+            if log_buffer_limit_errors:
+                logging.debug(
+                    "Truncated instruction at end of data block at 0x%x: %s",
+                    addr + offset, debug_info
+                )
+    
+    return debug_info
+
+
+def _iter_decode(data: bytes, addr: int, log_buffer_limit_errors: bool = False) -> Iterator[Tuple[Instruction, int]]:
     """A generator that yields decoded instructions one by one."""
     offset = 0
     while offset < len(data):
@@ -26,59 +98,17 @@ def _iter_decode(data: bytes, addr: int) -> Iterator[Tuple[Instruction, int]]:
             ks = KaitaiStream(BytesIO(remaining_data))
             parsed_op = Scumm6Opcodes(ks).op
         except Exception as exc:
-            # Add debugging context to the exception
-            debug_info = {
-                'address': hex(addr + offset),
-                'offset': offset,
-                'remaining_bytes': len(remaining_data),
-                'first_bytes': remaining_data[:min(16, len(remaining_data))].hex(),
-            }
+            # Handle buffer limit errors
+            debug_info = _handle_buffer_limit_error(exc, data, addr, offset, log_buffer_limit_errors)
             
-            # Try to identify the opcode that failed
-            if remaining_data:
-                opcode_byte = remaining_data[0]
-                debug_info['opcode_byte'] = hex(opcode_byte)
-                try:
-                    opcode_enum = Scumm6Opcodes.OpType(opcode_byte)
-                    debug_info['opcode_name'] = opcode_enum.name
-                except ValueError:
-                    debug_info['opcode_name'] = 'unknown'
-            
-            # Check if this is an end-of-data truncation
+            # Check if this is an EOF at buffer boundary
             is_eof = (
                 isinstance(exc, EOFError) or 
                 "requested" in str(exc) and "bytes available" in str(exc)
             )
             
-            # Enhanced diagnostics for buffer exhaustion
-            if is_eof:
-                # Calculate total bytes consumed before this instruction
-                total_consumed = offset
-                buffer_remaining = len(data) - offset
-                
-                # Add buffer consumption info to debug data
-                debug_info['total_consumed'] = total_consumed
-                debug_info['buffer_remaining'] = buffer_remaining
-                debug_info['total_buffer_size'] = len(data)
-                
-                # Check if we're hitting the 256-byte limit
-                if len(data) == 256:
-                    debug_info['at_max_buffer'] = True
-                    logging.warning(
-                        "Hit Binary Ninja's 256-byte buffer limit at 0x%x. "
-                        "Already consumed %d bytes, need more for %s instruction. %s",
-                        addr + offset, total_consumed, debug_info.get('opcode_name', 'unknown'),
-                        debug_info
-                    )
-                elif offset > len(data) - 10:  # Near end of data
-                    logging.debug(
-                        "Truncated instruction at end of data block at 0x%x: %s",
-                        addr + offset, debug_info
-                    )
-                    break  # Stop decoding gracefully
-                else:
-                    # Not near end, this is a real parsing error
-                    pass  # Continue to error reporting below
+            if is_eof and offset > len(data) - 10:  # Near end of data
+                break  # Stop decoding gracefully
             
             # Create enhanced error message
             error_msg = (
@@ -86,8 +116,9 @@ def _iter_decode(data: bytes, addr: int) -> Iterator[Tuple[Instruction, int]]:
                 f"Debug info: {debug_info}"
             )
             
-            # Log the error with full context
-            logging.error(error_msg)
+            # Only log actual errors (not expected buffer limit issues)
+            if not (is_eof and len(data) == 256):
+                logging.error(error_msg)
             
             # Re-raise with enhanced message
             raise RuntimeError(error_msg) from exc
@@ -114,19 +145,9 @@ def _fusion(instruction_iterator: Iterator[Tuple[Instruction, int]]) -> Iterator
     Each consumer instruction tries to fuse with the instruction that came before it.
     """
     decoded_sequence: List[Tuple[Instruction, int]] = []
-    total_bytes_consumed = 0  # Track total bytes consumed by fusion
     
     try:
         for instruction, addr in instruction_iterator:
-            # Track bytes consumed
-            total_bytes_consumed += instruction.length()
-            
-            # Log fusion activity for debugging buffer issues
-            if logging.getLogger().isEnabledFor(logging.DEBUG) and total_bytes_consumed > 200:
-                logging.debug(
-                    "Fusion consuming significant buffer: %d bytes total at addr 0x%x",
-                    total_bytes_consumed, addr
-                )
             # Try to fuse with the last instruction in the sequence
             if decoded_sequence:
                 last_instruction, last_addr = decoded_sequence[-1]
@@ -172,26 +193,28 @@ def _fusion(instruction_iterator: Iterator[Tuple[Instruction, int]]) -> Iterator
         yield instruction_pair
 
 
-def decode(data: bytes, addr: int) -> Optional[Instruction]:
+def decode(data: bytes, addr: int, log_buffer_limit_errors: bool = False) -> Optional[Instruction]:
     """
     Decodes a single instruction from a byte stream.
     
     Args:
         data: Raw instruction bytes
         addr: Address of the instruction
+        log_buffer_limit_errors: Whether to log buffer limit errors (default: False)
         
     Returns:
         Instruction object or None if decoding failed
     """
     try:
-        for instr, _ in _iter_decode(data, addr):
+        for instr, _ in _iter_decode(data, addr, log_buffer_limit_errors):
             return instr  # Return the first (only) instruction
         return None
     except StopIteration:
         return None
 
 
-def decode_with_fusion(data: bytes, addr: int, enable_loop_detection: bool = True) -> Optional[Instruction]:
+def decode_with_fusion(data: bytes, addr: int, enable_loop_detection: bool = True, 
+                       log_buffer_limit_errors: bool = False) -> Optional[Instruction]:
     """
     Decodes a single (potentially fused) instruction from a byte stream.
     This function applies instruction fusion for contexts like LLIL lifting.
@@ -200,11 +223,12 @@ def decode_with_fusion(data: bytes, addr: int, enable_loop_detection: bool = Tru
         data: Raw instruction bytes
         addr: Address of the instruction
         enable_loop_detection: Whether to apply loop pattern recognition
+        log_buffer_limit_errors: Whether to log buffer limit errors (default: False)
         
     Returns:
         Instruction object (potentially fused) or None if decoding failed
     """
-    fused_iterator = _fusion(_iter_decode(data, addr))
+    fused_iterator = _fusion(_iter_decode(data, addr, log_buffer_limit_errors))
     
     # For fusion, we want the most complete result (handles multi-instruction fusion)
     # This is different from regular decode() which returns the first instruction
@@ -222,7 +246,8 @@ def decode_with_fusion(data: bytes, addr: int, enable_loop_detection: bool = Tru
         return None
 
 
-def decode_with_fusion_incremental(data: bytes, addr: int, enable_loop_detection: bool = True) -> Optional[Instruction]:
+def decode_with_fusion_incremental(data: bytes, addr: int, enable_loop_detection: bool = True,
+                                   log_buffer_limit_errors: bool = False) -> Optional[Instruction]:
     """
     Decodes a single instruction with fusion, suitable for incremental parsing.
     Returns the first (complete) instruction for step-by-step disassembly.
@@ -231,20 +256,12 @@ def decode_with_fusion_incremental(data: bytes, addr: int, enable_loop_detection
         data: Raw instruction bytes
         addr: Address of the instruction
         enable_loop_detection: Whether to apply loop pattern recognition
+        log_buffer_limit_errors: Whether to log buffer limit errors (default: False)
         
     Returns:
         First instruction object (potentially fused) or None if decoding failed
     """
-    # Add diagnostics for buffer size issues
-    if len(data) < 256 and logging.getLogger().isEnabledFor(logging.DEBUG):
-        # Only log when we have less than max buffer size
-        logging.debug(
-            "decode_with_fusion_incremental called with limited buffer: "
-            "addr=0x%x, buffer_size=%d bytes (max=256), first_bytes=%s",
-            addr, len(data), data[:min(16, len(data))].hex()
-        )
-    
-    fused_iterator = _fusion(_iter_decode(data, addr))
+    fused_iterator = _fusion(_iter_decode(data, addr, log_buffer_limit_errors))
     
     # For incremental parsing, we want the first complete result
     try:

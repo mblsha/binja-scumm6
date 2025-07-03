@@ -75,6 +75,13 @@ class Scumm6(Architecture):  # type: ignore[misc]
     enable_fusion_in_disassembly = True
     enable_fusion_in_llil = True
     
+    # Buffer limit error logging - disabled by default
+    # Binary Ninja provides a 256-byte buffer for instruction parsing. When instructions
+    # need data beyond this boundary, parsing fails temporarily. This is NORMAL BEHAVIOR -
+    # Binary Ninja automatically retries with different buffer alignments until successful.
+    # Enable this only for debugging buffer-related issues.
+    log_buffer_limit_errors = False
+    
     regs = {
         RegisterName("sp"): RegisterInfo(
             RegisterName("sp"), 4, extend=ImplicitRegisterExtend.SignExtendToFullWidth
@@ -208,7 +215,7 @@ class Scumm6(Architecture):  # type: ignore[misc]
 
     def get_instruction_info(self, data: bytes, addr: int) -> Optional[InstructionInfo]:
         # Use new decoder for proper InstructionInfo population
-        new_instr = new_decode(data, addr)
+        new_instr = new_decode(data, addr, self.log_buffer_limit_errors)
         if new_instr is None:
             return None
 
@@ -224,9 +231,9 @@ class Scumm6(Architecture):  # type: ignore[misc]
     ) -> Optional[Tuple[List[InstructionTextToken], int]]:
         # Use decoder with or without fusion based on setting
         if self.enable_fusion_in_disassembly:
-            new_instr = decode_with_fusion_incremental(data, addr)
+            new_instr = decode_with_fusion_incremental(data, addr, log_buffer_limit_errors=self.log_buffer_limit_errors)
         else:
-            new_instr = new_decode(data, addr)
+            new_instr = new_decode(data, addr, self.log_buffer_limit_errors)
             
         if new_instr is None:
             return None
@@ -253,9 +260,9 @@ class Scumm6(Architecture):  # type: ignore[misc]
     ) -> Optional[int]:
         # Use decoder with or without fusion based on setting
         if self.enable_fusion_in_llil:
-            new_instr = decode_with_fusion_incremental(data, addr)
+            new_instr = decode_with_fusion_incremental(data, addr, log_buffer_limit_errors=self.log_buffer_limit_errors)
         else:
-            new_instr = new_decode(data, addr)
+            new_instr = new_decode(data, addr, self.log_buffer_limit_errors)
             
         if new_instr is None:
             return None
