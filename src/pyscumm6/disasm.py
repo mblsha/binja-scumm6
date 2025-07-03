@@ -61,7 +61,8 @@ def _handle_buffer_limit_error(exc: Exception, data: bytes, addr: int, offset: i
     # Check if this is an end-of-data truncation
     is_eof = (
         isinstance(exc, EOFError) or 
-        "requested" in str(exc) and "bytes available" in str(exc)
+        ("requested" in str(exc) and "bytes available" in str(exc)) or
+        "end of stream reached" in str(exc)
     )
     
     if is_eof:
@@ -107,7 +108,8 @@ def _iter_decode(data: bytes, addr: int) -> Iterator[Tuple[Instruction, int]]:
             # Check if this is an EOF at buffer boundary
             is_eof = (
                 isinstance(exc, EOFError) or 
-                "requested" in str(exc) and "bytes available" in str(exc)
+                ("requested" in str(exc) and "bytes available" in str(exc)) or
+                "end of stream reached" in str(exc)
             )
             
             if is_eof and offset > len(data) - 10:  # Near end of data
@@ -128,8 +130,13 @@ def _iter_decode(data: bytes, addr: int) -> Iterator[Tuple[Instruction, int]]:
                 # Either not a buffer limit error, or logging is enabled
                 logging.error(error_msg)
             
-            # Re-raise with enhanced message
-            raise RuntimeError(error_msg) from exc
+            # For buffer limit errors, return gracefully to let Binary Ninja retry
+            if is_eof:
+                # This signals Binary Ninja to retry with a different buffer alignment
+                break
+            else:
+                # This is a real parsing error, not a buffer limit issue
+                raise RuntimeError(error_msg) from exc
 
         length = ks.pos()
         if length == 0:
