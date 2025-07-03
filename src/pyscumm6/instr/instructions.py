@@ -2182,7 +2182,7 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
                 # Match the render order
                 x_expr = self._lift_operand(il, self.fused_operands[0])  # first param
                 y_expr = self._lift_operand(il, self.fused_operands[1])  # second param
-                il.append(il.intrinsic([], "print_cursor_xy", [x_expr, y_expr]))
+                il.append(il.intrinsic([], "print_text", [x_expr, y_expr]))
             else:
                 # Not fused or other subops - use stack pops
                 params = []
