@@ -50,13 +50,35 @@ def _iter_decode(data: bytes, addr: int) -> Iterator[Tuple[Instruction, int]]:
                 "requested" in str(exc) and "bytes available" in str(exc)
             )
             
-            # For truncated instructions at end of data, log debug info and stop gracefully
-            if is_eof and offset > len(data) - 10:  # Near end of data
-                logging.debug(
-                    "Truncated instruction at end of data block at 0x%x: %s",
-                    addr + offset, debug_info
-                )
-                break  # Stop decoding gracefully
+            # Enhanced diagnostics for buffer exhaustion
+            if is_eof:
+                # Calculate total bytes consumed before this instruction
+                total_consumed = offset
+                buffer_remaining = len(data) - offset
+                
+                # Add buffer consumption info to debug data
+                debug_info['total_consumed'] = total_consumed
+                debug_info['buffer_remaining'] = buffer_remaining
+                debug_info['total_buffer_size'] = len(data)
+                
+                # Check if we're hitting the 256-byte limit
+                if len(data) == 256:
+                    debug_info['at_max_buffer'] = True
+                    logging.warning(
+                        "Hit Binary Ninja's 256-byte buffer limit at 0x%x. "
+                        "Already consumed %d bytes, need more for %s instruction. %s",
+                        addr + offset, total_consumed, debug_info.get('opcode_name', 'unknown'),
+                        debug_info
+                    )
+                elif offset > len(data) - 10:  # Near end of data
+                    logging.debug(
+                        "Truncated instruction at end of data block at 0x%x: %s",
+                        addr + offset, debug_info
+                    )
+                    break  # Stop decoding gracefully
+                else:
+                    # Not near end, this is a real parsing error
+                    pass  # Continue to error reporting below
             
             # Create enhanced error message
             error_msg = (
@@ -92,9 +114,19 @@ def _fusion(instruction_iterator: Iterator[Tuple[Instruction, int]]) -> Iterator
     Each consumer instruction tries to fuse with the instruction that came before it.
     """
     decoded_sequence: List[Tuple[Instruction, int]] = []
+    total_bytes_consumed = 0  # Track total bytes consumed by fusion
     
     try:
         for instruction, addr in instruction_iterator:
+            # Track bytes consumed
+            total_bytes_consumed += instruction.length()
+            
+            # Log fusion activity for debugging buffer issues
+            if logging.getLogger().isEnabledFor(logging.DEBUG) and total_bytes_consumed > 200:
+                logging.debug(
+                    "Fusion consuming significant buffer: %d bytes total at addr 0x%x",
+                    total_bytes_consumed, addr
+                )
             # Try to fuse with the last instruction in the sequence
             if decoded_sequence:
                 last_instruction, last_addr = decoded_sequence[-1]
@@ -203,6 +235,15 @@ def decode_with_fusion_incremental(data: bytes, addr: int, enable_loop_detection
     Returns:
         First instruction object (potentially fused) or None if decoding failed
     """
+    # Add diagnostics for buffer size issues
+    if len(data) < 256 and logging.getLogger().isEnabledFor(logging.DEBUG):
+        # Only log when we have less than max buffer size
+        logging.debug(
+            "decode_with_fusion_incremental called with limited buffer: "
+            "addr=0x%x, buffer_size=%d bytes (max=256), first_bytes=%s",
+            addr, len(data), data[:min(16, len(data))].hex()
+        )
+    
     fused_iterator = _fusion(_iter_decode(data, addr))
     
     # For incremental parsing, we want the first complete result
