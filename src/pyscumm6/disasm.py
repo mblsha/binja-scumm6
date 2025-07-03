@@ -12,9 +12,13 @@ from ..scumm6_opcodes import Scumm6Opcodes
 from .instr.opcodes import Instruction
 from .instr.opcode_table import OPCODE_MAP
 
+# Global setting for buffer limit error logging
+# Set to True to see detailed buffer limit errors (for debugging)
+# These errors are NORMAL - Binary Ninja retries with different alignments
+LOG_BUFFER_LIMIT_ERRORS = False
 
-def _handle_buffer_limit_error(exc: Exception, data: bytes, addr: int, offset: int, 
-                               log_buffer_limit_errors: bool = False) -> Dict[str, Any]:
+
+def _handle_buffer_limit_error(exc: Exception, data: bytes, addr: int, offset: int) -> Dict[str, Any]:
     """
     Handle buffer limit errors during instruction parsing.
     
@@ -32,7 +36,6 @@ def _handle_buffer_limit_error(exc: Exception, data: bytes, addr: int, offset: i
         data: The buffer data provided by Binary Ninja
         addr: The base address 
         offset: Current offset within the buffer
-        log_buffer_limit_errors: Whether to log buffer limit errors (default: False)
         
     Returns:
         Dictionary with debug information about the error
@@ -68,7 +71,7 @@ def _handle_buffer_limit_error(exc: Exception, data: bytes, addr: int, offset: i
         # Check if we're at Binary Ninja's 256-byte limit
         if len(data) == 256:
             debug_info['at_max_buffer'] = True
-            if log_buffer_limit_errors:
+            if LOG_BUFFER_LIMIT_ERRORS:
                 logging.warning(
                     "Hit Binary Ninja's 256-byte buffer limit at 0x%x. "
                     "Already consumed %d bytes, need more for %s instruction. "
@@ -77,7 +80,7 @@ def _handle_buffer_limit_error(exc: Exception, data: bytes, addr: int, offset: i
                     debug_info
                 )
         elif offset > len(data) - 10:  # Near end of data
-            if log_buffer_limit_errors:
+            if LOG_BUFFER_LIMIT_ERRORS:
                 logging.debug(
                     "Truncated instruction at end of data block at 0x%x: %s",
                     addr + offset, debug_info
@@ -86,7 +89,7 @@ def _handle_buffer_limit_error(exc: Exception, data: bytes, addr: int, offset: i
     return debug_info
 
 
-def _iter_decode(data: bytes, addr: int, log_buffer_limit_errors: bool = False) -> Iterator[Tuple[Instruction, int]]:
+def _iter_decode(data: bytes, addr: int) -> Iterator[Tuple[Instruction, int]]:
     """A generator that yields decoded instructions one by one."""
     offset = 0
     while offset < len(data):
@@ -99,7 +102,7 @@ def _iter_decode(data: bytes, addr: int, log_buffer_limit_errors: bool = False) 
             parsed_op = Scumm6Opcodes(ks).op
         except Exception as exc:
             # Handle buffer limit errors
-            debug_info = _handle_buffer_limit_error(exc, data, addr, offset, log_buffer_limit_errors)
+            debug_info = _handle_buffer_limit_error(exc, data, addr, offset)
             
             # Check if this is an EOF at buffer boundary
             is_eof = (
@@ -118,7 +121,7 @@ def _iter_decode(data: bytes, addr: int, log_buffer_limit_errors: bool = False) 
             
             # Only log actual errors (not expected buffer limit issues)
             # Buffer limit errors should only be logged if explicitly enabled
-            if is_eof and not log_buffer_limit_errors:
+            if is_eof and not LOG_BUFFER_LIMIT_ERRORS:
                 # This is a buffer limit error and logging is disabled - don't log
                 pass
             else:
@@ -198,28 +201,26 @@ def _fusion(instruction_iterator: Iterator[Tuple[Instruction, int]]) -> Iterator
         yield instruction_pair
 
 
-def decode(data: bytes, addr: int, log_buffer_limit_errors: bool = False) -> Optional[Instruction]:
+def decode(data: bytes, addr: int) -> Optional[Instruction]:
     """
     Decodes a single instruction from a byte stream.
     
     Args:
         data: Raw instruction bytes
         addr: Address of the instruction
-        log_buffer_limit_errors: Whether to log buffer limit errors (default: False)
         
     Returns:
         Instruction object or None if decoding failed
     """
     try:
-        for instr, _ in _iter_decode(data, addr, log_buffer_limit_errors):
+        for instr, _ in _iter_decode(data, addr):
             return instr  # Return the first (only) instruction
         return None
     except StopIteration:
         return None
 
 
-def decode_with_fusion(data: bytes, addr: int, enable_loop_detection: bool = True, 
-                       log_buffer_limit_errors: bool = False) -> Optional[Instruction]:
+def decode_with_fusion(data: bytes, addr: int, enable_loop_detection: bool = True) -> Optional[Instruction]:
     """
     Decodes a single (potentially fused) instruction from a byte stream.
     This function applies instruction fusion for contexts like LLIL lifting.
@@ -228,12 +229,11 @@ def decode_with_fusion(data: bytes, addr: int, enable_loop_detection: bool = Tru
         data: Raw instruction bytes
         addr: Address of the instruction
         enable_loop_detection: Whether to apply loop pattern recognition
-        log_buffer_limit_errors: Whether to log buffer limit errors (default: False)
         
     Returns:
         Instruction object (potentially fused) or None if decoding failed
     """
-    fused_iterator = _fusion(_iter_decode(data, addr, log_buffer_limit_errors))
+    fused_iterator = _fusion(_iter_decode(data, addr))
     
     # For fusion, we want the most complete result (handles multi-instruction fusion)
     # This is different from regular decode() which returns the first instruction
@@ -251,8 +251,7 @@ def decode_with_fusion(data: bytes, addr: int, enable_loop_detection: bool = Tru
         return None
 
 
-def decode_with_fusion_incremental(data: bytes, addr: int, enable_loop_detection: bool = True,
-                                   log_buffer_limit_errors: bool = False) -> Optional[Instruction]:
+def decode_with_fusion_incremental(data: bytes, addr: int, enable_loop_detection: bool = True) -> Optional[Instruction]:
     """
     Decodes a single instruction with fusion, suitable for incremental parsing.
     Returns the first (complete) instruction for step-by-step disassembly.
@@ -261,12 +260,11 @@ def decode_with_fusion_incremental(data: bytes, addr: int, enable_loop_detection
         data: Raw instruction bytes
         addr: Address of the instruction
         enable_loop_detection: Whether to apply loop pattern recognition
-        log_buffer_limit_errors: Whether to log buffer limit errors (default: False)
         
     Returns:
         First instruction object (potentially fused) or None if decoding failed
     """
-    fused_iterator = _fusion(_iter_decode(data, addr, log_buffer_limit_errors))
+    fused_iterator = _fusion(_iter_decode(data, addr))
     
     # For incremental parsing, we want the first complete result
     try:
