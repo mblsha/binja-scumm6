@@ -117,7 +117,12 @@ def _iter_decode(data: bytes, addr: int, log_buffer_limit_errors: bool = False) 
             )
             
             # Only log actual errors (not expected buffer limit issues)
-            if not (is_eof and len(data) == 256):
+            # Buffer limit errors should only be logged if explicitly enabled
+            if is_eof and not log_buffer_limit_errors:
+                # This is a buffer limit error and logging is disabled - don't log
+                pass
+            else:
+                # Either not a buffer limit error, or logging is enabled
                 logging.error(error_msg)
             
             # Re-raise with enhanced message
