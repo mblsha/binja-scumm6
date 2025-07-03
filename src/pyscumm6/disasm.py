@@ -4,6 +4,7 @@ from typing import Optional, Iterator, Tuple, List
 from kaitaistruct import KaitaiStream, KaitaiStructError
 from io import BytesIO
 import logging
+import struct
 
 # Import the Kaitai-generated parser
 from ..scumm6_opcodes import Scumm6Opcodes
@@ -24,11 +25,36 @@ def _iter_decode(data: bytes, addr: int) -> Iterator[Tuple[Instruction, int]]:
         try:
             ks = KaitaiStream(BytesIO(remaining_data))
             parsed_op = Scumm6Opcodes(ks).op
-        except (KaitaiStructError, EOFError) as exc:
-            logging.debug(
-                "Failed to parse opcode at 0x%x: %s", addr + offset, exc
+        except Exception as exc:
+            # Add debugging context to the exception
+            debug_info = {
+                'address': hex(addr + offset),
+                'offset': offset,
+                'remaining_bytes': len(remaining_data),
+                'first_bytes': remaining_data[:min(16, len(remaining_data))].hex(),
+            }
+            
+            # Try to identify the opcode that failed
+            if remaining_data:
+                opcode_byte = remaining_data[0]
+                debug_info['opcode_byte'] = hex(opcode_byte)
+                try:
+                    opcode_enum = Scumm6Opcodes.OpType(opcode_byte)
+                    debug_info['opcode_name'] = opcode_enum.name
+                except ValueError:
+                    debug_info['opcode_name'] = 'unknown'
+            
+            # Create enhanced error message
+            error_msg = (
+                f"Failed to parse SCUMM6 opcode: {exc}\n"
+                f"Debug info: {debug_info}"
             )
-            break
+            
+            # Log the error with full context
+            logging.error(error_msg)
+            
+            # Re-raise with enhanced message
+            raise RuntimeError(error_msg) from exc
 
         length = ks.pos()
         if length == 0:
