@@ -1,6 +1,6 @@
 """Smart base classes for generated instruction types."""
 
-from typing import List, Optional, Any, NamedTuple, cast, TYPE_CHECKING
+from typing import List, Optional, Any, NamedTuple, cast, TYPE_CHECKING, Dict
 from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName
@@ -2324,69 +2324,139 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
         if self.fused_operands:
             # Enhanced LLIL: Create string pointer and use fused operands
             
-            # Try to find the string in the BSTR segment
-            string_addr = None
+            # Parse message parts to generate LLIL for each component
+            message_parts = self._parse_message_parts()
             
-            # Get the Binary View to access string mappings
-            try:
-                from ...scumm6 import LastBV
-                bv = LastBV.get()
-                
-                if bv and hasattr(bv, 'state') and hasattr(bv.state, 'bstr'):
-                    # Extract just the text parts from the message (no control codes)
-                    message_text = self._extract_message_text()
-                    
-                    # Try to find matching strings in BSTR
-                    # First, try to extract individual text segments
-                    text_parts = []
-                    for part in message_text.split(' + '):
-                        part = part.strip()
-                        if part.startswith('"') and part.endswith('"'):
-                            text_parts.append(part[1:-1])  # Remove quotes
-                    
-                    # Look for the longest text part in BSTR
-                    for text in sorted(text_parts, key=len, reverse=True):
-                        if text in bv.state.bstr:
-                            string_addr = bv.state.bstr[text]
-                            break
-                    
-                    # If not found, try to find a string containing our text
-                    if string_addr is None:
-                        for bstr_text, bstr_addr in bv.state.bstr.items():
-                            for text in text_parts:
-                                if text and text in bstr_text:
-                                    string_addr = bstr_addr
-                                    break
-                            if string_addr:
-                                break
-            except Exception:
-                pass  # Continue to check if we found a string
-            
-            # If string not found, this is a bug - return unimplemented
-            if string_addr is None:
-                il.append(il.unimplemented())
+            # If no message parts found, fall back to standard behavior
+            if not message_parts:
+                super().lift(il, addr)
                 return
             
-            # Use TEMP register by index
-            # Binary Ninja expects LLIL_TEMP(index) where index is an integer
-            temp_reg_index = 100 + (addr % 100)  # Generate unique temp reg index from address
+            # Generate LLIL for each message part
+            part_temps = []
+            temp_base = 100 + (addr % 100)  # Base index for temp registers
             
-            # Set the temp register to point to the string
-            il.append(il.set_reg(4, LLIL_TEMP(temp_reg_index), il.const_pointer(4, string_addr)))
-            
-            # Build parameters: string pointer + fused operands (e.g., actor ID)
-            params = [il.reg(4, LLIL_TEMP(temp_reg_index))]
+            for i, part in enumerate(message_parts):
+                temp_index = temp_base + i
+                
+                if part['type'] == 'string':
+                    # Try to find the string in the BSTR segment
+                    string_addr = self._find_string_address(str(part['value']))
+                    if string_addr is not None:
+                        # Create string pointer
+                        il.append(il.set_reg(4, LLIL_TEMP(temp_index), il.const_pointer(4, string_addr)))
+                        part_temps.append(il.reg(4, LLIL_TEMP(temp_index)))
+                    else:
+                        # String not found - use placeholder
+                        il.append(il.set_reg(4, LLIL_TEMP(temp_index), il.const_pointer(4, 0)))
+                        part_temps.append(il.reg(4, LLIL_TEMP(temp_index)))
+                
+                elif part['type'] == 'wait':
+                    # Create wait intrinsic with no parameters
+                    il.append(il.set_reg(4, LLIL_TEMP(temp_index), 
+                             il.intrinsic([], 'wait', [])))
+                    part_temps.append(il.reg(4, LLIL_TEMP(temp_index)))
+                
+                elif part['type'] == 'sound':
+                    # Create sound intrinsic with sound_id and volume parameters
+                    sound_params = [
+                        il.const(4, part['sound_id']),
+                        il.const(4, part['volume'])
+                    ]
+                    il.append(il.set_reg(4, LLIL_TEMP(temp_index),
+                             il.intrinsic([], 'sound', sound_params)))
+                    part_temps.append(il.reg(4, LLIL_TEMP(temp_index)))
             
             # Add fused operands (e.g., actor ID for talk_actor)
             for operand in self.fused_operands:
-                params.append(self._lift_operand(il, operand))
+                part_temps.append(self._lift_operand(il, operand))
             
             # Check if this instruction produces a result
             if self._config and self._config.push_count > 0:
-                il.append(il.intrinsic([LLIL_TEMP(0)], self._name, params))
+                il.append(il.intrinsic([LLIL_TEMP(0)], self._name, part_temps))
                 il.append(il.push(4, LLIL_TEMP(0)))
             else:
-                il.append(il.intrinsic([], self._name, params))
+                il.append(il.intrinsic([], self._name, part_temps))
         else:
             # Standard LLIL: Fall back to normal intrinsic behavior (pop from stack)
             super().lift(il, addr)
+    
+    def _parse_message_parts(self) -> List[Dict[str, Any]]:
+        """Parse message data into structured parts for LLIL generation."""
+        from ...scumm6_opcodes import Scumm6Opcodes
+        
+        if not (hasattr(self.op_details, 'body') and isinstance(self.op_details.body, Scumm6Opcodes.Message)):
+            return []
+        
+        parts: List[Dict[str, Any]] = []
+        current_text = ""
+        
+        try:
+            for part in self.op_details.body.parts:
+                if hasattr(part, 'data') and part.data != 0:
+                    if part.data == 0xFF and hasattr(part, 'content'):
+                        # Control code found - finalize current text
+                        if current_text:
+                            parts.append({'type': 'string', 'value': current_text})
+                            current_text = ""
+                        
+                        if hasattr(part.content, 'code'):
+                            if part.content.code == 0x03:  # wait() command
+                                parts.append({'type': 'wait'})
+                            elif part.content.code == 0x0a:  # sound command
+                                # Parse sound parameters from the payload
+                                if hasattr(part.content, 'payload'):
+                                    sound = part.content.payload
+                                    if hasattr(sound, 'value1') and hasattr(sound, 'v3'):
+                                        parts.append({
+                                            'type': 'sound',
+                                            'sound_id': int(sound.value1),
+                                            'volume': int(sound.v3)
+                                        })
+                                    else:
+                                        # Default sound parameters if parsing fails
+                                        parts.append({
+                                            'type': 'sound',
+                                            'sound_id': 0,
+                                            'volume': 0x7F
+                                        })
+                                else:
+                                    # Default sound parameters
+                                    parts.append({
+                                        'type': 'sound',
+                                        'sound_id': 0,
+                                        'volume': 0x7F
+                                    })
+                    elif 32 <= part.data <= 126:  # Printable ASCII
+                        current_text += chr(part.data)
+                else:
+                    # End of message or invalid data
+                    break
+            
+            # Add any remaining text
+            if current_text:
+                parts.append({'type': 'string', 'value': current_text})
+            
+            return parts
+        except Exception:
+            return []
+    
+    def _find_string_address(self, text: str) -> Optional[int]:
+        """Find the address of a string in the BSTR segment."""
+        try:
+            from ...scumm6 import LastBV
+            bv = LastBV.get()
+            
+            if bv and hasattr(bv, 'state') and hasattr(bv.state, 'bstr'):
+                # Try exact match first
+                if text in bv.state.bstr:
+                    return int(bv.state.bstr[text])
+                
+                # Try to find a string containing our text
+                for bstr_text, bstr_addr in bv.state.bstr.items():
+                    if text and text in bstr_text:
+                        return int(bstr_addr)
+        except Exception:
+            pass
+        
+        return None
