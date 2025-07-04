@@ -3433,6 +3433,197 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
             # For now, just generate a comment operation
             il.append(il.nop())
             
+        elif subop_name == "ignore_boxes":
+            # setIgnoreBoxes() - write 1 to current actor's IGNORE_BOXES property
+            current_actor_addr, ignore_boxes_offset = get_current_actor_property_address(ActorProperty.IGNORE_BOXES)
+            
+            # Calculate actor property address
+            current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+            from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+            actor_base = il.add(4, 
+                il.const_pointer(4, ACTORS_START),
+                il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+            )
+            ignore_boxes_addr = il.add(4, actor_base, il.const(4, ignore_boxes_offset))
+            il.append(il.store(1, ignore_boxes_addr, il.const(1, 1)))  # Set to 1 (true)
+            
+        elif subop_name == "never_zclip":
+            # setNeverZClip() - write 1 to current actor's NEVER_ZCLIP property
+            current_actor_addr, never_zclip_offset = get_current_actor_property_address(ActorProperty.NEVER_ZCLIP)
+            
+            # Calculate actor property address
+            current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+            from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+            actor_base = il.add(4, 
+                il.const_pointer(4, ACTORS_START),
+                il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+            )
+            never_zclip_addr = il.add(4, actor_base, il.const(4, never_zclip_offset))
+            il.append(il.store(1, never_zclip_addr, il.const(1, 1)))  # Set to 1 (true)
+            
+        elif subop_name == "elevation":
+            # setElevation(elevation) - write to current actor's ELEVATION property
+            if params:
+                elevation = params[0]
+                current_actor_addr, elevation_offset = get_current_actor_property_address(ActorProperty.ELEVATION)
+                
+                # Calculate actor property address
+                current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+                from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+                actor_base = il.add(4, 
+                    il.const_pointer(4, ACTORS_START),
+                    il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+                )
+                elevation_addr = il.add(4, actor_base, il.const(4, elevation_offset))
+                il.append(il.store(2, elevation_addr, elevation))  # 2 bytes, signed
+            else:
+                il.append(il.unimplemented())
+                
+        elif subop_name == "scale":
+            # setScale(scale) - write to both SCALE_X and SCALE_Y properties
+            if params:
+                scale = params[0]
+                current_actor_addr, _ = get_current_actor_property_address(ActorProperty.SCALE_X)
+                
+                # Calculate actor base address
+                current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+                from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+                actor_base = il.add(4, 
+                    il.const_pointer(4, ACTORS_START),
+                    il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+                )
+                
+                # Write scale to both X and Y
+                scale_x_offset = ActorProperty.SCALE_X.value.offset
+                scale_x_addr = il.add(4, actor_base, il.const(4, scale_x_offset))
+                il.append(il.store(1, scale_x_addr, scale))
+                
+                scale_y_offset = ActorProperty.SCALE_Y.value.offset
+                scale_y_addr = il.add(4, actor_base, il.const(4, scale_y_offset))
+                il.append(il.store(1, scale_y_addr, scale))
+            else:
+                il.append(il.unimplemented())
+                
+        elif subop_name == "text_offset":
+            # setTalkPos(x, y) - write to TALK_POS_X and TALK_POS_Y
+            if len(params) >= 2:
+                x_pos, y_pos = params[0], params[1]
+                current_actor_addr, _ = get_current_actor_property_address(ActorProperty.TALK_POS_X)
+                
+                # Calculate actor base address
+                current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+                from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+                actor_base = il.add(4, 
+                    il.const_pointer(4, ACTORS_START),
+                    il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+                )
+                
+                # Write X position
+                talk_pos_x_offset = ActorProperty.TALK_POS_X.value.offset
+                talk_pos_x_addr = il.add(4, actor_base, il.const(4, talk_pos_x_offset))
+                il.append(il.store(2, talk_pos_x_addr, x_pos))  # 2 bytes, signed
+                
+                # Write Y position
+                talk_pos_y_offset = ActorProperty.TALK_POS_Y.value.offset
+                talk_pos_y_addr = il.add(4, actor_base, il.const(4, talk_pos_y_offset))
+                il.append(il.store(2, talk_pos_y_addr, y_pos))  # 2 bytes, signed
+            else:
+                il.append(il.unimplemented())
+                
+        elif subop_name == "actor_width":
+            # setWidth(width) - write to current actor's WIDTH property
+            if params:
+                width = params[0]
+                current_actor_addr, width_offset = get_current_actor_property_address(ActorProperty.WIDTH)
+                
+                # Calculate actor property address
+                current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+                from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+                actor_base = il.add(4, 
+                    il.const_pointer(4, ACTORS_START),
+                    il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+                )
+                width_addr = il.add(4, actor_base, il.const(4, width_offset))
+                il.append(il.store(1, width_addr, width))  # 1 byte
+            else:
+                il.append(il.unimplemented())
+                
+        elif subop_name == "walk_animation":
+            # setWalkFrame(frame) - write to current actor's WALK_FRAME property
+            if params:
+                frame = params[0]
+                current_actor_addr, walk_frame_offset = get_current_actor_property_address(ActorProperty.WALK_FRAME)
+                
+                # Calculate actor property address
+                current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+                from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+                actor_base = il.add(4, 
+                    il.const_pointer(4, ACTORS_START),
+                    il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+                )
+                walk_frame_addr = il.add(4, actor_base, il.const(4, walk_frame_offset))
+                il.append(il.store(1, walk_frame_addr, frame))  # 1 byte
+            else:
+                il.append(il.unimplemented())
+                
+        elif subop_name == "stand_animation":
+            # setStandFrame(frame) - write to current actor's STAND_FRAME property
+            if params:
+                frame = params[0]
+                current_actor_addr, stand_frame_offset = get_current_actor_property_address(ActorProperty.STAND_FRAME)
+                
+                # Calculate actor property address
+                current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+                from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+                actor_base = il.add(4, 
+                    il.const_pointer(4, ACTORS_START),
+                    il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+                )
+                stand_frame_addr = il.add(4, actor_base, il.const(4, stand_frame_offset))
+                il.append(il.store(1, stand_frame_addr, frame))  # 1 byte
+            else:
+                il.append(il.unimplemented())
+                
+        elif subop_name == "talk_animation":
+            # setTalkFrame(frame1, frame2) - write to current actor's TALK_FRAME property
+            # Note: The second parameter might be for a different property or ignored
+            if params:
+                frame = params[0]  # Use first parameter for TALK_FRAME
+                current_actor_addr, talk_frame_offset = get_current_actor_property_address(ActorProperty.TALK_FRAME)
+                
+                # Calculate actor property address
+                current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+                from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+                actor_base = il.add(4, 
+                    il.const_pointer(4, ACTORS_START),
+                    il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+                )
+                talk_frame_addr = il.add(4, actor_base, il.const(4, talk_frame_offset))
+                il.append(il.store(1, talk_frame_addr, frame))  # 1 byte
+                
+                # If there's a second parameter, we might need to store it somewhere else
+                # For now, we'll ignore it as we don't have a second talk frame field
+            else:
+                il.append(il.unimplemented())
+                
+        elif subop_name == "palette":
+            # setPalette(palette) - write to current actor's PALETTE property
+            if params:
+                palette = params[0]
+                current_actor_addr, palette_offset = get_current_actor_property_address(ActorProperty.PALETTE)
+                
+                # Calculate actor property address
+                current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+                from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+                actor_base = il.add(4, 
+                    il.const_pointer(4, ACTORS_START),
+                    il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+                )
+                palette_addr = il.add(4, actor_base, il.const(4, palette_offset))
+                il.append(il.store(1, palette_addr, palette))  # 1 byte
+            else:
+                il.append(il.unimplemented())
+            
         else:
             # Unknown or unimplemented subop - fallback to unimplemented
             il.append(il.unimplemented())

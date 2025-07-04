@@ -311,13 +311,13 @@ def test_generated_actor_struct_definition():
     uint8_t facing_direction; // 0x18
     uint8_t moving; // 0x19
     uint8_t walk_box; // 0x1A
-    uint8_t _pad1;
+    uint8_t ignore_boxes; // 0x1B
     uint8_t scale_x; // 0x1C
     uint8_t scale_y; // 0x1D
     uint8_t width; // 0x1E
     uint8_t palette; // 0x1F
     uint8_t talk_color; // 0x20
-    uint8_t _pad2;
+    uint8_t never_zclip; // 0x21
     uint16_t flags; // 0x22
     uint16_t anim_counter; // 0x24
     uint8_t current_anim; // 0x26
@@ -328,7 +328,7 @@ def test_generated_actor_struct_definition():
     uint8_t loop_flag; // 0x2B
     int16_t talk_pos_x; // 0x2C
     int16_t talk_pos_y; // 0x2E
-    uint8_t _pad3[16];
+    uint8_t _pad1[16];
 }"""
     
     # Compare the full multi-line string

@@ -13,7 +13,7 @@ This streamlined test framework:
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from typing import List, NamedTuple, Optional, Tuple
+from typing import List, NamedTuple, Optional, Tuple, Any
 import sys
 import os
 from dataclasses import dataclass
@@ -66,6 +66,11 @@ def mintrinsic(name: str, outputs: Optional[List[MockReg]] = None, params: Optio
 def mreg(name: str) -> MockReg:
     """Helper to create MockReg objects more easily."""
     return MockReg(name)
+
+
+def mllil(op: str, *args: Any) -> MockLLIL:
+    """Helper to create MockLLIL objects more easily."""
+    return MockLLIL(op, list(args))
 
 
 @dataclass
@@ -1356,6 +1361,288 @@ script_test_cases = [
         expected_llil_fusion=[
             # Same for fusion - string not found in BSTR
             (0x0000, MockLLIL(op='UNIMPL', ops=[])),
+        ],
+    ),
+    
+    # Test case for all actor_ops functions
+    ScriptComparisonTestCase(
+        test_id="actor_ops_all_functions",
+        bytecode=bytes([
+            # actorOps.setCurActor(1)
+            0x00, 0x01,             # push_byte(1)
+            0x9D,                   # actor_ops (0x9D)
+            0xC5,                   # set_current_actor subop (197)
+            
+            # actorOps.init()
+            0x9D,                   # actor_ops (0x9D)
+            0x53,                   # init subop (83)
+            
+            # actorOps.setCostume(5)
+            0x00, 0x05,             # push_byte(5)
+            0x9D,                   # actor_ops (0x9D)
+            0x4C,                   # set_costume subop (76)
+            
+            # actorOps.setIgnoreBoxes()
+            0x9D,                   # actor_ops (0x9D)
+            0x5F,                   # ignore_boxes subop (95)
+            
+            # actorOps.setNeverZClip()
+            0x9D,                   # actor_ops (0x9D)
+            0x5D,                   # never_zclip subop (93)
+            
+            # actorOps.setElevation(20)
+            0x00, 0x14,             # push_byte(20)
+            0x9D,                   # actor_ops (0x9D)
+            0x54,                   # elevation subop (84)
+            
+            # actorOps.setScale(255)
+            0x00, 0xFF,             # push_byte(255)
+            0x9D,                   # actor_ops (0x9D)
+            0x5C,                   # scale subop (92)
+            
+            # actorOps.setTalkPos(-25, -98)
+            0x00, 0xE7,             # push_byte(-25 as unsigned = 231)
+            0x00, 0x9E,             # push_byte(-98 as unsigned = 158)
+            0x9D,                   # actor_ops (0x9D)
+            0x63,                   # text_offset subop (99)
+            
+            # actorOps.setWidth(30)
+            0x00, 0x1E,             # push_byte(30)
+            0x9D,                   # actor_ops (0x9D)
+            0x5B,                   # actor_width subop (91)
+            
+            # actorOps.setWalkFrame(2)
+            0x00, 0x02,             # push_byte(2)
+            0x9D,                   # actor_ops (0x9D)
+            0x4F,                   # walk_animation subop (79)
+            
+            # actorOps.setStandFrame(8)
+            0x00, 0x08,             # push_byte(8)
+            0x9D,                   # actor_ops (0x9D)
+            0x51,                   # stand_animation subop (81)
+            
+            # actorOps.setTalkFrame(6, 9)
+            0x00, 0x06,             # push_byte(6)
+            0x00, 0x09,             # push_byte(9)
+            0x9D,                   # actor_ops (0x9D)
+            0x50,                   # talk_animation subop (80)
+            
+            # actorOps.setTalkColor(15)
+            0x00, 0x0F,             # push_byte(15)
+            0x9D,                   # actor_ops (0x9D)
+            0x57,                   # talk_color subop (87)
+            
+            # actorOps.setPalette(3)
+            0x00, 0x03,             # push_byte(3)
+            0x9D,                   # actor_ops (0x9D)
+            0x56,                   # palette subop (86)
+            
+            # actorOps.setWalkSpeed(10, 5)
+            0x00, 0x0A,             # push_byte(10)
+            0x00, 0x05,             # push_byte(5)
+            0x9D,                   # actor_ops (0x9D)
+            0x4D,                   # step_dist subop (77)
+            
+            # actorOps.setName("Hero")
+            0x9D,                   # actor_ops (0x9D)
+            0x58,                   # actor_name subop (88)
+            # String data would follow but format is complex
+        ]),
+        expected_disasm_fusion_output=dedent("""
+            [0000] actorOps.setCurActor(1)
+            [0004] actorOps.init()
+            [0006] actorOps.setCostume(5)
+            [000A] actorOps.setIgnoreBoxes()
+            [000C] actorOps.setNeverZClip()
+            [000E] actorOps.setElevation(20)
+            [0012] actorOps.setScale(-1)
+            [0016] actorOps.setTalkPos(-25, -98)
+            [001C] actorOps.setWidth(30)
+            [0020] actorOps.setWalkFrame(2)
+            [0024] actorOps.setStandFrame(8)
+            [0028] actorOps.setTalkFrame(6, 9)
+            [002E] actorOps.setTalkColor(15)
+            [0032] actorOps.setPalette(3)
+            [0036] actorOps.setWalkSpeed(10, 5)
+        """).strip(),
+        expected_llil_fusion=[
+            # actorOps.setCurActor(1) - writes 1 to CURRENT_ACTOR_ADDRESS
+            (0x0000, mllil('STORE.4', 
+                mllil('CONST_PTR.4', 0x40002450),  # CURRENT_ACTOR_ADDRESS
+                mllil('CONST.4', 1))),
+            
+            # actorOps.init() - NOP operation
+            (0x0004, mllil('NOP')),
+            
+            # actorOps.setCostume(5) - writes to COSTUME property
+            (0x0006, mllil('STORE.2',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 2)),  # COSTUME offset
+                mllil('CONST.4', 5))),
+            
+            # actorOps.setIgnoreBoxes() - writes 1 to IGNORE_BOXES property
+            (0x000A, mllil('STORE.1',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 27)),  # IGNORE_BOXES offset
+                mllil('CONST.1', 1))),
+                
+            # actorOps.setNeverZClip() - writes 1 to NEVER_ZCLIP property
+            (0x000C, mllil('STORE.1',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 33)),  # NEVER_ZCLIP offset
+                mllil('CONST.1', 1))),
+                
+            # actorOps.setElevation(20) - writes to ELEVATION property
+            (0x000E, mllil('STORE.2',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 12)),  # ELEVATION offset
+                mllil('CONST.4', 20))),
+                
+            # actorOps.setScale(255) - writes to both SCALE_X and SCALE_Y
+            (0x0012, mllil('STORE.1',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 28)),  # SCALE_X offset
+                mllil('CONST.4', -1))),  # 255 as signed byte = -1
+            (0x0012, mllil('STORE.1',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 29)),  # SCALE_Y offset
+                mllil('CONST.4', -1))),  # 255 as signed byte = -1
+                
+            # actorOps.setTalkPos(-25, -98) - writes to TALK_POS_X and TALK_POS_Y
+            (0x0016, mllil('STORE.2',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 44)),  # TALK_POS_X offset
+                mllil('CONST.4', -25))),
+            (0x0016, mllil('STORE.2',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 46)),  # TALK_POS_Y offset
+                mllil('CONST.4', -98))),
+                
+            # actorOps.setWidth(30) - writes to WIDTH property
+            (0x001C, mllil('STORE.1',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 30)),  # WIDTH offset
+                mllil('CONST.4', 30))),
+                
+            # actorOps.setWalkFrame(2) - writes to WALK_FRAME property
+            (0x0020, mllil('STORE.1',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 39)),  # WALK_FRAME offset
+                mllil('CONST.4', 2))),
+                
+            # actorOps.setStandFrame(8) - writes to STAND_FRAME property
+            (0x0024, mllil('STORE.1',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 40)),  # STAND_FRAME offset
+                mllil('CONST.4', 8))),
+                
+            # actorOps.setTalkFrame(6, 9) - writes to TALK_FRAME property (only first param used)
+            (0x0028, mllil('STORE.1',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 41)),  # TALK_FRAME offset
+                mllil('CONST.4', 6))),
+                
+            # actorOps.setTalkColor(15) - writes to TALK_COLOR property
+            (0x002E, mllil('STORE.1',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 32)),  # TALK_COLOR offset
+                mllil('CONST.4', 15))),
+                
+            # actorOps.setPalette(3) - writes to PALETTE property
+            (0x0032, mllil('STORE.1',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 31)),  # PALETTE offset
+                mllil('CONST.4', 3))),
+                
+            # actorOps.setWalkSpeed(10, 5) - writes to WALK_SPEED_X and WALK_SPEED_Y
+            (0x0036, mllil('STORE.2',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 20)),  # WALK_SPEED_X offset
+                mllil('CONST.4', 10))),
+            (0x0036, mllil('STORE.2',
+                mllil('ADD.4',
+                    mllil('ADD.4',
+                        mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                        mllil('MUL.4',
+                            mllil('LOAD.4', mllil('CONST_PTR.4', 0x40002450)),  # current actor id
+                            mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                    mllil('CONST.4', 22)),  # WALK_SPEED_Y offset
+                mllil('CONST.4', 5))),
         ],
     ),
 ]

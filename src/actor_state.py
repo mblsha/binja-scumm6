@@ -46,7 +46,7 @@ class ActorProperty(Enum):
     FACING_DIRECTION = PropertyInfo(0x18, 1, "u8")
     MOVING = PropertyInfo(0x19, 1, "u8")
     WALK_BOX = PropertyInfo(0x1A, 1, "u8")
-    # _pad1 at 0x1B
+    IGNORE_BOXES = PropertyInfo(0x1B, 1, "u8")
     
     # Visual (8 bytes)
     SCALE_X = PropertyInfo(0x1C, 1, "u8")
@@ -54,7 +54,7 @@ class ActorProperty(Enum):
     WIDTH = PropertyInfo(0x1E, 1, "u8")
     PALETTE = PropertyInfo(0x1F, 1, "u8")
     TALK_COLOR = PropertyInfo(0x20, 1, "u8")
-    # _pad2 at 0x21
+    NEVER_ZCLIP = PropertyInfo(0x21, 1, "u8")
     FLAGS = PropertyInfo(0x22, 2, "u16")
     
     # Animation (8 bytes)
@@ -94,7 +94,7 @@ ACTOR_PROPERTIES: Dict[str, PropertyInfo] = {
     "facing_direction": PropertyInfo(0x18, 1, "u8"),
     "moving": PropertyInfo(0x19, 1, "u8"),
     "walk_box": PropertyInfo(0x1A, 1, "u8"),
-    # _pad1 at 0x1B
+    "ignore_boxes": PropertyInfo(0x1B, 1, "u8"),
     
     # Visual (8 bytes)
     "scale_x": PropertyInfo(0x1C, 1, "u8"),
@@ -102,7 +102,7 @@ ACTOR_PROPERTIES: Dict[str, PropertyInfo] = {
     "width": PropertyInfo(0x1E, 1, "u8"),
     "palette": PropertyInfo(0x1F, 1, "u8"),
     "talk_color": PropertyInfo(0x20, 1, "u8"),
-    # _pad2 at 0x21
+    "never_zclip": PropertyInfo(0x21, 1, "u8"),
     "flags": PropertyInfo(0x22, 2, "u16"),
     
     # Animation (8 bytes)
