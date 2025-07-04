@@ -8,6 +8,7 @@ from .container import ContainerParser as Scumm6Disasm, ScriptAddr, State
 from typing import List, cast
 
 from . import vars
+from .actor_state import CURRENT_ACTOR_ADDRESS
 
 
 class Scumm6View(BinaryView):  # type: ignore[misc]
@@ -82,6 +83,68 @@ class Scumm6View(BinaryView):  # type: ignore[misc]
             vars.BITVARS_SIZE,
             SectionSemantics.ReadWriteDataSectionSemantics,
         )
+        
+        # Create segment for actors
+        self.add_auto_segment(
+            vars.ACTORS_START,
+            vars.ACTORS_SIZE,
+            0,
+            0,
+            cast(SegmentFlag, SegmentFlag.SegmentReadable | SegmentFlag.SegmentWritable),
+        )
+        self.add_user_section(
+            "Actors",
+            vars.ACTORS_START,
+            vars.ACTORS_SIZE,
+            SectionSemantics.ReadWriteDataSectionSemantics,
+        )
+        
+        # Define symbols for each actor
+        # Create actor struct type definition based on ActorProperty enum
+        actor_struct_def = """struct Actor {
+            uint16_t id;              // 0x00
+            uint16_t costume;         // 0x02
+            uint32_t name_ptr;        // 0x04
+            uint16_t x;               // 0x08
+            uint16_t y;               // 0x0A
+            int16_t elevation;        // 0x0C
+            uint8_t room;             // 0x0E
+            uint8_t layer;            // 0x0F
+            uint16_t target_x;        // 0x10
+            uint16_t target_y;        // 0x12
+            uint16_t walk_speed_x;    // 0x14
+            uint16_t walk_speed_y;    // 0x16
+            uint8_t facing_direction; // 0x18
+            uint8_t moving;           // 0x19
+            uint8_t walk_box;         // 0x1A
+            uint8_t _pad1;            // 0x1B
+            uint8_t scale_x;          // 0x1C
+            uint8_t scale_y;          // 0x1D
+            uint8_t width;            // 0x1E
+            uint8_t palette;          // 0x1F
+            uint8_t talk_color;       // 0x20
+            uint8_t _pad2;            // 0x21
+            uint16_t flags;           // 0x22
+            uint16_t anim_counter;    // 0x24
+            uint8_t current_anim;     // 0x26
+            uint8_t walk_frame;       // 0x27
+            uint8_t stand_frame;      // 0x28
+            uint8_t _pad3[3];         // 0x29-0x2B
+            uint8_t _reserved[20];    // 0x2C-0x3F (rest of 64-byte struct)
+        }"""
+        actor_struct_type = self.parse_type_string(actor_struct_def)[0]
+        for i in range(vars.MAX_ACTORS):
+            actor_addr = vars.ACTORS_START + (i * vars.ACTOR_STRUCT_SIZE)
+            self.define_user_symbol(
+                Symbol(SymbolType.DataSymbol, actor_addr, f"actor_{i}")
+            )
+            self.define_user_data_var(actor_addr, actor_struct_type)
+        
+        # Define current actor pointer
+        self.define_user_symbol(
+            Symbol(SymbolType.DataSymbol, CURRENT_ACTOR_ADDRESS, "current_actor_id")
+        )
+        self.define_user_data_var(CURRENT_ACTOR_ADDRESS, uint32_t)
 
         for start, end, name, create_function, segment_flag, section_semantics in self.scripts:
             # print("adding segment:", hex(start), hex(end), name)
