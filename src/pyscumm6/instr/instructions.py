@@ -2578,15 +2578,66 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
             # No fusion - don't show the message content
             return [TInstr("talkActor"), TText("()")]
     
+    def _extract_all_strings_for_llil(self, message: Any) -> List[str]:
+        """Extract all string segments from a message for LLIL string lookup.
+        
+        This extracts strings separated by control codes like wait(), sound(), etc.
+        For example: "Hello" + wait() + "World" returns ["Hello", "World"]
+        """
+        strings = []
+        current_chars = []
+        
+        for part in message.parts:
+            if hasattr(part, 'data'):
+                if part.data == 0xFF or part.data == 0:
+                    # Control code or terminator - finish current string if any
+                    if current_chars:
+                        strings.append(''.join(current_chars))
+                        current_chars = []
+                    # Skip the control code itself
+                elif 32 <= part.data <= 126:
+                    # Direct printable character
+                    current_chars.append(chr(part.data))
+                elif hasattr(part, 'content') and hasattr(part.content, 'value'):
+                    # Character wrapped in content
+                    char_value = part.content.value
+                    if isinstance(char_value, int) and 32 <= char_value <= 126:
+                        current_chars.append(chr(char_value))
+        
+        # Add any remaining string
+        if current_chars:
+            strings.append(''.join(current_chars))
+        
+        return strings
+    
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
+        from ...scumm6_opcodes import Scumm6Opcodes
+        from ..instr.smart_bases import get_string_pointer_for_llil
+        
+        params = []
+        
+        # First parameter is always the actor ID
         if self.fused_operands and len(self.fused_operands) >= 1:
             # Use fused actor parameter
-            params = [self._lift_operand(il, self.fused_operands[0])]
-            il.append(il.intrinsic([], "talk_actor", params))
+            params.append(self._lift_operand(il, self.fused_operands[0]))
+            
+            # For fused case, extract all strings from the message and add them as string pointers
+            if isinstance(self.op_details.body, Scumm6Opcodes.Message):
+                strings = self._extract_all_strings_for_llil(self.op_details.body)
+                
+                for string_text in strings:
+                    if string_text:  # Skip empty strings
+                        string_ptr = get_string_pointer_for_llil(il, string_text, addr if addr else 0)
+                        if string_ptr:
+                            params.append(string_ptr)
         else:
             # Pop actor from stack
-            params = [il.pop(4)]
-            il.append(il.intrinsic([], "talk_actor", params))
+            params.append(il.pop(4))
+            # For non-fused case, the message is embedded in the instruction and not looked up
+            # from BSTR, so we don't add string pointers
+        
+        # Generate intrinsic with actor ID and possibly string pointers
+        il.append(il.intrinsic([], "talk_actor", params))
     
     def fuse(self, previous: Instruction) -> Optional['TalkActor']:
         """Fuse with push instruction for actor parameter."""

@@ -1230,10 +1230,15 @@ script_test_cases = [
             (0x0002, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
         ],
         expected_llil_fusion=[
-            # Enhanced LLIL with SmartMessageIntrinsic: string lookup in BSTR segment
-            # With mocked BinaryView, finds "It makes me feel GREAT!" at 0x102bc9
+            # Enhanced LLIL with custom TalkActor: actor ID first, then all string pointers
+            # With mocked BinaryView, finds both strings in BSTR segment
             (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST_PTR.4', ops=[0x102bc9])])),
-            (0x0000, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST.4', ops=[7])])),
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP101')]), MockLLIL(op='CONST_PTR.4', ops=[0x102be1])])),
+            (0x0000, mintrinsic('talk_actor', outputs=[], params=[
+                MockLLIL(op='CONST.4', ops=[7]),  # Actor ID first
+                MockLLIL(op='REG.4', ops=[mreg('TEMP100')]),  # "It makes me feel GREAT!"
+                MockLLIL(op='REG.4', ops=[mreg('TEMP101')])   # "Smarter!  More aggressive!"
+            ])),
         ],
     ),
     ScriptComparisonTestCase(
