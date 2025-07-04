@@ -1352,7 +1352,7 @@ class SetObjectName(FusibleMultiOperandMixin, Instruction):
             
             if message_text:
                 # Try to get a string pointer
-                string_ptr = get_string_pointer_for_llil(il, message_text, addr if addr else 0)
+                string_ptr = get_string_pointer_for_llil(il, message_text, 0)
                 if string_ptr:
                     # Build parameters: object_id, room_id, string_ptr
                     params = []
@@ -2038,7 +2038,7 @@ class PrintDebug(Instruction):
             
             if message_text:
                 # Try to get a string pointer
-                string_ptr = get_string_pointer_for_llil(il, message_text, addr if addr else 0)
+                string_ptr = get_string_pointer_for_llil(il, message_text, 0)
                 if string_ptr:
                     # Generate intrinsic with string pointer
                     il.append(il.intrinsic([], "print_debug", [string_ptr]))
@@ -2199,7 +2199,7 @@ class PrintSystem(FusibleMultiOperandMixin, Instruction):
                 
                 if message_text:
                     # Try to get a string pointer
-                    string_ptr = get_string_pointer_for_llil(il, message_text, addr if addr else 0)
+                    string_ptr = get_string_pointer_for_llil(il, message_text, 0)
                     if string_ptr:
                         # Generate intrinsic with string pointer
                         il.append(il.intrinsic([], "print_system", [string_ptr]))
@@ -2426,7 +2426,7 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
                 
                 if message_text:
                     # Try to get a string pointer
-                    string_ptr = get_string_pointer_for_llil(il, message_text, addr if addr else 0)
+                    string_ptr = get_string_pointer_for_llil(il, message_text, 0)
                     if string_ptr:
                         # Generate intrinsic with string pointer
                         il.append(il.intrinsic([], "print_text", [string_ptr]))
@@ -2584,8 +2584,8 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
         This extracts strings separated by control codes like wait(), sound(), etc.
         For example: "Hello" + wait() + "World" returns ["Hello", "World"]
         """
-        strings = []
-        current_chars = []
+        strings: List[str] = []
+        current_chars: List[str] = []
         
         for part in message.parts:
             if hasattr(part, 'data'):
@@ -2625,9 +2625,10 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
             if isinstance(self.op_details.body, Scumm6Opcodes.Message):
                 strings = self._extract_all_strings_for_llil(self.op_details.body)
                 
-                for string_text in strings:
+                for i, string_text in enumerate(strings):
                     if string_text:  # Skip empty strings
-                        string_ptr = get_string_pointer_for_llil(il, string_text, addr if addr else 0)
+                        # Use sequential temp register indices starting from 0
+                        string_ptr = get_string_pointer_for_llil(il, string_text, i)
                         if string_ptr:
                             params.append(string_ptr)
         else:
@@ -3068,7 +3069,7 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
             
             if message_text:
                 # Try to get a string pointer
-                string_ptr = get_string_pointer_for_llil(il, message_text, addr if addr else 0)
+                string_ptr = get_string_pointer_for_llil(il, message_text, 0)
                 if string_ptr:
                     # Generate intrinsic with string pointer
                     params = [string_ptr]
@@ -3091,7 +3092,7 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
         # Handle string subops (CallFuncString)
         elif isinstance(subop_body, Scumm6Opcodes.CallFuncString) and subop_body.data:
             # String parameter - create a string pointer
-            string_ptr = get_string_pointer_for_llil(il, subop_body.data, addr if addr else 0)
+            string_ptr = get_string_pointer_for_llil(il, subop_body.data, 0)
             if string_ptr:
                 params = [string_ptr]
                 
@@ -3158,7 +3159,7 @@ class PrintEgo(PrintActor):
             
             if message_text:
                 # Try to get a string pointer
-                string_ptr = get_string_pointer_for_llil(il, message_text, addr if addr else 0)
+                string_ptr = get_string_pointer_for_llil(il, message_text, 0)
                 if string_ptr:
                     # Generate intrinsic with string pointer
                     params = [string_ptr]
@@ -3181,7 +3182,7 @@ class PrintEgo(PrintActor):
         # Handle string subops (CallFuncString)
         elif isinstance(subop_body, Scumm6Opcodes.CallFuncString) and subop_body.data:
             # String parameter - create a string pointer
-            string_ptr = get_string_pointer_for_llil(il, subop_body.data, addr if addr else 0)
+            string_ptr = get_string_pointer_for_llil(il, subop_body.data, 0)
             if string_ptr:
                 params = [string_ptr]
                 
@@ -3318,7 +3319,7 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
         # Check if this subop has string data (like actor_name/setName)
         if isinstance(subop_body, Scumm6Opcodes.CallFuncString):
             # String parameter - create a string pointer
-            string_ptr = get_string_pointer_for_llil(il, subop_body.data, addr if addr else 0)
+            string_ptr = get_string_pointer_for_llil(il, subop_body.data, 0)
             if string_ptr:
                 params.append(string_ptr)
             else:
@@ -3506,7 +3507,7 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
             
             if message_text:
                 # Try to get a string pointer
-                string_ptr = get_string_pointer_for_llil(il, message_text, addr if addr else 0)
+                string_ptr = get_string_pointer_for_llil(il, message_text, 0)
                 if string_ptr:
                     # Generate intrinsic with string pointer
                     params = [string_ptr]
@@ -3795,7 +3796,7 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
             
             if string_text:
                 # Try to get a string pointer
-                string_ptr = get_string_pointer_for_llil(il, string_text, addr if addr else 0)
+                string_ptr = get_string_pointer_for_llil(il, string_text, 0)
                 if string_ptr:
                     # Build parameters: array_id, index, string_ptr
                     params = [il.const(4, array_num)]  # Array ID

@@ -17,7 +17,7 @@ from ...scumm6_opcodes import Scumm6Opcodes
 from .decorators import OperandRenderingMixin, OperandLiftingMixin
 
 
-def get_string_pointer_for_llil(il: LowLevelILFunction, string_text: str, addr: int) -> Optional[Any]:
+def get_string_pointer_for_llil(il: LowLevelILFunction, string_text: str, temp_reg_index: int) -> Optional[Any]:
     """Get a string pointer for use in LLIL.
     
     This function looks up the string in the BSTR segment and creates a temp register
@@ -26,7 +26,7 @@ def get_string_pointer_for_llil(il: LowLevelILFunction, string_text: str, addr: 
     Args:
         il: The LLIL function
         string_text: The string to look up (without quotes)
-        addr: The instruction address (used for temp register generation)
+        temp_reg_index: The temp register index to use (0-based, will be offset by 100 internally)
         
     Returns:
         IL expression for the string pointer, or None if string not found
@@ -41,14 +41,14 @@ def get_string_pointer_for_llil(il: LowLevelILFunction, string_text: str, addr: 
             if string_text in bv.state.bstr:
                 string_addr = bv.state.bstr[string_text]
                 
-                # Use TEMP register by index
-                temp_reg_index = 100 + (addr % 100)
+                # Use base of 100 for temp registers
+                actual_temp_index = 100 + temp_reg_index
                 
                 # Set the temp register to point to the string
-                il.append(il.set_reg(4, LLIL_TEMP(temp_reg_index), il.const_pointer(4, string_addr)))
+                il.append(il.set_reg(4, LLIL_TEMP(actual_temp_index), il.const_pointer(4, string_addr)))
                 
                 # Return the register reference
-                return il.reg(4, LLIL_TEMP(temp_reg_index))
+                return il.reg(4, LLIL_TEMP(actual_temp_index))
     except Exception:
         pass
     
