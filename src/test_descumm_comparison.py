@@ -1295,6 +1295,55 @@ script_test_cases = [
         ],
     ),
     ScriptComparisonTestCase(
+        test_id="start_script_global_and_local",
+        bytecode=bytes([
+            # Global script call: startScript(5, 0, [])
+            0x00, 0x05,       # push_byte(5) - global script ID
+            0x00, 0x00,       # push_byte(0) - flags
+            0x00, 0x00,       # push_byte(0) - arg count
+            0x5E,             # start_script
+            
+            # Local script call: startScriptQuick(201, [])
+            0x01, 0xC9, 0x00, # push_word(201) - local script ID (200+)
+            0x00, 0x00,       # push_byte(0) - arg count  
+            0x5F,             # start_script_quick
+        ]),
+        expected_descumm_output=dedent("""
+            [0000] (5E) startScript(5,0,[])
+            [0007] (5F) startScriptQuick(201,[])
+            END
+        """).strip(),
+        expected_disasm_output=dedent("""
+            [0000] push_byte(5)
+            [0002] push_byte(0)
+            [0004] push_byte(0)
+            [0006] startScript()
+            [0007] push_word(201)
+            [000A] push_byte(0)
+            [000C] startScriptQuick()
+        """).strip(),
+        expected_disasm_fusion_output=dedent("""
+            [0000] startScript(5, 0, [])
+            [0007] startScriptQuick(201, [])
+        """).strip(),
+        expected_llil_fusion=[
+            # Global script: startScript(5, script_address, 0, [])
+            # Script ID 5 maps to DSCR[5] -> room 2, offset 0x7f6a
+            # This would resolve to some specific address in the container
+            (0x0000, mintrinsic('start_script', outputs=[], params=[
+                MockLLIL(op='CONST.4', ops=[5]),     # script ID
+                MockLLIL(op='CONST.4', ops=[0]),     # script address (0 = failed to resolve in test env)
+                MockLLIL(op='CONST.4', ops=[0]),     # flags
+            ])),
+            # Local script: startScriptQuick(201, script_address, [])  
+            # Script 201 is local to current room, address depends on call location
+            (0x0007, mintrinsic('start_script_quick', outputs=[], params=[
+                MockLLIL(op='CONST.4', ops=[201]),   # script ID
+                MockLLIL(op='CONST.4', ops=[0]),     # script address (0 = failed to resolve in test env)
+            ])),
+        ],
+    ),
+    ScriptComparisonTestCase(
         test_id="actor_ops_setname_with_bstr_string",
         bytecode=bytes([
             0x9d,  # actor_ops opcode
