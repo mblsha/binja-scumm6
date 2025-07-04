@@ -116,7 +116,7 @@ OPCODE_MAP: Dict[Scumm6Opcodes.OpType, Type[Instruction]] = {
     Scumm6Opcodes.OpType.face_actor: INSTRUCTION_REGISTRY["face_actor"],
     Scumm6Opcodes.OpType.pickup_object: INSTRUCTION_REGISTRY["pickup_object"],
     Scumm6Opcodes.OpType.set_box_flags: INSTRUCTION_REGISTRY["set_box_flags"],
-    Scumm6Opcodes.OpType.set_object_name: INSTRUCTION_REGISTRY["set_object_name"],
+    Scumm6Opcodes.OpType.set_object_name: instructions.SetObjectName,
     Scumm6Opcodes.OpType.do_sentence: INSTRUCTION_REGISTRY["do_sentence"],
     Scumm6Opcodes.OpType.get_actor_elevation: INSTRUCTION_REGISTRY["get_actor_elevation"],
     Scumm6Opcodes.OpType.get_actor_width: INSTRUCTION_REGISTRY["get_actor_width"],
