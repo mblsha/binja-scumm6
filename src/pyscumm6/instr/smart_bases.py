@@ -16,6 +16,46 @@ from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfi
 from ...scumm6_opcodes import Scumm6Opcodes
 from .decorators import OperandRenderingMixin, OperandLiftingMixin
 
+
+def get_string_pointer_for_llil(il: LowLevelILFunction, string_text: str, addr: int) -> Optional[Any]:
+    """Get a string pointer for use in LLIL.
+    
+    This function looks up the string in the BSTR segment and creates a temp register
+    pointing to it. This is used for instructions that have embedded strings.
+    
+    Args:
+        il: The LLIL function
+        string_text: The string to look up (without quotes)
+        addr: The instruction address (used for temp register generation)
+        
+    Returns:
+        IL expression for the string pointer, or None if string not found
+    """
+    try:
+        from ...scumm6 import LastBV
+        bv = LastBV.get()
+        
+        if bv and hasattr(bv, 'state') and hasattr(bv.state, 'bstr'):
+            # Look for exact match in BSTR segment only
+            # We cannot use substring matching as it leads to incorrect addresses
+            if string_text in bv.state.bstr:
+                string_addr = bv.state.bstr[string_text]
+                
+                # Use TEMP register by index
+                temp_reg_index = 100 + (addr % 100)
+                
+                # Set the temp register to point to the string
+                il.append(il.set_reg(4, LLIL_TEMP(temp_reg_index), il.const_pointer(4, string_addr)))
+                
+                # Return the register reference
+                return il.reg(4, LLIL_TEMP(temp_reg_index))
+    except Exception:
+        pass
+    
+    # String not found in BSTR - return None so caller can handle it
+    return None
+
+
 # Descumm-style function name mapping for improved semantic clarity
 DESCUMM_FUNCTION_NAMES = {
     "stop_object_code1": "stopObjectCodeA",

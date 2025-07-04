@@ -2827,6 +2827,7 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         from ...scumm6_opcodes import Scumm6Opcodes
+        from ..instr.smart_bases import get_string_pointer_for_llil
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.ActorOps), \
@@ -2844,9 +2845,20 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
         push_count = getattr(subop_body, "push_count", 0)
         
         # Build parameters
-        if self.fused_operands:
+        params = []
+        
+        # Check if this subop has string data (like actor_name/setName)
+        if isinstance(subop_body, Scumm6Opcodes.CallFuncString):
+            # String parameter - create a string pointer
+            string_ptr = get_string_pointer_for_llil(il, subop_body.data, addr if addr else 0)
+            if string_ptr:
+                params.append(string_ptr)
+            else:
+                # String not found in BSTR - return unimplemented
+                il.append(il.unimplemented())
+                return
+        elif self.fused_operands:
             # Use fused operands directly
-            params = []
             for operand in self.fused_operands:
                 params.append(self._lift_operand(il, operand))
             # Pop any remaining arguments
@@ -2859,9 +2871,6 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
         
         # If unknown subop, generate unimplemented instead of intrinsic
         if unknown_subop:
-            # Pop all parameters to maintain stack balance
-            for _ in range(len(params)):
-                pass  # Already popped above
             # Generate unimplemented
             il.append(il.unimplemented())
             # Push dummy value if needed

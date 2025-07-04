@@ -1236,6 +1236,56 @@ script_test_cases = [
             (0x0000, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST.4', ops=[7])])),
         ],
     ),
+    ScriptComparisonTestCase(
+        test_id="actor_ops_setname_with_bstr_string",
+        bytecode=bytes([
+            0x9d,  # actor_ops opcode
+            0x58,  # setName subop (88 decimal)
+            0x42, 0x65, 0x72, 0x6e, 0x61, 0x72, 0x64,  # "Bernard"
+            0x00   # null terminator
+        ]),
+        expected_descumm_output=dedent("""
+            [0000] (9D) actorOps.setName("Bernard")
+            END
+        """).strip(),
+        expected_disasm_output='[0000] actorOps.setName("Bernard")',
+        expected_disasm_fusion_output='[0000] actorOps.setName("Bernard")',
+        expected_llil=[
+            # With mocked BinaryView, finds "Bernard" at 0x2000
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST_PTR.4', ops=[0x2000])])),
+            (0x0000, mintrinsic('actor_ops.actor_name', outputs=[], params=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')])])),
+        ],
+        expected_llil_fusion=[
+            # Same for fusion - string found in BSTR
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST_PTR.4', ops=[0x2000])])),
+            (0x0000, mintrinsic('actor_ops.actor_name', outputs=[], params=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')])])),
+        ],
+    ),
+    ScriptComparisonTestCase(
+        test_id="actor_ops_setname_unimplemented_string",
+        bytecode=bytes([
+            0x9d,  # actor_ops opcode
+            0x58,  # setName subop (88 decimal)
+            # "ObviouslyWrongActorName" - a string that would never exist in BSTR
+            0x4f, 0x62, 0x76, 0x69, 0x6f, 0x75, 0x73, 0x6c, 0x79, 0x57, 0x72, 0x6f, 0x6e, 0x67, 
+            0x41, 0x63, 0x74, 0x6f, 0x72, 0x4e, 0x61, 0x6d, 0x65,
+            0x00   # null terminator
+        ]),
+        expected_descumm_output=dedent("""
+            [0000] (9D) actorOps.setName("ObviouslyWrongActorName")
+            END
+        """).strip(),
+        expected_disasm_output='[0000] actorOps.setName("ObviouslyWrongActorName")',
+        expected_disasm_fusion_output='[0000] actorOps.setName("ObviouslyWrongActorName")',
+        expected_llil=[
+            # Should generate unimplemented since string not in BSTR
+            (0x0000, MockLLIL(op='UNIMPL', ops=[])),
+        ],
+        expected_llil_fusion=[
+            # Same for fusion - string not found in BSTR
+            (0x0000, MockLLIL(op='UNIMPL', ops=[])),
+        ],
+    ),
 ]
 
 
@@ -1285,15 +1335,26 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
 
     # 2. Execute all disassemblers and LLIL generation
     
-    # Set up mock BinaryView for talk_actor_enhanced_visualization test
-    if case.test_id == "talk_actor_enhanced_visualization":
+    # Set up mock BinaryView for tests that need BSTR data
+    mock_setup_needed = case.test_id in ["talk_actor_enhanced_visualization", "actor_ops_setname_with_bstr_string"]
+    
+    if mock_setup_needed:
         # Create a mock state with BSTR data containing our strings
         mock_state = State()
-        mock_state.bstr = {
-            "It makes me feel GREAT!": 0x102bc9,
-            "Smarter!  More aggressive!": 0x102be1,
-        }
-        mock_view = MockScumm6BinaryView(state=mock_state)
+        
+        if case.test_id == "talk_actor_enhanced_visualization":
+            mock_state.bstr = {
+                "It makes me feel GREAT!": 0x102bc9,
+                "Smarter!  More aggressive!": 0x102be1,
+            }
+        elif case.test_id == "actor_ops_setname_with_bstr_string":
+            mock_state.bstr = {
+                "Bernard": 0x2000,
+                "Green Tentacle": 0x2100,
+            }
+            
+        mock_view = MockScumm6BinaryView()
+        mock_view.state = mock_state
         
         # Temporarily replace LastBV with our mock
         import src.scumm6
@@ -1309,7 +1370,7 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
         llil_fusion_operations = run_scumm6_llil_generation(bytecode, start_addr, use_fusion=True)
     finally:
         # Restore original LastBV if we mocked it
-        if case.test_id == "talk_actor_enhanced_visualization":
+        if mock_setup_needed:
             src.scumm6.LastBV = original_LastBV  # type: ignore[misc]
     
     # Normalize addresses if script starts at non-zero address
