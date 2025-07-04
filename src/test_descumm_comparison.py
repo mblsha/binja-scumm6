@@ -28,7 +28,7 @@ from binja_helpers import binja_api  # noqa: F401
 from binja_helpers.mock_llil import MockLLIL, MockIntrinsic, MockReg, set_size_lookup
 from binaryninja.enums import BranchType
 from src.scumm6 import Scumm6
-from src.container import ContainerParser as Scumm6Disasm, ScriptAddr, State
+from src.container import ContainerParser as Scumm6Disasm, ScriptAddr, State, Resource, Room
 from scripts.ensure_descumm import build_descumm
 
 # Import ensure_demo_bsc6 from test_descumm_tool
@@ -1329,17 +1329,17 @@ script_test_cases = [
         expected_llil_fusion=[
             # Global script: startScript(5, script_address, 0, [])
             # Script ID 5 maps to DSCR[5] -> room 2, offset 0x7f6a
-            # This would resolve to some specific address in the container
+            # Room 2 at 0x8000 + offset 0x7f6a = 0xf76a -> resolves to script at 0xf772
             (0x0000, mintrinsic('start_script', outputs=[], params=[
-                MockLLIL(op='CONST.4', ops=[5]),     # script ID
-                MockLLIL(op='CONST.4', ops=[0]),     # script address (0 = failed to resolve in test env)
-                MockLLIL(op='CONST.4', ops=[0]),     # flags
+                MockLLIL(op='CONST.4', ops=[5]),       # script ID
+                MockLLIL(op='CONST.4', ops=[0xf772]),  # script address (resolved from mock)
+                MockLLIL(op='CONST.4', ops=[0]),       # flags
             ])),
             # Local script: startScriptQuick(201, script_address, [])  
-            # Script 201 is local to current room, address depends on call location
+            # Script 201 is local to room 1, resolves to address 0x5000
             (0x0007, mintrinsic('start_script_quick', outputs=[], params=[
-                MockLLIL(op='CONST.4', ops=[201]),   # script ID
-                MockLLIL(op='CONST.4', ops=[0]),     # script address (0 = failed to resolve in test env)
+                MockLLIL(op='CONST.4', ops=[201]),     # script ID
+                MockLLIL(op='CONST.4', ops=[0x5000]),  # script address (resolved from mock)
             ])),
         ],
     ),
@@ -1781,11 +1781,15 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
 
     # 2. Execute all disassemblers and LLIL generation
     
-    # Set up mock BinaryView for tests that need BSTR data
-    mock_setup_needed = case.test_id in ["talk_actor_enhanced_visualization", "actor_ops_setname_with_bstr_string"]
+    # Set up mock BinaryView for tests that need state data (BSTR, script resolution, etc.)
+    mock_setup_needed = case.test_id in [
+        "talk_actor_enhanced_visualization", 
+        "actor_ops_setname_with_bstr_string",
+        "start_script_global_and_local"
+    ]
     
     if mock_setup_needed:
-        # Create a mock state with BSTR data containing our strings
+        # Create a mock state with necessary data
         mock_state = State()
         
         if case.test_id == "talk_actor_enhanced_visualization":
@@ -1798,6 +1802,44 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
                 "Bernard": 0x2000,
                 "Green Tentacle": 0x2100,
             }
+        elif case.test_id == "start_script_global_and_local":
+            # Set up script resolution data
+            # Global script ID 5 maps to room 2, offset 0x7f6a  
+            mock_state.dscr = [
+                Resource(room_no=0, room_offset=0),     # script 0
+                Resource(room_no=1, room_offset=0x100), # script 1
+                Resource(room_no=1, room_offset=0x200), # script 2
+                Resource(room_no=1, room_offset=0x300), # script 3 
+                Resource(room_no=1, room_offset=0x400), # script 4
+                Resource(room_no=2, room_offset=0x7f6a),# script 5 - our global script
+            ]
+            
+            # Room ID to room address mapping
+            mock_state.room_ids = {
+                1: 0x1000,  # room 1 starts at 0x1000
+                2: 0x8000,  # room 2 starts at 0x8000
+            }
+            
+            # Block address to script address mapping
+            # Room 2 at 0x8000 + offset 0x7f6a = 0xf76a
+            mock_state.block_to_script = {
+                0xf76a: 0xf772,  # script 5 block address -> script start address
+            }
+            
+            # Set up rooms for local script resolution
+            # For our test starting at address 0x0, we need a room that contains address 0x7
+            # where the local script call happens
+            room0 = Room(num=0, start=0x0, end=0x1000)
+            room0.funcs = {
+                "local201": 0x5000,  # local script 201 is at address 0x5000
+            }
+            mock_state.rooms = [room0]
+            mock_state.rooms_dict = {0x0: room0}
+            
+            # Initialize the sorted list properly
+            from src.sorted_list import SortedList
+            mock_state.rooms_addrs = SortedList()
+            mock_state.rooms_addrs.insert_sorted(0x0)
             
         mock_view = MockScumm6BinaryView()
         mock_view.state = mock_state
