@@ -2360,7 +2360,7 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
             
             # Add fused operands (e.g., actor ID for talk_actor)
             for operand in self.fused_operands:
-                part_params.append(self._lift_operand(il, operand))
+                part_params.append(self._lift_operand_with_actor_conversion(il, operand))
             
             # Check if this instruction produces a result
             if self._config and self._config.push_count > 0:
@@ -2431,6 +2431,29 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
             return parts
         except Exception:
             return []
+    
+    def _lift_operand_with_actor_conversion(self, il: LowLevelILFunction, operand: Instruction) -> Any:
+        """Lift a fused operand to IL expression, converting actor IDs to actor addresses."""
+        from ... import vars
+        from ...actor_state import get_actor_base_address
+        
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return vars.il_get_var(il, operand.op_details.body)
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            # For talk_actor, the integer operand is an actor ID that should be converted to actor address
+            # This matches the behavior of animate_actor and put_actor_at_xy
+            if self._name == 'talk_actor':
+                actor_id = operand.op_details.body.data
+                try:
+                    actor_address = get_actor_base_address(actor_id)
+                    return il.const(4, actor_address)
+                except ValueError:
+                    # Actor ID out of bounds, use the original value
+                    return il.const(4, actor_id)
+            else:
+                # For other message intrinsics, use the value as-is
+                return il.const(4, operand.op_details.body.data)
+        return il.const(4, 0)
     
     def _find_string_address(self, text: str) -> Optional[int]:
         """Find the address of a string in the BSTR segment."""

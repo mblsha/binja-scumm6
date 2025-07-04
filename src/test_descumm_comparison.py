@@ -1286,7 +1286,7 @@ script_test_cases = [
                 MockLLIL(op='CONST_PTR.4', ops=[1059785]),  # "It makes me feel GREAT!" string pointer
                 mintrinsic('wait', outputs=[], params=[]),  # wait() directly as parameter
                 MockLLIL(op='CONST_PTR.4', ops=[1059809]),  # "Smarter!  More aggressive!" string pointer
-                MockLLIL(op='CONST.4', ops=[7])            # Actor ID
+                MockLLIL(op='CONST.4', ops=[1073749520])   # Actor address (converted from ID 7)
             ])),
         ],
     ),
