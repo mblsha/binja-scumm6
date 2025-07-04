@@ -4,7 +4,7 @@ This module provides utilities to calculate addresses for actor properties
 in a virtual memory segment used for tracking actor state modifications.
 """
 
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 from dataclasses import dataclass
 from enum import Enum
 
@@ -332,6 +332,68 @@ def is_valid_actor_address(address: int) -> bool:
         True if the address is within the actor state section
     """
     return ACTORS_START <= address < (ACTORS_START + MAX_ACTORS * ACTOR_STRUCT_SIZE)
+
+
+def generate_actor_struct_definition() -> str:
+    """Generate a C struct definition from the ActorProperty enum.
+    
+    This ensures the Binary Ninja struct definition always matches the Python
+    ActorProperty enum, preventing divergence.
+    
+    Returns:
+        C struct definition string for Binary Ninja's type parser.
+    """
+    # Map Python types to C types
+    type_map = {
+        "u8": "uint8_t",
+        "u16": "uint16_t", 
+        "u32": "uint32_t",
+        "s8": "int8_t",
+        "s16": "int16_t",
+        "s32": "int32_t"
+    }
+    
+    # Collect all properties sorted by offset
+    properties: List[Tuple[int, str, int, str]] = []
+    for prop in ActorProperty:
+        prop_info = prop.value
+        c_type = type_map.get(prop_info.type, "uint8_t")
+        name = prop.name.lower()
+        properties.append((prop_info.offset, name, prop_info.size, c_type))
+    
+    # Sort by offset
+    properties.sort(key=lambda x: x[0])
+    
+    # Build struct definition
+    lines = ["struct Actor {"]
+    current_offset = 0
+    pad_counter = 1
+    
+    for offset, name, size, c_type in properties:
+        # Add padding if there's a gap
+        if offset > current_offset:
+            pad_size = offset - current_offset
+            if pad_size == 1:
+                lines.append(f"    uint8_t _pad{pad_counter};")
+            else:
+                lines.append(f"    uint8_t _pad{pad_counter}[{pad_size}];")
+            pad_counter += 1
+        
+        # Add the property
+        lines.append(f"    {c_type} {name}; // 0x{offset:02X}")
+        current_offset = offset + size
+    
+    # Add final padding to reach 64 bytes
+    if current_offset < ACTOR_STRUCT_SIZE:
+        remaining = ACTOR_STRUCT_SIZE - current_offset
+        if remaining == 1:
+            lines.append(f"    uint8_t _pad{pad_counter};")
+        else:
+            lines.append(f"    uint8_t _pad{pad_counter}[{remaining}];")
+    
+    lines.append("}")
+    
+    return "\n".join(lines)
 
 
 def get_actor_and_property_from_address(address: int) -> Optional[Tuple[int, str]]:

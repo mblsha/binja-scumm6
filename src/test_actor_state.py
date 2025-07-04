@@ -12,8 +12,9 @@ from .actor_state import (
     get_actor_property_address, get_current_actor_property_address,
     ActorMemory, ActorState, ActorProperty,
     get_actor_base_address, get_property_info, is_valid_actor_address,
-    get_actor_and_property_from_address, MAX_ACTORS, ACTORS_START,
-    ACTOR_STRUCT_SIZE, ACTOR_PROPERTIES, CURRENT_ACTOR_ADDRESS
+    get_actor_and_property_from_address, generate_actor_struct_definition,
+    MAX_ACTORS, ACTORS_START, ACTOR_STRUCT_SIZE, ACTOR_PROPERTIES, 
+    CURRENT_ACTOR_ADDRESS
 )
 
 
@@ -285,6 +286,53 @@ def example_usage():
     (0, 'x')
     """
     pass
+
+
+def test_generated_actor_struct_definition():
+    """Test that the generated actor struct matches expected definition."""
+    # Generate the struct
+    generated = generate_actor_struct_definition()
+    
+    # Expected struct definition based on ActorProperty enum
+    # This serves as a regression test to ensure the struct format doesn't change unexpectedly
+    expected = """struct Actor {
+    uint16_t id; // 0x00
+    uint16_t costume; // 0x02
+    uint32_t name_ptr; // 0x04
+    uint16_t x; // 0x08
+    uint16_t y; // 0x0A
+    int16_t elevation; // 0x0C
+    uint8_t room; // 0x0E
+    uint8_t layer; // 0x0F
+    uint16_t target_x; // 0x10
+    uint16_t target_y; // 0x12
+    uint16_t walk_speed_x; // 0x14
+    uint16_t walk_speed_y; // 0x16
+    uint8_t facing_direction; // 0x18
+    uint8_t moving; // 0x19
+    uint8_t walk_box; // 0x1A
+    uint8_t _pad1;
+    uint8_t scale_x; // 0x1C
+    uint8_t scale_y; // 0x1D
+    uint8_t width; // 0x1E
+    uint8_t palette; // 0x1F
+    uint8_t talk_color; // 0x20
+    uint8_t _pad2;
+    uint16_t flags; // 0x22
+    uint16_t anim_counter; // 0x24
+    uint8_t current_anim; // 0x26
+    uint8_t walk_frame; // 0x27
+    uint8_t stand_frame; // 0x28
+    uint8_t talk_frame; // 0x29
+    uint8_t anim_speed; // 0x2A
+    uint8_t loop_flag; // 0x2B
+    int16_t talk_pos_x; // 0x2C
+    int16_t talk_pos_y; // 0x2E
+    uint8_t _pad3[16];
+}"""
+    
+    # Compare the full multi-line string
+    assert generated == expected, f"Generated struct does not match expected.\n\nExpected:\n{expected}\n\nGenerated:\n{generated}"
 
 
 if __name__ == "__main__":

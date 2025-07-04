@@ -11,7 +11,7 @@ from .vars import ACTORS_START, ACTORS_SIZE, MAX_ACTORS, ACTOR_STRUCT_SIZE
 from .actor_state import CURRENT_ACTOR_ADDRESS
 
 
-def test_actor_segment_values():
+def test_actor_segment_values() -> None:
     """Test that actor segment values are calculated correctly."""
     
     # Test basic calculations
@@ -41,7 +41,7 @@ def test_actor_segment_values():
     print(f"  - Per actor: {ACTOR_STRUCT_SIZE} bytes")
 
 
-def test_actor_struct_definition():
+def test_actor_struct_definition() -> None:
     """Test that the actor struct definition is correctly sized."""
     
     # This is the struct definition from view.py
@@ -87,7 +87,7 @@ def test_actor_struct_definition():
     assert total_size == ACTOR_STRUCT_SIZE, f"Actor struct size mismatch: {total_size} != {ACTOR_STRUCT_SIZE}"
 
 
-def test_segment_flags():
+def test_segment_flags() -> None:
     """Test that correct segment flags are used for actor data."""
     
     # These are the flags used in view.py
