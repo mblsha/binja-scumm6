@@ -2332,9 +2332,14 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
                 super().lift(il, addr)
                 return
             
-            # Generate LLIL parameters for each message part
+            # Generate LLIL parameters - actor address first, then message parts
             part_params = []
             
+            # Add fused operands (e.g., actor address for talk_actor) as first parameters
+            for operand in self.fused_operands:
+                part_params.append(self._lift_operand_with_actor_conversion(il, operand))
+            
+            # Then add message parts
             for part in message_parts:
                 if part['type'] == 'string':
                     # Try to find the string in the BSTR segment
@@ -2357,10 +2362,6 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
                         il.const(4, part['volume'])
                     ]
                     part_params.append(il.intrinsic([], 'sound', sound_params))
-            
-            # Add fused operands (e.g., actor ID for talk_actor)
-            for operand in self.fused_operands:
-                part_params.append(self._lift_operand_with_actor_conversion(il, operand))
             
             # Check if this instruction produces a result
             if self._config and self._config.push_count > 0:
