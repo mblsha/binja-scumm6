@@ -2339,29 +2339,42 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
             for operand in self.fused_operands:
                 part_params.append(self._lift_operand_with_actor_conversion(il, operand))
             
-            # Then add message parts
+            # Then add message parts - assign all to temp registers for consistency
+            temp_counter = 1  # Start at 1 since actor might use TEMP(0)
+            
             for part in message_parts:
                 if part['type'] == 'string':
                     # Try to find the string in the BSTR segment
                     string_addr = self._find_string_address(str(part['value']))
                     if string_addr is not None:
-                        # Create string pointer directly
-                        part_params.append(il.const_pointer(4, string_addr))
+                        # Assign string pointer to temp register and use register reference
+                        temp_reg = LLIL_TEMP(100 + temp_counter)
+                        il.append(il.set_reg(4, temp_reg, il.const_pointer(4, string_addr)))
+                        part_params.append(il.reg(4, temp_reg))
                     else:
-                        # String not found - use placeholder
-                        part_params.append(il.const_pointer(4, 0))
+                        # String not found - use placeholder in temp register
+                        temp_reg = LLIL_TEMP(100 + temp_counter)
+                        il.append(il.set_reg(4, temp_reg, il.const_pointer(4, 0)))
+                        part_params.append(il.reg(4, temp_reg))
+                    temp_counter += 1
                 
                 elif part['type'] == 'wait':
-                    # Create wait intrinsic directly as parameter
-                    part_params.append(il.intrinsic([], 'wait', []))
+                    # Assign wait intrinsic to temp register and use register reference
+                    temp_reg = LLIL_TEMP(100 + temp_counter)
+                    il.append(il.set_reg(4, temp_reg, il.intrinsic([], 'wait', [])))
+                    part_params.append(il.reg(4, temp_reg))
+                    temp_counter += 1
                 
                 elif part['type'] == 'sound':
-                    # Create sound intrinsic directly as parameter
+                    # Assign sound intrinsic to temp register and use register reference
                     sound_params = [
                         il.const(4, part['sound_id']),
                         il.const(4, part['volume'])
                     ]
-                    part_params.append(il.intrinsic([], 'sound', sound_params))
+                    temp_reg = LLIL_TEMP(100 + temp_counter)
+                    il.append(il.set_reg(4, temp_reg, il.intrinsic([], 'sound', sound_params)))
+                    part_params.append(il.reg(4, temp_reg))
+                    temp_counter += 1
             
             # Check if this instruction produces a result
             if self._config and self._config.push_count > 0:

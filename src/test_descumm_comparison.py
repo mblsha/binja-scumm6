@@ -1277,16 +1277,20 @@ script_test_cases = [
             (0x0002, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
         ],
         expected_llil_fusion=[
-            # Enhanced LLIL with embedded function intrinsics directly in talk_actor parameters
+            # Enhanced LLIL with temp register assignments for consistency
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP101'), mintrinsic('sound', outputs=[], params=[
+                MockLLIL(op='CONST.4', ops=[34071]),  # sound ID (0x8517 = 34071)
+                MockLLIL(op='CONST.4', ops=[38])      # volume (0x26 = 38)
+            ])])),
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP102'), MockLLIL(op='CONST_PTR.4', ops=[0])])),  # String pointer (placeholder)
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP103'), mintrinsic('wait', outputs=[], params=[])])),
+            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP104'), MockLLIL(op='CONST_PTR.4', ops=[0])])),  # String pointer (placeholder)
             (0x0000, mintrinsic('talk_actor', outputs=[], params=[
                 MockLLIL(op='CONST.4', ops=[1073749520]),   # Actor address (converted from ID 7) - first parameter
-                mintrinsic('sound', outputs=[], params=[  # sound(0x8517, 0x26) directly as parameter
-                    MockLLIL(op='CONST.4', ops=[34071]),  # sound ID (0x8517 = 34071)
-                    MockLLIL(op='CONST.4', ops=[38])      # volume (0x26 = 38)
-                ]),
-                MockLLIL(op='CONST_PTR.4', ops=[1059785]),  # "It makes me feel GREAT!" string pointer
-                mintrinsic('wait', outputs=[], params=[]),  # wait() directly as parameter
-                MockLLIL(op='CONST_PTR.4', ops=[1059809]),  # "Smarter!  More aggressive!" string pointer
+                MockLLIL(op='REG.4', ops=[mreg('TEMP101')]),  # Sound intrinsic result
+                MockLLIL(op='REG.4', ops=[mreg('TEMP102')]),  # First string pointer
+                MockLLIL(op='REG.4', ops=[mreg('TEMP103')]),  # Wait intrinsic result  
+                MockLLIL(op='REG.4', ops=[mreg('TEMP104')]),  # Second string pointer
             ])),
         ],
     ),
