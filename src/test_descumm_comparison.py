@@ -1277,25 +1277,16 @@ script_test_cases = [
             (0x0002, mintrinsic('talk_actor', outputs=[], params=[MockLLIL(op='POP.4', ops=[])])),
         ],
         expected_llil_fusion=[
-            # Enhanced LLIL with embedded function intrinsics
-            # TEMP100: sound(0x8517, 0x26) intrinsic  
-            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP100'), mintrinsic('sound', outputs=[], params=[
-                MockLLIL(op='CONST.4', ops=[34071]),  # sound ID (0x8517 = 34071)
-                MockLLIL(op='CONST.4', ops=[38])      # volume (0x26 = 38)
-            ])])),
-            # TEMP101: "It makes me feel GREAT!" string pointer
-            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP101'), MockLLIL(op='CONST_PTR.4', ops=[1059785])])),
-            # TEMP102: wait() intrinsic
-            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP102'), mintrinsic('wait', outputs=[], params=[])])),
-            # TEMP103: "Smarter!  More aggressive!" string pointer
-            (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[mreg('TEMP103'), MockLLIL(op='CONST_PTR.4', ops=[1059809])])),
-            # Main talk_actor intrinsic with all components
+            # Enhanced LLIL with embedded function intrinsics directly in talk_actor parameters
             (0x0000, mintrinsic('talk_actor', outputs=[], params=[
-                MockLLIL(op='REG.4', ops=[mreg('TEMP100')]),  # sound() intrinsic
-                MockLLIL(op='REG.4', ops=[mreg('TEMP101')]),  # "It makes me feel GREAT!"
-                MockLLIL(op='REG.4', ops=[mreg('TEMP102')]),  # wait() intrinsic
-                MockLLIL(op='REG.4', ops=[mreg('TEMP103')]),  # "Smarter!  More aggressive!"
-                MockLLIL(op='CONST.4', ops=[7])              # Actor ID
+                mintrinsic('sound', outputs=[], params=[  # sound(0x8517, 0x26) directly as parameter
+                    MockLLIL(op='CONST.4', ops=[34071]),  # sound ID (0x8517 = 34071)
+                    MockLLIL(op='CONST.4', ops=[38])      # volume (0x26 = 38)
+                ]),
+                MockLLIL(op='CONST_PTR.4', ops=[1059785]),  # "It makes me feel GREAT!" string pointer
+                mintrinsic('wait', outputs=[], params=[]),  # wait() directly as parameter
+                MockLLIL(op='CONST_PTR.4', ops=[1059809]),  # "Smarter!  More aggressive!" string pointer
+                MockLLIL(op='CONST.4', ops=[7])            # Actor ID
             ])),
         ],
     ),

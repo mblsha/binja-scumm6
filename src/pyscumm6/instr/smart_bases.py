@@ -2332,51 +2332,42 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
                 super().lift(il, addr)
                 return
             
-            # Generate LLIL for each message part
-            part_temps = []
-            temp_base = 100 + (addr % 100)  # Base index for temp registers
+            # Generate LLIL parameters for each message part
+            part_params = []
             
-            for i, part in enumerate(message_parts):
-                temp_index = temp_base + i
-                
+            for part in message_parts:
                 if part['type'] == 'string':
                     # Try to find the string in the BSTR segment
                     string_addr = self._find_string_address(str(part['value']))
                     if string_addr is not None:
-                        # Create string pointer
-                        il.append(il.set_reg(4, LLIL_TEMP(temp_index), il.const_pointer(4, string_addr)))
-                        part_temps.append(il.reg(4, LLIL_TEMP(temp_index)))
+                        # Create string pointer directly
+                        part_params.append(il.const_pointer(4, string_addr))
                     else:
                         # String not found - use placeholder
-                        il.append(il.set_reg(4, LLIL_TEMP(temp_index), il.const_pointer(4, 0)))
-                        part_temps.append(il.reg(4, LLIL_TEMP(temp_index)))
+                        part_params.append(il.const_pointer(4, 0))
                 
                 elif part['type'] == 'wait':
-                    # Create wait intrinsic with no parameters
-                    il.append(il.set_reg(4, LLIL_TEMP(temp_index), 
-                             il.intrinsic([], 'wait', [])))
-                    part_temps.append(il.reg(4, LLIL_TEMP(temp_index)))
+                    # Create wait intrinsic directly as parameter
+                    part_params.append(il.intrinsic([], 'wait', []))
                 
                 elif part['type'] == 'sound':
-                    # Create sound intrinsic with sound_id and volume parameters
+                    # Create sound intrinsic directly as parameter
                     sound_params = [
                         il.const(4, part['sound_id']),
                         il.const(4, part['volume'])
                     ]
-                    il.append(il.set_reg(4, LLIL_TEMP(temp_index),
-                             il.intrinsic([], 'sound', sound_params)))
-                    part_temps.append(il.reg(4, LLIL_TEMP(temp_index)))
+                    part_params.append(il.intrinsic([], 'sound', sound_params))
             
             # Add fused operands (e.g., actor ID for talk_actor)
             for operand in self.fused_operands:
-                part_temps.append(self._lift_operand(il, operand))
+                part_params.append(self._lift_operand(il, operand))
             
             # Check if this instruction produces a result
             if self._config and self._config.push_count > 0:
-                il.append(il.intrinsic([LLIL_TEMP(0)], self._name, part_temps))
+                il.append(il.intrinsic([LLIL_TEMP(0)], self._name, part_params))
                 il.append(il.push(4, LLIL_TEMP(0)))
             else:
-                il.append(il.intrinsic([], self._name, part_temps))
+                il.append(il.intrinsic([], self._name, part_params))
         else:
             # Standard LLIL: Fall back to normal intrinsic behavior (pop from stack)
             super().lift(il, addr)
