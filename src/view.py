@@ -103,6 +103,10 @@ class Scumm6View(BinaryView):  # type: ignore[misc]
         # Generate actor struct type definition from ActorProperty enum
         actor_struct_def = generate_actor_struct_definition()
         actor_struct_type = self.parse_type_string(actor_struct_def)[0]
+        
+        # Register the Actor type so it appears in the Types panel
+        self.define_user_type("Actor", actor_struct_type)
+        
         for i in range(vars.MAX_ACTORS):
             actor_addr = vars.ACTORS_START + (i * vars.ACTOR_STRUCT_SIZE)
             self.define_user_symbol(
