@@ -1443,10 +1443,18 @@ script_test_cases = [
             0x9D,                   # actor_ops (0x9D)
             0x4D,                   # step_dist subop (77)
             
-            # actorOps.setName("Hero")
-            0x9D,                   # actor_ops (0x9D)
-            0x58,                   # actor_name subop (88)
-            # String data would follow but format is complex
+            # Now test non-actorOps functions that take actor index
+            # putActorAtXY(2, 100, 200, room=0)
+            0x00, 0x02,             # push_byte(2) - actor index
+            0x01, 0x64, 0x00,       # push_word(100) - x position
+            0x01, 0xC8, 0x00,       # push_word(200) - y position  
+            0x00, 0x00,             # push_byte(0) - room
+            0x7F,                   # put_actor_at_xy opcode (127)
+            
+            # animateActor(3, 5)
+            0x00, 0x03,             # push_byte(3) - actor index
+            0x00, 0x05,             # push_byte(5) - animation
+            0x82,                   # animate_actor opcode (130)
         ]),
         expected_disasm_fusion_output=dedent("""
             [0000] actorOps.setCurActor(1)
@@ -1464,6 +1472,8 @@ script_test_cases = [
             [002E] actorOps.setTalkColor(15)
             [0032] actorOps.setPalette(3)
             [0036] actorOps.setWalkSpeed(10, 5)
+            [003C] putActorInXY(2, 100, 200, 0)
+            [0047] animateActor(3, 5)
         """).strip(),
         expected_llil_fusion=[
             # actorOps.setCurActor(1) - writes 1 to CURRENT_ACTOR_ADDRESS
@@ -1643,6 +1653,28 @@ script_test_cases = [
                             mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
                     mllil('CONST.4', 22)),  # WALK_SPEED_Y offset
                 mllil('CONST.4', 5))),
+                
+            # putActorAtXY(2, 100, 200, 0) - passes actor struct address as first param
+            (0x003C, mintrinsic('put_actor_at_xy', outputs=[], params=[
+                mllil('ADD.4',  # Calculate actor struct address
+                    mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                    mllil('MUL.4',
+                        mllil('CONST.4', 2),  # actor index
+                        mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                mllil('CONST.4', 100),  # x position
+                mllil('CONST.4', 200),  # y position  
+                mllil('CONST.4', 0),  # room
+            ])),
+            
+            # animateActor(3, 5) - passes actor struct address as first param
+            (0x0047, mintrinsic('animate_actor', outputs=[], params=[
+                mllil('ADD.4',  # Calculate actor struct address
+                    mllil('CONST_PTR.4', 0x40001c50),  # ACTORS_START
+                    mllil('MUL.4',
+                        mllil('CONST.4', 3),  # actor index
+                        mllil('CONST.4', 64))),  # ACTOR_STRUCT_SIZE
+                mllil('CONST.4', 5),  # animation
+            ])),
         ],
     ),
 ]

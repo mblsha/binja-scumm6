@@ -200,6 +200,14 @@ def generate_all_instructions() -> Dict[str, Type[Instruction]]:
     registry["print_debug"] = instructions.PrintDebug
     # registry["talk_actor"] = instructions.TalkActor  # Now using auto-generated SmartMessageIntrinsic
     
+    # Override actor-related intrinsics with custom implementations
+    from . import actor_ops
+    actor_ops.PutActorAtXy._config = INTRINSIC_CONFIGS["put_actor_at_xy"]
+    registry["put_actor_at_xy"] = actor_ops.PutActorAtXy
+    
+    actor_ops.AnimateActor._config = INTRINSIC_CONFIGS["animate_actor"]
+    registry["animate_actor"] = actor_ops.AnimateActor
+    
     # Override start_script_quick with custom implementation
     from . import script_ops
     # Set the config from the generated class
