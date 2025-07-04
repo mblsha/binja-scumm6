@@ -3297,6 +3297,7 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         from ...scumm6_opcodes import Scumm6Opcodes
         from ..instr.smart_bases import get_string_pointer_for_llil
+        from ...actor_state import ActorProperty, get_current_actor_property_address, CURRENT_ACTOR_ADDRESS
         
         # Verify we have the expected body type
         assert isinstance(self.op_details.body, Scumm6Opcodes.ActorOps), \
@@ -3307,7 +3308,7 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
         subop_body = self.op_details.body.body
         
         # Handle case where subop is an int instead of enum
-        intrinsic_name, unknown_subop = handle_unknown_subop_lift(il, subop, "actor_ops")
+        subop_name = get_subop_name(subop)
         
         # Handle parameters based on subop_body attributes
         pop_count = getattr(subop_body, "pop_count", 0)
@@ -3338,20 +3339,106 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
             # Pop all arguments from stack
             params = [il.pop(4) for _ in range(pop_count)]
         
-        # If unknown subop, generate unimplemented instead of intrinsic
-        if unknown_subop:
-            # Generate unimplemented
+        # Handle specific actor operations by writing to memory
+        if subop_name == "set_current_actor":
+            # setCurActor(actor_id) - write actor_id to CURRENT_ACTOR_ADDRESS
+            if params:
+                actor_id = params[0]
+                il.append(il.store(4, il.const_pointer(4, CURRENT_ACTOR_ADDRESS), actor_id))
+            else:
+                il.append(il.unimplemented())
+                
+        elif subop_name == "set_costume":
+            # setCostume(costume_id) - write to current actor's COSTUME property
+            if params:
+                costume_id = params[0]
+                current_actor_addr, costume_offset = get_current_actor_property_address(ActorProperty.COSTUME)
+                
+                # Calculate: actor_base = *(CURRENT_ACTOR_ADDRESS) * ACTOR_STRUCT_SIZE + ACTORS_START
+                current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+                from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+                actor_base = il.add(4, 
+                    il.const_pointer(4, ACTORS_START),
+                    il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+                )
+                costume_addr = il.add(4, actor_base, il.const(4, costume_offset))
+                il.append(il.store(2, costume_addr, costume_id))
+            else:
+                il.append(il.unimplemented())
+                
+        elif subop_name == "talk_color":
+            # setTalkColor(color) - write to current actor's TALK_COLOR property
+            if params:
+                talk_color = params[0]
+                current_actor_addr, talk_color_offset = get_current_actor_property_address(ActorProperty.TALK_COLOR)
+                
+                # Calculate actor property address
+                current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+                from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+                actor_base = il.add(4, 
+                    il.const_pointer(4, ACTORS_START),
+                    il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+                )
+                talk_color_addr = il.add(4, actor_base, il.const(4, talk_color_offset))
+                il.append(il.store(1, talk_color_addr, talk_color))
+            else:
+                il.append(il.unimplemented())
+                
+        elif subop_name == "actor_name":
+            # setName(string_ptr) - write string pointer to current actor's NAME_PTR property
+            if params:
+                name_ptr = params[0]
+                current_actor_addr, name_ptr_offset = get_current_actor_property_address(ActorProperty.NAME_PTR)
+                
+                # Calculate actor property address
+                current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+                from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+                actor_base = il.add(4, 
+                    il.const_pointer(4, ACTORS_START),
+                    il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+                )
+                name_ptr_addr = il.add(4, actor_base, il.const(4, name_ptr_offset))
+                il.append(il.store(4, name_ptr_addr, name_ptr))
+            else:
+                il.append(il.unimplemented())
+                
+        elif subop_name == "step_dist":
+            # setWalkSpeed(x_speed, y_speed) - write to WALK_SPEED_X and WALK_SPEED_Y
+            if len(params) >= 2:
+                x_speed, y_speed = params[0], params[1]
+                current_actor_addr, _ = get_current_actor_property_address(ActorProperty.WALK_SPEED_X)
+                
+                # Calculate actor base address
+                current_actor_id = il.load(4, il.const_pointer(4, current_actor_addr))
+                from ...actor_state import ACTOR_STRUCT_SIZE, ACTORS_START
+                actor_base = il.add(4, 
+                    il.const_pointer(4, ACTORS_START),
+                    il.mult(4, current_actor_id, il.const(4, ACTOR_STRUCT_SIZE))
+                )
+                
+                # Write X speed
+                x_speed_offset = ActorProperty.WALK_SPEED_X.value.offset
+                x_speed_addr = il.add(4, actor_base, il.const(4, x_speed_offset))
+                il.append(il.store(2, x_speed_addr, x_speed))
+                
+                # Write Y speed
+                y_speed_offset = ActorProperty.WALK_SPEED_Y.value.offset
+                y_speed_addr = il.add(4, actor_base, il.const(4, y_speed_offset))
+                il.append(il.store(2, y_speed_addr, y_speed))
+            else:
+                il.append(il.unimplemented())
+                
+        elif subop_name == "init":
+            # init() - no parameters, could initialize actor properties to defaults
+            # For now, just generate a comment operation
+            il.append(il.nop())
+            
+        else:
+            # Unknown or unimplemented subop - fallback to unimplemented
             il.append(il.unimplemented())
             # Push dummy value if needed
             if push_count > 0:
                 il.append(il.push(4, il.const(4, 0)))
-        else:
-            # Normal intrinsic handling
-            if push_count > 0:
-                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
-                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
-            else:
-                il.append(il.intrinsic([], intrinsic_name, params))
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""

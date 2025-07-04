@@ -41,6 +41,7 @@ from src.test_utils import (
     run_scumm6_disassembler_with_fusion,
     run_scumm6_llil_generation,
     assert_llil_operations_match,
+    assert_llil_operations_partial_match,
     collect_branches_from_architecture
 )
 from src.address_normalization import normalize_jump_addresses
@@ -740,6 +741,47 @@ script_test_cases = [
             END
             """
         ).strip(),
+        expected_llil_fusion=[
+            # Test key actor operations with memory writes
+            # [004B] (9D) actorOps.setCurActor(7) - store 7 to CURRENT_ACTOR_ADDRESS
+            (75, MockLLIL(op='STORE.4', ops=[MockLLIL(op='CONST_PTR.4', ops=[0x40002450]), MockLLIL(op='CONST.4', ops=[7])])),
+            
+            # [0050] (9D) actorOps.init() - nop for now
+            (80, MockLLIL(op='NOP', ops=[])),
+            
+            # [0052] (9D) actorOps.setCostume(6) - complex address calculation + store
+            (82, MockLLIL(op='STORE.2', ops=[
+                MockLLIL(op='ADD.4', ops=[
+                    MockLLIL(op='ADD.4', ops=[
+                        MockLLIL(op='CONST_PTR.4', ops=[0x40001c50]),  # ACTORS_START
+                        MockLLIL(op='MUL.4', ops=[
+                            MockLLIL(op='LOAD.4', ops=[MockLLIL(op='CONST_PTR.4', ops=[0x40002450])]),  # current actor id
+                            MockLLIL(op='CONST.4', ops=[64])  # ACTOR_STRUCT_SIZE
+                        ])
+                    ]),
+                    MockLLIL(op='CONST.4', ops=[2])  # COSTUME offset
+                ]),
+                MockLLIL(op='CONST.4', ops=[6])
+            ])),
+            
+            # [0057] (9D) actorOps.setTalkColor(13) - store to talk color property
+            (87, MockLLIL(op='STORE.1', ops=[
+                MockLLIL(op='ADD.4', ops=[
+                    MockLLIL(op='ADD.4', ops=[
+                        MockLLIL(op='CONST_PTR.4', ops=[0x40001c50]),  # ACTORS_START
+                        MockLLIL(op='MUL.4', ops=[
+                            MockLLIL(op='LOAD.4', ops=[MockLLIL(op='CONST_PTR.4', ops=[0x40002450])]),  # current actor id
+                            MockLLIL(op='CONST.4', ops=[64])  # ACTOR_STRUCT_SIZE
+                        ])
+                    ]),
+                    MockLLIL(op='CONST.4', ops=[32])  # TALK_COLOR offset (0x20)
+                ]),
+                MockLLIL(op='CONST.4', ops=[13])
+            ])),
+            
+            # [007E] (9D) actorOps.setCurActor(6) - store 6 to CURRENT_ACTOR_ADDRESS  
+            (126, MockLLIL(op='STORE.4', ops=[MockLLIL(op='CONST_PTR.4', ops=[0x40002450]), MockLLIL(op='CONST.4', ops=[6])])),
+        ],
     ),
     # ===== Migrated InstructionInfo test cases =====
     ScriptComparisonTestCase(
@@ -1258,12 +1300,37 @@ script_test_cases = [
         expected_llil=[
             # With mocked BinaryView, finds "Bernard" at 0x2000
             (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST_PTR.4', ops=[0x2000])])),
-            (0x0000, mintrinsic('actor_ops.actor_name', outputs=[], params=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')])])),
+            # setName now writes to memory: store string_ptr to current actor's NAME_PTR property
+            (0x0000, MockLLIL(op='STORE.4', ops=[
+                MockLLIL(op='ADD.4', ops=[
+                    MockLLIL(op='ADD.4', ops=[
+                        MockLLIL(op='CONST_PTR.4', ops=[0x40001c50]),  # ACTORS_START
+                        MockLLIL(op='MUL.4', ops=[
+                            MockLLIL(op='LOAD.4', ops=[MockLLIL(op='CONST_PTR.4', ops=[0x40002450])]),  # current actor id  
+                            MockLLIL(op='CONST.4', ops=[64])  # ACTOR_STRUCT_SIZE
+                        ])
+                    ]),
+                    MockLLIL(op='CONST.4', ops=[4])  # NAME_PTR offset
+                ]),
+                MockLLIL(op='REG.4', ops=[mreg('TEMP100')])  # string pointer
+            ])),
         ],
         expected_llil_fusion=[
-            # Same for fusion - string found in BSTR
+            # Same for fusion - string found in BSTR, setName writes to memory
             (0x0000, MockLLIL(op='SET_REG.4{0}', ops=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')]), MockLLIL(op='CONST_PTR.4', ops=[0x2000])])),
-            (0x0000, mintrinsic('actor_ops.actor_name', outputs=[], params=[MockLLIL(op='REG.4', ops=[mreg('TEMP100')])])),
+            (0x0000, MockLLIL(op='STORE.4', ops=[
+                MockLLIL(op='ADD.4', ops=[
+                    MockLLIL(op='ADD.4', ops=[
+                        MockLLIL(op='CONST_PTR.4', ops=[0x40001c50]),  # ACTORS_START
+                        MockLLIL(op='MUL.4', ops=[
+                            MockLLIL(op='LOAD.4', ops=[MockLLIL(op='CONST_PTR.4', ops=[0x40002450])]),  # current actor id  
+                            MockLLIL(op='CONST.4', ops=[64])  # ACTOR_STRUCT_SIZE
+                        ])
+                    ]),
+                    MockLLIL(op='CONST.4', ops=[4])  # NAME_PTR offset
+                ]),
+                MockLLIL(op='REG.4', ops=[mreg('TEMP100')])  # string pointer
+            ])),
         ],
     ),
     ScriptComparisonTestCase(
@@ -1418,7 +1485,11 @@ def test_script_comparison(case: ScriptComparisonTestCase, test_environment: Com
         assert_llil_operations_match(llil_operations, case.expected_llil, case.test_id, "regular LLIL")
 
     if case.expected_llil_fusion is not None:
-        assert_llil_operations_match(llil_fusion_operations, case.expected_llil_fusion, case.test_id, "fusion LLIL")
+        # Use partial matching for room2_scrp1_descumm_output since it only tests specific actor operations
+        if case.test_id == "room2_scrp1_descumm_output":
+            assert_llil_operations_partial_match(llil_fusion_operations, case.expected_llil_fusion, case.test_id, "fusion LLIL")
+        else:
+            assert_llil_operations_match(llil_fusion_operations, case.expected_llil_fusion, case.test_id, "fusion LLIL")
 
     # Always verify that outputs were generated
     assert len(descumm_output.strip()) > 0, f"descumm produced no output for '{case.test_id}'"

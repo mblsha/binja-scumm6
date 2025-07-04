@@ -7,7 +7,7 @@ across test files and provide consistent testing infrastructure.
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from typing import List, Any, Tuple, Dict, Optional
+from typing import List, Any, Tuple, Dict, Optional, Union
 import subprocess
 import tempfile
 from pathlib import Path
@@ -416,6 +416,84 @@ def assert_llil_operations_match(
                 f"LLIL intrinsic name mismatch for '{script_name}' ({test_type}) at offset 0x{actual_offset:04X}:\n" \
                 f"Expected: {expected_op.name}\n" \
                 f"Actual: {actual_op.name}"
+
+
+def assert_llil_operations_partial_match(
+    actual_llil: List[Tuple[int, MockLLIL]], 
+    expected_llil: List[Tuple[int, MockLLIL]], 
+    script_name: str, 
+    test_type: str
+) -> None:
+    """Verify that specific LLIL operations match expectations (partial matching).
+    
+    This function only validates the specific operations listed in expected_llil,
+    rather than requiring a complete match of all operations. This is useful for
+    testing specific features like actor operations without needing to specify
+    the entire script's LLIL.
+    
+    Args:
+        actual_llil: Generated LLIL operations
+        expected_llil: Expected LLIL operations (subset to validate)
+        script_name: Name of script being tested (for error messages)
+        test_type: Type of test being performed (for error messages)
+    """
+    
+    # Create a lookup dictionary for actual operations by offset
+    actual_by_offset = {offset: op for offset, op in actual_llil}
+    
+    # Validate each expected operation
+    for expected_offset, expected_op in expected_llil:
+        assert expected_offset in actual_by_offset, \
+            f"Expected LLIL operation at offset 0x{expected_offset:04X} not found in '{script_name}' ({test_type})"
+        
+        actual_op = actual_by_offset[expected_offset]
+        
+        # Compare operation types and key properties directly
+        assert actual_op.op == expected_op.op, \
+            f"LLIL operation type mismatch for '{script_name}' ({test_type}) at offset 0x{expected_offset:04X}:\\n" \
+            f"Expected: {expected_op.op}\\n" \
+            f"Actual: {actual_op.op}"
+            
+        # For intrinsics, also check the function name
+        if hasattr(actual_op, 'name') and hasattr(expected_op, 'name'):
+            assert actual_op.name == expected_op.name, \
+                f"LLIL intrinsic name mismatch for '{script_name}' ({test_type}) at offset 0x{expected_offset:04X}:\\n" \
+                f"Expected: {expected_op.name}\\n" \
+                f"Actual: {actual_op.name}"
+        
+        # Compare operands recursively
+        assert len(actual_op.ops) == len(expected_op.ops), \
+            f"LLIL operand count mismatch for '{script_name}' ({test_type}) at offset 0x{expected_offset:04X}:\\n" \
+            f"Expected {len(expected_op.ops)} operands, got {len(actual_op.ops)}"
+        
+        # Recursively compare each operand
+        for i, (actual_operand, expected_operand) in enumerate(zip(actual_op.ops, expected_op.ops)):
+            _compare_llil_operands_recursive(actual_operand, expected_operand, script_name, test_type, expected_offset, i)
+
+
+def _compare_llil_operands_recursive(actual: Any, expected: Any, script_name: str, test_type: str, offset: int, operand_idx: Union[int, str]) -> None:
+    """Recursively compare LLIL operands."""
+    if isinstance(expected, MockLLIL):
+        assert isinstance(actual, MockLLIL), \
+            f"Expected MockLLIL operand {operand_idx} at offset 0x{offset:04X} in '{script_name}' ({test_type}), got {type(actual)}"
+        
+        assert actual.op == expected.op, \
+            f"LLIL operand {operand_idx} type mismatch at offset 0x{offset:04X} in '{script_name}' ({test_type}):\\n" \
+            f"Expected: {expected.op}\\n" \
+            f"Actual: {actual.op}"
+        
+        assert len(actual.ops) == len(expected.ops), \
+            f"LLIL operand {operand_idx} sub-operand count mismatch at offset 0x{offset:04X} in '{script_name}' ({test_type}):\\n" \
+            f"Expected {len(expected.ops)}, got {len(actual.ops)}"
+        
+        for j, (actual_sub, expected_sub) in enumerate(zip(actual.ops, expected.ops)):
+            _compare_llil_operands_recursive(actual_sub, expected_sub, script_name, test_type, offset, f"{operand_idx}.{j}")
+    else:
+        # Simple value comparison
+        assert actual == expected, \
+            f"LLIL operand {operand_idx} value mismatch at offset 0x{offset:04X} in '{script_name}' ({test_type}):\\n" \
+            f"Expected: {expected}\\n" \
+            f"Actual: {actual}"
 
 
 def assert_no_unimplemented_llil(llil_operations: List[Tuple[int, MockLLIL]], script_name: str, test_type: str) -> None:

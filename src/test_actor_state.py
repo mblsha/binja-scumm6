@@ -2,16 +2,18 @@
 
 This file demonstrates different testing styles for the actor_state module.
 """
+# mypy: disable-error-code=no-untyped-def
 
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
 import pytest
 from .actor_state import (
-    get_actor_property_address, ActorMemory, ActorState,
+    get_actor_property_address, get_current_actor_property_address,
+    ActorMemory, ActorState, ActorProperty,
     get_actor_base_address, get_property_info, is_valid_actor_address,
     get_actor_and_property_from_address, MAX_ACTORS, ACTORS_START,
-    ACTOR_STRUCT_SIZE, ACTOR_PROPERTIES
+    ACTOR_STRUCT_SIZE, ACTOR_PROPERTIES, CURRENT_ACTOR_ADDRESS
 )
 
 
@@ -24,29 +26,37 @@ class TestTraditionalStyle:
     
     def test_simple_function_api(self):
         """Test the simple function-based API."""
-        # Test valid property access
-        addr = get_actor_property_address(0, "x")
+        # Test valid property access with enum
+        addr = get_actor_property_address(0, ActorProperty.X)
         assert addr == ACTORS_START + 0x08  # Base + x offset
         
-        addr = get_actor_property_address(5, "costume")
+        # Test with string for compatibility
+        addr = get_actor_property_address(0, "x")
+        assert addr == ACTORS_START + 0x08  # Same result
+        
+        addr = get_actor_property_address(5, ActorProperty.COSTUME)
         assert addr == ACTORS_START + (5 * 64) + 0x02
         
         # Test bounds checking
         with pytest.raises(ValueError, match="out of bounds"):
-            get_actor_property_address(32, "x")
+            get_actor_property_address(32, ActorProperty.X)
         
         with pytest.raises(ValueError, match="Unknown actor property"):
             get_actor_property_address(0, "invalid_prop")
     
     def test_fluent_api(self):
         """Test the fluent interface API."""
-        # Test chained calls
+        # Test chained calls with enum
         am = ActorMemory()
+        addr = am.actor(3).prop(ActorProperty.FLAGS).address
+        assert addr == ACTORS_START + (3 * 64) + 0x22
+        
+        # Test with string property
         addr = am.actor(3).prop("flags").address
         assert addr == ACTORS_START + (3 * 64) + 0x22
         
         # Test getting property info
-        info = am.actor(0).prop("elevation").info()
+        info = am.actor(0).prop(ActorProperty.ELEVATION).info()
         assert info.size == 2
         assert info.type == "s16"
         
@@ -58,7 +68,13 @@ class TestTraditionalStyle:
         """Test the dictionary-style API."""
         actors = ActorState()
         
-        # Test property access
+        # Test property access with enum
+        addr, info = actors[7][ActorProperty.WALK_SPEED_X]
+        assert addr == ACTORS_START + (7 * 64) + 0x14
+        assert info.size == 2
+        assert info.type == "u16"
+        
+        # Test with string property
         addr, info = actors[7]["walk_speed_x"]
         assert addr == ACTORS_START + (7 * 64) + 0x14
         assert info.size == 2
@@ -91,6 +107,18 @@ class TestTraditionalStyle:
         
         result = get_actor_and_property_from_address(ACTORS_START + (5 * 64) + 0x02)
         assert result == (5, "costume")
+    
+    def test_current_actor_functionality(self):
+        """Test current actor property address calculations."""
+        # Test current actor address calculation with enum
+        current_addr, prop_offset = get_current_actor_property_address(ActorProperty.X)
+        assert current_addr == CURRENT_ACTOR_ADDRESS
+        assert prop_offset == 0x08
+        
+        # Test with string property
+        current_addr, prop_offset = get_current_actor_property_address("flags")
+        assert current_addr == CURRENT_ACTOR_ADDRESS
+        assert prop_offset == 0x22
 
 
 # ==============================================================================
