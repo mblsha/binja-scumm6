@@ -175,6 +175,11 @@ class Scumm6(Architecture):  # type: ignore[misc]
             f"save_restore_verbs.subop_{i}": IntrinsicInfo(inputs=[], outputs=[])
             for i in range(256)
         }
+        | {
+            # Embedded function intrinsics for message-based instructions
+            "sound": IntrinsicInfo(inputs=[], outputs=[]),  # sound(id, volume)
+            "wait": IntrinsicInfo(inputs=[], outputs=[]),  # wait()
+        }
     )
 
     # FIXME: attach this state to the view?
