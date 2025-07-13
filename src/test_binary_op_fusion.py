@@ -5,15 +5,11 @@ import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
 import pytest
-from typing import List
 from binja_helpers import binja_api  # noqa: F401
 from .pyscumm6.disasm import decode_with_fusion
-from binja_helpers.tokens import Token
+from .test_utils import safe_token_text
 
 
-def render_tokens(tokens: List[Token]) -> str:
-    """Convert tokens to string for testing."""
-    return ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
 
 
 def test_add_fusion_with_constants() -> None:
@@ -33,7 +29,7 @@ def test_add_fusion_with_constants() -> None:
     assert len(instruction.fused_operands) == 2
     assert instruction.stack_pop_count == 0
     
-    text = render_tokens(instruction.render())
+    text = safe_token_text(instruction.render())
     assert text == "(10 + 5)"
 
 
@@ -54,7 +50,7 @@ def test_sub_fusion_with_variables() -> None:
     assert len(instruction.fused_operands) == 2
     assert instruction.stack_pop_count == 0
     
-    text = render_tokens(instruction.render())
+    text = safe_token_text(instruction.render())
     assert text == "(VAR_OVERRIDE - VAR_HAVE_MSG)"
 
 
@@ -75,7 +71,7 @@ def test_mul_fusion_with_same_variable() -> None:
     assert len(instruction.fused_operands) == 2
     assert instruction.stack_pop_count == 0
     
-    text = render_tokens(instruction.render())
+    text = safe_token_text(instruction.render())
     assert text == "(VAR_ME * VAR_ME)"
 
 
@@ -96,7 +92,7 @@ def test_div_fusion_mixed_operands() -> None:
     assert len(instruction.fused_operands) == 2
     assert instruction.stack_pop_count == 0
     
-    text = render_tokens(instruction.render())
+    text = safe_token_text(instruction.render())
     assert text == "(VAR_CURRENTDRIVE / 2)"
 
 
@@ -116,7 +112,7 @@ def test_partial_fusion_with_one_operand() -> None:
     assert len(instruction.fused_operands) == 1
     assert instruction.stack_pop_count == 1  # Still needs one from stack
     
-    text = render_tokens(instruction.render())
+    text = safe_token_text(instruction.render())
     assert text == "sub(42, ...)"
 
 
@@ -138,7 +134,7 @@ def test_nested_expression_fusion() -> None:
     add_instr = decode_with_fusion(add_bytecode, 0x0)
     assert add_instr is not None
     assert add_instr.__class__.__name__ == "Add"
-    assert render_tokens(add_instr.render()) == "(10 + 5)"
+    assert safe_token_text(add_instr.render()) == "(10 + 5)"
     
     # mul(3, ...)  - would use stack value in real execution
     mul_bytecode = bytes([
@@ -150,7 +146,7 @@ def test_nested_expression_fusion() -> None:
     assert mul_instr is not None
     assert mul_instr.__class__.__name__ == "Mul"
     assert len(mul_instr.fused_operands) == 1
-    assert render_tokens(mul_instr.render()) == "mul(3, ...)"
+    assert safe_token_text(mul_instr.render()) == "mul(3, ...)"
 
 
 if __name__ == "__main__":

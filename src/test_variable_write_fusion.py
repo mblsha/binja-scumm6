@@ -4,39 +4,12 @@
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from dataclasses import dataclass
-from typing import Optional, Callable, Any
+
 
 import pytest
 from binja_helpers import binja_api  # noqa: F401
 
-from .pyscumm6.disasm import decode_with_fusion
-
-
-@dataclass
-class FusionTestCase:
-    test_id: str
-    bytecode: bytes
-    expected_class: str
-    expected_fused_operands: int
-    expected_stack_pops: int
-    expected_render_text: Optional[str] = None
-    additional_validation: Optional[Callable[[Any], None]] = None
-    addr: int = 0x1000
-
-
-def run_fusion_test(case: FusionTestCase) -> None:
-    instr = decode_with_fusion(case.bytecode, case.addr)
-    assert instr is not None, f"Failed to decode {case.test_id}"
-    assert instr.__class__.__name__ == case.expected_class
-    assert len(instr.fused_operands) == case.expected_fused_operands
-    assert instr.stack_pop_count == case.expected_stack_pops
-    tokens = instr.render()
-    token_text = ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
-    if case.expected_render_text is not None:
-        assert token_text == case.expected_render_text
-    if case.additional_validation:
-        case.additional_validation(instr)
+from .test_utils import FusionTestCase, run_fusion_test
 
 
 fusion_test_cases = [
