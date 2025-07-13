@@ -4,7 +4,7 @@
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from typing import Optional, Callable, Any
+from typing import Callable, Any
 
 import pytest
 from binja_helpers import binja_api  # noqa: F401
