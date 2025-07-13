@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from .opcodes import Instruction
 
 
-def render_operand(operand: 'Instruction') -> List[Token]:
+def render_operand(operand: 'Instruction', use_raw_names: bool = False) -> List[Token]:
     """
     Render a fused operand appropriately.
     
@@ -47,7 +47,7 @@ def render_operand(operand: 'Instruction') -> List[Token]:
                     return [TInt(f"bitvar{data}")]
             
             # System variable - use semantic name mapping
-            return [TInt(get_variable_name(data))]
+            return [TInt(get_variable_name(data, use_raw_names=use_raw_names))]
     
     # Constant push operations
     elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
@@ -65,7 +65,7 @@ def render_operand(operand: 'Instruction') -> List[Token]:
     return [TText("?")]
 
 
-def render_operand_with_parens(operand: 'Instruction') -> List[Token]:
+def render_operand_with_parens(operand: 'Instruction', use_raw_names: bool = False) -> List[Token]:
     """
     Render a fused operand with parentheses for nested expressions.
     
@@ -87,10 +87,10 @@ def render_operand_with_parens(operand: 'Instruction') -> List[Token]:
         return tokens
     
     # For all other cases, use standard rendering
-    return render_operand(operand)
+    return render_operand(operand, use_raw_names)
 
 
-def render_operand_smart_binary(operand: 'Instruction', as_operand: bool = False) -> List[Token]:
+def render_operand_smart_binary(operand: 'Instruction', as_operand: bool = False, use_raw_names: bool = False) -> List[Token]:
     """
     Render a fused operand for SmartBinaryOp with special parentheses handling.
     
@@ -106,7 +106,7 @@ def render_operand_smart_binary(operand: 'Instruction', as_operand: bool = False
     """
     # Variable and constant handling (no parentheses needed)
     if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar', 'PushByte', 'PushWord']:
-        return render_operand(operand)
+        return render_operand(operand, use_raw_names)
     
     # Result-producing operations
     elif hasattr(operand, 'produces_result') and operand.produces_result():
@@ -129,7 +129,7 @@ def render_operand_smart_binary(operand: 'Instruction', as_operand: bool = False
                 return operand.render()
     
     # Fallback
-    return render_operand(operand)
+    return render_operand(operand, use_raw_names)
 
 
 def lift_operand(il: LowLevelILFunction, operand: 'Instruction') -> Any:
