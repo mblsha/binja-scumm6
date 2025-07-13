@@ -7,7 +7,8 @@ across test files and provide consistent testing infrastructure.
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from typing import List, Any, Tuple, Dict, Optional, Union
+from typing import List, Any, Tuple, Dict, Optional, Union, Callable
+from dataclasses import dataclass
 import subprocess
 import tempfile
 from pathlib import Path
@@ -111,6 +112,45 @@ def safe_token_text(tokens: List[Any]) -> str:
         Concatenated text from all tokens
     """
     return ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
+
+
+@dataclass
+class FusionTestCase:
+    """Data describing an instruction fusion test case."""
+
+    test_id: str
+    bytecode: bytes
+    expected_class: str
+    expected_fused_operands: int
+    expected_stack_pops: int
+    expected_render_text: Optional[str] = None
+    expected_length: Optional[int] = None
+    additional_validation: Optional[Callable[[Any], None]] = None
+    addr: int = 0x1000
+
+
+def run_fusion_test(case: FusionTestCase, *, expect_in_text: bool = False) -> None:
+    """Decode bytecode with fusion and verify the resulting instruction."""
+
+    instr = decode_with_fusion(case.bytecode, case.addr)
+    assert instr is not None, f"Failed to decode {case.test_id}"
+
+    assert instr.__class__.__name__ == case.expected_class
+    assert len(instr.fused_operands) == case.expected_fused_operands
+    assert instr.stack_pop_count == case.expected_stack_pops
+
+    if case.expected_length is not None:
+        assert instr.length() == case.expected_length
+
+    token_text = safe_token_text(instr.render())
+    if case.expected_render_text is not None:
+        if expect_in_text:
+            assert case.expected_render_text in token_text
+        else:
+            assert token_text == case.expected_render_text
+
+    if case.additional_validation:
+        case.additional_validation(instr)
 
 
 def _clean_literal_mode_jumps(output: str) -> str:

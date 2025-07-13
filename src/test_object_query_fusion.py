@@ -5,15 +5,11 @@ import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
 import pytest
-from typing import List
 from binja_helpers import binja_api  # noqa: F401
 from .pyscumm6.disasm import decode_with_fusion
-from binja_helpers.tokens import Token
+from .test_utils import safe_token_text
 
 
-def render_tokens(tokens: List[Token]) -> str:
-    """Convert tokens to string for testing."""
-    return ''.join(str(t.text if hasattr(t, 'text') else t) for t in tokens)
 
 
 def test_get_object_x_fusion() -> None:
@@ -32,7 +28,7 @@ def test_get_object_x_fusion() -> None:
     assert instruction.fused_operands[0].__class__.__name__ == "PushWordVar"
     assert instruction.stack_pop_count == 0  # No stack pops needed
     
-    text = render_tokens(instruction.render())
+    text = safe_token_text(instruction.render())
     assert text == "getObjectX(VAR_OVERRIDE)"
 
 
@@ -52,7 +48,7 @@ def test_get_object_y_fusion() -> None:
     assert instruction.fused_operands[0].__class__.__name__ == "PushWordVar"
     assert instruction.stack_pop_count == 0
     
-    text = render_tokens(instruction.render())
+    text = safe_token_text(instruction.render())
     assert text == "getObjectY(VAR_CURRENTDRIVE)"
 
 
@@ -72,7 +68,7 @@ def test_get_state_fusion() -> None:
     assert instruction.fused_operands[0].__class__.__name__ == "PushWordVar"
     assert instruction.stack_pop_count == 0
     
-    text = render_tokens(instruction.render())
+    text = safe_token_text(instruction.render())
     assert text == "getState(VAR_KEYPRESS)"
 
 
@@ -92,7 +88,7 @@ def test_get_object_x_fusion_with_constant() -> None:
     assert instruction.fused_operands[0].__class__.__name__ == "PushWord"
     assert instruction.stack_pop_count == 0
     
-    text = render_tokens(instruction.render())
+    text = safe_token_text(instruction.render())
     assert text == "getObjectX(42)"
 
 
