@@ -10,7 +10,7 @@ from ...scumm6_opcodes import Scumm6Opcodes
 from .opcodes import Instruction
 from .generic import VariableWriteOp, ControlFlowOp, IntrinsicOp
 from .smart_bases import SmartConditionalJump, FusibleMultiOperandMixin, get_variable_name
-from .helpers import get_subop_name, render_operand, lift_operand
+from .helpers import get_subop_name
 
 # Import the vars module to use the same LLIL generation logic
 from ... import vars
@@ -532,8 +532,13 @@ class ByteArrayWrite(FusibleMultiOperandMixin, Instruction):
         return cast(Optional['ByteArrayWrite'], self._standard_fuse(previous))
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
-        """Render a fused operand using shared helper."""
-        return render_operand(operand, use_raw_names=True)
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(get_variable_name(operand.op_details.body.data, use_raw_names=True))]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return [TInt(str(operand.op_details.body.data))]
+        else:
+            return [TText("operand")]
 
     def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
@@ -598,8 +603,13 @@ class ByteArrayWrite(FusibleMultiOperandMixin, Instruction):
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
-        """Lift a fused operand using shared helper."""
-        return lift_operand(il, operand)
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return il.reg(4, f"var_{operand.op_details.body.data}")
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return il.const(4, operand.op_details.body.data)
+        else:
+            return il.const(4, 0)  # Placeholder
 
 
 class WordArrayWrite(FusibleMultiOperandMixin, Instruction):
@@ -625,8 +635,13 @@ class WordArrayWrite(FusibleMultiOperandMixin, Instruction):
         return cast(Optional['WordArrayWrite'], self._standard_fuse(previous))
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
-        """Render a fused operand using shared helper."""
-        return render_operand(operand, use_raw_names=True)
+        """Render a fused operand appropriately."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return [TInt(get_variable_name(operand.op_details.body.data, use_raw_names=True))]
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return [TInt(str(operand.op_details.body.data))]
+        else:
+            return [TText("operand")]
 
     def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
@@ -680,8 +695,13 @@ class WordArrayWrite(FusibleMultiOperandMixin, Instruction):
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
-        """Lift a fused operand using shared helper."""
-        return lift_operand(il, operand)
+        """Lift a fused operand to IL expression."""
+        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
+            return il.reg(4, f"var_{operand.op_details.body.data}")
+        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
+            return il.const(4, operand.op_details.body.data)
+        else:
+            return il.const(4, 0)  # Placeholder
 
 
 class ByteArrayIndexedWrite(Instruction):
