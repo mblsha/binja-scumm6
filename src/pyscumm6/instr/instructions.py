@@ -358,12 +358,13 @@ class Shuffle(Instruction):
         il.append(il.unimplemented())
 
 
-class _BaseArrayRead(Instruction):
-    """Shared implementation for byte/word array read operations."""
+class _BaseArrayReadCommon(Instruction):
+    """Common implementation for array read operations."""
 
     instr_name: str
     intrinsic_name: str
     expected_body_type: Any
+    pop_count: int = 1
 
     def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
@@ -374,12 +375,18 @@ class _BaseArrayRead(Instruction):
         assert isinstance(self.op_details.body, self.expected_body_type), \
             f"Expected {self.expected_body_type.__name__} body, got {type(self.op_details.body)}"
 
+        params = [il.pop(4) for _ in range(self.pop_count)]
         il.append(il.intrinsic(
             [il.reg(4, LLIL_TEMP(0))],
             IntrinsicName(self.intrinsic_name),
-            [il.pop(4)],
+            params,
         ))
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+
+
+class _BaseArrayRead(_BaseArrayReadCommon):
+    """Single index array read."""
+    pop_count = 1
 
 
 class ByteArrayRead(_BaseArrayRead):
@@ -404,28 +411,10 @@ class WordArrayRead(_BaseArrayRead):
     expected_body_type = Scumm6Opcodes.WordArrayRead
 
 
-class _BaseArrayIndexedRead(Instruction):
-    """Shared implementation for byte/word indexed array reads."""
+class _BaseArrayIndexedRead(_BaseArrayReadCommon):
+    """Indexed array read with two parameters."""
 
-    instr_name: str
-    intrinsic_name: str
-    expected_body_type: Any
-
-    def render(self, as_operand: bool = False) -> List[Token]:
-        array_id = self.op_details.body.array
-        array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
-        return [TInstr(self.instr_name), TSep("("), TInt(array_name), TSep(")")]
-
-    def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, self.expected_body_type), \
-            f"Expected {self.expected_body_type.__name__} body, got {type(self.op_details.body)}"
-
-        il.append(il.intrinsic(
-            [il.reg(4, LLIL_TEMP(0))],
-            IntrinsicName(self.intrinsic_name),
-            [il.pop(4), il.pop(4)],
-        ))
-        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+    pop_count = 2
 
 
 class ByteArrayIndexedRead(_BaseArrayIndexedRead):
@@ -1042,25 +1031,6 @@ class SetObjectName(FusibleMultiOperandMixin, Instruction):
         
         return ''.join(text_chars)
     
-    def _extract_primary_text_for_llil(self, message: Any) -> str:
-        """Extract the primary text content from a message for LLIL string lookup."""
-        text_chars = []
-        
-        for part in message.parts:
-            if hasattr(part, 'data'):
-                if part.data == 0xFF or part.data == 0:
-                    # Stop at control codes or terminator
-                    break
-                elif 32 <= part.data <= 126:
-                    # Direct printable character
-                    text_chars.append(chr(part.data))
-                elif hasattr(part, 'content') and hasattr(part.content, 'value'):
-                    # Character wrapped in content
-                    char_value = part.content.value
-                    if isinstance(char_value, int) and 32 <= char_value <= 126:
-                        text_chars.append(chr(char_value))
-        
-        return ''.join(text_chars)
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
@@ -1119,7 +1089,8 @@ class SetObjectName(FusibleMultiOperandMixin, Instruction):
         
         # Extract the message text
         if isinstance(self.op_details.body, Scumm6Opcodes.Message):
-            message_text = self._extract_primary_text_for_llil(self.op_details.body)
+            from .helpers import extract_primary_text_for_llil
+            message_text = extract_primary_text_for_llil(self.op_details.body)
             
             if message_text:
                 # Try to get a string pointer
@@ -1805,7 +1776,8 @@ class PrintDebug(Instruction):
             isinstance(self.op_details.body.body, Scumm6Opcodes.Message)):
             
             # Extract the primary text from the message (ignoring control codes for now)
-            message_text = self._extract_primary_text_for_llil(self.op_details.body.body)
+            from .helpers import extract_primary_text_for_llil
+            message_text = extract_primary_text_for_llil(self.op_details.body.body)
             
             if message_text:
                 # Try to get a string pointer
@@ -1818,22 +1790,6 @@ class PrintDebug(Instruction):
         # Default: simple intrinsic without parameters
         il.append(il.intrinsic([], "print_debug", []))
     
-    def _extract_primary_text_for_llil(self, message: Any) -> str:
-        """Extract the primary text content from a message for LLIL string lookup."""
-        text_chars = []
-        
-        for part in message.parts:
-            if hasattr(part, 'data'):
-                if part.data == 0xFF or part.data == 0:
-                    # Stop at control codes or terminator
-                    break
-                elif hasattr(part, 'content') and hasattr(part.content, 'value'):
-                    # Regular character
-                    char_value = part.content.value
-                    if isinstance(char_value, int) and 32 <= char_value <= 126:
-                        text_chars.append(chr(char_value))
-        
-        return ''.join(text_chars)
 
 
 class PrintSystem(FusibleMultiOperandMixin, Instruction):
@@ -1966,7 +1922,8 @@ class PrintSystem(FusibleMultiOperandMixin, Instruction):
                 isinstance(self.op_details.body.body, Scumm6Opcodes.Message)):
                 
                 # Extract the primary text from the message
-                message_text = self._extract_primary_text_for_llil(self.op_details.body.body)
+                from .helpers import extract_primary_text_for_llil
+                message_text = extract_primary_text_for_llil(self.op_details.body.body)
                 
                 if message_text:
                     # Try to get a string pointer
@@ -1997,22 +1954,6 @@ class PrintSystem(FusibleMultiOperandMixin, Instruction):
         # Default: simple intrinsic
         il.append(il.intrinsic([], "print_system", []))
     
-    def _extract_primary_text_for_llil(self, message: Any) -> str:
-        """Extract the primary text content from a message for LLIL string lookup."""
-        text_chars = []
-        
-        for part in message.parts:
-            if hasattr(part, 'data'):
-                if part.data == 0xFF or part.data == 0:
-                    # Stop at control codes or terminator
-                    break
-                elif hasattr(part, 'content') and hasattr(part.content, 'value'):
-                    # Regular character
-                    char_value = part.content.value
-                    if isinstance(char_value, int) and 32 <= char_value <= 126:
-                        text_chars.append(chr(char_value))
-        
-        return ''.join(text_chars)
 
 
 class PrintText(FusibleMultiOperandMixin, Instruction):
@@ -2193,7 +2134,8 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
                 isinstance(self.op_details.body.body, Scumm6Opcodes.Message)):
                 
                 # Extract the primary text from the message
-                message_text = self._extract_primary_text_for_llil(self.op_details.body.body)
+                from .helpers import extract_primary_text_for_llil
+                message_text = extract_primary_text_for_llil(self.op_details.body.body)
                 
                 if message_text:
                     # Try to get a string pointer
@@ -2236,22 +2178,6 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
             # For complex operands, we'd need to handle them specially
             return il.const(4, 0)
     
-    def _extract_primary_text_for_llil(self, message: Any) -> str:
-        """Extract the primary text content from a message for LLIL string lookup."""
-        text_chars = []
-        
-        for part in message.parts:
-            if hasattr(part, 'data'):
-                if part.data == 0xFF or part.data == 0:
-                    # Stop at control codes or terminator
-                    break
-                elif hasattr(part, 'content') and hasattr(part.content, 'value'):
-                    # Regular character
-                    char_value = part.content.value
-                    if isinstance(char_value, int) and 32 <= char_value <= 126:
-                        text_chars.append(chr(char_value))
-        
-        return ''.join(text_chars)
 
 
 # PrintActor - now generated by factories from configs.py
@@ -2802,26 +2728,6 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
         
         return tokens
     
-    def _extract_primary_text_for_llil(self, message: Any) -> str:
-        """Extract the primary text content from a message for LLIL string lookup."""
-        text_chars = []
-        
-        if hasattr(message, 'parts') and message.parts:
-            for part in message.parts:
-                if hasattr(part, 'data'):
-                    if part.data == 0xFF or part.data == 0:
-                        # Stop at control codes or terminator
-                        break
-                    elif 32 <= part.data <= 126:
-                        # Direct printable character
-                        text_chars.append(chr(part.data))
-                    elif hasattr(part, 'content') and hasattr(part.content, 'value'):
-                        # Character wrapped in content
-                        char_value = part.content.value
-                        if isinstance(char_value, int) and 32 <= char_value <= 126:
-                            text_chars.append(chr(char_value))
-        
-        return ''.join(text_chars)
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         """Generate LLIL for print actor."""
@@ -2838,7 +2744,8 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
             subop_body.__class__.__name__ == 'Message'):
             
             # Extract the primary text from the message
-            message_text = self._extract_primary_text_for_llil(subop_body)
+            from .helpers import extract_primary_text_for_llil
+            message_text = extract_primary_text_for_llil(subop_body)
             
             if message_text:
                 # Try to get a string pointer
@@ -2928,7 +2835,8 @@ class PrintEgo(PrintActor):
             subop_body.__class__.__name__ == 'Message'):
             
             # Extract the primary text from the message
-            message_text = self._extract_primary_text_for_llil(subop_body)
+            from .helpers import extract_primary_text_for_llil
+            message_text = extract_primary_text_for_llil(subop_body)
             
             if message_text:
                 # Try to get a string pointer
@@ -3516,25 +3424,6 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
         else:
             return [TText("operand")]
     
-    def _extract_primary_text_for_llil(self, message: Any) -> str:
-        """Extract the primary text content from a message for LLIL string lookup."""
-        text_chars = []
-        
-        for part in message.parts:
-            if hasattr(part, 'data'):
-                if part.data == 0xFF or part.data == 0:
-                    # Stop at control codes or terminator
-                    break
-                elif 32 <= part.data <= 126:
-                    # Direct printable character
-                    text_chars.append(chr(part.data))
-                elif hasattr(part, 'content') and hasattr(part.content, 'value'):
-                    # Character wrapped in content
-                    char_value = part.content.value
-                    if isinstance(char_value, int) and 32 <= char_value <= 126:
-                        text_chars.append(chr(char_value))
-        
-        return ''.join(text_chars)
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         from ...scumm6_opcodes import Scumm6Opcodes
@@ -3554,7 +3443,8 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
         # Check if this subop has message data (like verb_name)
         if isinstance(subop_body, Scumm6Opcodes.Message):
             # Message parameter - extract the text and create string pointer
-            message_text = self._extract_primary_text_for_llil(subop_body)
+            from .helpers import extract_primary_text_for_llil
+            message_text = extract_primary_text_for_llil(subop_body)
             
             if message_text:
                 # Try to get a string pointer
@@ -3843,7 +3733,8 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
             array_num = self.op_details.body.array
             
             # Extract the string text
-            string_text = self._extract_primary_text_for_llil(subop_body)
+            from .helpers import extract_primary_text_for_llil
+            string_text = extract_primary_text_for_llil(subop_body)
             
             if string_text:
                 # Try to get a string pointer

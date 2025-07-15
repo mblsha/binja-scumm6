@@ -216,3 +216,24 @@ def get_subop_name(subop: Union[int, Any]) -> str:
     else:
         # Assume it's an enum object with a name attribute
         return str(subop.name)
+
+
+def extract_primary_text_for_llil(message: Any) -> str:
+    """Extract the printable text from a Message for LLIL lookup."""
+    text_chars: List[str] = []
+
+    for part in getattr(message, "parts", []):
+        if hasattr(part, "data"):
+            if part.data == 0xFF or part.data == 0:
+                # Stop at control codes or terminator
+                break
+            elif 32 <= part.data <= 126:
+                # Direct printable character
+                text_chars.append(chr(part.data))
+            elif hasattr(part, "content") and hasattr(part.content, "value"):
+                # Character wrapped in content
+                char_value = part.content.value
+                if isinstance(char_value, int) and 32 <= char_value <= 126:
+                    text_chars.append(chr(char_value))
+
+    return "".join(text_chars)
