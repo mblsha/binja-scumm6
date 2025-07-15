@@ -268,82 +268,35 @@ def run_scumm6_disassembler(bytecode: bytes, start_addr: int) -> str:
     return '\n'.join(output_lines)
 
 
-def run_scumm6_disassembler_with_fusion(bytecode: bytes, start_addr: int, enable_loop_detection: bool = False) -> str:
-    """Execute SCUMM6 disassembler with instruction fusion and return formatted output.
-    
-    Args:
-        bytecode: SCUMM6 bytecode to disassemble
-        start_addr: Starting address for disassembly
-        enable_loop_detection: Whether to enable loop pattern recognition (default False for descumm compatibility)
-        
-    Returns:
-        Formatted disassembly output with fusion as string
-    """
-    from .pyscumm6.disasm import decode_with_fusion_incremental
-    
-    output_lines = []
-    offset = 0
+def _run_fusion_disassembly(
+    bytecode: bytes,
+    start_addr: int,
+    *,
+    enable_loop_detection: bool = False,
+    with_details: bool = False,
+) -> Tuple[str, List[Dict[str, Any]]]:
+    """Internal helper for fusion-based disassembly."""
 
-    while offset < len(bytecode):
-        addr = start_addr + offset
-        remaining_data = bytecode[offset:]
-
-        # Use fusion-enabled decoder with optional loop detection
-        instruction = decode_with_fusion_incremental(remaining_data, addr, enable_loop_detection)
-        if instruction is None:
-            break
-
-        # Get tokens from fused instruction rendering
-        tokens = instruction.render()
-        text = safe_token_text(tokens)
-
-        # Format as [offset] disassembly_text
-        output_lines.append(f"[{offset:04X}] {text}")
-        offset += instruction.length()
-
-    return '\n'.join(output_lines)
-
-
-def run_scumm6_disassembler_with_fusion_details(bytecode: bytes, start_addr: int, enable_loop_detection: bool = False) -> Tuple[str, List[Dict[str, Any]]]:
-    """Execute new SCUMM6 disassembler with fusion and return disassembly text with fusion details.
-    
-    Args:
-        bytecode: SCUMM6 bytecode to disassemble
-        start_addr: Starting address for disassembly
-        enable_loop_detection: Whether to enable loop pattern recognition (default False for descumm compatibility)
-        
-    Returns:
-        Tuple of (disassembly_text, fusion_spans) where fusion_spans is a list of dicts
-        containing fusion span information
-    """
     from .pyscumm6.disasm import decode_with_fusion_incremental, decode
-    
-    output_lines = []
-    fusion_spans = []
+
+    output_lines: List[str] = []
+    fusion_spans: List[Dict[str, Any]] = []
     offset = 0
 
     while offset < len(bytecode):
         addr = start_addr + offset
         remaining_data = bytecode[offset:]
 
-        # Use fusion-enabled decoder with optional loop detection
         instruction = decode_with_fusion_incremental(remaining_data, addr, enable_loop_detection)
         if instruction is None:
             break
 
-        # Get tokens from fused instruction rendering
         tokens = instruction.render()
         text = safe_token_text(tokens)
-
-        # Format as [offset] disassembly_text
         output_lines.append(f"[{offset:04X}] {text}")
-        
-        # Track fusion spans with exact instruction offsets
-        if instruction.fused_operands:
-            # Calculate the exact offsets of raw instructions that were fused
+
+        if with_details and instruction.fused_operands:
             raw_offsets = []
-            
-            # Decode the same bytecode without fusion to find raw instruction boundaries
             temp_offset = 0
             while temp_offset < instruction.length():
                 raw_data = bytecode[offset + temp_offset:]
@@ -353,18 +306,50 @@ def run_scumm6_disassembler_with_fusion_details(bytecode: bytes, start_addr: int
                     temp_offset += raw_instr.length()
                 else:
                     break
-            
-            fusion_span = {
-                'start_offset': offset,
-                'end_offset': offset + instruction.length(),
-                'fused_count': len(instruction.fused_operands),
-                'raw_instruction_offsets': raw_offsets
-            }
-            fusion_spans.append(fusion_span)
-        
+
+            fusion_spans.append(
+                {
+                    "start_offset": offset,
+                    "end_offset": offset + instruction.length(),
+                    "fused_count": len(instruction.fused_operands),
+                    "raw_instruction_offsets": raw_offsets,
+                }
+            )
+
         offset += instruction.length()
 
-    return '\n'.join(output_lines), fusion_spans
+    return "\n".join(output_lines), fusion_spans
+
+
+def run_scumm6_disassembler_with_fusion(
+    bytecode: bytes,
+    start_addr: int,
+    enable_loop_detection: bool = False,
+) -> str:
+    """Execute SCUMM6 disassembler with instruction fusion and return formatted output."""
+
+    text, _ = _run_fusion_disassembly(
+        bytecode,
+        start_addr,
+        enable_loop_detection=enable_loop_detection,
+        with_details=False,
+    )
+    return text
+
+
+def run_scumm6_disassembler_with_fusion_details(
+    bytecode: bytes,
+    start_addr: int,
+    enable_loop_detection: bool = False,
+) -> Tuple[str, List[Dict[str, Any]]]:
+    """Execute fusion disassembler and also return fusion span information."""
+
+    return _run_fusion_disassembly(
+        bytecode,
+        start_addr,
+        enable_loop_detection=enable_loop_detection,
+        with_details=True,
+    )
 
 
 def run_scumm6_llil_generation(bytecode: bytes, start_addr: int, use_fusion: bool = False) -> List[Tuple[int, MockLLIL]]:
