@@ -329,18 +329,10 @@ class FusibleMultiOperandMixin:
         return self._create_fused_copy(previous)
     
     def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if instruction is a push that can be fused."""
-        class_name = instr.__class__.__name__
-        
-        # Basic push operations
-        if class_name in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']:
-            return True
-        
-        # Result-producing operations (for multi-level fusion)
-        if hasattr(instr, 'produces_result') and instr.produces_result():
-            return True
-        
-        return False
+        """Check if *instr* is a push that can be fused."""
+        from .helpers import is_fusible_push
+
+        return is_fusible_push(instr)
 
 
 class SmartIntrinsicOp(Instruction):
@@ -1365,17 +1357,10 @@ class SmartComparisonOp(Instruction):
         return fused
 
     def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if instruction is a push that can be fused or produces a consumable result."""
-        # Check for basic push instructions
-        if instr.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']:
-            return True
-        
-        # Check if instruction produces a result that can be consumed
-        # This enables multi-level expression building
-        if instr.produces_result():
-            return True
-            
-        return False
+        """Check if *instr* is a push that can be fused or produces a result."""
+        from .helpers import is_fusible_push
+
+        return is_fusible_push(instr)
 
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
@@ -1522,10 +1507,10 @@ class SmartArrayOp(Instruction):
         return self._config.operation == "read"
     
     def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if instruction is a push that can be fused."""
-        return instr.__class__.__name__ in [
-            'PushByte', 'PushWord', 'PushByteVar', 'PushWordVar'
-        ]
+        """Check if *instr* is a push that can be fused."""
+        from .helpers import is_fusible_push
+
+        return is_fusible_push(instr)
 
     @property
     def stack_pop_count(self) -> int:
@@ -2077,8 +2062,10 @@ class SmartVariableArgumentIntrinsic(SmartIntrinsicOp):
         return DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
     
     def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if instruction is a push that can be fused."""
-        return instr.__class__.__name__ in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']
+        """Check if *instr* is a push that can be fused."""
+        from .helpers import is_fusible_push
+
+        return is_fusible_push(instr)
     
     def _extract_arg_count(self, push_instr: Instruction) -> Optional[int]:
         """Extract arg_count value from a push instruction."""

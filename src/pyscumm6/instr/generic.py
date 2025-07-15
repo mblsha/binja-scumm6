@@ -218,18 +218,10 @@ class VariableWriteOp(Instruction):
         return fused
     
     def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if instruction is a push that can be fused."""
-        # Check for basic push instructions
-        if instr.__class__.__name__ in [
-            'PushByte', 'PushWord', 'PushByteVar', 'PushWordVar'
-        ]:
-            return True
-        
-        # Check if instruction produces a result that can be consumed
-        if hasattr(instr, 'produces_result') and instr.produces_result():
-            return True
-            
-        return False
+        """Check if *instr* is a push that can be fused."""
+        from .helpers import is_fusible_push
+
+        return is_fusible_push(instr)
     
     @property
     def stack_pop_count(self) -> int:
