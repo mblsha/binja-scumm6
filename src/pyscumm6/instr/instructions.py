@@ -239,94 +239,57 @@ class Bor(Instruction):
         il.append(il.unimplemented())
 
 
-class ByteVarInc(Instruction):
+class _VarIncDecInstruction(Instruction):
+    """Shared logic for incrementing/decrementing variable values."""
+
+    instr_name: str
+    body_type: type
+    delta: int  # +1 for increment, -1 for decrement
 
     def render(self, as_operand: bool = False) -> List[Token]:
         var_id = self.op_details.body.data
-        # Handle signed byte interpretation
-        if var_id < 0:
-            var_id = var_id + 256
+        if self.body_type is Scumm6Opcodes.ByteVarData and var_id < 0:
+            var_id += 256
         return [
-            TInstr("byte_var_inc"),
+            TInstr(self.instr_name),
             TSep("("),
             TInt(get_variable_name(var_id)),
             TSep(")"),
         ]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.ByteVarData), \
-            f"Expected ByteVarData body, got {type(self.op_details.body)}"
-
-        # Original implementation: vars.il_set_var(il, body, il.add(4, vars.il_get_var(il, body), il.const(4, 1)))
+        assert isinstance(self.op_details.body, self.body_type), (
+            f"Expected {self.body_type.__name__} body, "
+            f"got {type(self.op_details.body)}"
+        )
         current_value = vars.il_get_var(il, self.op_details.body)
-        incremented_value = il.add(4, current_value, il.const(4, 1))
-        il.append(vars.il_set_var(il, self.op_details.body, incremented_value))
+        op = il.add if self.delta > 0 else il.sub
+        new_value = op(4, current_value, il.const(4, 1))
+        il.append(vars.il_set_var(il, self.op_details.body, new_value))
 
 
-class WordVarInc(Instruction):
-
-    def render(self, as_operand: bool = False) -> List[Token]:
-        var_id = self.op_details.body.data
-        return [
-            TInstr("word_var_inc"),
-            TSep("("),
-            TInt(get_variable_name(var_id)),
-            TSep(")"),
-        ]
-
-    def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.WordVarData), \
-            f"Expected WordVarData body, got {type(self.op_details.body)}"
-
-        # Original implementation: vars.il_set_var(il, body, il.add(4, vars.il_get_var(il, body), il.const(4, 1)))
-        current_value = vars.il_get_var(il, self.op_details.body)
-        incremented_value = il.add(4, current_value, il.const(4, 1))
-        il.append(vars.il_set_var(il, self.op_details.body, incremented_value))
+class ByteVarInc(_VarIncDecInstruction):
+    instr_name = "byte_var_inc"
+    body_type = Scumm6Opcodes.ByteVarData
+    delta = 1
 
 
-class ByteVarDec(Instruction):
-
-    def render(self, as_operand: bool = False) -> List[Token]:
-        var_id = self.op_details.body.data
-        # Handle signed byte interpretation
-        if var_id < 0:
-            var_id = var_id + 256
-        return [
-            TInstr("byte_var_dec"),
-            TSep("("),
-            TInt(get_variable_name(var_id)),
-            TSep(")"),
-        ]
-
-    def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.ByteVarData), \
-            f"Expected ByteVarData body, got {type(self.op_details.body)}"
-
-        # Original implementation: vars.il_set_var(il, body, il.sub(4, vars.il_get_var(il, body), il.const(4, 1)))
-        current_value = vars.il_get_var(il, self.op_details.body)
-        decremented_value = il.sub(4, current_value, il.const(4, 1))
-        il.append(vars.il_set_var(il, self.op_details.body, decremented_value))
+class WordVarInc(_VarIncDecInstruction):
+    instr_name = "word_var_inc"
+    body_type = Scumm6Opcodes.WordVarData
+    delta = 1
 
 
-class WordVarDec(Instruction):
+class ByteVarDec(_VarIncDecInstruction):
+    instr_name = "byte_var_dec"
+    body_type = Scumm6Opcodes.ByteVarData
+    delta = -1
 
-    def render(self, as_operand: bool = False) -> List[Token]:
-        var_id = self.op_details.body.data
-        return [
-            TInstr("word_var_dec"),
-            TSep("("),
-            TInt(get_variable_name(var_id)),
-            TSep(")"),
-        ]
 
-    def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.WordVarData), \
-            f"Expected WordVarData body, got {type(self.op_details.body)}"
-
-        # Original implementation: vars.il_set_var(il, body, il.sub(4, vars.il_get_var(il, body), il.const(4, 1)))
-        current_value = vars.il_get_var(il, self.op_details.body)
-        decremented_value = il.sub(4, current_value, il.const(4, 1))
-        il.append(vars.il_set_var(il, self.op_details.body, decremented_value))
+class WordVarDec(_VarIncDecInstruction):
+    instr_name = "word_var_dec"
+    body_type = Scumm6Opcodes.WordVarData
+    delta = -1
 
 
 # BreakHere is now generated by factory in opcode_table.py
