@@ -395,30 +395,34 @@ class Shuffle(Instruction):
         il.append(il.unimplemented())
 
 
-class ByteArrayRead(Instruction):
+class _BaseArrayRead(Instruction):
+    """Shared implementation for byte/word array read operations."""
+
+    instr_name: str
+    intrinsic_name: str
+    expected_body_type: Any
 
     def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
-        return [
-            TInstr("byte_array_read"),
-            TSep("("),
-            TInt(array_name),
-            TSep(")"),
-        ]
+        return [TInstr(self.instr_name), TSep("("), TInt(array_name), TSep(")")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.ByteArrayRead), \
-            f"Expected ByteArrayRead body, got {type(self.op_details.body)}"
+        assert isinstance(self.op_details.body, self.expected_body_type), \
+            f"Expected {self.expected_body_type.__name__} body, got {type(self.op_details.body)}"
 
-        # Generate intrinsic call to match old implementation
-        # The intrinsic pops one value from stack and pushes the result
         il.append(il.intrinsic(
-            [il.reg(4, LLIL_TEMP(0))],  # output
-            IntrinsicName("byte_array_read"),  # intrinsic name
-            [il.pop(4)]  # parameter: pop base from stack
+            [il.reg(4, LLIL_TEMP(0))],
+            IntrinsicName(self.intrinsic_name),
+            [il.pop(4)],
         ))
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+
+
+class ByteArrayRead(_BaseArrayRead):
+    instr_name = "byte_array_read"
+    intrinsic_name = "byte_array_read"
+    expected_body_type = Scumm6Opcodes.ByteArrayRead
 
 
 class WriteByteVar(VariableWriteOp):
@@ -431,124 +435,83 @@ class WriteWordVar(VariableWriteOp):
     expected_body_type = Scumm6Opcodes.WordVarData
 
 
-class WordArrayRead(Instruction):
+class WordArrayRead(_BaseArrayRead):
+    instr_name = "word_array_read"
+    intrinsic_name = "word_array_read"
+    expected_body_type = Scumm6Opcodes.WordArrayRead
+
+
+class _BaseArrayIndexedRead(Instruction):
+    """Shared implementation for byte/word indexed array reads."""
+
+    instr_name: str
+    intrinsic_name: str
+    expected_body_type: Any
 
     def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
-        return [
-            TInstr("word_array_read"),
-            TSep("("),
-            TInt(array_name),
-            TSep(")"),
-        ]
+        return [TInstr(self.instr_name), TSep("("), TInt(array_name), TSep(")")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.WordArrayRead), \
-            f"Expected WordArrayRead body, got {type(self.op_details.body)}"
+        assert isinstance(self.op_details.body, self.expected_body_type), \
+            f"Expected {self.expected_body_type.__name__} body, got {type(self.op_details.body)}"
 
-        # Generate intrinsic call to match old implementation
-        # The intrinsic pops one value from stack and pushes the result
         il.append(il.intrinsic(
-            [il.reg(4, LLIL_TEMP(0))],  # output
-            IntrinsicName("word_array_read"),  # intrinsic name
-            [il.pop(4)]  # parameter: pop base from stack
+            [il.reg(4, LLIL_TEMP(0))],
+            IntrinsicName(self.intrinsic_name),
+            [il.pop(4), il.pop(4)],
         ))
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
 
 
-class ByteArrayIndexedRead(Instruction):
-
-    def render(self, as_operand: bool = False) -> List[Token]:
-        array_id = self.op_details.body.array
-        array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
-        return [
-            TInstr("byte_array_indexed_read"),
-            TSep("("),
-            TInt(array_name),
-            TSep(")"),
-        ]
-
-    def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.ByteArrayIndexedRead), \
-            f"Expected ByteArrayIndexedRead body, got {type(self.op_details.body)}"
-
-        # Generate intrinsic call to match expected implementation
-        # The intrinsic pops two values from stack (index, base) and pushes the result
-        il.append(il.intrinsic(
-            [il.reg(4, LLIL_TEMP(0))],  # output
-            IntrinsicName("byte_array_indexed_read"),  # intrinsic name
-            [il.pop(4), il.pop(4)]  # parameters: pop index and base from stack
-        ))
-        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+class ByteArrayIndexedRead(_BaseArrayIndexedRead):
+    instr_name = "byte_array_indexed_read"
+    intrinsic_name = "byte_array_indexed_read"
+    expected_body_type = Scumm6Opcodes.ByteArrayIndexedRead
 
 
-class WordArrayIndexedRead(Instruction):
-
-    def render(self, as_operand: bool = False) -> List[Token]:
-        array_id = self.op_details.body.array
-        array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
-        return [
-            TInstr("word_array_indexed_read"),
-            TSep("("),
-            TInt(array_name),
-            TSep(")"),
-        ]
-
-    def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.WordArrayIndexedRead), \
-            f"Expected WordArrayIndexedRead body, got {type(self.op_details.body)}"
-
-        # Generate intrinsic call to match expected implementation  
-        # The intrinsic pops two values from stack (index, base) and pushes the result
-        il.append(il.intrinsic(
-            [il.reg(4, LLIL_TEMP(0))],  # output
-            IntrinsicName("word_array_indexed_read"),  # intrinsic name
-            [il.pop(4), il.pop(4)]  # parameters: pop index and base from stack
-        ))
-        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
+class WordArrayIndexedRead(_BaseArrayIndexedRead):
+    instr_name = "word_array_indexed_read"
+    intrinsic_name = "word_array_indexed_read"
+    expected_body_type = Scumm6Opcodes.WordArrayIndexedRead
 
 
-class ByteArrayWrite(FusibleMultiOperandMixin, Instruction):
-    """Byte array write with fusion support and descumm-style names."""
-    
+class _BaseArrayWrite(FusibleMultiOperandMixin, Instruction):
+    """Shared implementation for byte/word array writes."""
+
+    instr_name: str
+    intrinsic_name: str
+    expected_body_type: Any
+
     def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
         super().__init__(kaitai_op, length, addr)
         self.fused_operands: List['Instruction'] = []
-    
+
     @property
     def stack_pop_count(self) -> int:
-        """Number of values this instruction pops from the stack."""
         if self.fused_operands:
-            return 0  # Fused instructions handle their own operands
-        return 2  # byte_array_write pops index and value
-    
+            return 0
+        return 2
+
     def _get_max_operands(self) -> int:
-        """Return the maximum number of operands this instruction can fuse."""
-        return 2  # array write takes 2 parameters: index and value
-    
-    def fuse(self, previous: Instruction) -> Optional['ByteArrayWrite']:
-        """Attempt to fuse with previous instruction."""
-        return cast(Optional['ByteArrayWrite'], self._standard_fuse(previous))
-    
+        return 2
+
+    def fuse(self, previous: Instruction) -> Optional['Instruction']:
+        return self._standard_fuse(previous)
+
     def _render_operand(self, operand: Instruction) -> List[Token]:
-        """Render a fused operand using shared helper."""
         return render_operand(operand, use_raw_names=True)
 
     def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
-        
+
         if self.fused_operands:
-            # With fusion: show as assignment
-            # IMPORTANT: The fusion order and descumm semantics require:
-            # fused_operands[0] = first pushed = index
-            # fused_operands[1] = last pushed = value
-            # This produces the correct descumm output: array[index] = value
             if len(self.fused_operands) == 2:
-                index_operand = self.fused_operands[0]  # First pushed = index
-                value_operand = self.fused_operands[1]  # Last pushed = value
-                
+                index_operand = self.fused_operands[0]
+                value_operand = self.fused_operands[1]
+
                 tokens: List[Token] = []
                 tokens.append(TText(array_name))
                 tokens.append(TSep("["))
@@ -556,242 +519,105 @@ class ByteArrayWrite(FusibleMultiOperandMixin, Instruction):
                 tokens.append(TSep("] = "))
                 tokens.extend(self._render_operand(value_operand))
                 return tokens
-            elif len(self.fused_operands) == 1:
-                # Partial fusion - we have one operand but need two
-                # Show as array[?, operand] or array[operand, ?] depending on position
-                tokens = []
-                tokens.append(TText(array_name))
-                tokens.append(TSep("["))
-                tokens.append(TText("?"))
-                tokens.append(TSep(", "))
-                tokens.extend(self._render_operand(self.fused_operands[0]))
-                tokens.append(TSep("]"))
-                return tokens
-        
-        # Without fusion: show function call style
-        return [
-            TInstr("byte_array_write"),
-            TSep("("),
-            TInt(array_name),
-            TSep(")"),
-        ]
+
+        return [TInstr(self.instr_name), TSep("("), TInt(array_name), TSep(")")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.ByteArrayWrite), \
-            f"Expected ByteArrayWrite body, got {type(self.op_details.body)}"
+        assert isinstance(self.op_details.body, self.expected_body_type), \
+            f"Expected {self.expected_body_type.__name__} body, got {type(self.op_details.body)}"
 
         if self.fused_operands:
-            # Use fused operands
             params = [self._lift_operand(il, op) for op in self.fused_operands]
-            il.append(il.intrinsic(
-                [il.reg(4, LLIL_TEMP(0))],
-                IntrinsicName("byte_array_write"),
-                params
-            ))
+            il.append(il.intrinsic([
+                il.reg(4, LLIL_TEMP(0))], IntrinsicName(self.intrinsic_name), params))
         else:
-            # Generate intrinsic call - pops value and base, pushes result
-            il.append(il.intrinsic(
-                [il.reg(4, LLIL_TEMP(0))],  # output
-                IntrinsicName("byte_array_write"),  # intrinsic name
-                [il.pop(4), il.pop(4)]  # parameters: pop value and base from stack
-            ))
+            il.append(il.intrinsic([
+                il.reg(4, LLIL_TEMP(0))], IntrinsicName(self.intrinsic_name), [il.pop(4), il.pop(4)]))
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
-    
+
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
-        """Lift a fused operand using shared helper."""
         return lift_operand(il, operand)
 
 
-class WordArrayWrite(FusibleMultiOperandMixin, Instruction):
-    """Word array write with fusion support and descumm-style names."""
-    
-    def __init__(self, kaitai_op: Any, length: int, addr: Optional[int] = None) -> None:
-        super().__init__(kaitai_op, length, addr)
-        self.fused_operands: List['Instruction'] = []
-    
-    @property
-    def stack_pop_count(self) -> int:
-        """Number of values this instruction pops from the stack."""
-        if self.fused_operands:
-            return 0  # Fused instructions handle their own operands
-        return 2  # word_array_write pops index and value
-    
-    def _get_max_operands(self) -> int:
-        """Return the maximum number of operands this instruction can fuse."""
-        return 2  # array write takes 2 parameters: index and value
-    
-    def fuse(self, previous: Instruction) -> Optional['WordArrayWrite']:
-        """Attempt to fuse with previous instruction."""
-        return cast(Optional['WordArrayWrite'], self._standard_fuse(previous))
-    
-    def _render_operand(self, operand: Instruction) -> List[Token]:
-        """Render a fused operand using shared helper."""
-        return render_operand(operand, use_raw_names=True)
+class ByteArrayWrite(_BaseArrayWrite):
+    instr_name = "byte_array_write"
+    intrinsic_name = "byte_array_write"
+    expected_body_type = Scumm6Opcodes.ByteArrayWrite
+
+
+class WordArrayWrite(_BaseArrayWrite):
+    instr_name = "word_array_write"
+    intrinsic_name = "word_array_write"
+    expected_body_type = Scumm6Opcodes.WordArrayWrite
+
+
+class _BaseArrayIndexedWrite(Instruction):
+    """Shared implementation for byte/word indexed array writes."""
+
+    instr_name: str
+    intrinsic_name: str
+    expected_body_type: Any
 
     def render(self, as_operand: bool = False) -> List[Token]:
         array_id = self.op_details.body.array
         array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
-        
-        if self.fused_operands:
-            # With fusion: show as assignment
-            # IMPORTANT: The fusion order and descumm semantics require:
-            # fused_operands[0] = first pushed = index
-            # fused_operands[1] = last pushed = value
-            # This produces the correct descumm output: array[index] = value
-            if len(self.fused_operands) == 2:
-                index_operand = self.fused_operands[0]  # First pushed = index
-                value_operand = self.fused_operands[1]  # Last pushed = value
-                
-                tokens: List[Token] = []
-                tokens.append(TText(array_name))
-                tokens.append(TSep("["))
-                tokens.extend(self._render_operand(index_operand))
-                tokens.append(TSep("] = "))
-                tokens.extend(self._render_operand(value_operand))
-                return tokens
-        
-        # Without fusion: show function call style
-        return [
-            TInstr("word_array_write"),
-            TSep("("),
-            TInt(array_name),
-            TSep(")"),
-        ]
+        return [TInstr(self.instr_name), TSep("("), TInt(array_name), TSep(")")]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.WordArrayWrite), \
-            f"Expected WordArrayWrite body, got {type(self.op_details.body)}"
+        assert isinstance(self.op_details.body, self.expected_body_type), \
+            f"Expected {self.expected_body_type.__name__} body, got {type(self.op_details.body)}"
 
-        if self.fused_operands:
-            # Use fused operands
-            params = [self._lift_operand(il, op) for op in self.fused_operands]
-            il.append(il.intrinsic(
-                [il.reg(4, LLIL_TEMP(0))],
-                IntrinsicName("word_array_write"),
-                params
-            ))
-        else:
-            # Generate intrinsic call - pops value and index, pushes result
-            il.append(il.intrinsic(
-                [il.reg(4, LLIL_TEMP(0))],  # output
-                IntrinsicName("word_array_write"),  # intrinsic name
-                [il.pop(4), il.pop(4)]  # parameters: pop value and index from stack
-            ))
-        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
-    
-    def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
-        """Lift a fused operand using shared helper."""
-        return lift_operand(il, operand)
-
-
-class ByteArrayIndexedWrite(Instruction):
-
-    def render(self, as_operand: bool = False) -> List[Token]:
-        array_id = self.op_details.body.array
-        array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
-        return [
-            TInstr("byte_array_indexed_write"),
-            TSep("("),
-            TInt(array_name),
-            TSep(")"),
-        ]
-
-    def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.ByteArrayIndexedWrite), \
-            f"Expected ByteArrayIndexedWrite body, got {type(self.op_details.body)}"
-
-        # Generate intrinsic call - pops value, index, and base, pushes result
         il.append(il.intrinsic(
-            [il.reg(4, LLIL_TEMP(0))],  # output
-            IntrinsicName("byte_array_indexed_write"),  # intrinsic name
-            [il.pop(4), il.pop(4), il.pop(4)]  # parameters: pop value, index, base from stack
+            [il.reg(4, LLIL_TEMP(0))],
+            IntrinsicName(self.intrinsic_name),
+            [il.pop(4), il.pop(4), il.pop(4)],
         ))
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
 
 
-class WordArrayIndexedWrite(Instruction):
+class ByteArrayIndexedWrite(_BaseArrayIndexedWrite):
+    instr_name = "byte_array_indexed_write"
+    intrinsic_name = "byte_array_indexed_write"
+    expected_body_type = Scumm6Opcodes.ByteArrayIndexedWrite
+
+
+class WordArrayIndexedWrite(_BaseArrayIndexedWrite):
+    instr_name = "word_array_indexed_write"
+    intrinsic_name = "word_array_indexed_write"
+    expected_body_type = Scumm6Opcodes.WordArrayIndexedWrite
+
+
+class _BaseArrayMutate(Instruction):
+    """Shared implementation for inc/dec array operations."""
+
+    instr_name: str
+    expected_body_type: Any = Scumm6Opcodes.UnknownOp
 
     def render(self, as_operand: bool = False) -> List[Token]:
-        array_id = self.op_details.body.array
-        array_name = SCUMM_ARRAY_NAMES.get(array_id, f"array_{array_id}")
-        return [
-            TInstr("word_array_indexed_write"),
-            TSep("("),
-            TInt(array_name),
-            TSep(")"),
-        ]
+        return [TInstr(self.instr_name)]
 
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.WordArrayIndexedWrite), \
-            f"Expected WordArrayIndexedWrite body, got {type(self.op_details.body)}"
+        assert isinstance(self.op_details.body, self.expected_body_type), \
+            f"Expected {self.expected_body_type.__name__} body, got {type(self.op_details.body)}"
 
-        # Generate intrinsic call - pops value, index, and base, pushes result
-        il.append(il.intrinsic(
-            [il.reg(4, LLIL_TEMP(0))],  # output
-            IntrinsicName("word_array_indexed_write"),  # intrinsic name
-            [il.pop(4), il.pop(4), il.pop(4)]  # parameters: pop value, index, base from stack
-        ))
-        il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
-
-
-class ByteArrayInc(Instruction):
-
-    def render(self, as_operand: bool = False) -> List[Token]:
-        return [TInstr("byte_array_inc")]
-
-    def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp), \
-            f"Expected UnknownOp body, got {type(self.op_details.body)}"
-
-        # These operations are not implemented in the original scumm6.py
-        # They fall through to UnknownOp and generate two unimplemented() calls like other UnknownOp instructions
         il.append(il.unimplemented())
         il.append(il.unimplemented())
 
 
-class WordArrayInc(Instruction):
-
-    def render(self, as_operand: bool = False) -> List[Token]:
-        return [TInstr("word_array_inc")]
-
-    def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp), \
-            f"Expected UnknownOp body, got {type(self.op_details.body)}"
-
-        # These operations are not implemented in the original scumm6.py
-        # They fall through to UnknownOp and generate two unimplemented() calls like other UnknownOp instructions
-        il.append(il.unimplemented())
-        il.append(il.unimplemented())
+class ByteArrayInc(_BaseArrayMutate):
+    instr_name = "byte_array_inc"
 
 
-class ByteArrayDec(Instruction):
-
-    def render(self, as_operand: bool = False) -> List[Token]:
-        return [TInstr("byte_array_dec")]
-
-    def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp), \
-            f"Expected UnknownOp body, got {type(self.op_details.body)}"
-
-        # These operations are not implemented in the original scumm6.py
-        # They fall through to UnknownOp and generate two unimplemented() calls like other UnknownOp instructions
-        il.append(il.unimplemented())
-        il.append(il.unimplemented())
+class WordArrayInc(_BaseArrayMutate):
+    instr_name = "word_array_inc"
 
 
-class WordArrayDec(Instruction):
+class ByteArrayDec(_BaseArrayMutate):
+    instr_name = "byte_array_dec"
 
-    def render(self, as_operand: bool = False) -> List[Token]:
-        return [TInstr("word_array_dec")]
 
-    def lift(self, il: LowLevelILFunction, addr: int) -> None:
-        assert isinstance(self.op_details.body, Scumm6Opcodes.UnknownOp), \
-            f"Expected UnknownOp body, got {type(self.op_details.body)}"
-
-        # These operations are not implemented in the original scumm6.py
-        # They fall through to UnknownOp and generate two unimplemented() calls like other UnknownOp instructions
-        il.append(il.unimplemented())
-        il.append(il.unimplemented())
+class WordArrayDec(_BaseArrayMutate):
+    instr_name = "word_array_dec"
 
 
 class DimArray(FusibleMultiOperandMixin, Instruction):
