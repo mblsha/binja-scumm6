@@ -12,6 +12,16 @@ if TYPE_CHECKING:
     from .opcodes import Instruction
 
 
+def is_fusible_push(instr: 'Instruction') -> bool:
+    """Return True if *instr* is a push operation that can be fused."""
+    class_name = instr.__class__.__name__
+    if class_name in ['PushByte', 'PushWord', 'PushByteVar', 'PushWordVar']:
+        return True
+    if hasattr(instr, 'produces_result') and instr.produces_result():
+        return True
+    return False
+
+
 def render_operand(operand: 'Instruction', use_raw_names: bool = False) -> List[Token]:
     """
     Render a fused operand appropriately.
