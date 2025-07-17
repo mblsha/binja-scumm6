@@ -15,7 +15,6 @@ from .helpers import (
     render_operand,
     lift_operand,
     extract_message_text,
-    extract_message_text_with_sound,
 )
 
 # Import the vars module to use the same LLIL generation logic
