@@ -1027,19 +1027,15 @@ class SetObjectName(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(get_variable_name(operand.op_details.body.data))]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return [TInt(str(operand.op_details.body.data))]
-        else:
-            return [TText("operand")]
+        from .helpers import render_operand
+
+        return render_operand(operand)
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return il.reg(4, f"var_{operand.op_details.body.data}")
-        else:
-            return il.const(4, operand.op_details.body.data)
+        from .helpers import lift_operand
+
+        return lift_operand(il, operand)
     
     
     def render(self, as_operand: bool = False) -> List[Token]:
@@ -1369,29 +1365,15 @@ class SaveRestoreVerbs(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(get_variable_name(operand.op_details.body.data))]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return [TInt(str(operand.op_details.body.data))]
-        elif operand.produces_result():
-            tokens: List[Token] = []
-            tokens.append(TText("("))
-            tokens.extend(operand.render())
-            tokens.append(TText(")"))
-            return tokens
-        else:
-            return [TText("operand")]
+        from .helpers import render_operand_with_parens
+
+        return render_operand_with_parens(operand)
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return il.reg(4, f"var_{operand.op_details.body.data}")
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return il.const(4, operand.op_details.body.data)
-        elif operand.produces_result():
-            return il.const(4, 0)  # Placeholder
-        else:
-            return il.const(4, 0)  # Placeholder
+        from .helpers import lift_operand
+
+        return lift_operand(il, operand)
     
     def render(self, as_operand: bool = False) -> List[Token]:
         # Get sub-operation byte
@@ -1459,33 +1441,15 @@ class PrintLine(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(get_variable_name(operand.op_details.body.data))]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return [TInt(str(operand.op_details.body.data))]
-        elif hasattr(operand, 'produces_result') and operand.produces_result():
-            # This is a result-producing instruction (like a fused expression)
-            # Render it as a nested expression with parentheses
-            tokens: List[Token] = []
-            tokens.append(TText("("))
-            tokens.extend(operand.render())
-            tokens.append(TText(")"))
-            return tokens
-        else:
-            return [TText("operand")]
+        from .helpers import render_operand_with_parens
+
+        return render_operand_with_parens(operand)
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return il.reg(4, f"var_{operand.op_details.body.data}")
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return il.const(4, operand.op_details.body.data)
-        elif hasattr(operand, 'produces_result') and operand.produces_result():
-            # Complex case: would need to execute operand's lift method
-            # For now, use placeholder - future enhancement needed
-            return il.const(4, 0)  # Placeholder
-        else:
-            return il.const(4, 0)  # Placeholder
+        from .helpers import lift_operand
+
+        return lift_operand(il, operand)
     
     def _get_max_operands(self) -> int:
         """Return the maximum number of operands based on subop's pop_count."""
@@ -1789,12 +1753,9 @@ class PrintSystem(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return [TInt(str(operand.op_details.body.data))]
-        elif operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(get_variable_name(operand.op_details.body.data))]
-        else:
-            return [TText("operand")]
+        from .helpers import render_operand
+
+        return render_operand(operand)
     
     def _extract_message_text(self, message: Any) -> str:
         """Extract text from a SCUMM6 Message object."""
@@ -1967,24 +1928,9 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            if hasattr(operand.op_details.body, 'data'):
-                return [TInt(str(operand.op_details.body.data))]
-            else:
-                return [TInt("?")]
-        elif operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            # Handle variable pushes
-            if hasattr(operand.op_details.body, 'data'):
-                from .smart_bases import get_variable_name
-                var_id = operand.op_details.body.data
-                # Handle signed byte interpretation for PushByteVar
-                if operand.__class__.__name__ == 'PushByteVar' and var_id < 0:
-                    var_id = var_id + 256
-                return [TInt(get_variable_name(var_id))]
-            else:
-                return [TInt("var_?")]
-        else:
-            return operand.render()
+        from .helpers import render_operand
+
+        return render_operand(operand)
     
     def render(self, as_operand: bool = False) -> List[Token]:
         from ...scumm6_opcodes import Scumm6Opcodes
@@ -2107,14 +2053,9 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
-        if operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            if hasattr(operand.op_details.body, 'data'):
-                return il.const(4, operand.op_details.body.data)
-            else:
-                return il.const(4, 0)
-        else:
-            # For complex operands, we'd need to handle them specially
-            return il.const(4, 0)
+        from .helpers import lift_operand
+
+        return lift_operand(il, operand)
     
 
 
@@ -2274,33 +2215,15 @@ class CursorCommand(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(get_variable_name(operand.op_details.body.data))]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return [TInt(str(operand.op_details.body.data))]
-        elif hasattr(operand, 'produces_result') and operand.produces_result():
-            # This is a result-producing instruction (like a fused expression)
-            # Render it as a nested expression with parentheses
-            tokens: List[Token] = []
-            tokens.append(TText("("))
-            tokens.extend(operand.render())
-            tokens.append(TText(")"))
-            return tokens
-        else:
-            return [TText("operand")]
+        from .helpers import render_operand_with_parens
+
+        return render_operand_with_parens(operand)
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return il.reg(4, f"var_{operand.op_details.body.data}")
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return il.const(4, operand.op_details.body.data)
-        elif hasattr(operand, 'produces_result') and operand.produces_result():
-            # Complex case: would need to execute operand's lift method
-            # For now, use placeholder - future enhancement needed
-            return il.const(4, 0)  # Placeholder
-        else:
-            return il.const(4, 0)  # Placeholder
+        from .helpers import lift_operand
+
+        return lift_operand(il, operand)
     
     def _get_max_operands(self) -> int:
         """Return the maximum number of operands based on subop's pop_count."""
@@ -2458,33 +2381,15 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(get_variable_name(operand.op_details.body.data))]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return [TInt(str(operand.op_details.body.data))]
-        elif hasattr(operand, 'produces_result') and operand.produces_result():
-            # This is a result-producing instruction (like a fused expression)
-            # Render it as a nested expression with parentheses
-            tokens: List[Token] = []
-            tokens.append(TText("("))
-            tokens.extend(operand.render())
-            tokens.append(TText(")"))
-            return tokens
-        else:
-            return [TText("operand")]
+        from .helpers import render_operand_with_parens
+
+        return render_operand_with_parens(operand)
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return il.reg(4, f"var_{operand.op_details.body.data}")
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return il.const(4, operand.op_details.body.data)
-        elif hasattr(operand, 'produces_result') and operand.produces_result():
-            # Complex case: would need to execute operand's lift method
-            # For now, use placeholder - future enhancement needed
-            return il.const(4, 0)  # Placeholder
-        else:
-            return il.const(4, 0)  # Placeholder
+        from .helpers import lift_operand
+
+        return lift_operand(il, operand)
     
     def _get_max_operands(self) -> int:
         """Return the maximum number of operands based on subop's pop_count."""
@@ -2866,19 +2771,9 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            if hasattr(operand.op_details.body, 'data'):
-                return [TInt(get_variable_name(operand.op_details.body.data))]
-            else:
-                return [TInt("var_?")]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            if hasattr(operand.op_details.body, 'data'):
-                value = operand.op_details.body.data
-                return [TInt(str(value))]
-            else:
-                return [TInt("?")]
-        else:
-            return [TText("operand")]
+        from .helpers import render_operand
+
+        return render_operand(operand)
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
         from ...scumm6_opcodes import Scumm6Opcodes
@@ -3219,19 +3114,9 @@ class ActorOps(FusibleMultiOperandMixin, Instruction):
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
-        from ... import vars
-        
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            # Variable push - use il_get_var
-            return vars.il_get_var(il, operand.op_details.body)
-        else:
-            # Constant push - use const
-            if hasattr(operand.op_details.body, 'data'):
-                value = operand.op_details.body.data
-                return il.const(4, value)
-        
-        # Fallback to undefined
-        return il.undefined()
+        from .helpers import lift_operand
+
+        return lift_operand(il, operand)
 
 
 class VerbOps(FusibleMultiOperandMixin, Instruction):
@@ -3301,19 +3186,9 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            if hasattr(operand.op_details.body, 'data'):
-                return [TInt(get_variable_name(operand.op_details.body.data))]
-            else:
-                return [TInt("var_?")]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            if hasattr(operand.op_details.body, 'data'):
-                value = operand.op_details.body.data
-                return [TInt(str(value))]
-            else:
-                return [TInt("?")]
-        else:
-            return [TText("operand")]
+        from .helpers import render_operand
+
+        return render_operand(operand)
     
     
     def lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -3397,12 +3272,9 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return il.reg(4, f"var_{operand.op_details.body.data}")
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return il.const(4, operand.op_details.body.data)
-        else:
-            return il.const(4, 0)  # Placeholder
+        from .helpers import lift_operand
+
+        return lift_operand(il, operand)
 
 
 class ArrayOps(FusibleMultiOperandMixin, Instruction):
@@ -3534,31 +3406,15 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return [TInt(get_variable_name(operand.op_details.body.data))]
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return [TInt(str(operand.op_details.body.data))]
-        elif hasattr(operand, 'produces_result') and operand.produces_result():
-            # This is a result-producing instruction
-            tokens: List[Token] = []
-            tokens.append(TText("("))
-            tokens.extend(operand.render())
-            tokens.append(TText(")"))
-            return tokens
-        else:
-            return [TText("operand")]
+        from .helpers import render_operand_with_parens
+
+        return render_operand_with_parens(operand)
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
-        if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return il.reg(4, f"var_{operand.op_details.body.data}")
-        elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
-            return il.const(4, operand.op_details.body.data)
-        elif hasattr(operand, 'produces_result') and operand.produces_result():
-            # Complex case - placeholder
-            return il.const(4, 0)
-        else:
-            return il.const(4, 0)
+        from .helpers import lift_operand
+
+        return lift_operand(il, operand)
     
     def _extract_primary_text_for_llil(self, body: Any) -> str:
         """Extract the primary text content from array ops body for LLIL string lookup."""
