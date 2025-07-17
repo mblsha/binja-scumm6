@@ -1020,9 +1020,6 @@ class SetObjectName(FusibleMultiOperandMixin, Instruction):
         """Return remaining pops needed after fusion."""
         return max(0, self._stack_pop_count - len(self.fused_operands))
     
-    def _extract_message_text(self, message: Any) -> str:
-        """Extract text from a SCUMM6 Message object."""
-        return extract_message_text(message)
     
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
@@ -1063,14 +1060,14 @@ class SetObjectName(FusibleMultiOperandMixin, Instruction):
             # Add the string after parameters
             if len(self.fused_operands) >= 2 and isinstance(self.op_details.body, Scumm6Opcodes.Message):
                 tokens.append(TSep(", "))
-                string_text = self._extract_message_text(self.op_details.body)
+                string_text = extract_message_text(self.op_details.body)
                 tokens.append(TText(f'"{string_text}"'))
         else:
             # No fusion - show placeholders and string
             tokens.append(TText("..."))
             if isinstance(self.op_details.body, Scumm6Opcodes.Message):
                 tokens.append(TSep(", "))
-                string_text = self._extract_message_text(self.op_details.body)
+                string_text = extract_message_text(self.op_details.body)
                 tokens.append(TText(f'"{string_text}"'))
         
         tokens.append(TText(")"))
@@ -1697,10 +1694,6 @@ class PrintLine(FusibleMultiOperandMixin, Instruction):
 
 class PrintDebug(Instruction):
     """Print debug with text parameter."""
-
-    def _extract_message_text(self, message: Any) -> Tuple[List[str], str]:
-        """Extract text from a SCUMM6 Message object, including sound commands."""
-        return extract_message_text_with_sound(message)
     
     def render(self, as_operand: bool = False) -> List[Token]:
         # Check if this instruction contains a message
@@ -1801,9 +1794,6 @@ class PrintSystem(FusibleMultiOperandMixin, Instruction):
         else:
             return [TText("operand")]
     
-    def _extract_message_text(self, message: Any) -> str:
-        """Extract text from a SCUMM6 Message object."""
-        return extract_message_text(message)
     
     def render(self, as_operand: bool = False) -> List[Token]:
         from ...scumm6_opcodes import Scumm6Opcodes
@@ -1966,9 +1956,6 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
         """Use standard fusion logic from mixin."""
         return self._standard_fuse(previous)  # type: ignore[return-value]
     
-    def _extract_message_text(self, message: Any) -> str:
-        """Extract text from a SCUMM6 Message object."""
-        return extract_message_text(message)
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
@@ -2142,9 +2129,6 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
         """Return 0 when fused, 1 when not fused."""
         return 0 if self.fused_operands else self._stack_pop_count
     
-    def _extract_message_text(self, message: Any) -> Tuple[List[str], str]:
-        """Extract text and sound commands from a SCUMM6 Message object."""
-        return extract_message_text_with_sound(message)
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
@@ -3267,9 +3251,6 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
         fused_count = len(self.fused_operands)
         return max(0, max_operands - fused_count)
     
-    def _extract_message_text(self, message: Any) -> str:
-        """Extract string from a Message object."""
-        return extract_message_text(message)
     
     def render(self, as_operand: bool = False) -> List[Token]:
         from ...scumm6_opcodes import Scumm6Opcodes
@@ -3286,7 +3267,7 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
         if isinstance(subop_body, Scumm6Opcodes.Message):
             # Message parameter - extract the text
             tokens.append(TText("("))
-            text = self._extract_message_text(subop_body)
+            text = extract_message_text(subop_body)
             tokens.append(TText(f'"{text}"'))
             tokens.append(TText(")"))
         elif isinstance(subop_body, Scumm6Opcodes.CallFuncPop0):
@@ -3439,9 +3420,6 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
         super().__init__(kaitai_op, actual_length, addr)
         self.fused_operands: List[Instruction] = []
     
-    def _extract_message_text(self, message: Any) -> str:
-        """Extract text from a SCUMM6 Message object."""
-        return extract_message_text(message)
     
     def _get_max_operands(self) -> int:
         """Return the maximum number of operands based on subop."""
@@ -3517,7 +3495,7 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
                 body = self.op_details.body.body
                 if hasattr(body, 'parts'):
                     # Properly parsed Message object
-                    string_text = self._extract_message_text(body)
+                    string_text = extract_message_text(body)
                     tokens.append(TText(f'"{string_text}"'))
                 else:
                     # UnknownOp - extract message manually from raw data
