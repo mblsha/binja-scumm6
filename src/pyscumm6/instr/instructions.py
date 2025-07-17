@@ -10,7 +10,13 @@ from ...scumm6_opcodes import Scumm6Opcodes
 from .opcodes import Instruction
 from .generic import VariableWriteOp, ControlFlowOp, IntrinsicOp
 from .smart_bases import SmartConditionalJump, FusibleMultiOperandMixin, get_variable_name
-from .helpers import get_subop_name, render_operand, lift_operand
+from .helpers import (
+    get_subop_name,
+    render_operand,
+    lift_operand,
+    extract_message_text,
+    extract_message_text_with_sound,
+)
 
 # Import the vars module to use the same LLIL generation logic
 from ... import vars
@@ -1016,20 +1022,7 @@ class SetObjectName(FusibleMultiOperandMixin, Instruction):
     
     def _extract_message_text(self, message: Any) -> str:
         """Extract text from a SCUMM6 Message object."""
-        text_chars: List[str] = []
-        
-        for part in message.parts:
-            if hasattr(part, 'data'):
-                if part.data != 0 and part.data != 0xFF:  # Skip terminator and special sequences
-                    if 32 <= part.data <= 126:  # Printable ASCII
-                        text_chars.append(chr(part.data))
-                    elif hasattr(part, 'content') and hasattr(part.content, 'value'):
-                        # Character wrapped in content
-                        char_value = part.content.value
-                        if isinstance(char_value, int) and 32 <= char_value <= 126:
-                            text_chars.append(chr(char_value))
-        
-        return ''.join(text_chars)
+        return extract_message_text(message)
     
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
@@ -1704,38 +1697,10 @@ class PrintLine(FusibleMultiOperandMixin, Instruction):
 
 class PrintDebug(Instruction):
     """Print debug with text parameter."""
-    
+
     def _extract_message_text(self, message: Any) -> Tuple[List[str], str]:
-        """Extract text from a SCUMM6 Message object, including sound commands.
-        
-        Returns:
-            A tuple of (sound_commands, text_string)
-        """
-        sound_commands: List[str] = []
-        text_chars: List[str] = []
-        
-        for part in message.parts:
-            if hasattr(part, 'data'):
-                if part.data == 0xFF:
-                    # This might be a special sequence
-                    if hasattr(part, 'content') and hasattr(part.content, 'payload'):
-                        # Check if it's a Sound special sequence
-                        payload = part.content.payload
-                        if payload.__class__.__name__ == 'Sound':
-                            # Extract sound parameters (v1 and v3, skip v2)
-                            if hasattr(payload, 'v1') and hasattr(payload, 'v3'):
-                                sound_commands.append(f"sound({hex(payload.v1).upper().replace('X', 'x')}, {hex(payload.v3).upper().replace('X', 'x')})")
-                elif part.data != 0:  # Skip terminator
-                    if hasattr(part, 'content'):
-                        # Check if it's a RegularChar
-                        if hasattr(part.content, 'value'):
-                            # Convert byte value to character
-                            char_value = part.content.value
-                            if isinstance(char_value, int) and 32 <= char_value <= 126:  # Printable ASCII
-                                text_chars.append(chr(char_value))
-        
-        # Return sound commands and text separately
-        return sound_commands, ''.join(text_chars)
+        """Extract text from a SCUMM6 Message object, including sound commands."""
+        return extract_message_text_with_sound(message)
     
     def render(self, as_operand: bool = False) -> List[Token]:
         # Check if this instruction contains a message
@@ -1838,18 +1803,7 @@ class PrintSystem(FusibleMultiOperandMixin, Instruction):
     
     def _extract_message_text(self, message: Any) -> str:
         """Extract text from a SCUMM6 Message object."""
-        text_chars: List[str] = []
-        
-        for part in message.parts:
-            if hasattr(part, 'data'):
-                if part.data != 0 and part.data != 0xFF:  # Skip terminator and special sequences
-                    if hasattr(part, 'content') and hasattr(part.content, 'value'):
-                        # Convert byte value to character
-                        char_value = part.content.value
-                        if isinstance(char_value, int) and 32 <= char_value <= 126:  # Printable ASCII
-                            text_chars.append(chr(char_value))
-        
-        return ''.join(text_chars)
+        return extract_message_text(message)
     
     def render(self, as_operand: bool = False) -> List[Token]:
         from ...scumm6_opcodes import Scumm6Opcodes
@@ -2014,18 +1968,7 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
     
     def _extract_message_text(self, message: Any) -> str:
         """Extract text from a SCUMM6 Message object."""
-        text_chars: List[str] = []
-        
-        for part in message.parts:
-            if hasattr(part, 'data'):
-                if part.data != 0 and part.data != 0xFF:  # Skip terminator and special sequences
-                    if hasattr(part, 'content') and hasattr(part.content, 'value'):
-                        # Convert byte value to character
-                        char_value = part.content.value
-                        if isinstance(char_value, int) and 32 <= char_value <= 126:  # Printable ASCII
-                            text_chars.append(chr(char_value))
-        
-        return ''.join(text_chars)
+        return extract_message_text(message)
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
@@ -2200,36 +2143,8 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
         return 0 if self.fused_operands else self._stack_pop_count
     
     def _extract_message_text(self, message: Any) -> Tuple[List[str], str]:
-        """Extract text from a SCUMM6 Message object, including sound commands.
-        
-        Returns:
-            A tuple of (sound_commands, text_string)
-        """
-        sound_commands: List[str] = []
-        text_chars: List[str] = []
-        
-        for part in message.parts:
-            if hasattr(part, 'data'):
-                if part.data == 0xFF:
-                    # This might be a special sequence
-                    if hasattr(part, 'content') and hasattr(part.content, 'payload'):
-                        # Check if it's a Sound special sequence
-                        payload = part.content.payload
-                        if payload.__class__.__name__ == 'Sound':
-                            # Extract sound parameters (v1 and v3, skip v2)
-                            if hasattr(payload, 'v1') and hasattr(payload, 'v3'):
-                                sound_commands.append(f"sound({hex(payload.v1).upper().replace('X', 'x')}, {hex(payload.v3).upper().replace('X', 'x')})")
-                elif part.data != 0:  # Skip terminator
-                    if hasattr(part, 'content'):
-                        # Check if it's a RegularChar
-                        if hasattr(part.content, 'value'):
-                            # Convert byte value to character
-                            char_value = part.content.value
-                            if isinstance(char_value, int) and 32 <= char_value <= 126:  # Printable ASCII
-                                text_chars.append(chr(char_value))
-        
-        # Return sound commands and text separately
-        return sound_commands, ''.join(text_chars)
+        """Extract text and sound commands from a SCUMM6 Message object."""
+        return extract_message_text_with_sound(message)
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
@@ -3354,21 +3269,7 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
     
     def _extract_message_text(self, message: Any) -> str:
         """Extract string from a Message object."""
-        text_parts = []
-        for part in message.parts:
-            if hasattr(part, 'data'):
-                if isinstance(part.data, bytes):
-                    try:
-                        decoded = part.data.decode('iso-8859-1').rstrip('\x00')
-                        text_parts.append(decoded)
-                    except UnicodeDecodeError:
-                        pass
-                elif isinstance(part.data, str):
-                    text_parts.append(part.data)
-                elif isinstance(part.data, int) and 32 <= part.data <= 126:
-                    text_parts.append(chr(part.data))
-        
-        return ''.join(text_parts)
+        return extract_message_text(message)
     
     def render(self, as_operand: bool = False) -> List[Token]:
         from ...scumm6_opcodes import Scumm6Opcodes
@@ -3539,20 +3440,8 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
         self.fused_operands: List[Instruction] = []
     
     def _extract_message_text(self, message: Any) -> str:
-        """Extract text from a SCUMM6 Message object.
-        
-        Returns:
-            The extracted text string
-        """
-        text_chars: List[str] = []
-        
-        for part in message.parts:
-            if hasattr(part, 'data'):
-                if part.data != 0 and part.data != 0xFF:  # Skip terminator and special sequences
-                    if 32 <= part.data <= 126:  # Printable ASCII
-                        text_chars.append(chr(part.data))
-        
-        return ''.join(text_chars)
+        """Extract text from a SCUMM6 Message object."""
+        return extract_message_text(message)
     
     def _get_max_operands(self) -> int:
         """Return the maximum number of operands based on subop."""
