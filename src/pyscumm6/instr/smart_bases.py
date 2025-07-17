@@ -14,7 +14,11 @@ from .generic import ControlFlowOp
 from .configs import (IntrinsicConfig, VariableConfig, ArrayConfig, ComplexConfig, StackConfig,
                      SemanticIntrinsicConfig)
 from ...scumm6_opcodes import Scumm6Opcodes
-from .decorators import OperandRenderingMixin, OperandLiftingMixin
+from .decorators import (
+    OperandRenderingMixin,
+    OperandLiftingMixin,
+    FusiblePushMixin,
+)
 
 
 def get_string_pointer_for_llil(il: LowLevelILFunction, string_text: str, temp_reg_index: int) -> Optional[Any]:
@@ -1318,7 +1322,7 @@ class SmartConditionalJump(ControlFlowOp):
             # Optional nop for clarity - the next instruction will be lifted here
             il.append(il.nop())
 
-class SmartComparisonOp(Instruction):
+class SmartComparisonOp(FusiblePushMixin, Instruction):
     """Self-configuring comparison stack operation with fusion support."""
     
     _name: str
@@ -1356,11 +1360,6 @@ class SmartComparisonOp(Instruction):
         fused._length = self._length + previous.length()
         return fused
 
-    def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if *instr* is a push that can be fused or produces a result."""
-        from .helpers import is_fusible_push
-
-        return is_fusible_push(instr)
 
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
@@ -1467,7 +1466,7 @@ class SmartComparisonOp(Instruction):
             comp_res = il_func(4, op1, op2)
             il.append(il.push(4, comp_res))
 
-class SmartArrayOp(Instruction):
+class SmartArrayOp(FusiblePushMixin, Instruction):
     """Self-configuring array operation."""
     
     _name: str
@@ -1506,11 +1505,6 @@ class SmartArrayOp(Instruction):
         """Array read operations produce a result that can be consumed by other instructions."""
         return self._config.operation == "read"
     
-    def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if *instr* is a push that can be fused."""
-        from .helpers import is_fusible_push
-
-        return is_fusible_push(instr)
 
     @property
     def stack_pop_count(self) -> int:
@@ -2027,7 +2021,7 @@ class SmartLoopIff(SmartLoopConditionalJump):
     _is_if_not = False
 
 
-class SmartVariableArgumentIntrinsic(SmartIntrinsicOp):
+class SmartVariableArgumentIntrinsic(FusiblePushMixin, SmartIntrinsicOp):
     """Base class for intrinsic operations with variable number of arguments.
     
     This class provides a unified pattern for instructions that:
@@ -2061,11 +2055,6 @@ class SmartVariableArgumentIntrinsic(SmartIntrinsicOp):
         """Get the display name for this instruction."""
         return DESCUMM_FUNCTION_NAMES.get(self._name, self._name)
     
-    def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if *instr* is a push that can be fused."""
-        from .helpers import is_fusible_push
-
-        return is_fusible_push(instr)
     
     def _extract_arg_count(self, push_instr: Instruction) -> Optional[int]:
         """Extract arg_count value from a push instruction."""

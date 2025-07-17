@@ -1048,11 +1048,6 @@ class SetObjectName(FusibleMultiOperandMixin, Instruction):
         else:
             return il.const(4, operand.op_details.body.data)
     
-    def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if *instr* is a push that can be fused."""
-        from .helpers import is_fusible_push
-
-        return is_fusible_push(instr)
     
     def render(self, as_operand: bool = False) -> List[Token]:
         from ...scumm6_opcodes import Scumm6Opcodes
@@ -2247,11 +2242,6 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
         else:
             return il.const(4, operand.op_details.body.data)
     
-    def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if *instr* is a push that can be fused."""
-        from .helpers import is_fusible_push
-
-        return is_fusible_push(instr)
     
     def render(self, as_operand: bool = False) -> List[Token]:
         # Extract the message text from the bytecode

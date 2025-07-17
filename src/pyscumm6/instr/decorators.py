@@ -163,3 +163,12 @@ class ProducesResultMixin:
         if hasattr(self, '_config') and hasattr(self._config, 'push_count'):
             return bool(self._config.push_count > 0)
         return True  # Conservative default for operations
+
+
+class FusiblePushMixin:
+    """Mixin providing a shared _is_fusible_push implementation."""
+
+    def _is_fusible_push(self, instr: 'Instruction') -> bool:
+        from .helpers import is_fusible_push
+
+        return is_fusible_push(instr)
