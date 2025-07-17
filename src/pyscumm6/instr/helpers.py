@@ -4,7 +4,7 @@ This module consolidates common patterns used across instruction classes
 to reduce code duplication while maintaining the exact same behavior.
 """
 
-from typing import List, Any, TYPE_CHECKING, Union
+from typing import List, Any, TYPE_CHECKING, Union, Tuple
 from binja_helpers.tokens import Token, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction
 
@@ -237,3 +237,57 @@ def extract_primary_text_for_llil(message: Any) -> str:
                     text_chars.append(chr(char_value))
 
     return "".join(text_chars)
+
+
+def extract_message_text(message: Any) -> str:
+    """Extract plain ASCII text from a Message object."""
+    text_chars: List[str] = []
+
+    for part in getattr(message, "parts", []):
+        if not hasattr(part, "data"):
+            continue
+
+        data = part.data
+
+        if isinstance(data, bytes):
+            try:
+                text_chars.append(data.decode("iso-8859-1").rstrip("\x00"))
+            except Exception:
+                pass
+        elif isinstance(data, str):
+            text_chars.append(data)
+        elif data not in (0, 0xFF):
+            if 32 <= data <= 126:
+                text_chars.append(chr(data))
+            elif hasattr(part, "content") and hasattr(part.content, "value"):
+                char_value = part.content.value
+                if isinstance(char_value, int) and 32 <= char_value <= 126:
+                    text_chars.append(chr(char_value))
+
+    return "".join(text_chars)
+
+
+def extract_message_text_with_sound(message: Any) -> Tuple[List[str], str]:
+    """Extract sound commands and text from a Message object."""
+    sound_cmds: List[str] = []
+    text_chars: List[str] = []
+
+    for part in getattr(message, "parts", []):
+        if not hasattr(part, "data"):
+            continue
+
+        if part.data == 0xFF and hasattr(part, "content") and hasattr(part.content, "payload"):
+            payload = part.content.payload
+            if payload.__class__.__name__ == "Sound" and hasattr(payload, "v1") and hasattr(payload, "v3"):
+                sound_cmds.append(
+                    f"sound({hex(payload.v1).upper().replace('X', 'x')}, {hex(payload.v3).upper().replace('X', 'x')})"
+                )
+        elif part.data != 0:
+            if hasattr(part, "content") and hasattr(part.content, "value"):
+                char_value = part.content.value
+                if isinstance(char_value, int) and 32 <= char_value <= 126:
+                    text_chars.append(chr(char_value))
+            elif 32 <= part.data <= 126:
+                text_chars.append(chr(part.data))
+
+    return sound_cmds, "".join(text_chars)
