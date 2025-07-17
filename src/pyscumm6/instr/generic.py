@@ -10,6 +10,7 @@ from binaryninja import InstructionInfo
 
 from .opcodes import Instruction
 from ...scumm6_opcodes import Scumm6Opcodes
+from .decorators import FusiblePushMixin
 
 
 def make_push_constant_instruction(
@@ -193,7 +194,7 @@ class ComparisonStackOp(Instruction):
         il.append(il.push(4, comp_res))
 
 
-class VariableWriteOp(Instruction):
+class VariableWriteOp(FusiblePushMixin, Instruction):
     """Base class for instructions that pop a value and write it to a variable."""
     
     def fuse(self, previous: Instruction) -> Optional['VariableWriteOp']:
@@ -217,11 +218,6 @@ class VariableWriteOp(Instruction):
         
         return fused
     
-    def _is_fusible_push(self, instr: Instruction) -> bool:
-        """Check if *instr* is a push that can be fused."""
-        from .helpers import is_fusible_push
-
-        return is_fusible_push(instr)
     
     @property
     def stack_pop_count(self) -> int:
