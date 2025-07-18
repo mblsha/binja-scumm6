@@ -2,7 +2,7 @@
 
 from typing import List, Optional, Any
 from binja_helpers.tokens import Token, TInstr, TSep, TInt
-from binaryninja import LowLevelILFunction
+from binaryninja.lowlevelil import LowLevelILFunction
 
 from .opcodes import Instruction
 from .smart_bases import SmartVariableArgumentIntrinsic, get_variable_name
@@ -42,7 +42,7 @@ class StartScriptQuick(SmartVariableArgumentIntrinsic):
 
         tokens = [TInstr("startScriptQuick"), TSep("(")]
         tokens.extend(self._render_operand(self.fused_operands[0]))
-        tokens.append(TSep(", ")]
+        tokens.append(TSep(", "))
         tokens.append(TSep("["))
         for i in range(1, self._arg_count + 1):
             if i > 1:
@@ -134,9 +134,9 @@ class StartScript(SmartVariableArgumentIntrinsic):
 
         tokens = [TInstr("startScript"), TSep("(")]
         tokens.extend(self._render_operand(self.fused_operands[0]))
-        tokens.append(TSep(", ")]
+        tokens.append(TSep(", "))
         tokens.extend(self._render_operand(self.fused_operands[1]))
-        tokens.append(TSep(", ")]
+        tokens.append(TSep(", "))
         tokens.append(TSep("["))
         for i in range(2, 2 + self._arg_count):
             if i > 2:
