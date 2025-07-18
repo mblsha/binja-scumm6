@@ -1,6 +1,6 @@
-# Binary Ninja Restart Scripts
+# Binary Ninja Restart Script
 
-This directory contains Python scripts for restarting Binary Ninja and loading files with process monitoring capabilities. Both scripts use Plumbum CLI for clean argument handling.
+This directory contains a Python script for restarting Binary Ninja and loading files with advanced process monitoring capabilities. The script uses Plumbum CLI for clean argument handling.
 
 ## Requirements
 
@@ -9,46 +9,7 @@ This directory contains Python scripts for restarting Binary Ninja and loading f
 - macOS with Binary Ninja installed
 - Accessibility permissions for Terminal/iTerm (for window detection)
 
-## Available Scripts
-
-### 1. **binja_restart_monitor.py** - Process Monitor
-
-A reliable script with process monitoring and CPU usage detection to ensure files are fully loaded.
-
-**Usage:**
-```bash
-./binja_restart_monitor.py [OPTIONS] [file_path]
-```
-
-**Options:**
-- `-h, --help` - Show help message
-- `-t, --timeout SECONDS` - Timeout for window detection (default: 30)
-- `-g, --graceful-timeout SECONDS` - Timeout for graceful quit (default: 5)
-- `-w, --wait SECONDS` - Extra wait time after window appears (default: 3)
-- `-f, --force` - Skip graceful quit and force kill immediately
-- `-v, --verbose` - Enable verbose output
-
-**Examples:**
-```bash
-# Open Binary Ninja without file
-./binja_restart_monitor.py
-
-# Open specific file with verbose output
-./binja_restart_monitor.py -v ~/Downloads/program.bin
-
-# Force kill with extended timeout
-./binja_restart_monitor.py -f -t 60 myfile.bin
-```
-
-**Features:**
-- Process existence checking
-- Graceful quit with configurable timeout
-- Automatic handling of "Save changes?" dialogs (clicks "Don't Save")
-- Window detection and verification
-- Progress indicators
-- Detailed error reporting
-
-### 2. **binja_restart_advanced.py** - Advanced Controller
+## binja_restart_advanced.py - Advanced Controller
 
 An advanced controller with enhanced monitoring capabilities and preparation for future Binary Ninja API integration.
 
@@ -94,7 +55,7 @@ An advanced controller with enhanced monitoring capabilities and preparation for
 
 ## File Handling
 
-When no file path is provided, both scripts will:
+When no file path is provided, the script will:
 - Kill any existing Binary Ninja instances
 - Launch Binary Ninja without opening any file
 - Wait for the main window to appear
@@ -104,15 +65,27 @@ This is useful for:
 - Clearing memory after crashes
 - Automation workflows where files are opened later
 
-## Key Differences
+## Quick Start
 
-| Feature | Monitor Script | Advanced Script |
-|---------|---------------|-----------------|
-| Complexity | Simple, focused | Feature-rich |
-| Wait Strategy | Fixed wait time | Configurable stabilization |
-| Logging | Basic | Timestamped with levels |
-| Configuration | Essential options | Extensive customization |
-| Use Case | Quick restarts | Complex workflows |
+For simple use cases similar to the removed monitor script, you can use these aliases:
+
+```bash
+# Simple restart with default settings
+alias binja-restart='./binja_restart_advanced.py -b "/Applications/Binary Ninja.app"'
+
+# Simple restart with file
+alias binja-restart-file='./binja_restart_advanced.py -b "/Applications/Binary Ninja.app" -s 3'
+```
+
+## Key Features
+
+| Feature | Description |
+|---------|-----------------|
+| Wait Strategy | Configurable stabilization time |
+| Logging | Timestamped with multiple levels |
+| Configuration | Extensive customization options |
+| Monitoring | Two-phase with intervals |
+| Error Handling | Graceful quit with dialog handling |
 
 ## Troubleshooting
 
@@ -127,9 +100,8 @@ Grant Terminal/iTerm accessibility permissions:
 - Try increasing timeout values
 
 ### File not fully loaded
-- Increase `-w` or `--wait` time for monitor script
-- Use `-s` or `--stabilization-time` for advanced script
-- These wait times ensure Binary Ninja has time to load files
+- Use `-s` or `--stabilization-time` to increase wait time after window appears
+- This wait time ensures Binary Ninja has time to fully load files
 
 ### Process won't quit
 - Use `-f` or `--force` flag to skip graceful quit
@@ -137,7 +109,6 @@ Grant Terminal/iTerm accessibility permissions:
 
 ## Version Information
 
-- Monitor Script: 1.0.0
 - Advanced Script: 2.0.0
 
-Both scripts are actively maintained and tested with Binary Ninja Personal 5.1.x on macOS.
+The script is actively maintained and tested with Binary Ninja Personal 5.1.x on macOS.

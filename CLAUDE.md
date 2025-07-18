@@ -418,11 +418,9 @@ This proactive testing approach catches stability issues before they reach produ
    ~/Library/Application Support/Binary Ninja/plugins/scumm6/
    ```
 
-2. **Restart Binary Ninja**: Use the provided restart scripts for quick testing:
+2. **Restart Binary Ninja**: Use the provided restart script for quick testing:
    ```bash
    cd scripts
-   ./binja_restart_monitor.py ../DOTTDEMO.bsc6
-   # or
    ./binja_restart_advanced.py -b ~/Applications/Binary\ Ninja.app ../DOTTDEMO.bsc6
    ```
 
