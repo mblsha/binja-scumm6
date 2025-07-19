@@ -4,7 +4,7 @@ from typing import List, Any, Optional, Tuple, cast
 import copy
 from binja_test_mocks.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
-from binaryninja import IntrinsicName, InstructionInfo
+from binaryninja import IntrinsicName, InstructionInfo, RegisterName
 from ...scumm6_opcodes import Scumm6Opcodes
 
 from .opcodes import Instruction
@@ -382,7 +382,7 @@ class _BaseArrayReadCommon(Instruction):
 
         params = [il.pop(4) for _ in range(self.pop_count)]
         il.append(il.intrinsic(
-            [il.reg(4, LLIL_TEMP(0))],
+            [LLIL_TEMP(0)],
             IntrinsicName(self.intrinsic_name),
             params,
         ))
@@ -485,11 +485,9 @@ class _BaseArrayWrite(FusibleMultiOperandMixin, Instruction):
 
         if self.fused_operands:
             params = [self._lift_operand(il, op) for op in self.fused_operands]
-            il.append(il.intrinsic([
-                il.reg(4, LLIL_TEMP(0))], IntrinsicName(self.intrinsic_name), params))
+            il.append(il.intrinsic([LLIL_TEMP(0)], IntrinsicName(self.intrinsic_name), params))
         else:
-            il.append(il.intrinsic([
-                il.reg(4, LLIL_TEMP(0))], IntrinsicName(self.intrinsic_name), [il.pop(4), il.pop(4)]))
+            il.append(il.intrinsic([LLIL_TEMP(0)], IntrinsicName(self.intrinsic_name), [il.pop(4), il.pop(4)]))
         il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
 
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
@@ -525,7 +523,7 @@ class _BaseArrayIndexedWrite(Instruction):
             f"Expected {self.expected_body_type.__name__} body, got {type(self.op_details.body)}"
 
         il.append(il.intrinsic(
-            [il.reg(4, LLIL_TEMP(0))],
+            [LLIL_TEMP(0)],
             IntrinsicName(self.intrinsic_name),
             [il.pop(4), il.pop(4), il.pop(4)],
         ))
@@ -636,7 +634,7 @@ class DimArray(FusibleMultiOperandMixin, Instruction):
         # Get array variable
         array_var = self.op_details.body.array
         
-        tokens = [TInstr("dimArray"), TText(f".{display_subop}(")]
+        tokens: List[Token] = [TInstr("dimArray"), TText(f".{display_subop}(")]
         tokens.append(TText(get_variable_name(array_var)))
         
         if self.fused_operands:
@@ -666,7 +664,7 @@ class DimArray(FusibleMultiOperandMixin, Instruction):
             subop_name = f"subop_{subop}"
         
         # Generate intrinsic call
-        il.append(il.intrinsic([], f"dim_array.{subop_name}", [il.const(4, array_var), size_expr]))
+        il.append(il.intrinsic([], IntrinsicName(f"dim_array.{subop_name}"), [il.const(4, array_var), size_expr]))
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
@@ -1091,7 +1089,7 @@ class SetObjectName(FusibleMultiOperandMixin, Instruction):
                     params.append(string_ptr)
                     
                     # Generate intrinsic
-                    il.append(il.intrinsic([], "set_object_name", params))
+                    il.append(il.intrinsic([], IntrinsicName("set_object_name"), params))
                     return
         
         # Fallback without valid string
@@ -1105,7 +1103,7 @@ class SetObjectName(FusibleMultiOperandMixin, Instruction):
         for _ in range(self.stack_pop_count):
             params.append(il.pop(4))
         
-        il.append(il.intrinsic([], "set_object_name", params))
+        il.append(il.intrinsic([], IntrinsicName("set_object_name"), params))
     
     def fuse(self, previous: Instruction) -> Optional['SetObjectName']:
         """Fuse with push instruction for parameters."""
@@ -1264,7 +1262,7 @@ class IfClassOfIs(FusibleMultiOperandMixin, Instruction):
         
         # Call intrinsic to check if object is of specified class
         # This returns a boolean result (0 or 1)
-        result = il.intrinsic([il.reg(4, LLIL_TEMP(0))], "if_class_of_is", [object_val, class_val])
+        result = il.intrinsic([LLIL_TEMP(0)], IntrinsicName("if_class_of_is"), [object_val, class_val])
         il.append(result)
         
         # Push the result to stack
@@ -1274,7 +1272,7 @@ class IfClassOfIs(FusibleMultiOperandMixin, Instruction):
         """Lift a fused operand to IL expression."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             var_num = operand.op_details.body.data if hasattr(operand.op_details.body, 'data') else 0
-            return il.reg(4, f"var_{var_num}")
+            return il.reg(4, RegisterName(f"var_{var_num}"))
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             value = operand.op_details.body.data if hasattr(operand.op_details.body, 'data') else 0
             return il.const(4, value)
@@ -1390,7 +1388,7 @@ class SaveRestoreVerbs(FusibleMultiOperandMixin, Instruction):
         
         # Handle fused operands
         if self.fused_operands:
-            tokens = [TInstr(display_name), TSep("(")]
+            tokens: List[Token] = [TInstr(display_name), TSep("(")]
             # Render operands in push order (not reversed)
             for i, operand in enumerate(self.fused_operands):
                 if i > 0:
@@ -1663,7 +1661,7 @@ class PrintDebug(Instruction):
                 isinstance(self.op_details.body.body, Scumm6Opcodes.Message)):
                 # Use generic message parsing with full control code support
                 msg_tokens = parse_message_with_control_codes(self.op_details.body.body)
-                tokens = [
+                tokens: List[Token] = [
                     TInstr("printDebug"),
                     TText(".msg(")
                 ]
@@ -1700,11 +1698,11 @@ class PrintDebug(Instruction):
                 string_ptr = get_string_pointer_for_llil(il, message_text, 0)
                 if string_ptr:
                     # Generate intrinsic with string pointer
-                    il.append(il.intrinsic([], "print_debug", [string_ptr]))
+                    il.append(il.intrinsic([], IntrinsicName("print_debug"), [string_ptr]))
                     return
         
         # Default: simple intrinsic without parameters
-        il.append(il.intrinsic([], "print_debug", []))
+        il.append(il.intrinsic([], IntrinsicName("print_debug"), []))
     
 
 
@@ -1766,7 +1764,7 @@ class PrintSystem(FusibleMultiOperandMixin, Instruction):
                 if isinstance(self.op_details.body.body, Scumm6Opcodes.Message):
                     # Use generic message parsing with full control code support
                     msg_tokens = parse_message_with_control_codes(self.op_details.body.body)
-                    tokens = [
+                    tokens: List[Token] = [
                         TInstr("printSystem"),
                         TText(".msg(")
                     ]
@@ -1829,11 +1827,11 @@ class PrintSystem(FusibleMultiOperandMixin, Instruction):
                     string_ptr = get_string_pointer_for_llil(il, message_text, 0)
                     if string_ptr:
                         # Generate intrinsic with string pointer
-                        il.append(il.intrinsic([], "print_system", [string_ptr]))
+                        il.append(il.intrinsic([], IntrinsicName("print_system"), [string_ptr]))
                         return
                 
                 # Fallback for message without valid string
-                il.append(il.intrinsic([], "print_system", []))
+                il.append(il.intrinsic([], IntrinsicName("print_system"), []))
                 return
             
             # Handle color subop with fusion
@@ -1844,14 +1842,14 @@ class PrintSystem(FusibleMultiOperandMixin, Instruction):
                     if operand.__class__.__name__ in ['PushByte', 'PushWord']:
                         params.append(il.const(4, operand.op_details.body.data))
                     elif operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-                        params.append(il.reg(4, f"var_{operand.op_details.body.data}"))
+                        params.append(il.reg(4, RegisterName(f"var_{operand.op_details.body.data}")))
                     else:
                         params.append(il.const(4, 0))  # Fallback
-                il.append(il.intrinsic([], "print_system.color", params))
+                il.append(il.intrinsic([], IntrinsicName("print_system.color"), params))
                 return
         
         # Default: simple intrinsic
-        il.append(il.intrinsic([], "print_system", []))
+        il.append(il.intrinsic([], IntrinsicName("print_system"), []))
     
 
 
@@ -1934,7 +1932,7 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
                 if isinstance(self.op_details.body.body, Scumm6Opcodes.Message):
                     # Use generic message parsing with full control code support
                     msg_tokens = parse_message_with_control_codes(self.op_details.body.body)
-                    tokens = [
+                    tokens: List[Token] = [
                         TInstr("printCursor"),
                         TText(".msg(")
                     ]
@@ -2012,11 +2010,11 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
                     string_ptr = get_string_pointer_for_llil(il, message_text, 0)
                     if string_ptr:
                         # Generate intrinsic with string pointer
-                        il.append(il.intrinsic([], "print_text", [string_ptr]))
+                        il.append(il.intrinsic([], IntrinsicName("print_text"), [string_ptr]))
                         return
                 
                 # Fallback for message without valid string
-                il.append(il.intrinsic([], "print_text", []))
+                il.append(il.intrinsic([], IntrinsicName("print_text"), []))
                 return
             
             elif subop_value == 0x41 and self.fused_operands and len(self.fused_operands) >= 2:
@@ -2026,16 +2024,16 @@ class PrintText(FusibleMultiOperandMixin, Instruction):
                 # Match the render order
                 x_expr = self._lift_operand(il, self.fused_operands[0])  # first param
                 y_expr = self._lift_operand(il, self.fused_operands[1])  # second param
-                il.append(il.intrinsic([], "print_text", [x_expr, y_expr]))
+                il.append(il.intrinsic([], IntrinsicName("print_text"), [x_expr, y_expr]))
             else:
                 # Not fused or other subops - use stack pops
                 params = []
                 for _ in range(self.stack_pop_count):
                     params.append(il.pop(4))
-                il.append(il.intrinsic([], "print_text", params))
+                il.append(il.intrinsic([], IntrinsicName("print_text"), params))
         else:
             # No subop
-            il.append(il.intrinsic([], "print_text", []))
+            il.append(il.intrinsic([], IntrinsicName("print_text"), []))
     
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
@@ -2077,7 +2075,7 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return il.reg(4, f"var_{operand.op_details.body.data}")
+            return il.reg(4, RegisterName(f"var_{operand.op_details.body.data}"))
         else:
             return il.const(4, operand.op_details.body.data)
     
@@ -2088,7 +2086,7 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
         
         if self.fused_operands and len(self.fused_operands) >= 1:
             # We have the actor parameter fused
-            tokens = [TInstr("talkActor"), TText("(")]
+            tokens: List[Token] = [TInstr("talkActor"), TText("(")]
             
             # Use generic message parsing with full control code support
             if isinstance(self.op_details.body, Scumm6Opcodes.Message):
@@ -2166,7 +2164,7 @@ class TalkActor(FusibleMultiOperandMixin, Instruction):
             # from BSTR, so we don't add string pointers
         
         # Generate intrinsic with actor ID and possibly string pointers
-        il.append(il.intrinsic([], "talk_actor", params))
+        il.append(il.intrinsic([], IntrinsicName("talk_actor"), params))
     
     def fuse(self, previous: Instruction) -> Optional['TalkActor']:
         """Fuse with push instruction for actor parameter."""
@@ -2555,11 +2553,11 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
                     for _ in range(self.stack_pop_count):
                         params.append(il.pop(4))
                     
-                    il.append(il.intrinsic([], "print_actor", params))
+                    il.append(il.intrinsic([], IntrinsicName("print_actor"), params))
                     return
             
             # Fallback for message without valid string
-            il.append(il.intrinsic([], "print_actor", []))
+            il.append(il.intrinsic([], IntrinsicName("print_actor"), []))
             return
         
         # Handle string subops (CallFuncString)
@@ -2577,11 +2575,11 @@ class PrintActor(FusibleMultiOperandMixin, Instruction):
                 for _ in range(self.stack_pop_count):
                     params.append(il.pop(4))
                 
-                il.append(il.intrinsic([], f"print_actor.{subop_name}", params))
+                il.append(il.intrinsic([], IntrinsicName(f"print_actor.{subop_name}"), params))
                 return
             
             # String not found - fallback
-            il.append(il.intrinsic([], "print_actor", []))
+            il.append(il.intrinsic([], IntrinsicName("print_actor"), []))
             return
         
         # Default handling for non-string subops
@@ -2646,11 +2644,11 @@ class PrintEgo(PrintActor):
                     for _ in range(self.stack_pop_count):
                         params.append(il.pop(4))
                     
-                    il.append(il.intrinsic([], "print_ego", params))
+                    il.append(il.intrinsic([], IntrinsicName("print_ego"), params))
                     return
             
             # Fallback for message without valid string
-            il.append(il.intrinsic([], "print_ego", []))
+            il.append(il.intrinsic([], IntrinsicName("print_ego"), []))
             return
         
         # Handle string subops (CallFuncString)
@@ -2668,11 +2666,11 @@ class PrintEgo(PrintActor):
                 for _ in range(self.stack_pop_count):
                     params.append(il.pop(4))
                 
-                il.append(il.intrinsic([], f"print_ego.{subop_name}", params))
+                il.append(il.intrinsic([], IntrinsicName(f"print_ego.{subop_name}"), params))
                 return
             
             # String not found - fallback
-            il.append(il.intrinsic([], "print_ego", []))
+            il.append(il.intrinsic([], IntrinsicName("print_ego"), []))
             return
         
         # Default handling for non-string subops
@@ -3245,7 +3243,7 @@ class VerbOps(FusibleMultiOperandMixin, Instruction):
         else:
             # Normal intrinsic handling
             if push_count > 0:
-                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+                il.append(il.intrinsic([LLIL_TEMP(0)], intrinsic_name, params))
                 il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
             else:
                 il.append(il.intrinsic([], intrinsic_name, params))
@@ -3464,11 +3462,11 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
                     params.append(string_ptr)  # String pointer
                     
                     # Generate intrinsic
-                    il.append(il.intrinsic([], "array_ops.assign_string", params))
+                    il.append(il.intrinsic([], IntrinsicName("array_ops.assign_string"), params))
                     return
             
             # Fallback without valid string
-            il.append(il.intrinsic([], "array_ops.assign_string", []))
+            il.append(il.intrinsic([], IntrinsicName("array_ops.assign_string"), []))
             return
         
         # Default handling for other subops
@@ -3500,7 +3498,7 @@ class ArrayOps(FusibleMultiOperandMixin, Instruction):
         else:
             # Normal intrinsic handling
             if push_count > 0:
-                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+                il.append(il.intrinsic([LLIL_TEMP(0)], intrinsic_name, params))
                 il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
             else:
                 il.append(il.intrinsic([], intrinsic_name, params))
@@ -3544,7 +3542,7 @@ class RoomOps(Instruction):
         else:
             # Normal intrinsic handling
             if push_count > 0:
-                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+                il.append(il.intrinsic([LLIL_TEMP(0)], intrinsic_name, params))
                 il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
             else:
                 il.append(il.intrinsic([], intrinsic_name, params))
@@ -3588,7 +3586,7 @@ class SystemOps(Instruction):
         else:
             # Normal intrinsic handling
             if push_count > 0:
-                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+                il.append(il.intrinsic([LLIL_TEMP(0)], intrinsic_name, params))
                 il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
             else:
                 il.append(il.intrinsic([], intrinsic_name, params))
@@ -3632,7 +3630,7 @@ class ResourceRoutines(Instruction):
         else:
             # Normal intrinsic handling
             if push_count > 0:
-                il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+                il.append(il.intrinsic([LLIL_TEMP(0)], intrinsic_name, params))
                 il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
             else:
                 il.append(il.intrinsic([], intrinsic_name, params))

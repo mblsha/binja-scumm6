@@ -6,7 +6,7 @@ import copy
 from binja_test_mocks.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
 from binaryninja.enums import BranchType
-from binaryninja import InstructionInfo
+from binaryninja import InstructionInfo, IntrinsicName
 
 from .opcodes import Instruction
 from ...scumm6_opcodes import Scumm6Opcodes
@@ -62,12 +62,12 @@ def make_intrinsic_instruction(
             params = [il.pop(4) for _ in range(pop_count)]
             
             if push_count > 0:
-                outputs = [il.reg(4, LLIL_TEMP(i)) for i in range(push_count)]
-                il.append(il.intrinsic(outputs, name, params))
-                for out_reg in outputs:
-                    il.append(il.push(4, out_reg))
+                outputs = [LLIL_TEMP(i) for i in range(push_count)]
+                il.append(il.intrinsic(outputs, IntrinsicName(name), params))
+                for i in range(push_count):
+                    il.append(il.push(4, il.reg(4, LLIL_TEMP(i))))
             else:
-                il.append(il.intrinsic([], name, params))
+                il.append(il.intrinsic([], IntrinsicName(name), params))
 
     IntrinsicInstruction.__name__ = name.title().replace("_", "")
     IntrinsicInstruction.__qualname__ = name.title().replace("_", "")
@@ -528,11 +528,11 @@ class IntrinsicOp(Instruction):
         # Generate intrinsic call
         if self.push_count > 0:
             # Intrinsic with return value
-            outputs = [il.reg(4, LLIL_TEMP(i)) for i in range(self.push_count)]
-            il.append(il.intrinsic(outputs, self.intrinsic_name, params))
+            outputs = [LLIL_TEMP(i) for i in range(self.push_count)]
+            il.append(il.intrinsic(outputs, IntrinsicName(self.intrinsic_name), params))
             # Push return values back to stack
-            for out_reg in outputs:
-                il.append(il.push(4, out_reg))
+            for i in range(self.push_count):
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(i))))
         else:
             # Intrinsic without return value
-            il.append(il.intrinsic([], self.intrinsic_name, params))
+            il.append(il.intrinsic([], IntrinsicName(self.intrinsic_name), params))

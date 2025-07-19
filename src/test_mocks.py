@@ -11,6 +11,10 @@ class MockScumm6BinaryView(MockBinaryView):
     def __init__(self, state: Optional[Any] = None, filename: str = "test.bsc6"):
         super().__init__(filename)
         self.state = state
+    
+    def perform_get_address_size(self) -> int:
+        """Return the address size for SCUMM6 architecture."""
+        return 4  # SCUMM6 uses 4-byte addresses
 
 
 # Global registry for mock views

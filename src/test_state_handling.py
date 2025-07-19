@@ -6,10 +6,10 @@ import enum
 from typing import Any, Optional
 
 from binja_test_mocks import binja_api  # noqa: F401
-import binaryninja
+from binja_test_mocks.binja_api import configure_mock_binaryview
 
 # Configure mock BinaryView for SCUMM6 testing
-binaryninja.configure_mock_binaryview(filename="test.bsc6", memory_size=0x100000)
+configure_mock_binaryview(filename="test.bsc6", memory_size=0x100000)
 
 bn = sys.modules.get("binaryninja")
 if bn and not hasattr(bn, "core_ui_enabled"):

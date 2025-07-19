@@ -3,6 +3,7 @@
 from typing import List, Optional, Any
 from binja_test_mocks.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction
+from binaryninja import IntrinsicName
 
 from .opcodes import Instruction
 from .smart_bases import SmartVariableArgumentIntrinsic, get_variable_name
@@ -40,7 +41,7 @@ class StartScriptQuick(SmartVariableArgumentIntrinsic):
         if len(self.fused_operands) < total_needed:
             return [TInstr(f"{self.get_instruction_name()}()")]
 
-        tokens = [TInstr("startScriptQuick"), TSep("(")]
+        tokens: List[Token] = [TInstr("startScriptQuick"), TSep("(")]
         tokens.extend(self._render_operand(self.fused_operands[0]))
         tokens.append(TSep(", "))
         tokens.append(TSep("["))
@@ -76,7 +77,7 @@ class StartScriptQuick(SmartVariableArgumentIntrinsic):
                 params.append(self._lift_operand(il, self.fused_operands[i]))
                 
             # Generate intrinsic call
-            il.append(il.intrinsic([], "start_script_quick", params))
+            il.append(il.intrinsic([], IntrinsicName("start_script_quick"), params))
         else:
             # Fallback to default lifting
             super().lift(il, addr)
@@ -132,7 +133,7 @@ class StartScript(SmartVariableArgumentIntrinsic):
         if len(self.fused_operands) < total_needed:
             return [TInstr(f"{self.get_instruction_name()}()")]
 
-        tokens = [TInstr("startScript"), TSep("(")]
+        tokens: List[Token] = [TInstr("startScript"), TSep("(")]
         tokens.extend(self._render_operand(self.fused_operands[0]))
         tokens.append(TSep(", "))
         tokens.extend(self._render_operand(self.fused_operands[1]))
@@ -168,7 +169,7 @@ class StartScript(SmartVariableArgumentIntrinsic):
             for i in range(2, 2 + self._arg_count):
                 params.append(self._lift_operand(il, self.fused_operands[i]))
             
-            il.append(il.intrinsic([], "start_script", params))
+            il.append(il.intrinsic([], IntrinsicName("start_script"), params))
         else:
             super().lift(il, addr)
             
@@ -209,7 +210,7 @@ class StartObject(SmartVariableArgumentIntrinsic):
         if len(self.fused_operands) < total_needed:
             return [TInstr(f"{self.get_instruction_name()}()")]
 
-        tokens = [TInstr("startObject"), TSep("(")]
+        tokens: List[Token] = [TInstr("startObject"), TSep("(")]
 
         # object_id
         tokens.extend(self._render_operand(self.fused_operands[0]))
@@ -321,7 +322,7 @@ class IsAnyOf(SmartVariableArgumentIntrinsic):
         if len(self.fused_operands) < total_needed:
             return [TInstr(f"{self.get_instruction_name()}()")]
         
-        tokens = [TInstr(self.get_instruction_name()), TSep("(")]
+        tokens: List[Token] = [TInstr(self.get_instruction_name()), TSep("(")]
         
         # Test value (first parameter)
         tokens.extend(self._render_operand(self.fused_operands[0]))

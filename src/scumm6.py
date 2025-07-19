@@ -1,6 +1,6 @@
 from binja_test_mocks import binja_api  # noqa: F401
 
-from typing import List, Optional, Tuple, Dict
+from typing import List, Optional, Tuple, Dict, ClassVar
 
 import threading
 import logging
@@ -65,7 +65,7 @@ class LastBV:
 # FIXME: create a fake memory segment for all the function names,
 # so that cross-references will work
 class Scumm6(Architecture):  # type: ignore[misc]
-    name = "SCUMM6"
+    name: ClassVar[str | None] = "SCUMM6"
     address_size = 4
     default_int_size = 4
     max_instr_length = 256
@@ -89,7 +89,7 @@ class Scumm6(Architecture):  # type: ignore[misc]
         for i in range(vars.NUM_SCUMM_VARS)
     }
 
-    stack_pointer = "sp"
+    stack_pointer: ClassVar[str | None] = "sp"
     flags = ["n", "z", "v", "c"]
     flag_write_types = [FlagWriteTypeName("*")]
     flags_written_by_flag_write_type = {

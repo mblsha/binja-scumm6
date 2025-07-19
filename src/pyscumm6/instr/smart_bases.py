@@ -3,7 +3,7 @@
 from typing import List, Optional, Any, NamedTuple, cast, TYPE_CHECKING, Dict
 from binja_test_mocks.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
-from binaryninja import IntrinsicName
+from binaryninja import IntrinsicName, RegisterName
 import copy
 
 if TYPE_CHECKING:
@@ -381,7 +381,7 @@ class SmartIntrinsicOp(Instruction):
             return [TInstr(f"{display_name}()")]
         elif pattern == "function_params":
             # Render with parameters from fused operands
-            tokens = [TInstr(display_name), TSep("(")]
+            tokens: List[Token] = [TInstr(display_name), TSep("(")]
             
             if hasattr(self, 'fused_operands') and self.fused_operands:
                 for i, operand in enumerate(self.fused_operands):
@@ -445,18 +445,18 @@ class SmartIntrinsicOp(Instruction):
         if self._config.push_count > 0:
             # Create temp registers for outputs
             output_regs = [LLIL_TEMP(i) for i in range(self._config.push_count)]
-            il.append(il.intrinsic(output_regs, self._name, params))
+            il.append(il.intrinsic(output_regs, IntrinsicName(self._name), params))
             # Push the output values
-            for reg in output_regs:
-                il.append(il.push(4, il.reg(4, reg)))
+            for i in range(self._config.push_count):
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(i))))
         else:
-            il.append(il.intrinsic([], self._name, params))
+            il.append(il.intrinsic([], IntrinsicName(self._name), params))
     
     def no_ret_lift(self, il: LowLevelILFunction, addr: int) -> None:
         """Special lift for instructions that don't return."""
         # Do standard lift first
         params = [il.pop(4) for _ in range(self._config.pop_count)]
-        il.append(il.intrinsic([], self._name, params))
+        il.append(il.intrinsic([], IntrinsicName(self._name), params))
         il.append(il.no_ret())
     
     def cutscene_lift(self, il: LowLevelILFunction, addr: int) -> None:
@@ -468,7 +468,7 @@ class SmartIntrinsicOp(Instruction):
             pop_count = 0
             
         params = [il.pop(4) for _ in range(pop_count)]
-        il.append(il.intrinsic([], self._name, params))
+        il.append(il.intrinsic([], IntrinsicName(self._name), params))
 
 
 class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandRenderingMixin, OperandLiftingMixin):
@@ -528,8 +528,8 @@ class SmartFusibleIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
                 output_regs = [LLIL_TEMP(i) for i in range(self._config.push_count)]
                 il.append(il.intrinsic(output_regs, IntrinsicName(self._name), params))
                 # Push the output values
-                for reg in output_regs:
-                    il.append(il.push(4, il.reg(4, reg)))
+                for i in range(self._config.push_count):
+                    il.append(il.push(4, il.reg(4, LLIL_TEMP(i))))
             else:
                 il.append(il.intrinsic([], IntrinsicName(self._name), params))
         else:
@@ -642,7 +642,7 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction, OperandRenderingMixi
         
         # Handle fused operands and/or hardcoded parameters
         if self.fused_operands or hasattr(self.op_details.body.body, 'param'):
-            tokens = [TInstr(display_name), TSep("(")]
+            tokens: List[Token] = [TInstr(display_name), TSep("(")]
             param_count = 0
             
             # First, add any hardcoded parameter from the instruction body
@@ -702,10 +702,10 @@ class SmartComplexOp(FusibleMultiOperandMixin, Instruction, OperandRenderingMixi
             params = [il.pop(4) for _ in range(pop_count)]
         
         if push_count > 0:
-            il.append(il.intrinsic([il.reg(4, LLIL_TEMP(0))], intrinsic_name, params))
+            il.append(il.intrinsic([LLIL_TEMP(0)], IntrinsicName(intrinsic_name), params))
             il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
         else:
-            il.append(il.intrinsic([], intrinsic_name, params))
+            il.append(il.intrinsic([], IntrinsicName(intrinsic_name), params))
 
 # Smart stack operation base classes
 class SmartBinaryOp(Instruction, FusibleMultiOperandMixin, OperandRenderingMixin, OperandLiftingMixin):
@@ -977,7 +977,7 @@ class SmartUnaryOp(Instruction, OperandRenderingMixin, OperandLiftingMixin):
             # Special case for abs - use intrinsic since LLIL doesn't have native abs
             # This will show as an intrinsic call in the decompiler
             value = il.reg(4, LLIL_TEMP(0))
-            result = il.intrinsic([il.reg(4, LLIL_TEMP(1))], "abs", [value])
+            result = il.intrinsic([LLIL_TEMP(1)], IntrinsicName("abs"), [value])
             il.append(result)
             il.append(il.push(4, il.reg(4, LLIL_TEMP(1))))
         else:
@@ -1112,8 +1112,8 @@ class SmartConditionalJump(ControlFlowOp):
             use_unless = self._is_if_not
             
             # Keep the logic simple - no special handling for double negation
-            # Descumm shows: unless ((!isScriptRunning(...)))
-            # Not: if ((isScriptRunning(...)))
+            # Descumm shows: unless ((!isScriptRunning(...))
+            # Not: if ((isScriptRunning(...))
             
             if use_unless:
                 tokens.append(TInstr("unless"))
@@ -1198,7 +1198,7 @@ class SmartConditionalJump(ControlFlowOp):
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return il.reg(4, f"var_{operand.op_details.body.data}")
+            return il.reg(4, RegisterName(f"var_{operand.op_details.body.data}"))
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return il.const(4, operand.op_details.body.data)
         else:
@@ -1394,7 +1394,7 @@ class SmartComparisonOp(FusiblePushMixin, Instruction):
     def _lift_operand(self, il: LowLevelILFunction, operand: Instruction) -> Any:
         """Lift a fused operand to IL expression."""
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
-            return il.reg(4, f"var_{operand.op_details.body.data}")
+            return il.reg(4, RegisterName(f"var_{operand.op_details.body.data}"))
         elif operand.__class__.__name__ in ['PushByte', 'PushWord']:
             return il.const(4, operand.op_details.body.data)
         elif operand.produces_result():
@@ -1622,14 +1622,14 @@ class SmartArrayOp(FusiblePushMixin, Instruction):
             if self._config.indexed:
                 # Indexed read: pop index and base
                 il.append(il.intrinsic(
-                    [il.reg(4, LLIL_TEMP(0))],
+                    [LLIL_TEMP(0)],
                     IntrinsicName(self._name),
                     [il.pop(4), il.pop(4)]
                 ))
             else:
                 # Simple read: pop base only
                 il.append(il.intrinsic(
-                    [il.reg(4, LLIL_TEMP(0))],
+                    [LLIL_TEMP(0)],
                     IntrinsicName(self._name),
                     [il.pop(4)]
                 ))
@@ -1649,7 +1649,7 @@ class SmartArrayOp(FusiblePushMixin, Instruction):
                 
                 # Generate the intrinsic call
                 il.append(il.intrinsic(
-                    [il.reg(4, LLIL_TEMP(0))],
+                    [LLIL_TEMP(0)],
                     IntrinsicName(self._name),
                     params
                 ))
@@ -1659,14 +1659,14 @@ class SmartArrayOp(FusiblePushMixin, Instruction):
                 if self._config.indexed:
                     # Indexed write: pop value, index, base
                     il.append(il.intrinsic(
-                        [il.reg(4, LLIL_TEMP(0))],
+                        [LLIL_TEMP(0)],
                         IntrinsicName(self._name),
                         [il.pop(4), il.pop(4), il.pop(4)]
                     ))
                 else:
                     # Simple write: pop value and base
                     il.append(il.intrinsic(
-                        [il.reg(4, LLIL_TEMP(0))],
+                        [LLIL_TEMP(0)],
                         IntrinsicName(self._name),
                         [il.pop(4), il.pop(4)]
                     ))
@@ -1728,7 +1728,7 @@ class SmartSemanticIntrinsicOp(SmartFusibleIntrinsic):
         """Render semantic function call with fused operands."""
         # Use descumm-style naming for fused semantic operations too
         display_name = DESCUMM_FUNCTION_NAMES.get(self._config.semantic_name, self._config.semantic_name)
-        tokens = [TInstr(display_name), TSep("(")]
+        tokens: List[Token] = [TInstr(display_name), TSep("(")]
         
         # Add fused operands as actual parameters
         for i, operand in enumerate(self.fused_operands):
@@ -1763,12 +1763,12 @@ class SmartSemanticIntrinsicOp(SmartFusibleIntrinsic):
         
         # Generate the semantic intrinsic call
         if self._config.push_count > 0:
-            outputs = [il.reg(4, LLIL_TEMP(i)) for i in range(self._config.push_count)]
-            il.append(il.intrinsic(outputs, self._config.semantic_name, params))
-            for out_reg in outputs:
-                il.append(il.push(4, out_reg))
+            outputs = [LLIL_TEMP(i) for i in range(self._config.push_count)]
+            il.append(il.intrinsic(outputs, IntrinsicName(self._config.semantic_name), params))
+            for i in range(self._config.push_count):
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(i))))
         else:
-            il.append(il.intrinsic([], self._config.semantic_name, params))
+            il.append(il.intrinsic([], IntrinsicName(self._config.semantic_name), params))
     
     def _lift_variable_args_operation(self, il: LowLevelILFunction, addr: int) -> None:
         """Handle operations with variable arguments (like start_script)."""
@@ -1792,7 +1792,7 @@ class SmartSemanticIntrinsicOp(SmartFusibleIntrinsic):
             params = [script_id, arg_count] + args
         
         # Generate semantic intrinsic call
-        il.append(il.intrinsic([], self._config.semantic_name, params))
+        il.append(il.intrinsic([], IntrinsicName(self._config.semantic_name), params))
         
         # Handle control flow implications if needed
         if self._config.control_flow_impact:
@@ -1804,12 +1804,12 @@ class SmartSemanticIntrinsicOp(SmartFusibleIntrinsic):
         params = [il.pop(4) for _ in range(self._config.pop_count)]
         
         if self._config.push_count > 0:
-            outputs = [il.reg(4, LLIL_TEMP(i)) for i in range(self._config.push_count)]
-            il.append(il.intrinsic(outputs, self._config.semantic_name, params))
-            for out_reg in outputs:
-                il.append(il.push(4, out_reg))
+            outputs = [LLIL_TEMP(i) for i in range(self._config.push_count)]
+            il.append(il.intrinsic(outputs, IntrinsicName(self._config.semantic_name), params))
+            for i in range(self._config.push_count):
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(i))))
         else:
-            il.append(il.intrinsic([], self._config.semantic_name, params))
+            il.append(il.intrinsic([], IntrinsicName(self._config.semantic_name), params))
     
     def _extract_variable_arguments(self, il: LowLevelILFunction) -> List[int]:
         """Extract variable arguments from stack (following original implementation)."""
@@ -2141,7 +2141,7 @@ class SmartVariableArgumentIntrinsic(FusiblePushMixin, SmartIntrinsicOp):
         if len(self.fused_operands) < total_needed:
             return [TInstr(f"{self.get_instruction_name()}()")]
         
-        tokens = [TInstr(self.get_instruction_name()), TSep("(")]
+        tokens: List[Token] = [TInstr(self.get_instruction_name()), TSep("(")]
         
         # Render fixed parameters first (they come first in LIFO order)
         fixed_count = self.get_fixed_param_count()
@@ -2182,10 +2182,10 @@ class SmartVariableArgumentIntrinsic(FusiblePushMixin, SmartIntrinsicOp):
                 
                 # Generate intrinsic call
                 if self._config and self._config.push_count > 0:
-                    il.append(il.intrinsic([LLIL_TEMP(0)], self._name, params))
-                    il.append(il.push(4, LLIL_TEMP(0)))
+                    il.append(il.intrinsic([LLIL_TEMP(0)], IntrinsicName(self._name), params))
+                    il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
                 else:
-                    il.append(il.intrinsic([], self._name, params))
+                    il.append(il.intrinsic([], IntrinsicName(self._name), params))
                 return
         
         # Fallback to default lifting
@@ -2222,7 +2222,7 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
         # Handle fusion rendering
         if self.fused_operands:
             # Fused version: talkActor("message", actor_id)
-            tokens = [TInstr(display_name), TText("(")]
+            tokens: List[Token] = [TInstr(display_name), TText("(")]
             
             # Add message text first (already includes quotes)
             tokens.append(TText(message_text))
@@ -2337,7 +2337,7 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
                 elif part['type'] == 'wait':
                     # Assign wait intrinsic to temp register and use register reference
                     temp_reg = LLIL_TEMP(100 + temp_counter)
-                    il.append(il.set_reg(4, temp_reg, il.intrinsic([], 'wait', [])))
+                    il.append(il.set_reg(4, temp_reg, il.intrinsic([], IntrinsicName('wait'), [])))
                     part_params.append(il.reg(4, temp_reg))
                     temp_counter += 1
                 
@@ -2348,16 +2348,16 @@ class SmartMessageIntrinsic(SmartIntrinsicOp, FusibleMultiOperandMixin, OperandR
                         il.const(4, part['volume'])
                     ]
                     temp_reg = LLIL_TEMP(100 + temp_counter)
-                    il.append(il.set_reg(4, temp_reg, il.intrinsic([], 'sound', sound_params)))
+                    il.append(il.set_reg(4, temp_reg, il.intrinsic([], IntrinsicName('sound'), sound_params)))
                     part_params.append(il.reg(4, temp_reg))
                     temp_counter += 1
             
             # Check if this instruction produces a result
             if self._config and self._config.push_count > 0:
-                il.append(il.intrinsic([LLIL_TEMP(0)], self._name, part_params))
-                il.append(il.push(4, LLIL_TEMP(0)))
+                il.append(il.intrinsic([LLIL_TEMP(0)], IntrinsicName(self._name), part_params))
+                il.append(il.push(4, il.reg(4, LLIL_TEMP(0))))
             else:
-                il.append(il.intrinsic([], self._name, part_params))
+                il.append(il.intrinsic([], IntrinsicName(self._name), part_params))
         else:
             # Standard LLIL: Fall back to normal intrinsic behavior (pop from stack)
             super().lift(il, addr)
