@@ -11,6 +11,7 @@ requires-python = ">=3.10"
 dependencies = [
     "kaitaistruct",
     "plumbum",
+    "binja-test-mocks",
 ]
 
 [project.optional-dependencies]
