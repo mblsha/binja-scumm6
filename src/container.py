@@ -4,7 +4,7 @@ This module handles parsing .bsc6 container files and extracting script informat
 for use with the Binary Ninja view and analysis tools.
 """
 
-from binja_helpers import binja_api  # noqa: F401
+from binja_test_mocks import binja_api  # noqa: F401
 from binaryninja.enums import SegmentFlag, SectionSemantics
 
 from kaitaistruct import KaitaiStream, BytesIO

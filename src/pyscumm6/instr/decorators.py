@@ -9,7 +9,7 @@ from functools import wraps
 
 if TYPE_CHECKING:
     from .opcodes import Instruction
-    from binja_helpers.tokens import Token
+    from binja_test_mocks.tokens import Token
     from binaryninja.lowlevelil import LowLevelILFunction
 
 T = TypeVar('T')
@@ -25,7 +25,7 @@ def with_descumm_name_mapping(render_method: Callable[..., List['Token']]) -> Ca
     @wraps(render_method)
     def wrapper(self: Any, *args: Any, **kwargs: Any) -> List['Token']:
         from .helpers import apply_descumm_function_name
-        from binja_helpers.tokens import TInstr
+        from binja_test_mocks.tokens import TInstr
         
         # Get the original tokens
         tokens = render_method(self, *args, **kwargs)

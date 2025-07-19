@@ -11,7 +11,7 @@ from typing import List, Optional, NamedTuple, Tuple, Dict, Any
 from pathlib import Path
 from dataclasses import dataclass
 
-from binja_helpers import binja_api  # noqa: F401
+from binja_test_mocks import binja_api  # noqa: F401
 
 # Import container parsing functionality
 from .container import ContainerParser as Scumm6Disasm, ScriptAddr, State

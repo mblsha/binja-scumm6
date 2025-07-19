@@ -13,8 +13,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from binja_helpers import binja_api  # noqa: F401
-from binja_helpers.mock_llil import MockLowLevelILFunction, MockLLIL
+from binja_test_mocks import binja_api  # noqa: F401
+from binja_test_mocks.mock_llil import MockLowLevelILFunction, MockLLIL
 from binaryninja.enums import BranchType
 
 from .scumm6 import Scumm6, LastBV

@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional
-from binja_helpers.tokens import Token
+from binja_test_mocks.tokens import Token
 from binaryninja.lowlevelil import LowLevelILFunction
 from binaryninja import InstructionInfo
 

@@ -5,7 +5,7 @@ to reduce code duplication while maintaining the exact same behavior.
 """
 
 from typing import List, Any, TYPE_CHECKING, Union, Tuple
-from binja_helpers.tokens import Token, TInt, TText
+from binja_test_mocks.tokens import Token, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction
 
 if TYPE_CHECKING:

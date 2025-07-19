@@ -24,8 +24,8 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-from binja_helpers import binja_api  # noqa: F401
-from binja_helpers.mock_llil import MockLLIL, MockIntrinsic, MockReg, set_size_lookup
+from binja_test_mocks import binja_api  # noqa: F401
+from binja_test_mocks.mock_llil import MockLLIL, MockIntrinsic, MockReg, set_size_lookup
 from binaryninja.enums import BranchType
 from src.scumm6 import Scumm6
 from src.container import ContainerParser as Scumm6Disasm, ScriptAddr, State, Resource, Room

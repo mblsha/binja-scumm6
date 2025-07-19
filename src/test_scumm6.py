@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 
 import pytest
 
-from binja_helpers import binja_api  # noqa: F401
+from binja_test_mocks import binja_api  # noqa: F401
 import sys
 import types
 import enum

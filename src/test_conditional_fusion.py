@@ -7,7 +7,7 @@ os.environ["FORCE_BINJA_MOCK"] = "1"
 from typing import Callable, Any
 
 import pytest
-from binja_helpers import binja_api  # noqa: F401
+from binja_test_mocks import binja_api  # noqa: F401
 
 from .pyscumm6.disasm import decode
 from .test_utils import FusionTestCase, run_fusion_test

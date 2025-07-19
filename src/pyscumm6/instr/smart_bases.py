@@ -1,7 +1,7 @@
 """Smart base classes for generated instruction types."""
 
 from typing import List, Optional, Any, NamedTuple, cast, TYPE_CHECKING, Dict
-from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
+from binja_test_mocks.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName
 import copy
@@ -1589,7 +1589,7 @@ class SmartArrayOp(FusiblePushMixin, Instruction):
     
     def _render_operand(self, operand: Instruction) -> List[Token]:
         """Render a fused operand appropriately."""
-        from binja_helpers.tokens import TInt, TText
+        from binja_test_mocks.tokens import TInt, TText
         
         if operand.__class__.__name__ in ['PushByteVar', 'PushWordVar']:
             # Variable push - extract var number

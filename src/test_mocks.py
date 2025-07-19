@@ -2,7 +2,7 @@
 
 import threading
 from typing import Optional, Dict, Any
-from binja_helpers.mock_binaryview import MockBinaryView
+from binja_test_mocks.mock_binaryview import MockBinaryView
 
 
 class MockScumm6BinaryView(MockBinaryView):

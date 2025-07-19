@@ -3,7 +3,7 @@
 import os
 os.environ["FORCE_BINJA_MOCK"] = "1"
 
-from binja_helpers import binja_api  # noqa: F401
+from binja_test_mocks import binja_api  # noqa: F401
 
 from src.pyscumm6.disasm import decode, decode_with_fusion
 

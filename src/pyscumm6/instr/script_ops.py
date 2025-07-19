@@ -1,7 +1,7 @@
 """Special handling for script operations with variable arguments."""
 
 from typing import List, Optional, Any
-from binja_helpers.tokens import Token, TInstr, TSep, TInt
+from binja_test_mocks.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction
 
 from .opcodes import Instruction

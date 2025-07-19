@@ -1,4 +1,4 @@
-from binja_helpers import binja_api  # noqa: F401
+from binja_test_mocks import binja_api  # noqa: F401
 
 from typing import List, Optional, Tuple, Dict
 

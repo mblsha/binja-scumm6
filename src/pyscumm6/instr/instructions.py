@@ -2,7 +2,7 @@
 
 from typing import List, Any, Optional, Tuple, cast
 import copy
-from binja_helpers.tokens import Token, TInstr, TSep, TInt, TText
+from binja_test_mocks.tokens import Token, TInstr, TSep, TInt, TText
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP, LowLevelILLabel
 from binaryninja import IntrinsicName, InstructionInfo
 from ...scumm6_opcodes import Scumm6Opcodes

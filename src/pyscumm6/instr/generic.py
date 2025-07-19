@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from typing import List, Type, Any, Optional
 import copy
-from binja_helpers.tokens import Token, TInstr, TSep, TInt
+from binja_test_mocks.tokens import Token, TInstr, TSep, TInt
 from binaryninja.lowlevelil import LowLevelILFunction, LLIL_TEMP
 from binaryninja.enums import BranchType
 from binaryninja import InstructionInfo

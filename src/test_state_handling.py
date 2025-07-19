@@ -5,7 +5,7 @@ import sys
 import enum
 from typing import Any, Optional
 
-from binja_helpers import binja_api  # noqa: F401
+from binja_test_mocks import binja_api  # noqa: F401
 import binaryninja
 
 # Configure mock BinaryView for SCUMM6 testing

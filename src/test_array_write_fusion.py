@@ -6,7 +6,7 @@ os.environ["FORCE_BINJA_MOCK"] = "1"
 
 
 import pytest
-from binja_helpers import binja_api  # noqa: F401
+from binja_test_mocks import binja_api  # noqa: F401
 
 from .test_utils import FusionTestCase, run_fusion_test
 

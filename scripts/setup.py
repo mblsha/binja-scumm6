@@ -10,14 +10,9 @@ def setup_test_environment() -> None:
     os.environ["FORCE_BINJA_MOCK"] = "1"
     repo_root = Path(__file__).resolve().parent.parent
     
-    # This logic becomes much simpler if binja_helpers is an installed package.
-    # The sys.path manipulation below can be removed after externalizing the package.
+    # Ensure repository root is in sys.path
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    
-    helper_dir = repo_root / "binja_helpers_tmp"
-    if helper_dir.is_dir() and str(helper_dir) not in sys.path:
-        sys.path.insert(0, str(helper_dir))
     
     # Remove any real Binary Ninja paths that might have been added
     bn_path = os.path.expanduser("~/Applications/Binary Ninja.app/Contents/Resources/python/")
@@ -25,7 +20,7 @@ def setup_test_environment() -> None:
         sys.path.remove(bn_path)
     
     # Import the mock API to ensure it's loaded first
-    from binja_helpers import binja_api  # noqa: F401
+    from binja_test_mocks import binja_api  # noqa: F401
 
 
 def setup_mypy_environment(force_mock: bool = False) -> bool:
@@ -35,10 +30,6 @@ def setup_mypy_environment(force_mock: bool = False) -> bool:
     # Ensure repository root is in sys.path
     if str(repo_root) not in sys.path:
         sys.path.append(str(repo_root))
-    
-    helper_dir = repo_root / "binja_helpers_tmp"
-    if helper_dir.is_dir() and str(helper_dir) not in sys.path:
-        sys.path.insert(0, str(helper_dir))
     
     bn_path = os.path.expanduser("~/Applications/Binary Ninja.app/Contents/Resources/python/")
     
@@ -62,21 +53,17 @@ def setup_mypy_environment(force_mock: bool = False) -> bool:
         except ImportError:
             has_binja = False
     
-    # Set up MYPYPATH
+    # Set up MYPYPATH - for now, stubs are included in binja-test-mocks package
     mypath = []
-    stub_dir = repo_root / "binja_helpers_tmp" / "stubs"
-    if stub_dir.exists():
-        mypath.append(str(stub_dir.resolve()))
-        print(f"Using stubs from {mypath[0]}")
-    else:
-        print("Warning: Stub directory not found, mypy may fail")
+    print("Using stubs from binja-test-mocks package")
     
     if not has_binja:
-        from binja_helpers import binja_api  # noqa: F401
+        from binja_test_mocks import binja_api  # noqa: F401
     else:
         mypath.append(bn_path)
         print(f"Using Binary Ninja from {bn_path}")
     
-    os.environ["MYPYPATH"] = os.pathsep.join(mypath)
+    if mypath:
+        os.environ["MYPYPATH"] = os.pathsep.join(mypath)
     
     return has_binja

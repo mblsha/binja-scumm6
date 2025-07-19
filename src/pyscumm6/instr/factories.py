@@ -1,7 +1,7 @@
 """Smart factory functions for generating instruction classes."""
 
 from typing import Type, Dict, List, Any
-from binja_helpers.tokens import Token
+from binja_test_mocks.tokens import Token
 
 from .opcodes import Instruction
 from .smart_bases import (SmartIntrinsicOp, SmartVariableOp, SmartArrayOp, SmartComplexOp, 
