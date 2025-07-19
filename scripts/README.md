@@ -1,17 +1,39 @@
-# Binary Ninja Restart Script
+# SCUMM6 Scripts
 
-This directory contains a Python script for restarting Binary Ninja and loading files with advanced process monitoring capabilities. The script uses Plumbum CLI for clean argument handling.
+This directory contains utility scripts specific to the SCUMM6 Binary Ninja plugin, as well as symlinks to shared Binary Ninja utilities.
 
-## Requirements
+## Shared Binary Ninja Scripts (Symlinks)
 
-- Python 3.6+
-- Plumbum: `pip install plumbum`
-- macOS with Binary Ninja installed
-- Accessibility permissions for Terminal/iTerm (for window detection)
+The following scripts are symlinks to shared utilities in the binary_ninja_mcp plugin:
 
-## binja_restart_advanced.py - Advanced Controller
+### binja-restart.py
+Advanced Binary Ninja restart utility (symlink to `../../binary_ninja_mcp/scripts/binja-restart.py`).
+See the [shared scripts README](../../binary_ninja_mcp/scripts/README.md) for full documentation.
 
-An advanced controller with enhanced monitoring capabilities and preparation for future Binary Ninja API integration.
+### binja-cli.py
+Binary Ninja MCP command-line interface (symlink to `../../binary_ninja_mcp/scripts/binja-cli.py`).
+See the [shared scripts README](../../binary_ninja_mcp/scripts/README.md) for full documentation.
+
+## SCUMM6-Specific Scripts
+
+### ensure_descumm.py
+[Description needed]
+
+### show_instruction_info.py
+Display instruction info at specific addresses. Meant to be run from Binary Ninja's Python console.
+
+### Other Scripts
+- `list-project-files.fish` - Fish shell script for listing project files
+- `run_mypy.py` / `run_mypy.sh` - Type checking scripts
+- `run_pytest_direct.py` - Direct pytest runner
+- `setup.py` - Setup script
+
+## Legacy Documentation
+
+**Note:** The Binary Ninja restart script (`binja_restart_advanced.py`) has been moved to the shared scripts directory.
+For usage information, see [binary_ninja_mcp/scripts/README.md](../../binary_ninja_mcp/scripts/README.md).
+
+The following documentation is preserved for reference:
 
 **Usage:**
 ```bash

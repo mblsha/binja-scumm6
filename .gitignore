@@ -6,6 +6,8 @@ _scripts
 .claude
 tools/scumm6-web/analysis_notes.json
 scripts/cli.py
+scripts/binja-cli.py
+scripts/binja-restart.py
 binaryninja-api
 
 *.code-workspace
