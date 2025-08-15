@@ -9,9 +9,9 @@ function build_and_run
 
     echo "🔍 Running ruff..."
     if test "$fix_mode" = "--fix"
-        ruff check --fix .
+        uv run ruff check --fix .
     else
-        ruff check .
+        uv run ruff check .
     end
     if test $status -ne 0
         set -a failures "ruff"
@@ -20,14 +20,14 @@ function build_and_run
     echo "🔍 Running mypy..."
     set -l mypy_failed false
     echo "  Running mypy with real Binary Ninja (if available)..."
-    bash scripts/run_mypy.sh
+    uv run bash scripts/run_mypy.sh
     if test $status -ne 0
         echo "❌ mypy failed with real Binary Ninja"
         set mypy_failed true
     end
 
     echo "  Running mypy with mocked Binary Ninja..."
-    env FORCE_BINJA_MOCK=1 bash scripts/run_mypy.sh
+    env FORCE_BINJA_MOCK=1 uv run bash scripts/run_mypy.sh
     if test $status -ne 0
         echo "❌ mypy failed with mocked Binary Ninja"
         set mypy_failed true
@@ -38,7 +38,7 @@ function build_and_run
     end
 
     echo "🧪 Running pytest..."
-    python scripts/run_pytest_direct.py
+    uv run python scripts/run_pytest_direct.py
     if test $status -ne 0
         set -a failures "pytest"
     end

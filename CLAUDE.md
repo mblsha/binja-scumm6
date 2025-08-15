@@ -8,7 +8,7 @@ The plugin provides a web-based tool for comparing disassembly output between de
 - Flask-based web interface accessible via browser
 - RESTful API for programmatic access
 - Three-panel synchronized view with dark theme
-- Run with: `cd tools/scumm6-web && pip install -r requirements.txt && python app.py`
+- Run with: `cd tools/scumm6-web && uv run --extra web python app.py`
 - Default port: 6001 (configured in app.py)
 
 
@@ -65,8 +65,10 @@ pkill -f "python.*app.py"
 
 #### Flask Not Installed
 ```bash
-cd tools/scumm6-web
-python3 -m pip install -r requirements.txt
+# Install dependencies using uv
+uv sync --extra web
+# Then run the web app
+uv run --extra web python tools/scumm6-web/app.py
 ```
 
 ## Jump Instructions and Absolute Addressing
@@ -112,19 +114,20 @@ This ensures test expectations match descumm's relative addressing while the act
 
 To run tests correctly, use one of these methods:
 
-### Method 1: Use the test runner script (Recommended)
+### Method 1: Use the test runner script with uv (Recommended)
 ```bash
 ./run-tests.fish --once
 ```
 
 This script automatically:
+- Uses uv to manage dependencies and virtual environment
 - Sets up the proper mocking environment
 - Runs ruff, mypy, and pytest
 - Watches for file changes (unless `--once` is used)
 
-### Method 2: Run pytest directly with proper environment
+### Method 2: Run pytest directly with uv
 ```bash
-python scripts/run_pytest_direct.py
+uv run python scripts/run_pytest_direct.py
 ```
 
 This ensures the `FORCE_BINJA_MOCK=1` environment variable is set and loads the mocked Binary Ninja API.
@@ -156,9 +159,9 @@ When working with this plugin without a valid Binary Ninja license, you'll encou
 3. Without a valid license, operations fail with `RuntimeError: License is not valid`
 
 **Solution**: Always use `FORCE_BINJA_MOCK=1` when:
-- Running tests (`FORCE_BINJA_MOCK=1 python -m pytest`)
-- Running mypy (`FORCE_BINJA_MOCK=1 mypy src/`)
-- Running any Python script that imports from this plugin
+- Running tests (`FORCE_BINJA_MOCK=1 uv run pytest`)
+- Running mypy (`FORCE_BINJA_MOCK=1 uv run mypy src/`)
+- Running any Python script that imports from this plugin (`FORCE_BINJA_MOCK=1 uv run python script.py`)
 - Working in development environments without Binary Ninja license
 
 The mock system provides stub implementations of all Binary Ninja classes and functions needed for development and testing.
@@ -194,7 +197,7 @@ This section provides specific rules for fixing common `ruff`, `mypy`, and `pyte
 - **Fix**:
   1. Identify the file and line number from the ruff error message.
   2. Remove the unused import from the `import` statement.
-  3. **Autonomous Fix**: You can run `ruff check --fix .` to fix these errors automatically.
+  3. **Autonomous Fix**: You can run `uv run ruff check --fix .` to fix these errors automatically.
 
 ### Pattern 2: Unused Type Ignore (Mypy `unused-ignore`)
 

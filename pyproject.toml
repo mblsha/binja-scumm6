@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "binja-scumm6"
@@ -21,10 +21,13 @@ dev = [
     "mypy",
     "ruff",
 ]
+web = [
+    "Flask>=2.3.0",
+    "Flask-CORS>=4.0.0",
+]
 
-[tool.setuptools.packages.find]
-where = ["."]
-exclude = ["binja_helpers"]
+[tool.hatch.build.targets.wheel]
+packages = ["src", "converter"]
 
 [tool.coverage.run]
 source = ["src"]
