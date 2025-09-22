@@ -121,6 +121,29 @@ ACTOR_PROPERTIES: Dict[str, PropertyInfo] = {
 }
 
 
+def _get_property_info(property: Union[ActorProperty, str]) -> PropertyInfo:
+    """Return :class:`PropertyInfo` for either enum or string inputs.
+
+    Centralises validation of property identifiers to keep error handling
+    consistent across the multiple helper APIs.  Previously each public helper
+    reimplemented the same ``isinstance`` and dictionary lookup logic, which was
+    both repetitive and risked diverging behaviour if one copy was updated.
+    """
+
+    if isinstance(property, ActorProperty):
+        return property.value
+
+    if isinstance(property, str):
+        try:
+            return ACTOR_PROPERTIES[property]
+        except KeyError:
+            raise ValueError(f"Unknown actor property: {property}") from None
+
+    raise ValueError(
+        f"Property must be ActorProperty enum or string, got {type(property)}"
+    )
+
+
 # ==============================================================================
 # API Option 1: Simple function-based approach
 # ==============================================================================
@@ -141,15 +164,8 @@ def get_actor_property_address(actor_index: int, property: Union[ActorProperty, 
     if not (0 <= actor_index < MAX_ACTORS):
         raise ValueError(f"Actor index {actor_index} out of bounds (0-{MAX_ACTORS-1})")
     
-    if isinstance(property, ActorProperty):
-        prop_info = property.value
-    elif isinstance(property, str):
-        if property not in ACTOR_PROPERTIES:
-            raise ValueError(f"Unknown actor property: {property}")
-        prop_info = ACTOR_PROPERTIES[property]
-    else:
-        raise ValueError(f"Property must be ActorProperty enum or string, got {type(property)}")
-    
+    prop_info = _get_property_info(property)
+
     return ACTORS_START + (actor_index * ACTOR_STRUCT_SIZE) + prop_info.offset
 
 
@@ -168,15 +184,8 @@ def get_current_actor_property_address(property: Union[ActorProperty, str]) -> T
     Raises:
         ValueError: If property is invalid
     """
-    if isinstance(property, ActorProperty):
-        prop_info = property.value
-    elif isinstance(property, str):
-        if property not in ACTOR_PROPERTIES:
-            raise ValueError(f"Unknown actor property: {property}")
-        prop_info = ACTOR_PROPERTIES[property]
-    else:
-        raise ValueError(f"Property must be ActorProperty enum or string, got {type(property)}")
-    
+    prop_info = _get_property_info(property)
+
     # Return address of current actor variable and property offset for LLIL calculation:
     # final_address = *(CURRENT_ACTOR_ADDRESS) * ACTOR_STRUCT_SIZE + ACTORS_START + property_offset  
     return CURRENT_ACTOR_ADDRESS, prop_info.offset
@@ -203,15 +212,12 @@ class ActorMemory:
     def prop(self, property: Union[ActorProperty, str]) -> 'ActorMemory':
         """Select a property by name or enum."""
         new = ActorMemory(self._actor_index)
+        _get_property_info(property)
         if isinstance(property, ActorProperty):
             new._property_enum = property
             new._property_name = property.name.lower()
-        elif isinstance(property, str):
-            if property not in ACTOR_PROPERTIES:
-                raise ValueError(f"Unknown actor property: {property}")
-            new._property_name = property
         else:
-            raise ValueError(f"Property must be ActorProperty enum or string, got {type(property)}")
+            new._property_name = property
         return new
     
     @property
@@ -223,22 +229,21 @@ class ActorMemory:
             # Return base address of actor struct
             return ACTORS_START + (self._actor_index * ACTOR_STRUCT_SIZE)
         
-        if self._property_enum:
-            prop = self._property_enum.value
-        elif self._property_name:
-            prop = ACTOR_PROPERTIES[self._property_name]
+        if self._property_enum is not None:
+            prop = _get_property_info(self._property_enum)
+        elif self._property_name is not None:
+            prop = _get_property_info(self._property_name)
         else:
             raise ValueError("Property not set")
         return ACTORS_START + (self._actor_index * ACTOR_STRUCT_SIZE) + prop.offset
-    
+
     def info(self) -> PropertyInfo:
         """Get property information."""
-        if self._property_enum:
-            return self._property_enum.value
-        elif self._property_name:
-            return ACTOR_PROPERTIES[self._property_name]
-        else:
-            raise ValueError("Property not set")
+        if self._property_enum is not None:
+            return _get_property_info(self._property_enum)
+        if self._property_name is not None:
+            return _get_property_info(self._property_name)
+        raise ValueError("Property not set")
 
 
 # ==============================================================================
@@ -270,15 +275,8 @@ class ActorProxy:
     
     def __getitem__(self, property: Union[ActorProperty, str]) -> Tuple[int, PropertyInfo]:
         """Get address and info for a property."""
-        if isinstance(property, ActorProperty):
-            prop = property.value
-        elif isinstance(property, str):
-            if property not in ACTOR_PROPERTIES:
-                raise ValueError(f"Unknown actor property: {property}")
-            prop = ACTOR_PROPERTIES[property]
-        else:
-            raise ValueError(f"Property must be ActorProperty enum or string, got {type(property)}")
-        
+        prop = _get_property_info(property)
+
         address = ACTORS_START + (self._actor_index * ACTOR_STRUCT_SIZE) + prop.offset
         return address, prop
     
@@ -316,10 +314,7 @@ def get_property_info(property_name: str) -> PropertyInfo:
     Returns:
         PropertyInfo with offset, size, and type
     """
-    if property_name not in ACTOR_PROPERTIES:
-        raise ValueError(f"Unknown actor property: {property_name}")
-    
-    return ACTOR_PROPERTIES[property_name]
+    return _get_property_info(property_name)
 
 
 def is_valid_actor_address(address: int) -> bool:
@@ -416,5 +411,5 @@ def get_actor_and_property_from_address(address: int) -> Optional[Tuple[int, str
     for prop_name, prop_info in ACTOR_PROPERTIES.items():
         if prop_info.offset <= property_offset < (prop_info.offset + prop_info.size):
             return actor_index, prop_name
-    
+
     return actor_index, "unknown"
