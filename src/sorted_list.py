@@ -15,9 +15,10 @@ class SortedList:
 
     def insert_sorted(self, value: int) -> None:
         """Insert a value while maintaining sorted order."""
-        if self.find_element(value):
+        pos = bisect.bisect_left(self._list, value)
+        if pos != len(self._list) and self._list[pos] == value:
             return
-        bisect.insort(self._list, value)
+        self._list.insert(pos, value)
 
     def find_element(self, value: int) -> bool:
         """Check if a value exists in the list."""
