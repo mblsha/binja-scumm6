@@ -40,6 +40,12 @@ class ScriptAnalysisResult:
     hex_bytecode: str
 
 
+def _count_non_empty_lines(text: str) -> int:
+    """Return the number of non-empty lines in ``text``."""
+
+    return sum(1 for line in text.splitlines() if line.strip())
+
+
 class Scumm6AnalysisToolkit:
     """Shared toolkit for SCUMM6 script analysis tasks."""
     
@@ -234,9 +240,9 @@ class Scumm6AnalysisToolkit:
         result = self.analyze_script(script_name)
         
         # Count lines in each output
-        descumm_lines = len([line for line in result.descumm_output.split('\n') if line.strip()])
-        legacy_lines = len([line for line in result.legacy_output.split('\n') if line.strip()])  
-        fusion_lines = len([line for line in result.fusion_output.split('\n') if line.strip()])
+        descumm_lines = _count_non_empty_lines(result.descumm_output)
+        legacy_lines = _count_non_empty_lines(result.legacy_output)
+        fusion_lines = _count_non_empty_lines(result.fusion_output)
         
         return {
             'script_name': script_name,
