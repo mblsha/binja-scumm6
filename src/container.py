@@ -69,19 +69,19 @@ class ScriptAddr(NamedTuple):
 # https://github.com/scummvm/scummvm/blob/74b6c4d35aaeeb6892c358f0c3e41d8be98c79ea/engines/scumm/resource.cpp#L455
 # DSCR: readResTypeList(rtScript): room_no -> room_offset
 def decode_rnam_dscr(r: Scumm6Container) -> List[Resource]:
-    dscr = None
+    dscr_block: Optional[Scumm6Container.IndexNoOffset] = None
     for b in r.blocks:
         if b.block_type == BlockType.dscr:
-            dscr = b.block_data
+            dscr_block = b.block_data
             break
 
-    if not dscr:
+    if dscr_block is None:
         raise ValueError("No DSCR block found at top-level")
 
     scripts: List[Resource] = []
-    for i in range(dscr.num_entries):
-        index = dscr.index_no[i]
-        room_offset = dscr.room_offset[i]
+    for i in range(dscr_block.num_entries):
+        index = dscr_block.index_no[i]
+        room_offset = dscr_block.room_offset[i]
         scripts.append(Resource(index, room_offset))
 
     return scripts
@@ -202,7 +202,7 @@ class ContainerParser:
     @staticmethod
     def decode_container(
         lecf_filename: str, data: bytes
-    ) -> Optional[Tuple[List[ScriptAddr], State]]:
+    ) -> Tuple[List[ScriptAddr], State]:
         """Decode a SCUMM6 container file and extract script information."""
         ks = KaitaiStream(BytesIO(data))
         r = Scumm6Container(ks)

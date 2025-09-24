@@ -28,13 +28,12 @@ class Scumm6View(BinaryView):  # type: ignore[misc]
 
         self.disasm = Scumm6Disasm()
         data = parent_view.read(0, parent_view.end)
-        container = self.disasm.decode_container(
+        scripts, state = self.disasm.decode_container(
             parent_view.file.filename,
             data,
         )
-        assert container
-        self.scripts: List[ScriptAddr] = container[0]
-        self.state: State = container[1]
+        self.scripts: List[ScriptAddr] = scripts
+        self.state: State = state
 
         # ScummEngine::runBootscript()
         # global script #1 is normally the boot script
