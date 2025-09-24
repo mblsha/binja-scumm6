@@ -113,12 +113,10 @@ class DataProvider:
 
             # Parse container
             Scumm6Disasm = container_module.ContainerParser
-            result = Scumm6Disasm.decode_container(str(self.bsc6_path), self.bsc6_data)
-            if result is None:
-                self.initialization_error = "Failed to decode container"
-                return False
-
-            self.scripts, self.state = result
+            scripts, state = Scumm6Disasm.decode_container(
+                str(self.bsc6_path), self.bsc6_data
+            )
+            self.scripts, self.state = scripts, state
             return True
 
         except Exception as e:

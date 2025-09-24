@@ -71,11 +71,7 @@ class Scumm6AnalysisToolkit:
             bsc6_data = f.read()
         
         # Parse container to get script list
-        result = Scumm6Disasm().decode_container(str(bsc6_path), bsc6_data)
-        if result is None:
-            raise RuntimeError("Failed to parse DOTTDEMO.bsc6 container")
-        
-        scripts, state = result
+        scripts, state = Scumm6Disasm.decode_container(str(bsc6_path), bsc6_data)
         
         # Ensure descumm tool is available
         if descumm_path is None:
