@@ -171,11 +171,14 @@ class ScummVar(NamedTuple):
 
 def get_scumm_var(num: int) -> ScummVar:
     address = SCUMM_VARS_START + num * VAR_ITEM_SIZE
+    inverse = scumm_vars_inverse()
 
-    if num in scumm_vars_inverse():
-        return ScummVar(name=scumm_vars_inverse()[num], address=address)
+    # Avoid repeated dictionary lookups by using .get(). This keeps the
+    # function efficient and easier to follow while still falling back to an
+    # unnamed variable when the mapping does not include ``num``.
+    name = inverse.get(num)
 
-    return ScummVar(name=None, address=address)
+    return ScummVar(name=name, address=address)
 
 
 def get_bit_var(num: int) -> int:
