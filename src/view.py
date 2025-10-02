@@ -16,10 +16,11 @@ class Scumm6View(BinaryView):  # type: ignore[misc]
     long_name = "SCUMM6 Resources"
 
     @classmethod
-    def is_valid_for_data(self, data: BinaryView) -> bool:
-        header = data.read(0, 0x4)
-        result = header[0:4] in [b"Bsc6"]
-        return result
+    def is_valid_for_data(cls, data: BinaryView) -> bool:
+        """Return True when *data* looks like a SCUMM6 container."""
+
+        header = data.read(0, 4)
+        return header == b"Bsc6"
 
     def __init__(self, parent_view: BinaryView) -> None:
         # parent_view is a binaryninja.binaryview.BinaryView
