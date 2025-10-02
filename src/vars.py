@@ -172,10 +172,8 @@ class ScummVar(NamedTuple):
 def get_scumm_var(num: int) -> ScummVar:
     address = SCUMM_VARS_START + num * VAR_ITEM_SIZE
 
-    if num in scumm_vars_inverse():
-        return ScummVar(name=scumm_vars_inverse()[num], address=address)
-
-    return ScummVar(name=None, address=address)
+    name = scumm_vars_inverse().get(num)
+    return ScummVar(name=name, address=address)
 
 
 def get_bit_var(num: int) -> int:
