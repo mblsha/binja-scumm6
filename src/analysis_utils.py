@@ -57,6 +57,10 @@ class Scumm6AnalysisToolkit:
             descumm_path: Path to descumm executable (auto-built if None)
         """
         self.environment = self._setup_environment(bsc6_path, descumm_path)
+        # Cache script lookups to avoid repeated linear searches when analyzing many scripts
+        self._scripts_by_name: Dict[str, ScriptAddr] = {
+            script.name: script for script in self.environment.scripts
+        }
     
     def _setup_environment(self, bsc6_path: Optional[Path], descumm_path: Optional[Path]) -> Scumm6AnalysisEnvironment:
         """Set up the analysis environment with all required tools and data."""
@@ -92,10 +96,12 @@ class Scumm6AnalysisToolkit:
         Raises:
             ValueError: If script is not found
         """
-        for script in self.environment.scripts:
-            if script.name == script_name:
-                return script
-        raise ValueError(f"Script '{script_name}' not found. Available scripts: {[s.name for s in self.environment.scripts]}")
+        try:
+            return self._scripts_by_name[script_name]
+        except KeyError as exc:
+            raise ValueError(
+                f"Script '{script_name}' not found. Available scripts: {[s.name for s in self.environment.scripts]}"
+            ) from exc
     
     def get_all_scripts(self) -> List[ScriptAddr]:
         """Get list of all available scripts."""
