@@ -44,21 +44,32 @@ class Scumm6View(BinaryView):  # type: ignore[misc]
 
         self.script_nums = self.disasm.get_script_nums(self.state)
 
+    def _add_segment(
+        self,
+        start: int,
+        size: int,
+        name: str,
+        segment_flag: SegmentFlag,
+        semantics: SectionSemantics,
+        data_offset: int = 0,
+        data_length: int = 0,
+    ) -> None:
+        """Register a segment and matching section in the Binary Ninja view."""
+
+        self.add_auto_segment(start, size, data_offset, data_length, segment_flag)
+        self.add_user_section(name, start, size, semantics)
+
     def init(self) -> bool:
         arch = Architecture["SCUMM6"]  # type: ignore[type-arg,name-defined,unused-ignore]
         self.arch = arch
         self.platform = arch.standalone_platform
 
         # create specinal segments for vars
-        self.add_auto_segment(            vars.SCUMM_VARS_START,
-            vars.SCUMM_VARS_SIZE,
-            0,
-            0,
-            cast(SegmentFlag, SegmentFlag.SegmentReadable | SegmentFlag.SegmentWritable),
-        )
-        self.add_user_section(            "SCUMM VARs",
+        self._add_segment(
             vars.SCUMM_VARS_START,
             vars.SCUMM_VARS_SIZE,
+            "SCUMM VARs",
+            cast(SegmentFlag, SegmentFlag.SegmentReadable | SegmentFlag.SegmentWritable),
             SectionSemantics.ReadWriteDataSectionSemantics,
         )
         uint32_t = self.parse_type_string("uint32_t")[0]
@@ -70,35 +81,23 @@ class Scumm6View(BinaryView):  # type: ignore[misc]
                 Symbol(SymbolType.DataSymbol, var.address, var.name)
             )
             self.define_user_data_var(var.address, uint32_t)
-        self.add_auto_segment(
+        self._add_segment(
             vars.BITVARS_START,
             vars.BITVARS_SIZE,
-            0,
-            0,
-            cast(SegmentFlag, SegmentFlag.SegmentReadable | SegmentFlag.SegmentWritable),
-        )
-        self.add_user_section(
             "Bit VARs",
-            vars.BITVARS_START,
-            vars.BITVARS_SIZE,
-            SectionSemantics.ReadWriteDataSectionSemantics,
-        )
-        
-        # Create segment for actors
-        self.add_auto_segment(
-            vars.ACTORS_START,
-            vars.ACTORS_SIZE,
-            0,
-            0,
             cast(SegmentFlag, SegmentFlag.SegmentReadable | SegmentFlag.SegmentWritable),
-        )
-        self.add_user_section(
-            "Actors",
-            vars.ACTORS_START,
-            vars.ACTORS_SIZE,
             SectionSemantics.ReadWriteDataSectionSemantics,
         )
-        
+
+        # Create segment for actors
+        self._add_segment(
+            vars.ACTORS_START,
+            vars.ACTORS_SIZE,
+            "Actors",
+            cast(SegmentFlag, SegmentFlag.SegmentReadable | SegmentFlag.SegmentWritable),
+            SectionSemantics.ReadWriteDataSectionSemantics,
+        )
+
         # Define symbols for each actor
         # Generate actor struct type definition from ActorProperty enum
         actor_struct_def = generate_actor_struct_definition()
@@ -124,15 +123,14 @@ class Scumm6View(BinaryView):  # type: ignore[misc]
             # print("adding segment:", hex(start), hex(end), name)
             size = end - start
 
-            self.add_auto_segment(
-                start, size, start, size, segment_flag
-            )
-
-            self.add_user_section(
-                name,
+            self._add_segment(
                 start,
                 size,
+                name,
+                segment_flag,
                 section_semantics,
+                data_offset=start,
+                data_length=size,
             )
 
             if create_function and not self.get_function_at(start):
