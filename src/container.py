@@ -200,9 +200,7 @@ class ContainerParser:
     """Parser for SCUMM6 .bsc6 container files."""
 
     @staticmethod
-    def decode_container(
-        lecf_filename: str, data: bytes
-    ) -> Tuple[List[ScriptAddr], State]:
+    def decode_container(data: bytes) -> Tuple[List[ScriptAddr], State]:
         """Decode a SCUMM6 container file and extract script information."""
         ks = KaitaiStream(BytesIO(data))
         r = Scumm6Container(ks)

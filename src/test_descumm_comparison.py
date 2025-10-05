@@ -1743,7 +1743,7 @@ def test_environment() -> ComparisonTestEnvironment:
     bsc6_data = bsc6_path.read_bytes()
 
     # Decode the container to get scripts list and state
-    scripts, state = Scumm6Disasm.decode_container(str(bsc6_path), bsc6_data)
+    scripts, state = Scumm6Disasm.decode_container(bsc6_data)
     return ComparisonTestEnvironment(descumm_path, bsc6_data, scripts, state)
 
 
