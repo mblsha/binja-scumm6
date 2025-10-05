@@ -80,7 +80,7 @@ ACTOR_PROPERTIES: Dict[str, PropertyInfo] = {
 }
 
 
-def _get_property_info(property: Union[ActorProperty, str]) -> PropertyInfo:
+def _get_property_info(prop_identifier: Union[ActorProperty, str]) -> PropertyInfo:
     """Return :class:`PropertyInfo` for either enum or string inputs.
 
     Centralises validation of property identifiers to keep error handling
@@ -89,18 +89,18 @@ def _get_property_info(property: Union[ActorProperty, str]) -> PropertyInfo:
     both repetitive and risked diverging behaviour if one copy was updated.
     """
 
-    if isinstance(property, ActorProperty):
-        return property.value
+    if isinstance(prop_identifier, ActorProperty):
+        return prop_identifier.value
 
-    if isinstance(property, str):
-        normalized_name = property.lower()
+    if isinstance(prop_identifier, str):
+        normalized_name = prop_identifier.lower()
         try:
             return ACTOR_PROPERTIES[normalized_name]
         except KeyError:
-            raise ValueError(f"Unknown actor property: {property}") from None
+            raise ValueError(f"Unknown actor property: {prop_identifier}") from None
 
     raise ValueError(
-        f"Property must be ActorProperty enum or string, got {type(property)}"
+        f"Property must be ActorProperty enum or string, got {type(prop_identifier)}"
     )
 
 
@@ -108,12 +108,12 @@ def _get_property_info(property: Union[ActorProperty, str]) -> PropertyInfo:
 # API Option 1: Simple function-based approach
 # ==============================================================================
 
-def get_actor_property_address(actor_index: int, property: Union[ActorProperty, str]) -> int:
+def get_actor_property_address(actor_index: int, prop: Union[ActorProperty, str]) -> int:
     """Calculate the address for an actor property.
-    
+
     Args:
         actor_index: The actor index (0-31)
-        property: ActorProperty enum or property name string
+        prop: ActorProperty enum or property name string
         
     Returns:
         The calculated memory address
@@ -124,19 +124,19 @@ def get_actor_property_address(actor_index: int, property: Union[ActorProperty, 
     if not (0 <= actor_index < MAX_ACTORS):
         raise ValueError(f"Actor index {actor_index} out of bounds (0-{MAX_ACTORS-1})")
     
-    prop_info = _get_property_info(property)
+    prop_info = _get_property_info(prop)
 
     return ACTORS_START + (actor_index * ACTOR_STRUCT_SIZE) + prop_info.offset
 
 
-def get_current_actor_property_address(property: Union[ActorProperty, str]) -> Tuple[int, int]:
+def get_current_actor_property_address(prop: Union[ActorProperty, str]) -> Tuple[int, int]:
     """Calculate the address for a property of the current actor.
     
     This function returns LLIL-friendly addresses for property access that uses
     the current actor index (set by actor_ops.set_current_actor).
     
     Args:
-        property: ActorProperty enum or property name string
+        prop: ActorProperty enum or property name string
         
     Returns:
         Tuple of (current_actor_address, property_offset) for LLIL pointer arithmetic
@@ -144,7 +144,7 @@ def get_current_actor_property_address(property: Union[ActorProperty, str]) -> T
     Raises:
         ValueError: If property is invalid
     """
-    prop_info = _get_property_info(property)
+    prop_info = _get_property_info(prop)
 
     # Return address of current actor variable and property offset for LLIL calculation:
     # final_address = *(CURRENT_ACTOR_ADDRESS) * ACTOR_STRUCT_SIZE + ACTORS_START + property_offset  
@@ -169,15 +169,15 @@ class ActorMemory:
             raise ValueError(f"Actor index {index} out of bounds (0-{MAX_ACTORS-1})")
         return ActorMemory(index)
     
-    def prop(self, property: Union[ActorProperty, str]) -> 'ActorMemory':
+    def prop(self, prop_identifier: Union[ActorProperty, str]) -> 'ActorMemory':
         """Select a property by name or enum."""
         new = ActorMemory(self._actor_index)
-        _get_property_info(property)
-        if isinstance(property, ActorProperty):
-            new._property_enum = property
-            new._property_name = property.name.lower()
+        _get_property_info(prop_identifier)
+        if isinstance(prop_identifier, ActorProperty):
+            new._property_enum = prop_identifier
+            new._property_name = prop_identifier.name.lower()
         else:
-            new._property_name = property
+            new._property_name = prop_identifier
         return new
     
     @property
@@ -233,9 +233,9 @@ class ActorProxy:
     def __init__(self, actor_index: int):
         self._actor_index = actor_index
     
-    def __getitem__(self, property: Union[ActorProperty, str]) -> Tuple[int, PropertyInfo]:
+    def __getitem__(self, prop_identifier: Union[ActorProperty, str]) -> Tuple[int, PropertyInfo]:
         """Get address and info for a property."""
-        prop = _get_property_info(property)
+        prop = _get_property_info(prop_identifier)
 
         address = ACTORS_START + (self._actor_index * ACTOR_STRUCT_SIZE) + prop.offset
         return address, prop
