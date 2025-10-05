@@ -29,10 +29,7 @@ class Scumm6View(BinaryView):  # type: ignore[misc]
 
         self.disasm = Scumm6Disasm()
         data = parent_view.read(0, parent_view.end)
-        scripts, state = self.disasm.decode_container(
-            parent_view.file.filename,
-            data,
-        )
+        scripts, state = self.disasm.decode_container(data)
         self.scripts: List[ScriptAddr] = scripts
         self.state: State = state
 

@@ -75,7 +75,7 @@ class Scumm6AnalysisToolkit:
             bsc6_data = f.read()
         
         # Parse container to get script list
-        scripts, state = Scumm6Disasm.decode_container(str(bsc6_path), bsc6_data)
+        scripts, state = Scumm6Disasm.decode_container(bsc6_data)
         
         # Ensure descumm tool is available
         if descumm_path is None:

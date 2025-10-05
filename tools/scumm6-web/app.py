@@ -113,9 +113,7 @@ class DataProvider:
 
             # Parse container
             Scumm6Disasm = container_module.ContainerParser
-            scripts, state = Scumm6Disasm.decode_container(
-                str(self.bsc6_path), self.bsc6_data
-            )
+            scripts, state = Scumm6Disasm.decode_container(self.bsc6_data)
             self.scripts, self.state = scripts, state
             return True
 
