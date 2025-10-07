@@ -80,6 +80,14 @@ ACTOR_PROPERTIES: Dict[str, PropertyInfo] = {
 }
 
 
+def _validate_actor_index(actor_index: int) -> int:
+    """Ensure ``actor_index`` falls within the valid actor range."""
+
+    if not (0 <= actor_index < MAX_ACTORS):
+        raise ValueError(f"Actor index {actor_index} out of bounds (0-{MAX_ACTORS-1})")
+    return actor_index
+
+
 def _get_property_info(prop_identifier: Union[ActorProperty, str]) -> PropertyInfo:
     """Return :class:`PropertyInfo` for either enum or string inputs.
 
@@ -121,12 +129,10 @@ def get_actor_property_address(actor_index: int, prop: Union[ActorProperty, str]
     Raises:
         ValueError: If actor_index is out of bounds or property is invalid
     """
-    if not (0 <= actor_index < MAX_ACTORS):
-        raise ValueError(f"Actor index {actor_index} out of bounds (0-{MAX_ACTORS-1})")
-    
+    actor_base = get_actor_base_address(actor_index)
     prop_info = _get_property_info(prop)
 
-    return ACTORS_START + (actor_index * ACTOR_STRUCT_SIZE) + prop_info.offset
+    return actor_base + prop_info.offset
 
 
 def get_current_actor_property_address(prop: Union[ActorProperty, str]) -> Tuple[int, int]:
@@ -157,53 +163,42 @@ def get_current_actor_property_address(prop: Union[ActorProperty, str]) -> Tuple
 
 class ActorMemory:
     """Fluent interface for actor memory calculations."""
-    
-    def __init__(self, actor_index: Optional[int] = None):
+
+    def __init__(
+        self,
+        actor_index: Optional[int] = None,
+        property_info: Optional[PropertyInfo] = None,
+    ) -> None:
         self._actor_index = actor_index
-        self._property_name: Optional[str] = None
-        self._property_enum: Optional[ActorProperty] = None
-    
+        self._property_info = property_info
+
     def actor(self, index: int) -> 'ActorMemory':
         """Select an actor by index."""
-        if not (0 <= index < MAX_ACTORS):
-            raise ValueError(f"Actor index {index} out of bounds (0-{MAX_ACTORS-1})")
-        return ActorMemory(index)
-    
+        validated_index = _validate_actor_index(index)
+        return ActorMemory(validated_index, self._property_info)
+
     def prop(self, prop_identifier: Union[ActorProperty, str]) -> 'ActorMemory':
         """Select a property by name or enum."""
-        new = ActorMemory(self._actor_index)
-        _get_property_info(prop_identifier)
-        if isinstance(prop_identifier, ActorProperty):
-            new._property_enum = prop_identifier
-            new._property_name = prop_identifier.name.lower()
-        else:
-            new._property_name = prop_identifier
-        return new
-    
+        prop_info = _get_property_info(prop_identifier)
+        return ActorMemory(self._actor_index, prop_info)
+
     @property
     def address(self) -> int:
         """Get the calculated address."""
         if self._actor_index is None:
             raise ValueError("Actor index not set")
-        if self._property_name is None and self._property_enum is None:
+        base_address = get_actor_base_address(self._actor_index)
+        if self._property_info is None:
             # Return base address of actor struct
-            return ACTORS_START + (self._actor_index * ACTOR_STRUCT_SIZE)
-        
-        if self._property_enum is not None:
-            prop = _get_property_info(self._property_enum)
-        elif self._property_name is not None:
-            prop = _get_property_info(self._property_name)
-        else:
-            raise ValueError("Property not set")
-        return ACTORS_START + (self._actor_index * ACTOR_STRUCT_SIZE) + prop.offset
+            return base_address
+
+        return base_address + self._property_info.offset
 
     def info(self) -> PropertyInfo:
         """Get property information."""
-        if self._property_enum is not None:
-            return _get_property_info(self._property_enum)
-        if self._property_name is not None:
-            return _get_property_info(self._property_name)
-        raise ValueError("Property not set")
+        if self._property_info is None:
+            raise ValueError("Property not set")
+        return self._property_info
 
 
 # ==============================================================================
@@ -218,12 +213,10 @@ class ActorState:
     
     def __getitem__(self, actor_index: int) -> 'ActorProxy':
         """Get an actor proxy by index."""
-        if not (0 <= actor_index < MAX_ACTORS):
-            raise ValueError(f"Actor index {actor_index} out of bounds (0-{MAX_ACTORS-1})")
-        
+        actor_index = _validate_actor_index(actor_index)
         if actor_index not in self._actors:
             self._actors[actor_index] = ActorProxy(actor_index)
-        
+
         return self._actors[actor_index]
 
 
@@ -231,19 +224,19 @@ class ActorProxy:
     """Proxy for accessing actor properties."""
     
     def __init__(self, actor_index: int):
-        self._actor_index = actor_index
-    
+        self._actor_index = _validate_actor_index(actor_index)
+
     def __getitem__(self, prop_identifier: Union[ActorProperty, str]) -> Tuple[int, PropertyInfo]:
         """Get address and info for a property."""
         prop = _get_property_info(prop_identifier)
 
-        address = ACTORS_START + (self._actor_index * ACTOR_STRUCT_SIZE) + prop.offset
+        address = get_actor_base_address(self._actor_index) + prop.offset
         return address, prop
-    
+
     @property
     def base_address(self) -> int:
         """Get the base address of this actor's struct."""
-        return ACTORS_START + (self._actor_index * ACTOR_STRUCT_SIZE)
+        return get_actor_base_address(self._actor_index)
 
 
 # ==============================================================================
@@ -259,10 +252,9 @@ def get_actor_base_address(actor_index: int) -> int:
     Returns:
         The base address of the actor struct
     """
-    if not (0 <= actor_index < MAX_ACTORS):
-        raise ValueError(f"Actor index {actor_index} out of bounds (0-{MAX_ACTORS-1})")
-    
-    return ACTORS_START + (actor_index * ACTOR_STRUCT_SIZE)
+    validated_index = _validate_actor_index(actor_index)
+
+    return ACTORS_START + (validated_index * ACTOR_STRUCT_SIZE)
 
 
 def get_property_info(property_name: str) -> PropertyInfo:
